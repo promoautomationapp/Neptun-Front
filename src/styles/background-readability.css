@@ -1,0 +1,113 @@
+/* All page colors share the same artwork and editing rules. Only ink and
+   small text surfaces adapt; product photographs are never changed. */
+.brochure-page.has-background-readability {
+  color: var(--brochure-foreground);
+}
+.brochure-page.has-background-readability
+  :is(
+    .brochure-product-copy,
+    .brochure-interior-brand-footer,
+    .stores-disclaimer,
+    .stores-service,
+    .stores-social
+  ) {
+  color: var(--brochure-foreground);
+}
+.brochure-page.has-background-readability
+  .brochure-product-copy
+  > :is(strong, p, span),
+.brochure-page.has-background-readability
+  .brochure-product.details-left
+  > .brochure-specs
+  > .product-detail-block:not(.detail-filled):not(.detail-style-filled) {
+  color: inherit;
+}
+.brochure-page.has-background-readability .brochure-brand-mark img {
+  filter: var(--brochure-brand-filter);
+}
+.brochure-page.has-background-readability
+  .product-artwork-item[data-monochrome-badge="true"]
+  img {
+  filter: var(--brochure-brand-filter);
+}
+.brochure-page.has-background-readability.cover-editable-elements
+  :is(.cover-element-headline, .cover-element-message),
+.brochure-page.has-background-readability.cover-editable-elements
+  :is(.cover-element-headline, .cover-element-message)
+  > :is(h1, span, p),
+.brochure-page.has-background-readability .brochure-footer-payment {
+  color: var(--brochure-foreground);
+}
+.brochure-page.has-background-readability
+  .brochure-specs
+  > .product-detail-block:not(.detail-style-filled) {
+  border-color: currentColor;
+}
+.brochure-page.has-background-readability
+  .brochure-specs
+  > .product-detail-block:not(.detail-filled):not(.detail-style-filled)
+  .detail-energy
+  > em:first-child,
+.brochure-page.has-background-readability
+  .brochure-specs
+  > .detail-style-outline
+  .detail-energy
+  > em:first-child {
+  color: var(--brochure-energy-ink);
+}
+/* Photos and gradients crossing light/dark tones cannot share a reliable
+   foreground everywhere. A compact opaque surface travels with each text region. */
+.brochure-page.needs-contrast-surfaces
+  .brochure-product:not(.large-bundle-product)
+  .brochure-product-copy,
+.brochure-page.needs-contrast-surfaces
+  .brochure-product:not(.large-bundle-product)
+  > .brochure-specs
+  > .product-detail-block:not(.detail-filled):not(.detail-style-filled),
+.brochure-page.needs-contrast-surfaces
+  .brochure-product:not(.large-bundle-product)
+  > .brochure-specs
+  > .detail-style-outline,
+.brochure-page.needs-contrast-surfaces
+  :is(.stores-disclaimer, .stores-service, .stores-social),
+.brochure-page.needs-contrast-surfaces.cover-editable-elements
+  :is(.cover-element-headline, .cover-element-message),
+.brochure-page.needs-contrast-surfaces .brochure-footer-payment,
+.brochure-page.needs-contrast-surfaces .stores-blue .store-spot,
+.brochure-page.stores-blue.needs-contrast-surfaces .store-spot {
+  background: var(--brochure-text-surface);
+  border-radius: 0.55cqw;
+}
+.brochure-page.needs-contrast-surfaces .brochure-product-copy {
+  box-shadow: 0 0 0 0.15cqw var(--brochure-text-surface);
+}
+.brochure-page.has-background-readability.stores-gray .store-spot {
+  color: #1c4075;
+}
+.brochure-page.has-background-readability
+  .brochure-specs
+  > .product-detail-block:not(.detail-filled):not(.detail-style-filled)
+  :is(
+    .detail-temperature-high,
+    .detail-energy > em:last-child:not(:first-child)
+  ),
+.brochure-page.has-background-readability
+  .brochure-specs
+  > .detail-style-outline
+  :is(
+    .detail-temperature-high,
+    .detail-energy > em:last-child:not(:first-child)
+  ) {
+  background: #fff;
+  border-radius: 0.12em;
+  color: #bf1e25;
+}
+/* Keep footer groups readable when moved out of the white footer band. */
+.brochure-page.has-background-readability .compact-footer-disclaimer {
+  background: var(--brochure-disclaimer-surface);
+  color: var(--brochure-foreground);
+}
+.compact-stores-footer
+  :is(.compact-footer-brand, .compact-footer-stores, .compact-footer-service) {
+  background: #fff;
+}

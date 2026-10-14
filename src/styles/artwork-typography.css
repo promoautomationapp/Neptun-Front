@@ -1,0 +1,134 @@
+/* Original brochure typefaces, scoped to printed/exported artwork. */
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/api/assets/app/fonts/brochure/SkolaSans-Light.otf") format("opentype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/api/assets/app/fonts/brochure/SkolaSans-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/api/assets/app/fonts/brochure/SkolaSans-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/api/assets/app/fonts/brochure/SkolaSans-Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/api/assets/app/fonts/brochure/SkolaSans-Black.otf") format("opentype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "TSTAR";
+  src: url("/api/assets/app/fonts/brochure/TSTAR-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "TSTAR";
+  src: url("/api/assets/app/fonts/brochure/TSTAR-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "TSTAR Headline";
+  src: url("/api/assets/app/fonts/brochure/TSTAR-Headline.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+.brochure-page,
+.social-canvas {
+  font-family: "SkolaSans", Arial, sans-serif;
+  font-weight: 400;
+}
+
+/* Override the old display fonts and any pasted rich-text font family. */
+.brochure-page :is(.cover-headline h1, .cover-ribbon > div > b,
+  .brochure-page-header > div > span, .brochure-screen-annotation,
+  .brochure-specs .brochure-warranty b, .brochure-price,
+  .brochure-price-saving-tab b, .stores-top h2),
+.social-canvas .social-price-stack,
+.social-canvas .social-top-copy,
+.social-canvas .social-top-copy * {
+  font-family: "SkolaSans", Arial, sans-serif !important;
+}
+
+/* Product names, warranty lines, and specification boxes follow the reference. */
+.brochure-page .brochure-product-copy > :is(span, small),
+.brochure-page .brochure-specs :is(span, b, small),
+.social-canvas .social-product-copy > div:not(.social-product-brand),
+.social-canvas .social-specs :is(span, small) {
+  font-weight: 300;
+}
+
+.brochure-page :is(.brochure-brand-mark, .brochure-page-number,
+  .brochure-interior-brand-footer > b, .brochure-section-label > span,
+  .brochure-page-header > div > span, .cover-meta strong,
+  .cover-headline > span, .cover-headline h1, .cover-ribbon p,
+  .brochure-page-footer strong, .stores-heading, .stores-top h2,
+  .store-spot strong),
+.brochure-page .brochure-specs .brochure-warranty :is(b, small),
+.social-canvas :is(.social-product-brand, .social-top-copy h1,
+  .social-top-copy h2, .social-top-copy h3, .social-top-copy strong,
+  .social-top-copy b) {
+  font-weight: 700 !important;
+}
+
+.brochure-page .cover-headline:is(.style-strong, .style-bold) h1,
+.brochure-page .brochure-screen-annotation b,
+.social-canvas :is(.social-inches, .social-tv-inches, .social-event-text) {
+  font-weight: 900 !important;
+}
+
+.brochure-page .store-spot b {
+  font-weight: 500;
+}
+
+/* Existing HTML price designs share the same source weights as the SVG card. */
+.brochure-page .brochure-price-top,
+.brochure-page .brochure-price-top del,
+.social-canvas .social-price-stack .social-regular,
+.social-canvas .social-price-stack .social-regular del {
+  font-weight: 700 !important;
+}
+.brochure-page :is(.brochure-happy-label, .brochure-price-month,
+  .brochure-saving i, .brochure-saving-amount, .brochure-price-saving-tab small,
+  .brochure-price-saving-tab b, .brochure-screen-annotation small),
+.social-canvas :is(.social-sale-label, .social-installments,
+  .social-saving, .social-saving b) {
+  font-weight: 700;
+}
+.brochure-page .brochure-price-sale strong,
+.social-canvas .social-sale strong {
+  font-weight: 900;
+}
+
+/* Canvas editing controls retain the platform interface typeface. */
+.brochure-page :is(button, .cs-product-edit-pins, .cs-region-handles,
+  .cs-region-dimensions, .cs-card-size-label),
+.brochure-page :is(button, .cs-product-edit-pins, .cs-region-handles) *,
+.social-canvas :is(button, [data-export-hide="true"], .social-cutout-pending),
+.social-canvas :is(button, [data-export-hide="true"]) * {
+  font-family: "DM Sans", Arial, sans-serif !important;
+}

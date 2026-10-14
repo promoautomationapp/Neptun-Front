@@ -1,0 +1,783 @@
+{
+  "source": "/Users/brikenaahmeti/Downloads/BroshuraMujore_Maj..... 2/BroshuraMujore_Maj.......idml",
+  "unit": "pt",
+  "origin": "redSaleBandTopLeft",
+  "viewBox": [
+    0,
+    -24.43776377952736,
+    127.90621535448952,
+    89.57214310605104
+  ],
+  "parts": {
+    "saleBand": {
+      "id": "u431a5",
+      "kind": "Rectangle",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 127.90621535448952,
+      "height": 38.683132003048286,
+      "path": "M0 0 L0 38.683132003 L127.9062153545 38.683132003 L127.9062153545 0 L0 0 Z",
+      "fill": "Color/u42ef4"
+    },
+    "priceLabel": {
+      "id": "u431a8",
+      "kind": "TextFrame",
+      "x": 8.120379198490696,
+      "y": 6.238127056384656,
+      "width": 27.038944659971776,
+      "height": 6.370323620738418,
+      "path": "M8.1203791985 6.2381270564 L8.1203791985 12.6084506771 L35.1593238585 12.6084506771 L35.1593238585 6.2381270564 L8.1203791985 6.2381270564 Z",
+      "text": "çmimi",
+      "contentsWithBreaks": "çmimi",
+      "fill": null,
+      "scale": 1.0148689337602794,
+      "angle": 0.0,
+      "baselineAtFrameBottom": 12.608450677123074,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "24.0806223746429",
+          "RuleAboveLineWeight": "0.6689061770734137",
+          "RuleBelowLineWeight": "0.6689061770734137",
+          "Justification": "CenterAlign",
+          "SplitColumnInsideGutter": "4.013437062440486",
+          "TreatIdeographicSpaceAsSpace": "false"
+        }
+      ],
+      "runs": [
+        {
+          "text": "çmimi",
+          "font": "SkolaSans",
+          "style": "Regular",
+          "size": "8.369321934193298",
+          "effectiveSize": 8.493764827651272,
+          "tracking": "0",
+          "trackingEm": 0.0,
+          "position": "Normal",
+          "capitalization": "AllCaps",
+          "fill": "Color/Paper",
+          "leading": null
+        }
+      ],
+      "baseline": 12.608450677123074
+    },
+    "sale": {
+      "id": "u431c7",
+      "kind": "TextFrame",
+      "x": 44.60354543824508,
+      "y": 1.951482739988819,
+      "width": 81.7596092660724,
+      "height": 32.99030172481184,
+      "path": "M44.6035454382 1.95148274 L44.6035454382 34.9417844648 L126.3631547043 34.9417844648 L126.3631547043 1.95148274 L44.6035454382 1.95148274 Z",
+      "text": "599 €",
+      "contentsWithBreaks": "599 €",
+      "fill": null,
+      "scale": 1.0148689337602792,
+      "angle": 0.0,
+      "baselineAtFrameBottom": 34.94178446480066,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "39.647138734179514",
+          "RuleAboveLineWeight": "1.1013094092827644",
+          "RuleBelowLineWeight": "1.1013094092827644",
+          "Justification": "RightAlign",
+          "SplitColumnInsideGutter": "6.6078564556965835",
+          "TreatIdeographicSpaceAsSpace": "false"
+        }
+      ],
+      "runs": [
+        {
+          "text": "599",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "40.760898164740425",
+          "effectiveSize": 41.366969259561436,
+          "tracking": "-90.00000000000001",
+          "trackingEm": -0.09000000000000001,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        },
+        {
+          "text": " €",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "41.73514077293203",
+          "effectiveSize": 42.35569781656068,
+          "tracking": "-90.00000000000001",
+          "trackingEm": -0.09000000000000001,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        }
+      ],
+      "baseline": 34.836716863930064
+    },
+    "oldBand": {
+      "id": "u431df",
+      "kind": "Rectangle",
+      "x": 57.74873503851052,
+      "y": -24.43776377952736,
+      "width": 70.157480315979,
+      "height": 24.481779169503625,
+      "path": "M57.7487350385 -24.4377637795 L57.7487350385 0.04401539 L127.9062153545 0.04401539 L127.9062153545 -24.4377637795 L57.7487350385 -24.4377637795 Z",
+      "fill": "Gradient/New Gradient Swatch 7",
+      "gradient": {
+        "source": {
+          "attributes": {
+            "Self": "Gradient/New Gradient Swatch 7",
+            "Type": "Linear",
+            "Name": "New Gradient Swatch 7",
+            "ColorEditable": "true",
+            "ColorRemovable": "true",
+            "Visible": "true",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "u12ColorGroupSwatch6b"
+          },
+          "stops": [
+            {
+              "Self": "u243GradientStop0",
+              "StopColor": "Color/Paper",
+              "Location": "0"
+            },
+            {
+              "Self": "u243GradientStop1",
+              "StopColor": "Color/u1d6",
+              "Location": "100",
+              "Midpoint": "81.8681001663208"
+            }
+          ]
+        },
+        "start": [
+          57.719283114266545,
+          -0.02238613691406499
+        ],
+        "end": [
+          127.93573360666858,
+          -0.02238613691406499
+        ],
+        "colors": {
+          "Color/Paper": {
+            "Self": "Color/Paper",
+            "Model": "Process",
+            "Space": "CMYK",
+            "ColorValue": "0 0 0 0",
+            "ColorOverride": "Specialpaper",
+            "ConvertToHsb": "false",
+            "AlternateSpace": "NoAlternateColor",
+            "AlternateColorValue": "",
+            "Name": "Paper",
+            "ColorEditable": "true",
+            "ColorRemovable": "false",
+            "Visible": "true",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "u12ColorGroupSwatch2"
+          },
+          "Color/u1d6": {
+            "Self": "Color/u1d6",
+            "Model": "Process",
+            "Space": "CMYK",
+            "ColorValue": "0 0 0 40.00000059604645",
+            "ColorOverride": "Normal",
+            "ConvertToHsb": "false",
+            "AlternateSpace": "NoAlternateColor",
+            "AlternateColorValue": "",
+            "Name": "",
+            "ColorEditable": "true",
+            "ColorRemovable": "true",
+            "Visible": "false",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "n"
+          }
+        }
+      }
+    },
+    "old": {
+      "id": "u431e1",
+      "kind": "TextFrame",
+      "x": 65.73380844589894,
+      "y": -23.773297200948036,
+      "width": 60.0646169309,
+      "height": 21.633137179067603,
+      "path": "M65.7338084459 -23.7732972009 L65.7338084459 -2.1401600219 L125.7984253768 -2.1401600219 L125.7984253768 -23.7732972009 L65.7338084459 -23.7732972009 Z",
+      "text": "899€",
+      "contentsWithBreaks": "899€",
+      "fill": null,
+      "scale": 1.0148689337602794,
+      "angle": 0.0,
+      "baselineAtFrameBottom": -2.1401600218804333,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "23.90562334933324",
+          "RuleAboveLineWeight": "0.664045093037031",
+          "RuleBelowLineWeight": "0.664045093037031",
+          "Justification": "RightAlign",
+          "SplitColumnInsideGutter": "3.9842705582222075",
+          "TreatIdeographicSpaceAsSpace": "false",
+          "ParagraphBorderTopLeftCornerRadius": "1.000913674555472",
+          "ParagraphBorderTopRightCornerRadius": "1.000913674555472",
+          "ParagraphBorderBottomLeftCornerRadius": "1.000913674555472",
+          "ParagraphBorderBottomRightCornerRadius": "1.000913674555472",
+          "ParagraphShadingTopLeftCornerRadius": "1.000913674555472",
+          "ParagraphShadingTopRightCornerRadius": "1.000913674555472",
+          "ParagraphShadingBottomLeftCornerRadius": "1.000913674555472",
+          "ParagraphShadingBottomRightCornerRadius": "1.000913674555472",
+          "ParagraphBorderTopLineWeight": "1.000913674555472",
+          "ParagraphBorderBottomLineWeight": "1.000913674555472",
+          "ParagraphBorderLeftLineWeight": "1.000913674555472",
+          "ParagraphBorderRightLineWeight": "1.000913674555472"
+        }
+      ],
+      "runs": [
+        {
+          "text": "899€",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "27.54293590586563",
+          "effectiveSize": 27.952469995413566,
+          "tracking": "10",
+          "trackingEm": 0.01,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/u43529",
+          "leading": null
+        }
+      ],
+      "baseline": -2.1401600218804333
+    },
+    "oldStrike": {
+      "id": "u431f8",
+      "kind": "GraphicLine",
+      "x": 69.31632103887068,
+      "y": -18.211838497315057,
+      "width": 52.98760936895792,
+      "height": 12.26683499458386,
+      "path": "M69.3163210389 -5.9450035027 L122.3039304078 -18.2118384973 L69.3163210389 -5.9450035027 Z",
+      "fill": null,
+      "strokeColor": "Color/u42ef0",
+      "strokeWidth": 1.4019783586894692,
+      "strokeLineCap": "round",
+      "openPath": "M69.31632103887068 -5.945003502731197 L122.3039304078286 -18.211838497315057"
+    },
+    "installmentBand": {
+      "id": "u42c59",
+      "kind": "Rectangle",
+      "x": 50.71918141454307,
+      "y": 39.169212255463776,
+      "width": 77.18703393994645,
+      "height": 25.96516707105991,
+      "path": "M50.7191814145 39.1692122555 L50.7191814145 65.1343793265 L127.9062153545 65.1343793265 L127.9062153545 39.1692122555 L50.7191814145 39.1692122555 Z",
+      "fill": "Gradient/u24a",
+      "gradient": {
+        "source": {
+          "attributes": {
+            "Self": "Gradient/u24a",
+            "Type": "Linear",
+            "Name": "",
+            "ColorEditable": "true",
+            "ColorRemovable": "true",
+            "Visible": "false",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "n"
+          },
+          "stops": [
+            {
+              "Self": "u24aGradientStop0",
+              "StopColor": "Color/u145",
+              "Location": "0"
+            },
+            {
+              "Self": "u24aGradientStop1",
+              "StopColor": "Color/u146",
+              "Location": "100",
+              "Midpoint": "50"
+            }
+          ]
+        },
+        "start": [
+          50.71918141454307,
+          65.13437932652369
+        ],
+        "end": [
+          127.90621535448952,
+          65.13437932652369
+        ],
+        "colors": {
+          "Color/u145": {
+            "Self": "Color/u145",
+            "Model": "Process",
+            "Space": "CMYK",
+            "ColorValue": "74.00000095367432 18.99999976158142 0 0",
+            "ColorOverride": "Normal",
+            "ConvertToHsb": "false",
+            "AlternateSpace": "NoAlternateColor",
+            "AlternateColorValue": "",
+            "Name": "",
+            "ColorEditable": "true",
+            "ColorRemovable": "true",
+            "Visible": "false",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "n"
+          },
+          "Color/u146": {
+            "Self": "Color/u146",
+            "Model": "Process",
+            "Space": "CMYK",
+            "ColorValue": "96.36073197362123 58.561294760710744 0 34.40112590789795",
+            "ColorOverride": "Normal",
+            "ConvertToHsb": "false",
+            "AlternateSpace": "NoAlternateColor",
+            "AlternateColorValue": "",
+            "Name": "",
+            "ColorEditable": "true",
+            "ColorRemovable": "true",
+            "Visible": "false",
+            "SwatchCreatorID": "7937",
+            "SwatchColorGroupReference": "n"
+          }
+        }
+      }
+    },
+    "installment": {
+      "id": "u42c5b",
+      "kind": "TextFrame",
+      "x": 53.99214386538131,
+      "y": 41.965673297792364,
+      "width": 72.04789088202392,
+      "height": 20.372244986402734,
+      "path": "M53.9921438654 41.9656732978 L53.9921438654 62.3379182842 L126.0400347474 62.3379182842 L126.0400347474 41.9656732978 L53.9921438654 41.9656732978 Z",
+      "text": "12x49.9€",
+      "contentsWithBreaks": "12x49.9€",
+      "fill": null,
+      "scale": 0.4342515111598682,
+      "angle": 0.0,
+      "baselineAtFrameBottom": 62.3379182841951,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "56.3057493432613",
+          "RuleAboveLineWeight": "1.5640485928683605",
+          "RuleBelowLineWeight": "1.5640485928683605",
+          "Justification": "RightAlign",
+          "SplitColumnInsideGutter": "9.384291557210217",
+          "TreatIdeographicSpaceAsSpace": "false"
+        }
+      ],
+      "runs": [
+        {
+          "text": "12x",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "38.28790433889544",
+          "effectiveSize": 16.62658031830982,
+          "tracking": "-70",
+          "trackingEm": -0.07,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        },
+        {
+          "text": "49.",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "60.617530194375",
+          "effectiveSize": 26.323254089686284,
+          "tracking": "-70",
+          "trackingEm": -0.07,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        },
+        {
+          "text": "9",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "60.617530194375",
+          "effectiveSize": 26.323254089686284,
+          "tracking": "-70",
+          "trackingEm": -0.07,
+          "position": "Superscript",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        },
+        {
+          "text": "€",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "60.617530194375",
+          "effectiveSize": 26.323254089686284,
+          "tracking": "-70",
+          "trackingEm": -0.07,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Paper",
+          "leading": null
+        }
+      ],
+      "baseline": 62.3379182841951
+    },
+    "installmentLabel": {
+      "id": "u42c72",
+      "kind": "TextFrame",
+      "x": 54.88259330622725,
+      "y": 43.77322469999615,
+      "width": 19.750400536210464,
+      "height": 5.055604719333246,
+      "path": "M54.8825933062 43.7732247 L54.8825933062 48.8288294193 L74.6329938424 48.8288294193 L74.6329938424 43.7732247 L54.8825933062 43.7732247 Z",
+      "text": "KëstI",
+      "contentsWithBreaks": "KëstI",
+      "fill": null,
+      "scale": 0.4891160826257669,
+      "angle": -5.08020168045579e-16,
+      "baselineAtFrameBottom": 48.828829419329395,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "41.34482507459533",
+          "RuleAboveLineWeight": "1.1484673631832034",
+          "RuleBelowLineWeight": "1.1484673631832034",
+          "SplitColumnInsideGutter": "6.890804179099221"
+        }
+      ],
+      "runs": [
+        {
+          "text": "KëstI",
+          "font": "SkolaSans",
+          "style": "Black",
+          "size": "13.781608358198442",
+          "effectiveSize": 6.740806292444549,
+          "tracking": "0",
+          "trackingEm": 0.0,
+          "position": "Normal",
+          "capitalization": "AllCaps",
+          "fill": "Color/Paper",
+          "leading": null
+        }
+      ],
+      "baseline": 48.828829419329395
+    },
+    "productTitle": {
+      "id": "u42808",
+      "kind": "TextFrame",
+      "x": -129.7376454330324,
+      "y": 31.62609044042904,
+      "width": 92.07941417701261,
+      "height": 21.329075610644054,
+      "path": "M-129.737645433 31.6260904404 L-129.737645433 52.9551660511 L-37.658231256 52.9551660511 L-37.658231256 31.6260904404 L-129.737645433 31.6260904404 Z",
+      "text": "RROBALARëSEWAN28270BY",
+      "contentsWithBreaks": "RROBALARëSE\nWAN28270BY",
+      "fill": null,
+      "scale": 1.0148689337602796,
+      "angle": 0.0,
+      "baselineAtFrameBottom": 52.95516605107309,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "60.42004725939447",
+          "RuleAboveLineWeight": "1.678334646094291",
+          "RuleBelowLineWeight": "1.678334646094291",
+          "SplitColumnInsideGutter": "10.070007876565747",
+          "TreatIdeographicSpaceAsSpace": "false"
+        }
+      ],
+      "runs": [
+        {
+          "text": "RROBALARëSEWAN28270BY",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "10",
+          "effectiveSize": 10.148689337602796,
+          "tracking": "0",
+          "trackingEm": 0.0,
+          "position": "Normal",
+          "capitalization": "AllCaps",
+          "fill": "Color/u434f3",
+          "leading": null
+        }
+      ],
+      "baselines": [
+        39.480422764696826,
+        51.65884996982018
+      ]
+    },
+    "savingCircle": {
+      "id": "u43177",
+      "kind": "TextFrame",
+      "x": 63.9992251961595,
+      "y": -134.6078319832087,
+      "width": 62.040353553872365,
+      "height": 62.04035355387248,
+      "path": "M93.9361535303 -72.5674784293 C111.0681240031 -71.9692168375 125.4413171582 -85.3724362906 126.03957875 -102.5044067635 C126.6378403419 -119.6363772363 113.2346208887 -134.0095703914 96.1026504159 -134.6078319832 C78.9706799431 -135.206093575 64.597486788 -121.8028741219 63.9992251962 -104.6709036491 C63.4009636043 -87.5389331763 76.8041830575 -73.1657400212 93.9361535303 -72.5674784293 Z",
+      "text": "",
+      "contentsWithBreaks": "",
+      "fill": "Color/Paper",
+      "scale": 1.0148689337602765,
+      "angle": 1.999999999999999,
+      "baselineAtFrameBottom": -72.56747842933623,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "48.578586674881464",
+          "RuleAboveLineWeight": "1.3494051854133733",
+          "RuleBelowLineWeight": "1.3494051854133733",
+          "SplitColumnInsideGutter": "8.096431112480241",
+          "TreatIdeographicSpaceAsSpace": "false"
+        }
+      ],
+      "runs": [
+        {
+          "text": "",
+          "font": "SkolaSans",
+          "style": "Medium",
+          "size": "10.795241483306986",
+          "effectiveSize": 10.955755213848468,
+          "tracking": "0",
+          "trackingEm": 0.0,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/Neptun Orange",
+          "leading": null
+        }
+      ]
+    },
+    "saving": {
+      "id": "u4318e",
+      "kind": "TextFrame",
+      "x": 63.675649241876954,
+      "y": -122.58607781052933,
+      "width": 62.68750546244053,
+      "height": 37.996845208509285,
+      "path": "M63.6756492419 -121.5031102266 L64.3199833726 -84.589232602 L126.3631547043 -85.672200186 L125.7188205736 -122.5860778105 L63.6756492419 -121.5031102266 Z",
+      "text": "kurseni300€",
+      "contentsWithBreaks": "kurseni\n300€",
+      "fill": null,
+      "scale": 1.0148689337602768,
+      "angle": -0.9999999999999843,
+      "baselineAtFrameBottom": -84.58923260202005,
+      "paragraphs": [
+        {
+          "AppliedParagraphStyle": "ParagraphStyle/$ID/NormalParagraphStyle",
+          "HyphenationZone": "51.78946308395863",
+          "RuleAboveLineWeight": "1.438596196776629",
+          "RuleBelowLineWeight": "1.438596196776629",
+          "Justification": "CenterAlign",
+          "SplitColumnInsideGutter": "8.63157718065977"
+        }
+      ],
+      "runs": [
+        {
+          "text": "kurseni",
+          "font": "TSTAR",
+          "style": "Regular",
+          "size": "13.575072534909257",
+          "effectiveSize": 13.776919389221774,
+          "tracking": "-60",
+          "trackingEm": -0.06,
+          "position": "Normal",
+          "capitalization": "AllCaps",
+          "fill": "Color/u4352f",
+          "leading": null
+        },
+        {
+          "text": "",
+          "font": "TSTAR",
+          "style": "Headline",
+          "size": "13.575072534909257",
+          "effectiveSize": 13.776919389221774,
+          "tracking": "-60",
+          "trackingEm": -0.06,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/u4352f",
+          "leading": null
+        },
+        {
+          "text": "300€",
+          "font": "TSTAR",
+          "style": "Bold",
+          "size": "26.267555214607686",
+          "effectiveSize": 26.6581257531381,
+          "tracking": "-60",
+          "trackingEm": -0.06,
+          "position": "Normal",
+          "capitalization": null,
+          "fill": "Color/u4352f",
+          "leading": null
+        }
+      ],
+      "centerBaselines": [
+        [
+          94.88331792956205,
+          -111.38390483896285
+        ],
+        [
+          95.34156903844166,
+          -85.13071639399413
+        ]
+      ],
+      "firstLineLeading": 6.807418992321345,
+      "secondLineLeading": 26.25718754181091,
+      "unrotatedTextFrame": {
+        "x": -32.34109773356585,
+        "y": 35.43575584071138,
+        "width": 61.143483835653456,
+        "height": 36.378589801285074
+      }
+    },
+    "happy": {
+      "x": 4.611866496023708,
+      "y": 14.826796535407311,
+      "width": 34.05597006490643,
+      "height": 17.618208411256887,
+      "paths": [
+        "M2.1516235445 0 L4.0858439694 0 L2.8744915619 6.8350119195 C3.2435952837 6.2506641267 3.7241476023 5.9581447768 4.3164673977 5.9581447768 C4.8607957374 5.9581447768 5.2837901969 6.1357609955 5.587045177 6.4915248995 C5.8900875704 6.8471825102 6.041608767 7.3294355227 6.041608767 7.9379119102 C6.041608767 8.1354049887 6.0238577745 8.3325791871 5.9893124298 8.5306568791 L5.801120021 9.561649406 C5.7873550298 9.6564099439 5.779914494 9.7475565073 5.779914494 9.8343450426 C5.779914494 10.0714324009 5.8638331084 10.1900558 6.0308731368 10.1900558 L6.1776642786 10.177938356 L5.8424681413 12.0391352369 C5.7529159784 12.102220351 5.4940384797 12.1341083615 5.0697684997 12.1341083615 C4.6517166817 12.1341083615 4.3189652919 11.9974150898 4.0713017435 11.7247725998 C3.8245416887 11.4521301098 3.7012413814 11.0950375387 3.7012413814 10.6517941924 C3.7012413814 10.5177582548 3.7425895017 10.2138123679 3.826348676 9.7392656246 L4.0038054546 8.7318170788 C4.0174641524 8.6531599862 4.0243732213 8.5739714267 4.0243732213 8.4946765739 C4.0243732213 8.2892114928 3.9704824836 8.1276455728 3.8630730348 8.0088095869 C3.7551852659 7.889973601 3.6023885488 7.8311402216 3.407287071 7.8311402216 C3.1776933953 7.8311402216 2.9863653321 7.9160686229 2.8319210678 8.086031719 C2.679921551 8.2559416684 2.5754883166 8.4910094527 2.5197374448 8.790863045 L1.9346987451 12.0745840752 L0 12.0745840752 L2.1516235445 0 Z",
+        "M7.5636235093 7.0369161728 C8.1773082718 6.3651420845 8.8707662073 6.0290956003 9.6433595556 6.0290956003 C10.0402058465 6.0290956003 10.3816732925 6.0926058879 10.6676024536 6.2187761162 C10.9534784679 6.345371518 11.1267898051 6.5149625873 11.1905126795 6.7286654044 L11.3049906372 6.1003121571 L13.196321688 6.1003121571 L12.570094308 9.596991951 C12.5487824877 9.7157747902 12.5379405641 9.7987367642 12.5379405641 9.8460373132 C12.5379405641 9.9569012964 12.5713166818 10.0478884198 12.6383877972 10.1188392432 C12.7044491257 10.1900558 12.7853383791 10.2252920516 12.8835003048 10.2252920516 C12.9253267453 10.2252920516 12.9947894615 10.2175857824 13.0917821602 10.2017480705 L12.7681720001 12.0391352369 C12.5460720068 12.102220351 12.329605562 12.1341083615 12.1211111199 12.1341083615 C11.8416127077 12.1341083615 11.5871995304 12.0784106365 11.3576058546 11.96791868 C11.1067535052 11.8416421584 10.9264799523 11.6633881795 10.8146061821 11.4349105841 L10.8036048184 11.4104099627 C10.3925683628 11.9009538579 9.8064667294 12.1455880453 9.0481166925 12.1455880453 C8.4069019476 12.1455880453 7.8454072289 11.8969678566 7.3649612037 11.3989834256 C6.8837711249 10.9009989946 6.6445047526 10.2491017662 6.6445047526 9.4431323002 C6.6445047526 8.5107268725 6.9505233603 7.7084245278 7.5636235093 7.0369161728 Z M8.9167380891 9.9347922758 C9.1021668703 10.1288308198 9.3432933766 10.2252920516 9.6433595556 10.2252920516 C9.9786088395 10.2252920516 10.2605519992 10.1007693706 10.4900925283 9.8524680619 C10.7197393508 9.6032632597 10.8358117091 9.3165368984 10.8358117091 8.9926610049 C10.8358117091 8.6924885325 10.742751865 8.4436557571 10.5573762305 8.2458437984 C10.3730635297 8.0483507199 10.1309272365 7.9493384473 9.8317114044 7.9493384473 C9.5033711894 7.9493384473 9.2237133371 8.073914275 8.9900805133 8.3230127839 C8.7564476896 8.5719518527 8.6404816246 8.8624516286 8.6404816246 9.193927498 C8.6404816246 9.4948440239 8.7324253883 9.7412851986 8.9167380891 9.9347922758 Z",
+        "M14.9385762896 3.8125068421 L18.0013665537 3.8125068421 C18.718421617 3.8125068421 19.3062770909 4.0596920704 19.7615315878 4.5533184733 C20.2178490184 5.0477420764 20.4468580807 5.6774771376 20.4468580807 6.4441180572 C20.4468580807 7.2974412188 20.166084148 8.0503702939 19.605492923 8.7023206691 C19.0433072975 9.3541116042 18.3563332575 9.679953925 17.5410631218 9.679953925 L15.8681117964 9.679953925 L15.4403872819 12.0745840752 L13.4551991868 12.0745840752 L14.9385762896 3.8125068421 Z M17.6036167691 7.6416722924 C17.8406509806 7.6416722924 18.0428209673 7.5368670311 18.2098078491 7.3273096553 C18.377273051 7.1178585729 18.4607133452 6.8830033754 18.4607133452 6.6218405692 C18.4607133452 6.4008566563 18.3953429237 6.2168096889 18.2615195728 6.0706563073 C18.1293969159 5.9246092191 17.958902353 5.8516919684 17.7499295907 5.8516919684 L16.5594438645 5.8516919684 L16.2348770641 7.6416722924 L17.6036167691 7.6416722924 Z",
+        "M21.6261535525 3.8125068421 L24.687508856 3.8125068421 C25.4052548262 3.8125068421 25.9925256867 4.0596920704 26.4488431172 4.5533184733 C26.9052136945 5.0477420764 27.1331598231 5.6774771376 27.1331598231 6.4441180572 C27.1331598231 7.2974412188 26.8530236506 8.0503702939 26.2925918657 8.7023206691 C25.7318943473 9.3541116042 25.0435384935 9.679953925 24.227736891 9.679953925 L22.556061086 9.679953925 L22.1278051047 12.0745840752 L20.1416072226 12.0745840752 L21.6261535525 3.8125068421 Z M24.2909282985 7.6416722924 C24.5268464297 7.6416722924 24.7299730567 7.5368670311 24.896534765 7.3273096553 C25.0638405269 7.1178585729 25.1479185813 6.8830033754 25.1479185813 6.6218405692 C25.1479185813 6.4008566563 25.0813789327 6.2168096889 24.9499471826 6.0706563073 C24.8167084453 5.9246092191 24.6469047893 5.8516919684 24.4371879734 5.8516919684 L23.2454267268 5.8516919684 L22.9211256598 7.6416722924 L24.2909282985 7.6416722924 Z",
+        "M28.8622634977 12.3708768397 L27.5563431734 6.1003121571 L29.5002362949 6.1003121571 L30.1896019357 9.5855654139 L31.9863850353 6.1003121571 L34.0559700649 6.1003121571 L30.7648616455 12.4417745164 C30.5553042697 12.8531298521 30.3866698407 13.1632939012 30.2573639581 13.3729044237 C30.1288552757 13.5821960661 29.9617621005 13.805199553 29.755021499 14.0422869112 C29.5506193515 14.2796400029 29.321663436 14.447583525 29.0718208735 14.5460643308 C28.8210748174 14.6450766035 28.5309470684 14.6941841397 28.2032977602 14.6941841397 C27.7441104087 14.6941841397 27.4099240584 14.6390178815 27.2002603892 14.5282070449 L27.5139321194 12.7624084622 C27.7301859774 12.8490907041 27.9529237309 12.8927241319 28.1832614603 12.8927241319 C28.5379624307 12.8927241319 28.7613910911 12.7305735984 28.8520593343 12.4068039982 L28.8622634977 12.3708768397 Z",
+        "M24.3018528194 12.0745840752 L25.6452947028 12.9960944327 C24.7497730739 14.395074601 23.5470104637 15.5150878239 22.0353593249 16.356718715 C20.5238144794 17.1980307259 18.926756619 17.6182084113 17.2425381966 17.6182084113 C14.9426685843 17.6182084113 13.0746157812 16.8618779483 11.6407182414 15.3494827559 L12.8973715894 13.9601752841 C14.1190544192 14.8960352463 15.5873910104 15.3641512408 17.300361789 15.3641512408 C18.6576749569 15.3641512408 19.9544540515 15.06876197 21.1909648062 14.478036575 C22.427635001 13.8866734199 23.4648456899 13.0861780624 24.3018528194 12.0745840752 Z"
+      ]
+    }
+  },
+  "superscript": {
+    "sizePercent": "58.3",
+    "positionPercent": "33.3"
+  },
+  "colors": {
+    "Color/u42ef4": {
+      "Self": "Color/u42ef4",
+      "Model": "Process",
+      "Space": "RGB",
+      "ColorValue": "239 64 35",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "$ID/",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u43529": {
+      "Self": "Color/u43529",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "100 84 27 13",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "$ID/",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u434f3": {
+      "Self": "Color/u434f3",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "0 0 0 0",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "$ID/",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u4352f": {
+      "Self": "Color/u4352f",
+      "Model": "Process",
+      "Space": "RGB",
+      "ColorValue": "239 64 35",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "$ID/",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u42ef0": {
+      "Self": "Color/u42ef0",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "100 84 27 13",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "$ID/",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u145": {
+      "Self": "Color/u145",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "74.00000095367432 18.99999976158142 0 0",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u146": {
+      "Self": "Color/u146",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "96.36073197362123 58.561294760710744 0 34.40112590789795",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    },
+    "Color/u1d6": {
+      "Self": "Color/u1d6",
+      "Model": "Process",
+      "Space": "CMYK",
+      "ColorValue": "0 0 0 40.00000059604645",
+      "ColorOverride": "Normal",
+      "ConvertToHsb": "false",
+      "AlternateSpace": "NoAlternateColor",
+      "AlternateColorValue": "",
+      "Name": "",
+      "ColorEditable": "true",
+      "ColorRemovable": "true",
+      "Visible": "false",
+      "SwatchCreatorID": "7937",
+      "SwatchColorGroupReference": "n"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+/* Shapes and text coordinates are taken from Broshura_BG_Gusht.idml. */
+.brochure-page .brochure-price.reference-price-card {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 56%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  font-family: "SkolaSans", Arial, sans-serif;
+}
+.reference-price-card .reference-price-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.reference-price-card svg {
+  font-family: "SkolaSans", Arial, sans-serif;
+  font-kerning: normal;
+  letter-spacing: 0;
+}
+.reference-price-card .reference-saving-tab {
+  position: absolute;
+  z-index: 3;
+  bottom: 100%;
+  display: block;
+  padding: 0;
+  line-height: 1;
+}
+.reference-saving-tab svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  text-anchor: middle;
+}
+.reference-price-card .reference-price-increase {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+}
+.cs-page-preview.edit-view .reference-saving-tab[role="button"] {
+  cursor: pointer;
+}
+.cs-page-preview.edit-view .reference-saving-tab[role="button"]:is(:hover, :focus-visible) {
+  outline: 2px solid #31b6fb;
+  outline-offset: 2px;
+}
+.brochure-cover .cover-feature-products .brochure-price.reference-price-card {
+  flex: 0 0 17cqw;
+  width: 17cqw;
+  max-width: 58%;
+}
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price.reference-price-card {
+  flex-basis: 22cqw;
+  width: 22cqw;
+  max-width: 48%;
+}
+/* Blue and gray offers put the detail row between the photograph and name. */
+.brochure-page .brochure-product:is(.style-card,.style-compact):not(.details-left)>.brochure-product-image-wrap { order:0; }
+.brochure-page .brochure-product:is(.style-card,.style-compact):not(.details-left)>.brochure-specs { order:1; }
+.brochure-page .brochure-product:is(.style-card,.style-compact):not(.details-left)>.brochure-product-bottom { order:2; }

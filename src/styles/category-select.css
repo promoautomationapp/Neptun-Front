@@ -1,0 +1,41 @@
+.cs-manual-filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+.cs-category-select { display: grid; gap: 5px; min-width: 0; position: relative; }
+.cs-category-select.is-open { z-index: 20; }
+.cs-category-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; min-height: 39px; padding: 5px 11px;
+  border: 1px solid #d7e2eb; border-radius: 8px; background: #fff;
+  color: #24435e; text-align: left; box-shadow: 0 1px 2px #21415d0a;
+}
+.cs-category-trigger:hover, .cs-category-select.is-open .cs-category-trigger { border-color: #7db8de; background: #fafdff; }
+.cs-category-trigger-text { display: grid; min-width: 0; font-size: 12px; line-height: 1.1; }
+.cs-category-trigger-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-category-trigger-text small { margin-top: 3px; color: #73879b; font-size: 10px; }
+.cs-category-trigger svg { width: 16px; height: 16px; flex: none; fill: none; stroke: #4d7596; stroke-width: 1.8; stroke-linecap: round; }
+.cs-category-popover {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+  width: max(100%, min(340px, calc(100vw - 52px)));
+  overflow: hidden; border: 1px solid #dbe6ee; border-radius: 12px;
+  background: #fff; box-shadow: 0 18px 42px #0c355430;
+}
+.cs-category-search { display: flex; align-items: center; gap: 7px; margin: 8px; padding: 0 9px; border: 1px solid #d7e2eb; border-radius: 8px; color: #537594; }
+.cs-category-search input { width: 100%; height: 36px; min-width: 0; border: 0; background: transparent; outline: none; color: #24435e; font-size: 12px; }
+.cs-category-options { max-height: 300px; overflow: auto; padding: 0 6px 6px; }
+.cs-category-options button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; border: 0; border-radius: 7px; background: transparent; color: #24435e; text-align: left; }
+.cs-category-options button:hover, .cs-category-options button:focus-visible { background: #eaf4fb; }
+.cs-category-options button[aria-pressed="true"] { background: #e4f2fb; color: #14598b; }
+.cs-category-options button b, .cs-category-all span { flex: none; color: #6f879b; font-size: 10px; font-weight: 700; }
+.cs-category-all { padding: 10px 11px; font-size: 12px; font-weight: 800; }
+.cs-category-group { margin-top: 4px; border-top: 1px solid #edf2f6; padding-top: 4px; }
+.cs-category-parent { padding: 8px 11px; }
+.cs-category-parent span { display: grid; gap: 2px; }
+.cs-category-parent strong { font-size: 12px; }
+.cs-category-parent small { color: #8296a7; font-size: 10px; }
+.cs-category-child { padding: 7px 11px 7px 23px; font-size: 11px; }
+.cs-category-empty { margin: 12px; color: #7b8fa1; font-size: 12px; }
+@media (max-width: 680px) { .cs-manual-filter-row { grid-template-columns: 1fr; } }

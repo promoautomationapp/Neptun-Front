@@ -1,0 +1,4792 @@
+import { CatalogNavigator, filterCatalog } from "../products/CatalogNavigator";
+import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
+import { CatalogRefreshControl } from "../products/CatalogRefreshControl";
+import { PageSettingsTabs, PageSettingsGroup as SettingsGroup } from "../brochure/PageSettingsTabs";
+import { CoverImageControls } from "../brochure/CoverImageControls";
+import { loadCatalog } from "../products/catalog-loader";
+import { screenArtworkForPhotoChange } from "../brochure/screenGeometry";
+import { BrochureIconControls } from "../settings/BrochureIconControls";
+import type {
+  Artwork,
+  Campaign,
+  CampaignMutator,
+  Gradient,
+  JsonValue,
+  PageLayout,
+  Placement,
+  Product,
+  Store,
+} from "../../domain/models";
+import type { AiProposal } from "../brochure/AiReview";
+import type { DetailEntry } from "../brochure/detailFacts";
+import { productSchema } from "../../domain/schemas";
+import { z } from "zod";
+import { apiFetch as fetch } from "../../api/client";
+import { requestAi } from "../ai/ai.api";
+import {
+  missingImageTargets,
+  startMissingImageSearch,
+  finishMissingImageSearch,
+  findMissingProductImages,
+} from "../ai/missing-product-images";
+import type { MissingImageTarget } from "../ai/missing-product-images";
+import { MissingCatalogNotice } from "../brochure/MissingCatalogNotice";
+import {
+  catalogWithExcelProducts,
+  campaignContainingExcelProduct,
+  hasRegularPrice,
+} from "../brochure/missingCatalog";
+import { startCampaignAiReview } from "../ai/campaign-review";
+import type { CampaignReviewTask } from "../ai/campaign-review";
+import { getLanguage, setLanguage, t } from "../brochure/i18n";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FilterDate, FilterSelect } from "../brochure/FilterControls";
+import {
+  AiReview,
+  applyAiProposals,
+  recordTextReview,
+} from "../brochure/AiReview";
+import { BrochureExport } from "../brochure/BrochureExport";
+import { ReviewPanel, REVIEW_STATUS } from "../brochure/ReviewPanel";
+import { BrochureComments } from "../brochure/BrochureComments";
+import {
+  brochurePageCount,
+  includesOnlineStore,
+  includesStoresPage,
+  includesStoresFooter,
+  compactStoresFooterHeight,
+  selectedStoreIndexes,
+} from "../brochure/storesSelection";
+import { OfferStyleControls } from "../brochure/OfferStyleControls";
+import { CategorySavingsControls } from "../brochure/CategorySavingsControls";
+import { ProductImageEditor } from "../brochure/ProductImageEditor";
+import { ScreenImageEditor } from "../brochure/ScreenImageEditor";
+import { applyTvWallpaper, campaignTelevisions } from "../brochure/tvWallpaper";
+import { BrochureFormatPicker } from "../brochure/BrochureFormatPicker";
+import {
+  brochureExportGeometry,
+  resolveBrochureFormat,
+} from "../brochure/brochureFormat";
+import { ProductPriceEditor } from "../brochure/ProductPriceEditor";
+import { BackgroundPicker } from "../brochure/BackgroundPicker";
+import { BrochureGridPicker } from "../brochure/BrochureGridPicker";
+import { PageLayersControls } from "../brochure/PageLayersControls";
+import { CoverDesignControls } from "../brochure/CoverDesignControls";
+import { ImageUploadButton } from "../brochure/ImageUploadButton";
+import {
+  pageBackgroundColor,
+  pageBackgroundGradient,
+  pageBackgroundImage,
+  productImageBackgroundContext,
+} from "../brochure/pageBackground";
+import {
+  imageBackgroundSignature,
+  IMAGE_PREPARATION_REVISION,
+} from "../brochure/imageReview";
+import { BrandLogoManager } from "../brochure/BrandLogoManager";
+import { loadPreparedBrandLogos } from "../brochure/brandLogos";
+import { mergeCampaignSnapshots } from "../brochure/mergeCampaignSnapshots";
+import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
+import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
+import {
+  placeProductOnPage,
+  reorderProducts,
+} from "../brochure/productPlacement";
+import { moveStore, orderedStoreIndexes } from "../brochure/brochureLayout";
+import {
+  applyProductPageLayout,
+  materializeProductPages,
+  reviewCommentsForLayout,
+} from "../brochure/campaignPages";
+import { applyCoverProductPlacement, repairCoverProductLayout } from "../brochure/coverElements";
+import {
+  storeDisplayChanges,
+  withoutFooterStorePlacements,
+} from "../brochure/storesDesign";
+import { reorderDisplayedDetails } from "../brochure/detailRows";
+import { savedDetailEntries } from "../brochure/detailFacts";
+import { searchProducts } from "../brochure/productSearch";
+import { SettingsPage } from "../settings/SettingsPage";
+import { UsersPage } from "../users/UsersPage";
+import { ProfilePage } from "../users/ProfilePage";
+import { canManageUsers, roleLabel } from "../auth/auth.api";
+import { resolveSettings } from "../settings/settings.schema";
+import type { Settings } from "../../domain/models";
+import {
+  bootstrapWorkspace,
+  getCampaigns,
+  getMembers,
+  getSession,
+  hasPendingSaves,
+  login,
+  logout,
+  removeCampaign,
+  reviewCampaign,
+  saveCampaign,
+} from "../brochure/teamStorage";
+import { downloadJson, normalize, readImage } from "../brochure/utils";
+import {
+  BROCHURE_ASSETS,
+  brochureAssetSource,
+  COVER_TEMPLATES,
+  CoverPage,
+  coverProducts,
+  discount,
+  installmentCount,
+  money,
+  paymentTextFor,
+  PRICE_LOGOS,
+  ProductPage,
+  splitPages,
+  StoresPage,
+  validOffer,
+  validSale,
+} from "../brochure/Brochure";
+import {
+  Button,
+  CreateCampaign,
+  Details,
+  Field,
+  ImportSales,
+  ManualPicker,
+  Modal,
+  ProductImage,
+} from "../brochure/Modals";
+import "../../styles/campaign.css";
+import "../../styles/brochure-reference.css";
+import "../../styles/responsive.css";
+import "../../styles/ai-review.css";
+import "../../styles/export.css";
+import "../../styles/review.css";
+import "../../styles/hero.css";
+import "../../styles/category-select.css";
+import "../../styles/brochure-workspace.css";
+import "../../styles/cover-layout.css";
+import "../../styles/product-editing.css";
+import "../../styles/import-flex.css";
+import "../../styles/page-background.css";
+import "../../styles/brochure-direct-edit.css";
+import "../../styles/stores-design.css";
+import "../../styles/brochure-comments.css";
+import "../../styles/brochure-import-artwork.css";
+import "../../styles/artwork-typography.css";
+import "../../styles/reference-price-card.css";
+import "../../styles/mobile-details.css";
+import "../../styles/brochure-format.css";
+
+const logo = "/api/assets/app/logo";
+type SessionUser = NonNullable<Awaited<ReturnType<typeof getSession>>["user"]>;
+type TeamMember = Awaited<ReturnType<typeof getMembers>>[number];
+type CampaignUpdater = (mutator: CampaignMutator) => void;
+interface CampaignControlsProps {
+  campaign: Campaign;
+  onUpdate: CampaignUpdater;
+}
+interface StoreControlsProps extends CampaignControlsProps {
+  settings: Settings;
+}
+interface CampaignLibraryProps {
+  campaigns: Campaign[];
+  onCreate: () => void;
+  onOpen: (id: string) => void;
+  onDuplicate: (campaign: Campaign) => void;
+  onDelete: (campaign: Campaign) => void;
+  onPrint: (id: string) => void;
+}
+interface ProductEditorProps extends CampaignControlsProps {
+  onImport: () => void;
+  onManual: () => void;
+  onDetails: (product: Product) => void;
+  onImageEdit: (product: Product) => void;
+  onAiReview: () => void;
+  onReCut: () => void;
+  onNext: () => void;
+  onMakeSocial: (products: Product[]) => void;
+}
+interface BrochureEditorProps extends StoreControlsProps {
+  user: SessionUser;
+  members: TeamMember[];
+  onReviewAction: (
+    action: string,
+    details?: Record<string, JsonValue | undefined>,
+  ) => Promise<boolean>;
+  onToast: (message: string) => void;
+  onAiReview: () => void;
+  onReCut: () => void;
+  onPrint: () => void;
+  onExport: (page: number) => void;
+  onAddProducts: () => void;
+  onImportProducts: () => void;
+  onEditImage: (product: Product) => void;
+  onEditScreen: (product: Product) => void;
+  onEditDetails: (product: Product) => void;
+  onEditPrice: (product: Product) => void;
+  onEditSavings: (product: Product) => void;
+  onMakeSocial: (products: Product[]) => void;
+}
+interface CampaignFilters {
+  query: string;
+  status: string;
+  period: string;
+  type: string;
+  from: string;
+  to: string;
+  sort: string;
+}
+interface SocialSeed {
+  campaignId: string;
+  products: Product[];
+}
+interface ImportOptions {
+  brochureImport?: boolean;
+  warnings?: Campaign["brochureImportWarnings"];
+}
+interface DetailSelection {
+  product: Product;
+  editable: boolean;
+}
+type BrochureCssStyle = React.CSSProperties & {
+  "--brochure-page-aspect": string | number;
+};
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? errorMessage(error) : String(error);
+}
+function reviewStatusLabel(status: string | undefined): string {
+  return (
+    Object.entries(REVIEW_STATUS).find(([key]) => key === status)?.[1] ||
+    "In progress"
+  );
+}
+function brochureAspectStyle(aspect: string | number): BrochureCssStyle {
+  return { "--brochure-page-aspect": aspect };
+}
+const catalogSnapshotSchema = z.object({
+  products: z.array(productSchema),
+  count: z.number().optional(),
+});
+const SocialStudio = React.lazy(() =>
+  import("../social/SocialStudio").then((module) => ({
+    default: module.SocialStudio,
+  })),
+);
+function TrashIcon({ size = 18 }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" />
+    </svg>
+  );
+}
+const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎" };
+
+function LanguageSwitch({
+  language,
+  onChange,
+}: {
+  language: string;
+  onChange: (language: string) => void;
+}) {
+  return (
+    <div
+      className="cs-language-switch"
+      role="group"
+      aria-label="Language / Gjuha"
+    >
+      <button
+        type="button"
+        lang="en"
+        aria-pressed={language === "en"}
+        className={language === "en" ? "active" : ""}
+        onClick={() => onChange("en")}
+      >
+        EN
+      </button>
+      <button
+        type="button"
+        lang="sq"
+        aria-pressed={language === "sq"}
+        className={language === "sq" ? "active" : ""}
+        onClick={() => onChange("sq")}
+      >
+        SQ
+      </button>
+    </div>
+  );
+}
+
+const MINI_COVER_BASE_WIDTH = 794;
+export function CampaignCoverThumbnail({ campaign }: { campaign: Campaign }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  React.useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const updateScale = () => {
+      frame.style.setProperty(
+        "--mini-cover-scale",
+        String(frame.getBoundingClientRect().width / MINI_COVER_BASE_WIDTH),
+      );
+    };
+    updateScale();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div
+      ref={frameRef}
+      className="cs-campaign-mini-cover"
+      aria-hidden="true"
+      style={brochureAspectStyle(resolveBrochureFormat(campaign).aspectRatio)}
+    >
+      <div className="cs-campaign-mini-cover-canvas">
+        <CoverPage campaign={campaign} />
+      </div>
+    </div>
+  );
+}
+
+function CampaignLibrary({
+  campaigns,
+  onCreate,
+  onOpen,
+  onDuplicate,
+  onDelete,
+  onPrint,
+}: CampaignLibraryProps) {
+  const emptyFilters = {
+    query: "",
+    status: "all",
+    period: "all",
+    type: "all",
+    from: "",
+    to: "",
+    sort: "updated_desc",
+  };
+  const [filters, setFilters] = useState<CampaignFilters>(() => {
+    try {
+      return {
+        ...emptyFilters,
+        ...JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}"),
+      };
+    } catch {
+      return emptyFilters;
+    }
+  });
+  useEffect(() => {
+    localStorage.setItem("neptun-campaign-filters", JSON.stringify(filters));
+  }, [filters]);
+  const setFilter = (key: keyof CampaignFilters, value: string) =>
+    setFilters((current) => ({ ...current, [key]: value }));
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const campaignTypes = [
+    ...new Set(
+      campaigns
+        .map((item) => item.type)
+        .filter((value): value is NonNullable<typeof value> => Boolean(value)),
+    ),
+  ].sort();
+  const filtered = campaigns
+    .filter((item) => {
+      const searchable = [
+        item.name,
+        item.type,
+        item.startDate,
+        item.endDate,
+        ...(item.products || []).flatMap((product: Product) => [
+          product.code,
+          product.name,
+          product.brand,
+        ]),
+      ].join(" ");
+      if (
+        filters.query &&
+        !normalize(searchable).includes(normalize(filters.query))
+      )
+        return false;
+      if (
+        filters.status !== "all" &&
+        (item.status || "in_progress") !== filters.status
+      )
+        return false;
+      if (filters.type !== "all" && item.type !== filters.type) return false;
+      const start = item.startDate || item.endDate || "";
+      const end = item.endDate || item.startDate || "";
+      if (filters.from && end < filters.from) return false;
+      if (filters.to && start > filters.to) return false;
+      if (filters.period === "one_day" && start !== end) return false;
+      if (filters.period === "past" && end >= today) return false;
+      if (filters.period === "current" && !(start <= today && end >= today))
+        return false;
+      if (filters.period === "upcoming" && start <= today) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (filters.sort === "updated_asc")
+        return (a.updatedAt || "").localeCompare(b.updatedAt || "");
+      if (filters.sort === "start_desc")
+        return (b.startDate || "").localeCompare(a.startDate || "");
+      if (filters.sort === "start_asc")
+        return (a.startDate || "").localeCompare(b.startDate || "");
+      if (filters.sort === "name") return a.name.localeCompare(b.name);
+      return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+    });
+  const filterActive = Object.entries(filters).some(
+    ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
+  );
+  return (
+    <div className="cs-main-panel">
+      <div className="cs-hero">
+        <div className="cs-hero-copy">
+          <span className="cs-eyebrow">
+            NEPTUN KOSOVO · {t("CAMPAIGN STUDIO")}
+          </span>
+          <h1>
+            {t("Make every offer")}
+            <br />
+            <em>{t("look its best.")}</em>
+          </h1>
+          <p>
+            {t(
+              "Create campaigns, match sale prices to the product catalog and compose brochures inspired by NEPTUN’s visual standards.",
+            )}
+          </p>
+          <Button tone="primary" onClick={onCreate}>
+            {t("＋ New campaign")}
+          </Button>
+        </div>
+        <div className="cs-hero-visual" aria-hidden="true">
+          <div className="cs-hero-sheet">
+            <div className="cs-hero-sheet-products">
+              <div>
+                <img
+                  src="/api/assets/legacy/catalog-images/84064143/01_3156fbb21d.jpg"
+                  alt=""
+                />
+                <span>LG NanoCell</span>
+              </div>
+              <div>
+                <img
+                  src="/api/assets/legacy/catalog-images/84057019/01_744d8a5ac2.jpeg"
+                  alt=""
+                />
+                <span>BEKO</span>
+              </div>
+            </div>
+            <div className="cs-hero-sheet-bottom">
+              <b>NEPTUN</b>
+              <span>Oferta që nuk priten</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="cs-section-head">
+        <div>
+          <span className="cs-eyebrow">{t("YOUR WORKSPACE")}</span>
+          <h2>{t("Campaigns")}</h2>
+          <p>
+            {campaigns.length} {t("saved for the team")}
+          </p>
+        </div>
+        <div className="cs-search">
+          <span>⌕</span>
+          <input
+            type="search"
+            value={filters.query}
+            onChange={(event) => setFilter("query", event.target.value)}
+            placeholder={t("Search campaigns, products or codes")}
+          />
+        </div>
+      </div>
+      <div className="cs-campaign-filters">
+        <div className="cs-campaign-filter-grid">
+          <FilterSelect
+            label={t("Status")}
+            value={filters.status}
+            onChange={(value: string) => setFilter("status", value)}
+            options={[
+              { value: "all", label: t("All statuses") },
+              { value: "in_progress", label: t("In progress") },
+              { value: "in_review", label: t("In review") },
+              { value: "changes_requested", label: t("Changes requested") },
+              { value: "completed", label: t("Completed") },
+            ]}
+          />
+          <FilterSelect
+            label={t("Campaign period")}
+            value={filters.period}
+            onChange={(value: string) => setFilter("period", value)}
+            options={[
+              { value: "all", label: t("Any time") },
+              { value: "past", label: t("Past") },
+              { value: "current", label: t("Current") },
+              { value: "upcoming", label: t("Upcoming") },
+              { value: "one_day", label: t("One day") },
+            ]}
+          />
+          <FilterSelect
+            label={t("Type")}
+            value={filters.type}
+            onChange={(value: string) => setFilter("type", value)}
+            options={[
+              { value: "all", label: t("All types") },
+              ...campaignTypes.map((type) => ({ value: type, label: t(type) })),
+            ]}
+          />
+          <FilterDate
+            label={t("From date")}
+            value={filters.from}
+            min={undefined}
+            max={filters.to || undefined}
+            onChange={(value: string) => setFilter("from", value)}
+          />
+          <FilterDate
+            label={t("To date")}
+            value={filters.to}
+            max={undefined}
+            min={filters.from || undefined}
+            onChange={(value: string) => setFilter("to", value)}
+          />
+          <FilterSelect
+            label={t("Sort by")}
+            value={filters.sort}
+            onChange={(value: string) => setFilter("sort", value)}
+            options={[
+              { value: "updated_desc", label: t("Recently edited") },
+              { value: "updated_asc", label: t("Oldest edited") },
+              { value: "start_desc", label: t("Newest campaign date") },
+              { value: "start_asc", label: t("Oldest campaign date") },
+              { value: "name", label: t("Name A–Z") },
+            ]}
+          />
+        </div>
+        <div className="cs-campaign-filter-footer">
+          <span>
+            {t("Showing")} {filtered.length} {t("of")} {campaigns.length}{" "}
+            {t("campaigns")}
+          </span>
+          {filterActive && (
+            <button type="button" onClick={() => setFilters(emptyFilters)}>
+              {t("Clear filters")}
+            </button>
+          )}
+        </div>
+      </div>
+      {filtered.length ? (
+        <div className="cs-campaign-grid">
+          {filtered.map((item) => (
+            <article className="cs-campaign-card" key={item.id}>
+              <button
+                className="cs-campaign-cover"
+                type="button"
+                aria-label={`${item.name} · ${item.startDate === item.endDate ? item.startDate : `${item.startDate} – ${item.endDate}`}`}
+                onClick={() => onOpen(item.id)}
+              >
+                <CampaignCoverThumbnail campaign={item} />
+                <div className="cs-campaign-badges">
+                  <span>{t(item.type)}</span>
+                  <span
+                    className={`status-${item.status || "in_progress"} ${
+                      (item.status || "in_progress") === "completed"
+                        ? "completed"
+                        : "progress"
+                    }`}
+                  >
+                    {t(reviewStatusLabel(item.status))}
+                  </span>
+                </div>
+              </button>
+              <div className="cs-campaign-card-title">
+                <strong>{item.name}</strong>
+                <small>
+                  {item.startDate === item.endDate
+                    ? item.startDate
+                    : `${item.startDate} → ${item.endDate}`}
+                </small>
+              </div>
+              <div className="cs-campaign-card-bottom">
+                <span>
+                  {item.products.length} {t("products")} ·{" "}
+                  {t(item.theme === "light" ? "White / gray" : "NEPTUN Blue")}
+                  {(item.reviewComments || []).some(
+                    (comment) => !comment.fixed,
+                  ) &&
+                    ` · ${(item.reviewComments || []).filter((comment) => !comment.fixed).length} ${t("open comments")}`}
+                </span>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => onDuplicate(item)}
+                    title={t("Duplicate campaign")}
+                  >
+                    ⧉
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(item)}
+                    title={t("Delete campaign")}
+                    aria-label={`${t("Delete campaign")}: ${item.name}`}
+                  >
+                    <TrashIcon />
+                  </button>
+                  <button
+                    className="cs-open-arrow"
+                    type="button"
+                    onClick={() => onOpen(item.id)}
+                    title={t("Open campaign")}
+                  >
+                    {t(
+                      (item.status || "in_progress") === "completed"
+                        ? "Open"
+                        : "Continue",
+                    )}{" "}
+                    →
+                  </button>
+                </div>
+              </div>
+              <button
+                className="cs-campaign-pdf"
+                type="button"
+                onClick={() => onPrint(item.id)}
+              >
+                {t("↓ Download brochure")}
+              </button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="cs-empty">
+          <b>✳</b>
+          <h3>
+            {campaigns.length
+              ? t("No campaigns match these filters")
+              : "Your first campaign starts here"}
+          </h3>
+          <p>
+            {campaigns.length
+              ? t("Adjust the search or clear filters to see saved campaigns.")
+              : "Create a campaign to organize your offers and design a brochure."}
+          </p>
+          {campaigns.length > 0 && filterActive && (
+            <Button onClick={() => setFilters(emptyFilters)}>
+              {t("Clear filters")}
+            </Button>
+          )}
+          {!campaigns.length && (
+            <Button tone="primary" onClick={onCreate}>
+              {t("Create campaign →")}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductEditor({
+  campaign,
+  onUpdate,
+  onImport,
+  onManual,
+  onDetails,
+  onImageEdit,
+  onAiReview,
+  onReCut,
+  onNext,
+  onMakeSocial,
+}: ProductEditorProps) {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [draggingCode, setDraggingCode] = useState<string | null>(null);
+  const [dropCode, setDropCode] = useState<string | null>(null);
+  const categories = [
+    ...new Set(
+      campaign.products
+        .map((p) => p.category)
+        .filter((value): value is NonNullable<typeof value> => Boolean(value)),
+    ),
+  ];
+  const filtered = campaign.products.filter(
+    (p) =>
+      (!search ||
+        normalize(`${p.code} ${p.name} ${p.brand}`).includes(
+          normalize(search),
+        )) &&
+      (!category || p.category === category),
+  );
+  const valid = campaign.products.filter(validOffer).length;
+  const discountedProducts = campaign.products.filter(validSale);
+  const featured = coverProducts(campaign).map((product: Product) =>
+    String(product.code),
+  );
+  const featuredSet = new Set(featured);
+  function toggleCover(code: string) {
+    onUpdate((draft: Campaign) => {
+      const current = coverProducts(draft).map((product: Product) =>
+        String(product.code),
+      );
+      const key = String(code);
+      if (current.includes(key)) {
+        const remaining = current.filter((item: string) => item !== key);
+        if (remaining.length) draft.coverProductCodes = remaining;
+      } else if (current.length < 3) {
+        draft.coverProductCodes = [...current, key];
+      }
+    });
+  }
+  function updatePrice(code: string, sale: string) {
+    onUpdate((draft: Campaign) => {
+      draft.products = draft.products.map((p) =>
+        p.code === code && String(p.sale) !== String(sale)
+          ? { ...p, sale, confirmedAboveRegular: false }
+          : p,
+      );
+    });
+  }
+  function confirmHigher(code: string, confirmed: boolean) {
+    onUpdate((draft: Campaign) => {
+      draft.products = draft.products.map((p) =>
+        p.code === code ? { ...p, confirmedAboveRegular: confirmed } : p,
+      );
+    });
+  }
+  function remove(code: string) {
+    onUpdate((draft: Campaign) => {
+      draft.products = draft.products.filter((p) => p.code !== code);
+      draft.coverProductCodes = (draft.coverProductCodes || []).filter(
+        (item) => String(item) !== String(code),
+      );
+    });
+  }
+  function move(code: string, direction: number) {
+    onUpdate((draft: Campaign) => {
+      const index = draft.products.findIndex((p) => p.code === code);
+      if (index < 0) return;
+      const target = index + direction;
+      if (target < 0 || target >= draft.products.length) return;
+      const first = draft.products[index];
+      const second = draft.products[target];
+      if (!first || !second) return;
+      draft.products[index] = second;
+      draft.products[target] = first;
+    });
+  }
+  function dropOnProduct(
+    product: Product,
+    event: React.DragEvent<HTMLElement>,
+  ) {
+    event.preventDefault();
+    const source = draggingCode || event.dataTransfer.getData("text/plain");
+    const target = String(product.code);
+    setDraggingCode(null);
+    setDropCode(null);
+    if (!source || String(source) === target) return;
+    const after =
+      event.clientY >
+      event.currentTarget.getBoundingClientRect().top +
+        event.currentTarget.getBoundingClientRect().height / 2;
+    onUpdate((draft: Campaign) => {
+      draft.products = reorderProducts(draft.products, source, target, after);
+    });
+  }
+  return (
+    <div className="cs-editor-section">
+      <div className="cs-editor-section-head">
+        <div>
+          <span className="cs-eyebrow">{t("02 / OFFERS")}</span>
+          <h2>{t("Campaign products")}</h2>
+          <p>
+            {t(
+              "Import a sale file or choose products manually. All prices update live.",
+            )}
+          </p>
+        </div>
+        <div className="cs-actions">
+          <Button onClick={onAiReview}>{t("✦ AI review")}</Button>
+          <Button onClick={onReCut}>{t("Re-cut product image")}</Button>
+          <Button onClick={onManual}>{t("＋ Add manually")}</Button>
+          <Button tone="primary" onClick={onImport}>
+            {t("↑ Import CSV / Excel")}
+          </Button>
+        </div>
+      </div>
+      <div className="cs-metrics">
+        <div>
+          <span>{t("PRODUCTS")}</span>
+          <strong>{campaign.products.length}</strong>
+        </div>
+        <div>
+          <span>{t("VALID OFFERS")}</span>
+          <strong>{valid}</strong>
+        </div>
+        <div>
+          <span>{t("AVERAGE DISCOUNT")}</span>
+          <strong>
+            {discountedProducts.length
+              ? Math.round(
+                  discountedProducts.reduce(
+                    (sum, p) =>
+                      sum + discount(Number(p.regular), Number(p.sale)),
+                    0,
+                  ) / discountedProducts.length,
+                )
+              : 0}
+            %
+          </strong>
+        </div>
+        <div>
+          <span>{t("BROCHURE PAGES")}</span>
+          <strong>
+            {brochurePageCount(campaign, splitPages(campaign).length)}
+          </strong>
+        </div>
+      </div>
+      <div className="cs-next-step">
+        <div>
+          <span>{t("NEXT STEP")}</span>
+          <strong>{t("Ready to design the brochure?")}</strong>
+          <small>
+            {t("Preview pages and choose layouts, stores and export options.")}
+          </small>
+        </div>
+        <Button tone="primary" onClick={onNext}>
+          {t("Next: brochure design")} →
+        </Button>
+      </div>
+      {campaign.products.length > 0 ? (
+        <>
+          <div className="cs-cover-selection-help">
+            <span>
+              <strong>{t("Cover products")}</strong> ·{" "}
+              {t(
+                "Select up to 3 products. The first 3 appear on the cover by default.",
+              )}
+            </span>
+            {!!campaign.coverProductCodes?.length && (
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdate((draft: Campaign) => {
+                    delete draft.coverProductCodes;
+                  })
+                }
+              >
+                {t("Use first 3")}
+              </button>
+            )}
+          </div>
+          <div className="cs-list-tools">
+            <div className="cs-search">
+              <span>⌕</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("Search code, name or brand")}
+              />
+            </div>
+            <select
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+            >
+              <option value="">{t("All categories")}</option>
+              {categories.map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+            <span>
+              {filtered.length} {t("shown")} · {t("Drag the grip to reorder")}
+            </span>
+          </div>
+          <div className="cs-product-list">
+            {filtered.map((product: Product) => {
+              const higher =
+                Number(product.regular) > 0 &&
+                Number(product.sale) > Number(product.regular);
+              return (
+                <article
+                  className={`cs-offer-row ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
+                  key={product.code}
+                  onDragOver={(event) => {
+                    if (draggingCode && draggingCode !== String(product.code)) {
+                      event.preventDefault();
+                      setDropCode(String(product.code));
+                    }
+                  }}
+                  onDragLeave={(event) => {
+                    if (!(
+                      event.relatedTarget instanceof Node &&
+                      event.currentTarget.contains(event.relatedTarget)
+                    ))
+                      setDropCode(null);
+                  }}
+                  onDrop={(event) => dropOnProduct(product, event)}
+                >
+                  <span
+                    className="cs-list-drag-handle"
+                    draggable="true"
+                    role="button"
+                    tabIndex={0}
+                    title={t("Drag to reorder products")}
+                    aria-label={`${t("Drag to reorder products")}: ${product.name}`}
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData(
+                        "text/plain",
+                        String(product.code),
+                      );
+                      setDraggingCode(String(product.code));
+                    }}
+                    onDragEnd={() => {
+                      setDraggingCode(null);
+                      setDropCode(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "ArrowUp" ||
+                        event.key === "ArrowDown"
+                      ) {
+                        event.preventDefault();
+                        move(product.code, event.key === "ArrowUp" ? -1 : 1);
+                      }
+                    }}
+                  >
+                    ⠿
+                  </span>
+                  <button
+                    type="button"
+                    className="cs-product-photo"
+                    onClick={() => onImageEdit(product)}
+                    aria-label={`${t("Change image")}: ${product.name}`}
+                    title={t("Change image")}
+                  >
+                    <ProductImage product={product} />
+                    <span className="cs-photo-edit-label">{t("Change")}</span>
+                  </button>
+                  <div className="cs-product-info">
+                    <span>
+                      {product.brand} · {product.code}
+                    </span>
+                    <h3>{product.name}</h3>
+                    <small>
+                      {product.category} / {product.subcategory}
+                    </small>
+                    <div className="cs-product-quick-actions">
+                      <button type="button" onClick={() => onDetails(product)}>
+                        {t("Edit details & display ↗")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onImageEdit(product)}
+                      >
+                        {t("Change image ↗")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onMakeSocial([product])}
+                      >
+                        Make social post ↗
+                      </button>
+                      {product.aiOriginalImage && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdate((draft: Campaign) => {
+                              const current = draft.products.find(
+                                (item) =>
+                                  String(item.code) === String(product.code),
+                              );
+                              if (current?.aiOriginalImage) {
+                                current.image = current.aiOriginalImage;
+                                current.aiReviewedImageSource = current.image;
+                                current.aiReviewedPreparationRevision =
+                                  IMAGE_PREPARATION_REVISION;
+                                current.aiReviewedBackgroundSignature =
+                                  imageBackgroundSignature(
+                                    productImageBackgroundContext(
+                                      draft,
+                                      current,
+                                    ),
+                                  );
+                                delete current.aiOriginalImage;
+                                for (const field of [
+                                  "aiInchesEmbedded",
+                                  "aiPreparedScreenInches",
+                                  "aiAnnotationStyle",
+                                  "aiPreparationRevision",
+                                  "aiBackgroundSignature",
+                                ])
+                                  delete current[field as keyof Product];
+                              }
+                            })
+                          }
+                        >
+                          {t("Restore original photo")}
+                        </button>
+                      )}
+                      <label className="cs-cover-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={featuredSet.has(String(product.code))}
+                          disabled={
+                            featuredSet.has(String(product.code))
+                              ? featured.length <= 1
+                              : featured.length >= 3
+                          }
+                          onChange={() => toggleCover(product.code)}
+                        />
+                        <span>{t("Cover")}</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="cs-regular-price">
+                    <small>{t("REGULAR PRICE")}</small>
+                    <strong>{money(Number(product.regular))} €</strong>
+                  </div>
+                  <div className="cs-sale-field">
+                    <label htmlFor={`sale-${product.code}`}>
+                      {t("SALE PRICE")}
+                    </label>
+                    <div>
+                      <input
+                        id={`sale-${product.code}`}
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        inputMode="decimal"
+                        value={product.sale ?? ""}
+                        onChange={(event) =>
+                          updatePrice(product.code, event.target.value)
+                        }
+                      />
+                      <span>€</span>
+                    </div>
+                    {product.sale && !validSale(product) && !higher && (
+                      <small>{t("Must be below regular")}</small>
+                    )}
+                    {higher && (
+                      <label className="cs-confirm-higher">
+                        <input
+                          type="checkbox"
+                          checked={product.confirmedAboveRegular === true}
+                          onChange={(event) =>
+                            confirmHigher(product.code, event.target.checked)
+                          }
+                        />
+                        {t("Confirm higher price")}
+                      </label>
+                    )}
+                  </div>
+                  <div
+                    className={`cs-percent ${higher ? "higher" : validSale(product) ? "" : "invalid"}`}
+                  >
+                    <strong>
+                      {validSale(product)
+                        ? `−${discount(Number(product.regular), Number(product.sale))}%`
+                        : higher
+                          ? `−${Math.round((Number(product.sale) / Number(product.regular) - 1) * 100)}%`
+                          : "—"}
+                    </strong>
+                    <small>
+                      {validSale(product)
+                        ? `${t("Save")} ${money(Number(product.regular) - Number(product.sale))} €`
+                        : higher
+                          ? `${t("Above regular")} ${money(Number(product.sale) - Number(product.regular))} €`
+                          : t("Check price")}
+                    </small>
+                  </div>
+                  <div className="cs-row-actions">
+                    <button
+                      type="button"
+                      title={t("Move up")}
+                      onClick={() => move(product.code, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      title={t("Move down")}
+                      onClick={() => move(product.code, 1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      title={t("Remove product")}
+                      onClick={() => remove(product.code)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <div className="cs-empty">
+          <b>▤</b>
+          <h3>{t("Build your offer list")}</h3>
+          <p>
+            {t(
+              "Import sale prices matched by product code, or search the catalog and set prices one by one.",
+            )}
+          </p>
+          <div className="cs-actions">
+            <Button onClick={onManual}>{t("Add manually")}</Button>
+            <Button tone="primary" onClick={onImport}>
+              {t("Import CSV / Excel")}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PriceLogoPicker({ campaign, onUpdate }: CampaignControlsProps) {
+  const selected =
+    campaign.priceLogo === "custom"
+      ? campaign.customPriceLogo
+        ? "custom"
+        : "symbol"
+      : campaign.priceLogo || "symbol";
+  return (
+    <div className="cs-price-logo-picker">
+      <span className="cs-label">{t("haPPy PRICE LOGO")}</span>
+      <p className="cs-control-help">
+        {t(
+          "The red price style uses this logo. Blue price cards use the supplied white haPPy logo with Çmimi.",
+        )}
+      </p>
+      <div className="cs-price-logo-options">
+        {PRICE_LOGOS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={selected === option.id ? "chosen" : ""}
+            aria-pressed={selected === option.id}
+            onClick={() =>
+              onUpdate((draft: Campaign) => {
+                draft.priceLogo = option.id;
+              })
+            }
+          >
+            <span className="cs-price-logo-preview">
+              <img src={option.src} alt="" />
+            </span>
+            <span>{t(option.label)}</span>
+          </button>
+        ))}
+        {campaign.customPriceLogo && (
+          <button
+            type="button"
+            className={selected === "custom" ? "chosen" : ""}
+            aria-pressed={selected === "custom"}
+            onClick={() =>
+              onUpdate((draft: Campaign) => {
+                draft.priceLogo = "custom";
+              })
+            }
+          >
+            <span className="cs-price-logo-preview">
+              <img src={campaign.customPriceLogo} alt="" />
+            </span>
+            <span>{t("Uploaded logo")}</span>
+          </button>
+        )}
+      </div>
+      <label className="cs-price-logo-upload">
+        {t("↑ Upload a new logo")}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={async (event) => {
+            const image = await readImage(event.target.files?.[0]);
+            if (image)
+              onUpdate((draft: Campaign) => {
+                draft.customPriceLogo = image;
+                draft.priceLogo = "custom";
+              });
+            event.target.value = "";
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
+function BrochureAssetPicker({ campaign, onUpdate }: CampaignControlsProps) {
+  return (
+    <details className="cs-brand-assets">
+      <summary>{t("Brochure logos")}</summary>
+      <p>{t("Replace the logo artwork for this campaign.")}</p>
+      <div className="cs-brand-asset-list">
+        {BROCHURE_ASSETS.map((asset) => {
+          const custom = !!campaign.brandAssets?.[asset.id];
+          const source = brochureAssetSource(campaign, asset.id);
+          return (
+            <div className="cs-brand-asset" key={asset.id}>
+              <strong>{t(asset.label)}</strong>
+              <div
+                className={`cs-brand-asset-preview ${asset.id === "neptun" && !custom && campaign.neptunLogoOption === "framed" ? "framed" : ""}`}
+              >
+                {asset.crop && !custom ? (
+                  <span className={`cs-brand-asset-crop ${asset.crop}`} />
+                ) : (
+                  <img src={source} alt="" />
+                )}
+              </div>
+              {asset.id === "neptun" && (
+                <div className="cs-neptun-logo-options">
+                  {(
+                    [
+                      ["classic", "Classic"],
+                      ["framed", "Framed"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      type="button"
+                      key={id}
+                      className={
+                        !custom &&
+                        (campaign.neptunLogoOption || "classic") === id
+                          ? "chosen"
+                          : ""
+                      }
+                      aria-pressed={
+                        !custom &&
+                        (campaign.neptunLogoOption || "classic") === id
+                      }
+                      onClick={() =>
+                        onUpdate((draft: Campaign) => {
+                          draft.neptunLogoOption = id;
+                          delete draft.brandAssets?.neptun;
+                        })
+                      }
+                    >
+                      {t(label)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="cs-brand-asset-actions">
+                <label>
+                  ↑ {custom ? "Replace" : "Upload"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (event) => {
+                      const image = await readImage(event.target.files?.[0]);
+                      if (image)
+                        onUpdate((draft: Campaign) => {
+                          draft.brandAssets ||= {};
+                          draft.brandAssets[asset.id] = image;
+                        });
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                {custom && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdate((draft: Campaign) => {
+                        delete draft.brandAssets?.[asset.id];
+                      })
+                    }
+                  >
+                    {t("Use selected logo")}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+function SocialContactFields({
+  campaign,
+  settings,
+  onUpdate,
+}: StoreControlsProps) {
+  const contact = campaign.storesSnapshot?.contact || settings.contact || {};
+  return (
+    <div className="cs-social-fields">
+      <span className="cs-label">{t("FOOTER CONTACTS")}</span>
+      {(
+        [
+          ["email", "Email"],
+          ["website", "Website"],
+          ["facebook", "Facebook"],
+          ["instagram", "Instagram"],
+        ] as const
+      ).map(([key, label]) => (
+        <Field key={key} label={t(label)}>
+          <input
+            aria-label={t(label)}
+            value={contact[key] ?? settings.contact?.[key] ?? ""}
+            onChange={(event) => {
+              const value = event.target.value;
+              onUpdate((draft: Campaign) => {
+                draft.storesSnapshot ||= structuredClone(settings);
+                draft.storesSnapshot.contact ||= {};
+                draft.storesSnapshot.contact[key] = value;
+              });
+            }}
+          />
+        </Field>
+      ))}
+    </div>
+  );
+}
+
+function PaymentNoteEditor({ campaign, onUpdate }: CampaignControlsProps) {
+  return (
+    <div className="cs-payment-note">
+      <span className="cs-label">{t("PAYMENT TERMS")}</span>
+      <Field
+        label={t("Maximum installments")}
+        hint={t(
+          "Offer prices and the default footer message recalculate automatically",
+        )}
+      >
+        <input
+          type="number"
+          min="1"
+          max="60"
+          step="1"
+          aria-label={t("Maximum installments")}
+          value={campaign.installments ?? 12}
+          onChange={(event) => {
+            const value = event.target.value;
+            onUpdate((draft: Campaign) => {
+              draft.installments =
+                value === ""
+                  ? undefined
+                  : Math.min(60, Math.max(1, Number.parseInt(value, 10) || 1));
+            });
+          }}
+        />
+      </Field>
+      <Field
+        label={t("Footer payment text")}
+        hint={t("Edit this only when you want different wording")}
+      >
+        <textarea
+          rows={3}
+          aria-label={t("Footer payment text")}
+          value={paymentTextFor(campaign)}
+          onChange={(event) => {
+            const value = event.target.value;
+            onUpdate((draft: Campaign) => {
+              draft.paymentText = value;
+            });
+          }}
+        />
+      </Field>
+      {campaign.paymentText !== undefined && (
+        <button
+          type="button"
+          onClick={() =>
+            onUpdate((draft: Campaign) => {
+              delete draft.paymentText;
+            })
+          }
+        >
+          {t("Use automatic message for")} {installmentCount(campaign)}{" "}
+          {t("installments")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
+  return (
+    <div className="cs-cover-template-picker">
+      <span className="cs-label">{t("COVER TEMPLATE")}</span>
+      <div className="cs-cover-template-options">
+        {COVER_TEMPLATES.map((template) => (
+          <button
+            type="button"
+            key={template.id}
+            className={
+              (campaign.coverTemplate || "photo") === template.id
+                ? "chosen"
+                : ""
+            }
+            aria-pressed={(campaign.coverTemplate || "photo") === template.id}
+            onClick={() =>
+              onUpdate((draft: Campaign) => {
+                draft.coverTemplate = template.id;
+              })
+            }
+          >
+            <img src={template.preview} alt="" />
+            <span>{t(template.label)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CoverAiBackground({
+  campaign,
+  onUpdate,
+  onToast,
+}: CampaignControlsProps & { onToast: (message: string) => void }) {
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function generate() {
+    setBusy(true);
+    try {
+      const data = await requestAi("ai-generate-background", {
+        context: "brochure",
+        prompt,
+        products: coverProducts(campaign),
+        orientation: "portrait",
+      });
+      onUpdate((draft: Campaign) => {
+        draft.coverImage = data.image;
+      });
+      onToast(
+        "AI cover background ready. Logos, title and UUU band stay editable.",
+      );
+    } catch (error) {
+      onToast(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="cs-cover-ai-controls">
+      <span className="cs-label">AI COVER ARTWORK</span>
+      <p>
+        Generate a background for the selected cover products. The product
+        photos and text are layered separately.
+      </p>
+      <textarea
+        rows={3}
+        value={prompt}
+        onChange={(event) => setPrompt(event.target.value)}
+        placeholder="Describe the mood, room or campaign scene…"
+      />
+      <button type="button" disabled={busy} onClick={generate}>
+        {busy ? "Generating cover…" : "✦ Generate cover background"}
+      </button>
+      <div className="cs-cover-ai-toggles">
+        <label>
+          <input
+            type="checkbox"
+            checked={campaign.showCoverLogo !== false}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.showCoverLogo = event.target.checked;
+              })
+            }
+          />{" "}
+          NEPTUN logo
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={campaign.showCoverBand === true}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.showCoverBand = event.target.checked;
+              })
+            }
+          />{" "}
+          UUU / hajde! band
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={campaign.showCoverHeadline !== false}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.showCoverHeadline = event.target.checked;
+              })
+            }
+          />{" "}
+          Cover title
+        </label>
+      </div>
+      <label>
+        Cover logo
+        <select
+          value={campaign.brandAssets?.neptun || "default"}
+          onChange={(event) =>
+            onUpdate((draft: Campaign) => {
+              draft.brandAssets ||= {};
+              if (event.target.value === "default")
+                delete draft.brandAssets.neptun;
+              else draft.brandAssets.neptun = event.target.value;
+            })
+          }
+        >
+          <option value="default">Brochure logo setting</option>
+          {campaign.brandAssets?.neptun &&
+            ![
+              "/api/assets/legacy/assets/social/neptun-white.png",
+              "/api/assets/legacy/assets/social/neptun-blue.png",
+            ].includes(campaign.brandAssets.neptun) && (
+              <option value={campaign.brandAssets.neptun}>
+                Selected custom logo
+              </option>
+            )}
+          <option value="/api/assets/legacy/assets/social/neptun-white.png">
+            White N + red bar
+          </option>
+          <option value="/api/assets/legacy/assets/social/neptun-blue.png">
+            Blue N + red bar
+          </option>
+        </select>
+      </label>
+    </div>
+  );
+}
+
+function CampaignArtworkPicker({ campaign, onUpdate }: CampaignControlsProps) {
+  return (
+    <div className="cs-cover-artwork-picker">
+      <span className="cs-label">
+        {t("COVER IMAGE · OPTIONAL FOR EVERY TEMPLATE")}
+      </span>
+      <label className="cs-cover-artwork-upload">
+        <input
+          type="file"
+          accept="image/*"
+          aria-label={t("Upload campaign background image")}
+          onChange={async (event) => {
+            const image = await readImage(event.target.files?.[0]);
+            if (image)
+              onUpdate((draft: Campaign) => {
+                draft.coverImage = image;
+              });
+            event.target.value = "";
+          }}
+        />
+        {campaign.coverImage ? (
+          <img
+            src={campaign.coverImage}
+            alt={t("Current campaign background")}
+          />
+        ) : (
+          <span className="cs-artwork-upload-icon" aria-hidden="true">
+            ↑
+          </span>
+        )}
+        <span>
+          <strong>
+            {t(campaign.coverImage ? "Replace image" : "Upload an image")}
+          </strong>
+          <small>
+            {t(
+              "Layered over the template through the UUU band. Logos and text stay above it.",
+            )}
+          </small>
+        </span>
+      </label>
+      {campaign.coverImage && (
+        <button
+          type="button"
+          onClick={() =>
+            onUpdate((draft: Campaign) => {
+              draft.coverImage = "";
+            })
+          }
+        >
+          {t("Remove image")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CoverHeadlineEditor({ campaign, onUpdate }: CampaignControlsProps) {
+  const styles = [
+    { id: "strong", label: "Bold", sample: "BLACK" },
+    { id: "clean", label: "Simple", sample: "Black" },
+    { id: "italic", label: "Italic", sample: "Black" },
+  ];
+  const [height, align] = (
+    campaign.coverHeadlinePosition || "middle-left"
+  ).split("-");
+  const title = campaign.coverHeadline || campaign.name;
+  return (
+    <section className="cs-cover-headline-editor">
+      <div className="cs-title-card-head">
+        <div>
+          <span className="cs-label">{t("COVER TITLE")}</span>
+          <p>{t("Text between the NEPTUN logo and the UUU band.")}</p>
+        </div>
+        <label className="cs-title-switch">
+          <input
+            type="checkbox"
+            aria-label={t("Show title on cover")}
+            checked={campaign.showCoverHeadline !== false}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.showCoverHeadline = event.target.checked;
+              })
+            }
+          />
+          <span aria-hidden="true" />
+        </label>
+      </div>
+      {campaign.showCoverHeadline !== false && (
+        <>
+          <Field label={t("Title text")}>
+            <input
+              aria-label={t("Cover headline")}
+              value={campaign.coverHeadline ?? campaign.name}
+              onChange={(event) =>
+                onUpdate((draft: Campaign) => {
+                  draft.coverHeadline = event.target.value;
+                })
+              }
+            />
+          </Field>
+          <span className="cs-field-caption">{t("FONT STYLE")}</span>
+          <div className="cs-cover-headline-styles">
+            {styles.map((style) => (
+              <button
+                type="button"
+                key={style.id}
+                className={`${style.id} ${(campaign.coverHeadlineStyle || "strong") === style.id ? "chosen" : ""}`}
+                aria-pressed={
+                  (campaign.coverHeadlineStyle || "strong") === style.id
+                }
+                onClick={() =>
+                  onUpdate((draft: Campaign) => {
+                    draft.coverHeadlineStyle = style.id;
+                  })
+                }
+              >
+                <strong>{style.sample}</strong>
+                <small>{t(style.label)}</small>
+              </button>
+            ))}
+          </div>
+          <span className="cs-field-caption">{t("PLACEMENT ON COVER")}</span>
+          <div className="cs-title-position-preview">
+            <span>NEPTUN</span>
+            <strong
+              className={`at-${height} align-${align} ${(campaign.coverHeadlineStyle || "strong") === "italic" ? "italic" : ""}`}
+            >
+              {title}
+            </strong>
+            <small>UUU / hajde!</small>
+          </div>
+          <div className="cs-title-placement-options">
+            <div>
+              <span>{t("Across")}</span>
+              <div className="cs-segmented">
+                {(
+                  [
+                    ["left", "Left"],
+                    ["center", "Center"],
+                    ["right", "Right"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    type="button"
+                    key={id}
+                    className={align === id ? "chosen" : ""}
+                    aria-pressed={align === id}
+                    onClick={() =>
+                      onUpdate((draft: Campaign) => {
+                        draft.coverHeadlinePosition = `${height}-${id}`;
+                      })
+                    }
+                  >
+                    {t(label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span>{t("Height")}</span>
+              <div className="cs-segmented">
+                {(
+                  [
+                    ["top", "Upper"],
+                    ["middle", "Middle"],
+                    ["bottom", "Lower"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    type="button"
+                    key={id}
+                    className={height === id ? "chosen" : ""}
+                    aria-pressed={height === id}
+                    onClick={() =>
+                      onUpdate((draft: Campaign) => {
+                        draft.coverHeadlinePosition = `${id}-${align}`;
+                      })
+                    }
+                  >
+                    {t(label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function StorePageControls({
+  campaign,
+  settings,
+  onUpdate,
+}: StoreControlsProps) {
+  const stores = campaign.storesSnapshot?.stores || settings.stores || [];
+  const chosen = selectedStoreIndexes(campaign, stores.length);
+  const chosenSet = new Set(chosen);
+  const online = includesOnlineStore(campaign);
+  const included = includesStoresPage(campaign);
+  const compact = includesStoresFooter(campaign);
+  const hiddenKey = compact
+    ? "storeFooterHiddenElements"
+    : "storesHiddenElements";
+  const placementKey = compact
+    ? "storeFooterElementPlacements"
+    : "storesElementPlacements";
+  const order = orderedStoreIndexes(campaign, stores.length);
+  const [dragStore, setDragStore] = useState<number | null>(null);
+  function selectAll() {
+    onUpdate((draft: Campaign) => {
+      draft.selectedStoreIndexes = stores.map((_, index) => index);
+      draft.showOnlineStore = true;
+    });
+  }
+  function selectNone() {
+    onUpdate((draft: Campaign) => {
+      draft.selectedStoreIndexes = [];
+      draft.showOnlineStore = false;
+    });
+  }
+  function toggleStore(index: number) {
+    onUpdate((draft: Campaign) => {
+      const current = new Set(selectedStoreIndexes(draft, stores.length));
+      if (current.has(index)) current.delete(index);
+      else current.add(index);
+      draft.selectedStoreIndexes = [...current].sort((a, b) => a - b);
+    });
+  }
+  function reorderStore(from: number, to: number | undefined) {
+    if (to === undefined) return;
+    onUpdate((draft: Campaign) => {
+      draft.storeOrder = moveStore(
+        orderedStoreIndexes(draft, stores.length),
+        from,
+        to,
+      );
+    });
+  }
+  function resetStorePositions(resetOrder = false) {
+    onUpdate((draft: Campaign) => {
+      if (compact)
+        draft.storeFooterElementPlacements = withoutFooterStorePlacements(
+          draft.storeFooterElementPlacements,
+        );
+      else delete draft.storePositions;
+      if (resetOrder) delete draft.storeOrder;
+    });
+  }
+  return (
+    <section
+      className="cs-store-page-options"
+      aria-label={t("Stores page options")}
+    >
+      <div className="cs-stores-display-options">
+        <label>
+          <strong>{t("Store information")}</strong>
+          <select
+            aria-label={t("Store information")}
+            value={included ? "page" : compact ? "footer" : "none"}
+            onChange={(event) => {
+              const value = event.target.value;
+              onUpdate((draft: Campaign) => {
+                draft.includeStoresPage = value === "page";
+                draft.includeStoresFooter = value === "footer";
+              });
+            }}
+          >
+            <option value="page">{t("Separate stores page")}</option>
+            <option value="footer">
+              {t("Bottom of the last product page")}
+            </option>
+            <option value="none">{t("No store information")}</option>
+          </select>
+        </label>
+        <small>
+          {compact
+            ? t(
+                "Products scale together to make room and keep their proportions.",
+              )
+            : included
+              ? t("This page will appear in downloads and print.")
+              : t("Store information is excluded from downloads and print.")}
+        </small>
+      </div>
+      {compact && (
+        <label className="cs-store-footer-size">
+          <span>
+            {t("Store section height")} · {compactStoresFooterHeight(campaign)}%
+          </span>
+          <input
+            aria-label={t("Store section height")}
+            type="range"
+            min="10"
+            max="28"
+            step="1"
+            value={compactStoresFooterHeight(campaign)}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.compactStoresFooterHeight = Number(event.target.value);
+              })
+            }
+          />
+        </label>
+      )}
+      <details className="cs-store-elements-options">
+        <summary>{t("Store fields & contact visibility")}</summary>
+        {(["city", "name", "address", "phone", "icon"] as const).map(
+          (field) => (
+            <label key={field}>
+              <input
+                type="checkbox"
+                checked={campaign.storeFields?.[field] !== false}
+                onChange={(event) =>
+                  onUpdate((draft: Campaign) => {
+                    draft.storeFields ??= {
+                      city: true,
+                      name: true,
+                      address: true,
+                      phone: true,
+                      icon: true,
+                    };
+                    draft.storeFields[field] = event.target.checked;
+                  })
+                }
+              />
+              {t(`Show store ${field}`)}
+            </label>
+          ),
+        )}
+        {Object.keys(
+          campaign.storesSnapshot?.contact || settings.contact || {},
+        ).map((field) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              checked={campaign.contactVisibility?.[field] !== false}
+              onChange={(event) =>
+                onUpdate((draft: Campaign) => {
+                  draft.contactVisibility ??= {};
+                  draft.contactVisibility[field] = event.target.checked;
+                })
+              }
+            />
+            {t(`Show ${field}`)}
+          </label>
+        ))}
+      </details>
+      <BrochureIconControls campaign={campaign} onUpdate={onUpdate} />
+      <details className="cs-store-elements-options">
+        <summary>{t("Visible sections & alignment")}</summary>
+        <div className="cs-store-checkboxes">
+          {(compact
+            ? ([
+                ["brand", "Logos"],
+                ["stores", "Stores"],
+                ["service", "Elektro-Servis"],
+                ["disclaimer", "Offer information"],
+              ] as const)
+            : ([
+                ["heading", "Page title"],
+                ["hajde", "hajde! logo"],
+                ["locations", "Stores"],
+                ["service", "Elektro-Servis"],
+                ["balfin", "BALFIN Group"],
+                ["disclaimer", "Offer information"],
+                ["social", "Footer contacts"],
+              ] as const)
+          ).map(([kind, label]) => (
+            <label key={kind}>
+              <input
+                type="checkbox"
+                checked={!campaign[hiddenKey]?.includes(kind)}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  onUpdate((draft: Campaign) => {
+                    const hidden = new Set(draft[hiddenKey] || []);
+                    if (checked) hidden.delete(kind);
+                    else hidden.add(kind);
+                    draft[hiddenKey] = [...hidden];
+                  });
+                }}
+              />
+              {t(label)}
+            </label>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            onUpdate((draft: Campaign) => {
+              delete draft[placementKey];
+              delete draft[hiddenKey];
+            })
+          }
+        >
+          {t("Reset sections")}
+        </button>
+      </details>
+      <div className="cs-store-select-head">
+        <span className="cs-label">{t("STORES ON THIS PAGE")}</span>
+        <small>
+          {chosen.length + Number(online)} / {stores.length + 1} {t("selected")}
+        </small>
+      </div>
+      <div className="cs-store-select-actions">
+        <button type="button" onClick={selectAll}>
+          {t("Select all")}
+        </button>
+        <button type="button" onClick={selectNone}>
+          {t("Unselect all")}
+        </button>
+      </div>
+      <p className="cs-control-help">
+        {t(
+          "Drag stores to change their brochure order. Use the handles on the page to move, resize or hide them.",
+        )}
+      </p>
+      <div className="cs-store-select-actions">
+        <button type="button" onClick={() => resetStorePositions()}>
+          {t("Reset store positions")}
+        </button>
+        <button type="button" onClick={() => resetStorePositions(true)}>
+          {t("Reset order and alignment")}
+        </button>
+      </div>
+      <div className="cs-store-checkboxes">
+        {order.map((index) => {
+          const store = stores[index];
+          if (!store) return null;
+          return (
+            <div
+              className={`cs-store-order-row ${dragStore === index ? "dragging" : ""}`}
+              key={`${store.city}-${index}`}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = "move";
+                setDragStore(index);
+              }}
+              onDragEnd={() => setDragStore(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (dragStore !== null) reorderStore(dragStore, index);
+                setDragStore(null);
+              }}
+            >
+              <span className="cs-store-grip" title={t("Drag to reorder")}>
+                ⠿
+              </span>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={chosenSet.has(index)}
+                  onChange={() => toggleStore(index)}
+                />
+                <span>
+                  <strong>{store.name}</strong>
+                  <small>{store.city}</small>
+                </span>
+              </label>
+              <button
+                type="button"
+                aria-label={`${t("Move up")}: ${store.name}`}
+                disabled={order.indexOf(index) === 0}
+                onClick={() =>
+                  reorderStore(index, order[order.indexOf(index) - 1])
+                }
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label={`${t("Move down")}: ${store.name}`}
+                disabled={order.indexOf(index) === order.length - 1}
+                onClick={() =>
+                  reorderStore(index, order[order.indexOf(index) + 1])
+                }
+              >
+                ↓
+              </button>
+            </div>
+          );
+        })}
+        <label>
+          <input
+            type="checkbox"
+            checked={online}
+            onChange={(event) =>
+              onUpdate((draft: Campaign) => {
+                draft.showOnlineStore = event.target.checked;
+              })
+            }
+          />
+          <span>
+            <strong>{t("Online store")}</strong>
+          </span>
+        </label>
+      </div>
+    </section>
+  );
+}
+
+export function BrochureEditor({
+  campaign,
+  settings,
+  user,
+  members,
+  onReviewAction,
+  onUpdate,
+  onToast,
+  onAiReview,
+  onReCut,
+  onPrint,
+  onExport,
+  onAddProducts,
+  onImportProducts,
+  onEditImage,
+  onEditScreen,
+  onEditDetails,
+  onEditPrice,
+  onEditSavings,
+  onMakeSocial,
+}: BrochureEditorProps) {
+  const pages = splitPages(campaign);
+  const pageFormat = resolveBrochureFormat(campaign);
+  const formatGeometry = brochureExportGeometry(pageFormat);
+  const televisions = campaignTelevisions(campaign);
+  const hasStoresPage = includesStoresPage(campaign);
+  const [selected, setSelected] = useState(-1);
+  const [moveTarget, setMoveTarget] = useState<Product | null>(null);
+  const [movePage, setMovePage] = useState(-1);
+  const [movePosition, setMovePosition] = useState("start");
+  const [draggingCode, setDraggingCode] = useState<string | null>(null);
+  const [dropCode, setDropCode] = useState<string | null>(null);
+  const [overPage, setOverPage] = useState<number | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [commentMode, setCommentMode] = useState(false);
+  const [showGuides, setShowGuides] = useState(false);
+  const canEditCanvas = !previewMode && !commentMode;
+  const importWarnings = (campaign.brochureImportWarnings || []).map(
+    (warning) =>
+      typeof warning === "string"
+        ? { position: undefined, row: 0, code: "", name: "", message: warning }
+        : warning,
+  );
+  function updateProduct(
+    code: string,
+    field: keyof Product | Partial<Product>,
+    value?: Product[keyof Product],
+  ) {
+    onUpdate((draft: Campaign) => {
+      const product = draft.products.find(
+        (item) => String(item.code) === String(code),
+      );
+      if (product) {
+        const changes = typeof field === "object" ? field : { [field]: value };
+        Object.assign(product, changes);
+        if (Object.hasOwn(changes, "specs")) product.autoSpecsDisabled = true;
+      }
+    });
+  }
+  const placeImage = (
+    product: Product,
+    value: Product["brochureImagePlacement"],
+  ) => updateProduct(product.code, "brochureImagePlacement", value);
+  const resizeCard = (product: Product, value: Product["brochureCardSize"]) =>
+    updateProduct(product.code, "brochureCardSize", value);
+  const reorderDetails = (
+    product: Product,
+    from: number,
+    to: number,
+    rows?: DetailEntry[],
+  ) =>
+    onUpdate((draft: Campaign) => {
+      const item = draft.products.find(
+        (entry) => String(entry.code) === String(product.code),
+      );
+      if (item)
+        Object.assign(
+          item,
+          rows
+            ? reorderDisplayedDetails(item, rows, from, to)
+            : {
+                brochureDetails: reorderDisplayedDetails(
+                  item,
+                  savedDetailEntries(item) || Object.entries(item.specs || {}),
+                  from,
+                  to,
+                ).brochureDetails,
+              },
+        );
+    });
+  const layoutRegion = (product: Product, kind: string, value: Placement) =>
+    onUpdate((draft: Campaign) => {
+      const item = draft.products.find(
+        (entry) => String(entry.code) === String(product.code),
+      );
+      if (item) {
+        item.brochureContentPlacement ||= {};
+        item.brochureContentPlacement[kind] = value;
+      }
+    });
+  const placeStore = (index: string | number, value: Placement) =>
+    onUpdate((draft: Campaign) => {
+      draft.storePositions ||= {};
+      draft.storePositions[index] = value;
+    });
+  const hideStore = (key: string | number) =>
+    onUpdate((draft: Campaign) => {
+      if (key === "online") draft.showOnlineStore = false;
+      else {
+        const count = (draft.storesSnapshot?.stores || settings.stores || [])
+          .length;
+        draft.selectedStoreIndexes = selectedStoreIndexes(draft, count).filter(
+          (index) => index !== Number(key),
+        );
+      }
+    });
+  const changeStore = (index: string | number, field: keyof Store, value: string) =>
+    onUpdate((draft: Campaign) => {
+      draft.storesSnapshot ||= structuredClone(settings);
+      const store = draft.storesSnapshot.stores?.[Number(index)];
+      if (store) Object.assign(store, storeDisplayChanges(store, field, value));
+    });
+  const changeStoreContact = (field: string, value: string) =>
+    onUpdate((draft: Campaign) => {
+      draft.storesSnapshot ||= structuredClone(settings);
+      draft.storesSnapshot.contact ||= {};
+      draft.storesSnapshot.contact[field] = value;
+    });
+  const changeStoreElement = (
+    scope: "footer" | "page",
+    kind: string,
+    value: Placement,
+  ) =>
+    onUpdate((draft: Campaign) => {
+      const key =
+        scope === "footer"
+          ? "storeFooterElementPlacements"
+          : "storesElementPlacements";
+      draft[key] ||= {};
+      draft[key][kind] = value;
+    });
+  const hideStoreElement = (scope: "footer" | "page", kind: string) =>
+    onUpdate((draft: Campaign) => {
+      const key =
+        scope === "footer"
+          ? "storeFooterHiddenElements"
+          : "storesHiddenElements";
+      draft[key] = [...new Set([...(draft[key] || []), kind])];
+    });
+  const reorderStore = (from: number, to: number) =>
+    onUpdate((draft: Campaign) => {
+      const count = (draft.storesSnapshot?.stores || settings.stores || [])
+        .length;
+      draft.storeOrder = moveStore(orderedStoreIndexes(draft, count), from, to);
+    });
+  async function dropImage(product: Product, file: File) {
+    if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
+      onToast(t("Choose an image under 12 MB."));
+      return;
+    }
+    try {
+      const image = await readImage(file);
+      onUpdate((draft: Campaign) => {
+        const item = draft.products.find(
+          (entry) => String(entry.code) === String(product.code),
+        );
+        if (!item) return;
+        item.screenArtwork = screenArtworkForPhotoChange(
+          item.screenArtwork,
+          item.image,
+          image,
+        );
+        item.image = image;
+        item.skipAiCutout = true;
+        item.aiReviewedImageSource = image;
+        delete item.aiOriginalImage;
+        delete item.aiInchesEmbedded;
+      });
+      onToast(t("Product image updated."));
+    } catch {
+      onToast(t("Could not read this image."));
+    }
+  }
+  useEffect(() => {
+    if (selected > pages.length) setSelected(-1);
+  }, [selected, pages.length]);
+  const page =
+    selected >= 0 && selected < pages.length ? pages[selected] : null;
+  const artworkPageKey =
+    selected === -1 ? "cover" : page ? `product-${page.index}` : "stores";
+  async function addPageArtwork(
+    file: File,
+    point: { x: number; y: number } | null = null,
+  ) {
+    if (!file?.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
+      onToast(t("Choose an image under 12 MB."));
+      return;
+    }
+    try {
+      const image = await readImage(file);
+      const id = crypto.randomUUID();
+      onUpdate((draft: Campaign) => {
+        draft.pageArtworks ||= {};
+        draft.pageArtworks[artworkPageKey] ||= [];
+        draft.pageArtworks[artworkPageKey].push({
+          id,
+          name: file.name,
+          image,
+          x: point?.x ?? 5,
+          y:
+            point?.y ??
+            Math.min(80, 5 + draft.pageArtworks[artworkPageKey].length * 8),
+          width: 20,
+        });
+      });
+      onToast(t("Artwork added. Drag it to position it on this page."));
+    } catch {
+      onToast(t("Could not read this image."));
+    }
+  }
+  async function replaceCoverLogo(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
+      onToast(t("Choose an image under 12 MB."));
+      return;
+    }
+    try {
+      const image = await readImage(file);
+      onUpdate((draft: Campaign) => {
+        draft.coverLogoSource = image;
+        draft.showCoverLogo = true;
+      });
+      onToast(t("Cover logo updated. Drag it on the page to move it."));
+    } catch {
+      onToast(t("Could not read this image."));
+    }
+  }
+  const changeCampaignAsset = (key: string, changes: { image?: string; hidden?: boolean; placement?: Placement }) => onUpdate((draft: Campaign) => {
+    draft.campaignAssets ||= {};
+    draft.campaignAssets[key] = { ...(draft.campaignAssets[key] || {}), ...changes };
+  });
+  function changeArtwork(id: string, placement: Partial<Artwork>) {
+    onUpdate((draft: Campaign) => {
+      const item = draft.pageArtworks?.[artworkPageKey]?.find(
+        (entry) => entry.id === id,
+      );
+      if (item) Object.assign(item, placement);
+    });
+  }
+  function removeArtwork(id: string) {
+    onUpdate((draft: Campaign) => {
+      if (draft.pageArtworks?.[artworkPageKey])
+        draft.pageArtworks[artworkPageKey] = draft.pageArtworks[
+          artworkPageKey
+        ].filter((entry) => entry.id !== id);
+    });
+  }
+  function dropArtwork(event: React.DragEvent<HTMLElement>) {
+    const file = [...(event.dataTransfer?.files || [])].find((item) =>
+      item.type.startsWith("image/"),
+    );
+    if (!file) return;
+    event.preventDefault();
+    const pageNode =
+      event.currentTarget.querySelector(
+        ".brochure-last-page-scaled > .brochure-page",
+      ) || event.currentTarget.querySelector(".brochure-page");
+    const rect = pageNode?.getBoundingClientRect();
+    const point = rect
+      ? {
+          x: Math.max(
+            0,
+            Math.min(90, ((event.clientX - rect.left) / rect.width) * 100),
+          ),
+          y: Math.max(
+            0,
+            Math.min(90, ((event.clientY - rect.top) / rect.height) * 100),
+          ),
+        }
+      : null;
+    addPageArtwork(file, point);
+  }
+  const title =
+    selected === -1
+      ? t("Cover")
+      : selected === pages.length
+        ? t("Stores & details")
+        : `${t("Page")} ${selected + 2}`;
+  const backgroundKind =
+    selected === -1 ? "cover" : page ? "product" : "stores";
+  const backgroundColor = pageBackgroundColor(
+    campaign,
+    backgroundKind,
+    page ?? undefined,
+  );
+  const backgroundGradient = pageBackgroundGradient(
+    campaign,
+    backgroundKind,
+    page ?? undefined,
+  );
+  const backgroundImage = pageBackgroundImage(
+    campaign,
+    backgroundKind,
+    page ?? undefined,
+  );
+  const defaultBackground =
+    backgroundKind === "cover"
+      ? "#1c4075"
+      : backgroundKind === "stores"
+        ? campaign.theme === "light"
+          ? "#e4e4e4"
+          : "#245b89"
+        : campaign.theme === "light"
+          ? "#f1f2f4"
+          : "#1c4075";
+  const backgroundPrefix = backgroundKind === "cover" ? "cover" : "stores";
+  const pageOverride =
+    backgroundKind === "product"
+      ? campaign.pages?.[selected]?.backgroundColor ||
+        campaign.pages?.[selected]?.backgroundGradient ||
+        campaign.pages?.[selected]?.backgroundImage
+      : campaign[`${backgroundPrefix}BackgroundColor`] ||
+        campaign[`${backgroundPrefix}BackgroundGradient`] ||
+        campaign[`${backgroundPrefix}BackgroundImage`];
+  function setBackgroundValues(
+    values: Pick<
+      PageLayout,
+      "backgroundColor" | "backgroundGradient" | "backgroundImage"
+    >,
+  ) {
+    onUpdate((draft: Campaign) => {
+      if (backgroundKind === "product") {
+        draft.pages ||= {};
+        draft.pages[selected] = { ...(draft.pages[selected] || {}), ...values };
+      } else if (backgroundKind === "cover") {
+        draft.coverBackgroundColor = values.backgroundColor;
+        draft.coverBackgroundGradient = values.backgroundGradient;
+        draft.coverBackgroundImage = values.backgroundImage;
+        draft.coverImage = "";
+      } else {
+        draft.storesBackgroundColor = values.backgroundColor;
+        draft.storesBackgroundGradient = values.backgroundGradient;
+        draft.storesBackgroundImage = values.backgroundImage;
+      }
+      if (backgroundKind !== "stores") draft.aiBackgroundChanged = true;
+    });
+  }
+  function changeBackground(color: string) {
+    setBackgroundValues({
+      backgroundColor: color,
+      backgroundGradient: null,
+      backgroundImage: "",
+    });
+  }
+  function changeGradient(gradient: Gradient) {
+    setBackgroundValues({
+      backgroundGradient: gradient,
+      backgroundColor: "",
+      backgroundImage: "",
+    });
+  }
+  function changeBackgroundImage(image: string) {
+    setBackgroundValues({
+      backgroundImage: image,
+      backgroundColor: backgroundColor || defaultBackground,
+      backgroundGradient: null,
+    });
+  }
+  function resetBackground() {
+    onUpdate((draft: Campaign) => {
+      if (backgroundKind === "product") {
+        if (draft.pages?.[selected])
+          for (const field of [
+            "backgroundColor",
+            "backgroundGradient",
+            "backgroundImage",
+          ])
+            delete draft.pages[selected][field];
+      } else if (backgroundKind === "cover") {
+        delete draft.coverBackgroundColor;
+        delete draft.coverBackgroundGradient;
+        delete draft.coverBackgroundImage;
+      } else {
+        delete draft.storesBackgroundColor;
+        delete draft.storesBackgroundGradient;
+        delete draft.storesBackgroundImage;
+      }
+      if (backgroundKind !== "stores") draft.aiBackgroundChanged = true;
+    });
+  }
+  function setPage(field: string, value: JsonValue | Gradient | undefined) {
+    onUpdate((draft: Campaign) => {
+      draft.pages ||= {};
+      draft.pages[selected] = {
+        ...(draft.pages[selected] || {}),
+        [field]: value,
+      };
+    });
+  }
+  function clearDrag() {
+    setDraggingCode(null);
+    setDropCode(null);
+    setOverPage(null);
+  }
+  function placeProduct(code: string, destination: number, position = "start") {
+    onUpdate((draft: Campaign) => {
+      if (
+        draft.products.some((product) => Number.isInteger(product.brochurePage))
+      )
+        materializeProductPages(draft);
+      placeProductOnPage(
+        draft,
+        code,
+        destination,
+        coverProducts(draft).map((product: Product) => product.code),
+        position,
+      );
+      if (
+        draft.products.some((product: Product) =>
+          Number.isInteger(product.brochurePage),
+        )
+      ) {
+        const moved = draft.products.find(
+          (product: Product) => String(product.code) === String(code),
+        );
+        if (moved)
+          moved.brochurePage = destination === -1 ? 1 : destination + 2;
+      }
+    });
+    setSelected(destination);
+  }
+  function pageDrop(
+    destination: number,
+    event: React.DragEvent<HTMLButtonElement>,
+  ) {
+    event.preventDefault();
+    const source = draggingCode || event.dataTransfer.getData("text/plain");
+    clearDrag();
+    if (source) placeProduct(source, destination);
+  }
+  function productDrop(target: Product, event: React.DragEvent<HTMLElement>) {
+    if ([...event.dataTransfer.types].includes("Files")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const source = draggingCode || event.dataTransfer.getData("text/plain");
+    const targetCode = String(target.code);
+    clearDrag();
+    if (!source || String(source) === targetCode) return;
+    const productsHere =
+      selected === -1 ? coverProducts(campaign) : page?.products || [];
+    if (
+      productsHere.some(
+        (product: Product) => String(product.code) === String(source),
+      )
+    ) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const after = event.clientX > rect.left + rect.width / 2;
+      onUpdate((draft: Campaign) => {
+        draft.products = reorderProducts(
+          draft.products,
+          source,
+          targetCode,
+          after,
+        );
+      });
+    } else {
+      placeProduct(source, selected);
+    }
+  }
+  const dragProps = {
+    onProductDragStart: (
+      product: Product,
+      event: React.DragEvent<HTMLElement>,
+    ) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(product.code));
+      setDraggingCode(String(product.code));
+    },
+    onProductDragEnd: clearDrag,
+    onProductDragOver: (
+      product: Product,
+      event: React.DragEvent<HTMLElement>,
+    ) => {
+      if (draggingCode && draggingCode !== String(product.code)) {
+        event.preventDefault();
+        setDropCode(String(product.code));
+      }
+    },
+    onProductDrop: productDrop,
+    draggingCode,
+    dropCode,
+  };
+  function openMove(product: Product) {
+    setMoveTarget(product);
+    setMovePage(selected);
+    setMovePosition("start");
+  }
+  return (
+    <div
+      className="cs-editor-section"
+      style={brochureAspectStyle(pageFormat.aspectRatio)}
+    >
+      <style>{`@page { size: ${formatGeometry.pdfWidthMm}mm ${formatGeometry.pdfHeightMm}mm; margin:0; } @media print { html,body,#root { width:${formatGeometry.pdfWidthMm}mm!important; } .print-stack .brochure-output-page { width:${formatGeometry.pdfWidthMm}mm!important;height:${formatGeometry.pdfHeightMm}mm!important; } }`}</style>
+      <div className="cs-editor-section-head">
+        <div>
+          <span className="cs-eyebrow">{t("01 / BROCHURE")}</span>
+          <h2>{t("Your brochure")}</h2>
+          <p>
+            {t("Click items on the brochure to edit them. Open settings for more options.")}
+          </p>
+        </div>
+        <div className="cs-actions cs-brochure-header-actions">
+          <Button onClick={onImportProducts}>{t("Upload products")}</Button>
+          <button
+            type="button"
+            className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`}
+            aria-expanded={showSettings}
+            aria-controls="brochure-page-settings"
+            onClick={() => {
+              setShowSettings((value) => !value);
+              setPreviewMode(false);
+              setCommentMode(false);
+            }}
+          >
+            {t(showSettings ? "Hide settings" : "Settings")}
+          </button>
+          <details className="cs-brochure-actions-menu">
+            <summary>{t("More actions")}</summary>
+            <div>
+              <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>
+              <Button
+                onClick={() =>
+                  onMakeSocial(
+                    selected === -1
+                      ? coverProducts(campaign)
+                      : page?.products || campaign.products.slice(0, 3),
+                  )
+                }
+              >
+                ＋ {t("Create social post")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setCommentMode((value) => !value);
+                  setPreviewMode(false);
+                  setShowSettings(false);
+                }}
+              >
+                {t(commentMode ? "Edit brochure" : "Comments")}
+              </Button>
+              {canEditCanvas && (
+                <Button onClick={() => setShowGuides((value) => !value)}>
+                  {showGuides ? t("Hide guides") : t("Show guides")}
+                </Button>
+              )}
+              <Button onClick={onAiReview}>{t("✦ AI review")}</Button>
+              <Button onClick={onReCut}>{t("Re-cut product image")}</Button>
+              <Button
+                onClick={() => {
+                  downloadJson(
+                    `${campaign.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-backup.json`,
+                    campaign,
+                  );
+                  onToast(t("Campaign backup downloaded."));
+                }}
+              >
+                {t("↓ Backup")}
+              </Button>
+              <Button onClick={onPrint}>{t("Print")}</Button>
+            </div>
+          </details>
+          <Button
+            tone="primary"
+            onClick={() =>
+              onExport(
+                selected === pages.length && !hasStoresPage ? 0 : selected + 1,
+              )
+            }
+          >
+            {t("↓ Download brochure")}
+          </Button>
+        </div>
+      </div>
+      <div
+        className={`cs-brochure-workspace ${showSettings ? "" : "settings-hidden"}`}
+      >
+        <aside className="cs-pages-sidebar">
+          <span className="cs-label">
+            {t("PAGES")} · {brochurePageCount(campaign, pages.length)}
+          </span>
+          <button
+            className={`${selected === -1 ? "active" : ""} ${overPage === -1 ? "cs-page-drop-target" : ""}`}
+            type="button"
+            onClick={() => setSelected(-1)}
+            onDragOver={(event) => {
+              if (draggingCode) {
+                event.preventDefault();
+                setOverPage(-1);
+              }
+            }}
+            onDragLeave={() => setOverPage(null)}
+            onDrop={(event) => pageDrop(-1, event)}
+          >
+            <span>01</span>
+            <strong>{t("Cover")}</strong>
+          </button>
+          {pages.map((item) => (
+            <button
+              key={item.index}
+              className={`${selected === item.index ? "active" : ""} ${overPage === item.index ? "cs-page-drop-target" : ""}`}
+              type="button"
+              onClick={() => setSelected(item.index)}
+              onDragOver={(event) => {
+                if (draggingCode) {
+                  event.preventDefault();
+                  setOverPage(item.index);
+                }
+              }}
+              onDragLeave={() => setOverPage(null)}
+              onDrop={(event) => pageDrop(item.index, event)}
+            >
+              <span>{String(item.index + 2).padStart(2, "0")}</span>
+              <strong>
+                {t("Page")} {item.index + 2}
+              </strong>
+              <small>
+                {item.products.length} {t("products")}
+              </small>
+            </button>
+          ))}
+          <button
+            className={selected === pages.length ? "active" : ""}
+            type="button"
+            onClick={() => setSelected(pages.length)}
+          >
+            <span>
+              {hasStoresPage ? String(pages.length + 2).padStart(2, "0") : "—"}
+            </span>
+            <strong>{t("Stores & details")}</strong>
+            {!hasStoresPage && <small>{t("Not included")}</small>}
+          </button>
+        </aside>
+        <div
+          className={`cs-page-preview ${canEditCanvas ? "edit-view" : "view-only"} ${commentMode ? "comment-view" : ""} ${canEditCanvas && showGuides ? "show-guides" : ""}`}
+        >
+          <div className="cs-preview-top">
+            <div className="cs-preview-title">
+              <span className="cs-eyebrow">{t(canEditCanvas ? "EDIT BROCHURE" : "LIVE PREVIEW")}</span>
+              <strong>{title}</strong>
+            </div>
+            <div className="cs-preview-actions">
+              <span className="cs-preview-format">{t(pageFormat.label)}</span>
+              {canEditCanvas && <>
+                {selected === -1 && <CoverImageControls campaign={campaign} onUpdate={onUpdate} />}
+                {selected === -1 && <label className="cs-button secondary cs-preview-file">{t("Change cover logo")}<input type="file" accept="image/*" aria-label={t("Change cover logo")} onChange={(event) => { void replaceCoverLogo(event.target.files?.[0]); event.target.value = ""; }} /></label>}
+                <label className="cs-button secondary cs-preview-file">{t(selected === -1 ? "Add campaign logo / image" : "Add image to page")}<input type="file" accept="image/*" aria-label={t("Add image to page")} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addPageArtwork(file); event.target.value = ""; }} /></label>
+                <button type="button" className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`} aria-expanded={showSettings} aria-controls="brochure-page-settings" onClick={() => setShowSettings((value) => !value)}>{t(showSettings ? "Hide settings" : "More settings")}</button>
+              </>}
+              <button type="button" className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`} onClick={() => { setPreviewMode(commentMode ? false : !previewMode); setCommentMode(false); setShowSettings(false); }}>{t(canEditCanvas ? "Preview only" : "Edit brochure")}</button>
+            </div>
+          </div>
+          {canEditCanvas && (
+            <p className="cs-preview-edit-hint">
+              {t(
+                "Use the buttons on each product to change its image or details. Drag the image to move it, or drop a new image onto it. Drag the logo to move it.",
+              )}
+            </p>
+          )}
+          {importWarnings
+            .filter(
+              (warning) =>
+                Number(String(warning.position).split(".")[0]) === selected + 2,
+            )
+            .map((warning) => (
+              <p
+                key={`${warning.position}-${warning.code}`}
+                className="cs-import-page-warning"
+                role="status"
+              >
+                ⚠ {t("Check brochure position")} {warning.position}:{" "}
+                {warning.name} ({warning.code}).{" "}
+                {t(
+                  "Different products share this order and appear in sequence.",
+                )}
+              </p>
+            ))}
+          {commentMode && (
+            <p className="cs-preview-edit-hint">
+              {t(
+                "Click anywhere on this page to place a comment. Click a numbered circle to read and reply.",
+              )}
+            </p>
+          )}
+          <div
+            className={`cs-preview-paper ${selected === pages.length && !hasStoresPage ? "cs-preview-excluded" : ""}`}
+            onDragOver={
+              canEditCanvas
+                ? (event) => {
+                    if ([...event.dataTransfer.types].includes("Files")) {
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "copy";
+                    }
+                  }
+                : undefined
+            }
+            onDrop={canEditCanvas ? dropArtwork : undefined}
+          >
+            {selected === pages.length && !hasStoresPage && (
+              <span className="cs-preview-excluded-label">
+                {t("Not included in brochure")}
+              </span>
+            )}
+            {selected === -1 ? (
+              <CoverPage
+                campaign={campaign}
+                settings={settings}
+                onStoresFooterChange={
+                  canEditCanvas
+                    ? (kind: string, value: Placement) =>
+                        changeStoreElement("footer", kind, value)
+                    : undefined
+                }
+                onStoresFooterHide={
+                  canEditCanvas
+                    ? (kind: string) => hideStoreElement("footer", kind)
+                    : undefined
+                }
+                onHideStore={canEditCanvas ? hideStore : undefined}
+                onStoreChange={canEditCanvas ? changeStore : undefined}
+                onContactChange={canEditCanvas ? changeStoreContact : undefined}
+                onCoverElementChange={
+                  canEditCanvas
+                    ? (kind: string, placement: Placement) =>
+                        onUpdate((draft: Campaign) => {
+                          if (!applyCoverProductPlacement(draft, kind, placement)) {
+                            draft.coverElementPlacements ||= {};
+                            draft.coverElementPlacements[kind] = placement;
+                            if (kind === "gradient")
+                              draft.coverGradientRegion = "custom";
+                          }
+                        })
+                    : undefined
+                }
+                onCoverElementHide={
+                  canEditCanvas
+                    ? (kind: string) =>
+                        onUpdate((draft: Campaign) => {
+                          if (kind === "logo") draft.showCoverLogo = false;
+                          else if (kind === "headline")
+                            draft.showCoverHeadline = false;
+                          else if (kind === "band") draft.showCoverBand = false;
+                          else if (kind === "message")
+                            draft.showCoverMessage = false;
+                          else if (kind === "gradient")
+                            draft.showCoverGradient = false;
+                        })
+                    : undefined
+                }
+                onEditImage={canEditCanvas ? onEditImage : undefined}
+                onEditScreen={canEditCanvas ? onEditScreen : undefined}
+                onEditDetails={canEditCanvas ? onEditDetails : undefined}
+                onEditPrice={canEditCanvas ? onEditPrice : undefined}
+                onEditSavings={canEditCanvas ? onEditSavings : undefined}
+                onDropImage={canEditCanvas ? dropImage : undefined}
+                onMove={canEditCanvas ? openMove : undefined}
+                onPlaceImage={canEditCanvas ? placeImage : undefined}
+                onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
+                onReorderDetails={canEditCanvas ? reorderDetails : undefined}
+                onProductChange={
+                  canEditCanvas
+                    ? (
+                        product: Product,
+                        field: keyof Product | Partial<Product>,
+                        value?: Product[keyof Product],
+                      ) => updateProduct(product.code, field, value)
+                    : undefined
+                }
+                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+                {...(canEditCanvas ? dragProps : {})}
+              />
+            ) : page ? (
+              <ProductPage
+                campaign={campaign}
+                settings={settings}
+                page={page}
+                onStoresFooterChange={
+                  canEditCanvas
+                    ? (kind: string, value: Placement) =>
+                        changeStoreElement("footer", kind, value)
+                    : undefined
+                }
+                onStoresFooterHide={
+                  canEditCanvas
+                    ? (kind: string) => hideStoreElement("footer", kind)
+                    : undefined
+                }
+                onHideStore={canEditCanvas ? hideStore : undefined}
+                onStoreChange={canEditCanvas ? changeStore : undefined}
+                onContactChange={canEditCanvas ? changeStoreContact : undefined}
+                onEditImage={canEditCanvas ? onEditImage : undefined}
+                onEditScreen={canEditCanvas ? onEditScreen : undefined}
+                onEditDetails={canEditCanvas ? onEditDetails : undefined}
+                onEditPrice={canEditCanvas ? onEditPrice : undefined}
+                onEditSavings={canEditCanvas ? onEditSavings : undefined}
+                onDropImage={canEditCanvas ? dropImage : undefined}
+                onMove={canEditCanvas ? openMove : undefined}
+                onPlaceImage={canEditCanvas ? placeImage : undefined}
+                onResizeCard={canEditCanvas ? resizeCard : undefined}
+                onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
+                onReorderDetails={canEditCanvas ? reorderDetails : undefined}
+                onProductChange={
+                  canEditCanvas
+                    ? (
+                        product: Product,
+                        field: keyof Product | Partial<Product>,
+                        value?: Product[keyof Product],
+                      ) => updateProduct(product.code, field, value)
+                    : undefined
+                }
+                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+                {...(canEditCanvas ? dragProps : {})}
+              />
+            ) : (
+              <StoresPage
+                campaign={campaign}
+                settings={settings}
+                onElementChange={
+                  canEditCanvas
+                    ? (kind: string, value: Placement) =>
+                        changeStoreElement("page", kind, value)
+                    : undefined
+                }
+                onElementHide={
+                  canEditCanvas
+                    ? (kind: string) => hideStoreElement("page", kind)
+                    : undefined
+                }
+                onHideStore={canEditCanvas ? hideStore : undefined}
+                onStoreChange={canEditCanvas ? changeStore : undefined}
+                onContactChange={canEditCanvas ? changeStoreContact : undefined}
+                onPlaceStore={canEditCanvas ? placeStore : undefined}
+                onReorderStore={canEditCanvas ? reorderStore : undefined}
+                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+              />
+            )}
+            {commentMode && (
+              <BrochureComments
+                key={`${campaign.id}-${selected}`}
+                campaign={campaign}
+                pageIndex={selected + 1}
+                pageLabel={title}
+                user={user}
+                members={members}
+                onAction={onReviewAction}
+              />
+            )}
+          </div>
+        </div>
+        {showSettings && (
+          <aside
+            className="cs-page-controls"
+            id="brochure-page-settings"
+            key={selected}
+          >
+            <span className="cs-label">{t("PAGE SETTINGS")}</span>
+            <h3>{title}</h3>
+            <PageSettingsTabs><SettingsGroup category="layout" title={t("Brochure size")}>
+              <BrochureFormatPicker
+                value={campaign}
+                onChange={(value: string) =>
+                  onUpdate((draft: Campaign) => {
+                    draft.brochureFormat = value;
+                  })
+                }
+              />
+            </SettingsGroup>
+            {televisions.length > 0 && (
+              <SettingsGroup category="images" title={t("TV wallpaper")}>
+                <p>
+                  {t(
+                    "Choose one picture for a TV or every TV in this brochure.",
+                  )}
+                </p>
+                <Button
+                  onClick={() => {
+                    const television = televisions[0];
+                    if (television) onEditScreen(television);
+                  }}
+                >
+                  {t("Choose TV wallpaper")}
+                </Button>
+              </SettingsGroup>
+            )}
+            <SettingsGroup category="review"
+              title={`${t("Page comments")} · ${reviewCommentsForLayout(campaign).filter((item) => item.pageIndex === selected + 1).length}`}
+            >
+              <ReviewPanel
+                campaign={campaign}
+                user={user}
+                members={members}
+                pageIndex={selected + 1}
+                pageLabel={title}
+                onAction={onReviewAction}
+              />
+            </SettingsGroup>
+            <SettingsGroup category="appearance" title={t("Background")}>
+              <BackgroundPicker
+                compact
+                color={backgroundColor}
+                defaultColor={defaultBackground}
+                onChange={changeBackground}
+                gradient={backgroundGradient}
+                onGradientChange={changeGradient}
+                image={backgroundImage}
+                onImageChange={backgroundKind === "cover" ? undefined : changeBackgroundImage}
+                onReset={pageOverride ? resetBackground : undefined}
+                onAllPages={
+                  backgroundKind === "product"
+                    ? () =>
+                        onUpdate((draft: Campaign) => {
+                          draft.productBackgroundColor =
+                            backgroundColor ||
+                            (backgroundImage ? defaultBackground : "");
+                          draft.productBackgroundGradient = backgroundGradient;
+                          draft.productBackgroundImage = backgroundImage;
+                          for (const config of Object.values(
+                            draft.pages || {},
+                          )) {
+                            delete config.backgroundColor;
+                            delete config.backgroundGradient;
+                            delete config.backgroundImage;
+                          }
+                          draft.aiBackgroundChanged = true;
+                        })
+                    : undefined
+                }
+              />
+              {backgroundKind !== "stores" && campaign.aiBackgroundChanged && (
+                <div className="cs-ai-background-reminder" role="status">
+                  <p>
+                    {t(
+                      "Background changed. Run AI again to match product images and inch labels.",
+                    )}
+                  </p>
+                  <Button onClick={onAiReview}>{t("✦ Run AI again")}</Button>
+                </div>
+              )}
+            </SettingsGroup>
+            {selected === -1 && (
+              <SettingsGroup category="appearance" title={t("Cover design")}>
+                <CoverDesignControls
+                  campaign={campaign}
+                  onUpdate={onUpdate}
+                  onToast={onToast}
+                />
+              </SettingsGroup>
+            )}
+            {page && (
+              <SettingsGroup category="layout" title={t("Grid")}>
+                <BrochureGridPicker
+                  value={page.layout}
+                  onChange={(value) =>
+                    onUpdate((draft: Campaign) => {
+                      applyProductPageLayout(draft, selected, value);
+                    })
+                  }
+                />
+                <p className="cs-control-help">
+                  {t(
+                    "Background and grid can be changed later. Run AI again after changing the background.",
+                  )}
+                </p>
+              </SettingsGroup>
+            )}
+            <SettingsGroup category="images" title={t("Images, text & layers")}>
+              <PageLayersControls
+                campaign={campaign}
+                pageKey={artworkPageKey}
+                onUpdate={onUpdate}
+                onToast={onToast}
+              />
+            </SettingsGroup>
+            <SettingsGroup category="layout" title={t("Page layout & content")}>
+              {selected === -1 ? (
+                <>
+                  <CoverTemplatePicker
+                    campaign={campaign}
+                    onUpdate={onUpdate}
+                  />
+                  <Field
+                    label={t("Campaign name")}
+                    hint={t(
+                      "Used in the workspace and as the cover title until you set a different title.",
+                    )}
+                  >
+                    <input
+                      value={campaign.name || ""}
+                      onChange={(event) =>
+                        onUpdate((draft: Campaign) => {
+                          draft.name = event.target.value;
+                        })
+                      }
+                    />
+                  </Field>
+                  <CoverHeadlineEditor
+                    campaign={campaign}
+                    onUpdate={onUpdate}
+                  />
+                  {!pages.length && (
+                    <details className="cs-store-elements-options">
+                      <summary>
+                        {t("Stores at the end of the brochure")}
+                      </summary>
+                      <StorePageControls
+                        campaign={campaign}
+                        settings={settings}
+                        onUpdate={onUpdate}
+                      />
+                    </details>
+                  )}
+                  <Field label={t("Cover message")}>
+                    <textarea
+                      rows={3}
+                      aria-label={t("Cover message")}
+                      value={campaign.tagline}
+                      onChange={(event) =>
+                        onUpdate((draft: Campaign) => {
+                          draft.tagline = event.target.value;
+                        })
+                      }
+                    />
+                  </Field>
+                  <p className="cs-control-help">
+                    {t(
+                      "Artwork, headline, message, and brochure logos can be changed for each campaign.",
+                    )}
+                  </p>
+                </>
+              ) : page ? (
+                <>
+                  <div className="cs-spacing-controls">
+                    <strong>{t("Spacing")}</strong>
+                    {(
+                      [
+                        ["horizontal", t("Between products · horizontal"), 3.1],
+                        ["vertical", t("Between products · vertical"), 3.2],
+                        ["content", t("Between details and price"), 1],
+                      ] as const
+                    ).map(([key, label, fallback]) => (
+                      <label key={key}>
+                        <span>
+                          {label}
+                          <b>
+                            {Number(page.spacing?.[key] ?? fallback).toFixed(1)}
+                            %
+                          </b>
+                        </span>
+                        <input
+                          type="range"
+                          min={key === "content" ? 0 : 0.5}
+                          max={key === "content" ? 4 : 6}
+                          step="0.1"
+                          value={Number(page.spacing?.[key] ?? fallback)}
+                          onChange={(event) =>
+                            setPage("spacing", {
+                              horizontal: page.spacing?.horizontal ?? 3.1,
+                              vertical: page.spacing?.vertical ?? 3.2,
+                              content: page.spacing?.content ?? 1,
+                              [key]: Number(event.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
+                    {page.spacing && (
+                      <button
+                        type="button"
+                        className="cs-spacing-reset"
+                        onClick={() => setPage("spacing", null)}
+                      >
+                        {t("Reset spacing")}
+                      </button>
+                    )}
+                  </div>
+                  <ImageUploadButton
+                    label={t("Optional page artwork")}
+                    value={page.image}
+                    onFile={async (file) =>
+                      setPage("image", await readImage(file))
+                    }
+                    onRemove={() => setPage("image", "")}
+                  />
+                  <label className="cs-store-page-switch">
+                    <input
+                      type="checkbox"
+                      checked={page.showFooter}
+                      onChange={(event) =>
+                        setPage("showFooter", event.target.checked)
+                      }
+                    />
+                    <span>
+                      <strong>{t("NEPTUN footer")}</strong>
+                      <small>
+                        {t(
+                          "Show the NEPTUN wordmark and line on this product page.",
+                        )}
+                      </small>
+                    </span>
+                  </label>
+                  {page.showFooter && (
+                    <label className="cs-store-page-switch">
+                      <input
+                        type="checkbox"
+                        checked={page.showFooterPageNumber}
+                        onChange={(event) =>
+                          setPage("showFooterPageNumber", event.target.checked)
+                        }
+                      />
+                      <span>
+                        <strong>{t("Show page number")}</strong>
+                        <small>
+                          {t("Turn off for only the NEPTUN logo and line.")}
+                        </small>
+                      </span>
+                    </label>
+                  )}
+                  {page.index === pages.at(-1)?.index && (
+                    <details className="cs-store-elements-options">
+                      <summary>
+                        {t("Stores at the end of the brochure")}
+                      </summary>
+                      <StorePageControls
+                        campaign={campaign}
+                        settings={settings}
+                        onUpdate={onUpdate}
+                      />
+                    </details>
+                  )}
+                  <button
+                    type="button"
+                    className="cs-page-footer-apply"
+                    onClick={() =>
+                      onUpdate((draft: Campaign) => {
+                        draft.showInteriorFooter = page.showFooter;
+                        draft.showFooterPageNumber = page.showFooterPageNumber;
+                        draft.pages ||= {};
+                        for (const item of pages)
+                          draft.pages[item.index] = {
+                            ...(draft.pages[item.index] || {}),
+                            showFooter: page.showFooter,
+                            showFooterPageNumber: page.showFooterPageNumber,
+                          };
+                      })
+                    }
+                  >
+                    {t("Apply footer choice to all product pages")}
+                  </button>
+                  <p className="cs-control-help">
+                    {t(
+                      "Drag products on the preview to change their order, or use the move control to choose a page.",
+                    )}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="cs-control-help">
+                    {t("Manage locations from")} <b>{t("Stores & footer")}</b>{" "}
+                    {t("to update future campaigns.")}
+                  </p>
+                  <StorePageControls
+                    campaign={campaign}
+                    settings={settings}
+                    onUpdate={onUpdate}
+                  />
+                  <SocialContactFields
+                    campaign={campaign}
+                    settings={settings}
+                    onUpdate={onUpdate}
+                  />
+                </>
+              )}
+            </SettingsGroup>
+            <SettingsGroup category="prices" title={t("Offer styles & savings")}>
+              <OfferStyleControls
+                styleValue={campaign.offerStyle || "current"}
+                savingValue={campaign.savingMode || "amount"}
+                onStyleChange={(value: string) =>
+                  onUpdate((draft: Campaign) => {
+                    draft.offerStyle = value;
+                  })
+                }
+                onSavingChange={(value: string) =>
+                  onUpdate((draft: Campaign) => {
+                    draft.savingMode = value;
+                  })
+                }
+              />
+              <CategorySavingsControls
+                campaign={campaign}
+                onUpdate={onUpdate}
+              />
+              <PriceLogoPicker campaign={campaign} onUpdate={onUpdate} />
+              <div className="cs-store-checkboxes">
+                {(["red", "blue", "blueBand", "saving"] as const).map((key) => (
+                  <label key={key}>
+                    <span>{t(`Price artwork color: ${key}`)}</span>
+                    <input
+                      type="color"
+                      value={
+                        campaign.pricePalette?.[key] ||
+                        {
+                          red: "#ef4023",
+                          blue: "#243a6a",
+                          blueBand: "#e7eae9",
+                          saving: "#ef4023",
+                        }[key]
+                      }
+                      onChange={(event) =>
+                        onUpdate((draft: Campaign) => {
+                          draft.pricePalette ??= {
+                            red: "#ef4023",
+                            blue: "#243a6a",
+                            blueBand: "#e7eae9",
+                            saving: "#ef4023",
+                          };
+                          draft.pricePalette[key] = event.target.value;
+                        })
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            </SettingsGroup>
+            <SettingsGroup category="logos" title={t("Logos & artwork")}>
+              <BrandLogoManager campaign={campaign} onUpdate={onUpdate} />
+              <BrochureAssetPicker campaign={campaign} onUpdate={onUpdate} />
+            </SettingsGroup>
+            <SettingsGroup category="prices" title={t("Payment message")}>
+              <PaymentNoteEditor campaign={campaign} onUpdate={onUpdate} />
+            </SettingsGroup>
+          </PageSettingsTabs>
+</aside>
+        )}
+      </div>
+      <div className="print-stack">
+        <CoverPage campaign={campaign} settings={settings} />
+        {pages.map((item) => (
+          <ProductPage
+            key={item.index}
+            campaign={campaign}
+            settings={settings}
+            page={item}
+          />
+        ))}
+        {hasStoresPage && (
+          <StoresPage campaign={campaign} settings={settings} />
+        )}
+      </div>
+      {moveTarget && (
+        <Modal
+          title={t("Move product")}
+          kicker={t("BROCHURE POSITION")}
+          onClose={() => setMoveTarget(null)}
+        >
+          <div className="cs-move-product-intro">
+            <ProductImage product={moveTarget} />
+            <div>
+              <strong>{moveTarget.name}</strong>
+              <small>
+                {moveTarget.brand} · {moveTarget.code}
+              </small>
+            </div>
+          </div>
+          <Field label={t("Destination page")}>
+            <select
+              value={movePage}
+              onChange={(event) => setMovePage(Number(event.target.value))}
+            >
+              <option value={-1}>{t("Cover")}</option>
+              {pages.map((item) => (
+                <option key={item.index} value={item.index}>
+                  {t("Page")} {item.index + 2} · {item.products.length}{" "}
+                  {t("products")}
+                </option>
+              ))}
+              {pages.length === 0 && campaign.products.length > 1 && (
+                <option value={0}>{t("First product page")}</option>
+              )}
+            </select>
+          </Field>
+          <Field label={t("Position on page")}>
+            <select
+              value={movePosition}
+              onChange={(event) => setMovePosition(event.target.value)}
+            >
+              <option value="start">{t("At the beginning")}</option>
+              <option value="end">{t("At the end")}</option>
+            </select>
+          </Field>
+          <p className="cs-move-product-note">
+            {t("If a page is full, its last product moves to the next page.")}
+          </p>
+          <div className="cs-modal-actions">
+            <Button onClick={() => setMoveTarget(null)}>{t("Cancel")}</Button>
+            <Button
+              tone="primary"
+              onClick={() => {
+                placeProduct(moveTarget.code, movePage, movePosition);
+                setMoveTarget(null);
+              }}
+            >
+              {t("Move product")}
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function enrichSavedCampaigns(saved: Campaign[], products: Product[]) {
+  const byCode = new Map(
+    products.map((product: Product) => [String(product.code), product]),
+  );
+  return (saved || []).map((item) => repairCoverProductLayout({
+    ...item,
+    status: item.status || "in_progress",
+    products: (item.products || []).map((product: Product) => ({
+      ...product,
+      warranty:
+        product.warranty || byCode.get(String(product.code))?.warranty || "",
+      specs: {
+        ...(byCode.get(String(product.code))?.specs || {}),
+        ...(product.specs || {}),
+      },
+    })),
+  }));
+}
+
+export default function App({ initialUser, onAuthChange }: { initialUser?: SessionUser; onAuthChange?: (user: SessionUser | null, notice?: string) => void } = {}) {
+  const [language, setLocale] = useState(getLanguage);
+  const [, setBrandLogoRevision] = useState(0);
+  useEffect(() => {
+    loadPreparedBrandLogos().then(() =>
+      setBrandLogoRevision((value) => value + 1),
+    );
+  }, []);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  function changeLanguage(next: string) {
+    setLanguage(next);
+    setLocale(next);
+  }
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  const [user, setUser] = useState<SessionUser | null>(initialUser || null);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [authReady, setAuthReady] = useState(false);
+  const [authConfigured, setAuthConfigured] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [settings, setSettings] = useState<Settings>(() =>
+    resolveSettings(null),
+  );
+  const [catalog, setCatalog] = useState<Product[]>([]);
+  const [catalogMeta, setCatalogMeta] = useState<{ count?: number } | null>(
+    null,
+  );
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [section, setSectionValue] = useState("campaigns");
+  const [settingsDirty, setSettingsDirty] = useState(false);
+  const [settingsBusy, setSettingsBusy] = useState(false);
+  function canLeaveSettings() {
+    return (
+      !settingsBusy &&
+      (!settingsDirty ||
+        window.confirm(t("Discard your unsaved Settings changes?")))
+    );
+  }
+  function setSection(next: string) {
+    if (next === section || section !== "stores" || canLeaveSettings())
+      setSectionValue(next);
+  }
+  const [socialSeed, setSocialSeed] = useState<SocialSeed | null>(null);
+  const activeEditorRef = useRef({ activeId, section });
+  activeEditorRef.current = { activeId, section };
+  const [editorTab, setEditorTab] = useState("brochure");
+  const [brochurePreviewVersion, setBrochurePreviewVersion] = useState(0);
+  const [modal, setModal] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [newBusy, setNewBusy] = useState(false);
+  const [aiTask, setAiTask] = useState<CampaignReviewTask | null>(null);
+  const [aiDestination, setAiDestination] = useState("manual");
+  const activeImageSearches = useRef(new Set<string>());
+  const [detail, setDetail] = useState<DetailSelection | null>(null);
+  const [imageEditCode, setImageEditCode] = useState<string | null>(null);
+  const [screenEditCode, setScreenEditCode] = useState<string | null>(null);
+  const [priceEdit, setPriceEdit] = useState<{
+    code: string;
+    focusSavings?: boolean;
+  } | null>(null);
+  const [toast, setToast] = useState("");
+  const {
+    campaigns,
+    setCampaigns,
+    updateCampaign,
+    undoCampaign,
+    redoCampaign,
+    historyCounts,
+    interactionHandlers,
+  } = useCampaignEditHistory({
+    activeId,
+    enabled: section === "editor",
+    persist: saveCampaign,
+    onError: (error: unknown) => {
+      console.error(error);
+      setToast(errorMessage(error));
+    },
+  });
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogSelection, setCatalogSelection] = useState({ categoryPath: "", brand: "", availability: "all" });
+  const [catalogVisible, setCatalogVisible] = useState(60);
+  const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
+  const [exportId, setExportId] = useState<string | null>(null);
+  const [exportPage, setExportPage] = useState(0);
+  useEffect(() => {
+    if (section === "editor") window.scrollTo(0, 0);
+  }, [section, activeId]);
+  useEffect(() => {
+    getSession()
+      .then(({ configured, user: sessionUser }) => {
+        setAuthConfigured(configured);
+        setUser(sessionUser);
+        onAuthChange?.(sessionUser);
+      })
+      .catch((error) => setAuthError(errorMessage(error)))
+      .finally(() => setAuthReady(true));
+  }, []);
+  useEffect(() => {
+    if (!user) return;
+    getMembers()
+      .then(setMembers)
+      .catch((error) => console.error("Could not load team members:", error));
+    Promise.allSettled([
+      bootstrapWorkspace(),
+      loadCatalog().then((products) => ({ products, count: products.length })),
+    ]).then(([workspaceResult, catalogResult]) => {
+      const products =
+        catalogResult.status === "fulfilled"
+          ? catalogResult.value.products || []
+          : [];
+      if (catalogResult.status === "fulfilled") {
+        setCatalog(products);
+        setCatalogMeta(catalogResult.value);
+      } else {
+        console.error(catalogResult.reason);
+      }
+      if (workspaceResult.status === "fulfilled") {
+        const { campaigns: saved, settings: custom } = workspaceResult.value;
+        setCampaigns((current) =>
+          mergeCampaignSnapshots(
+            current,
+            enrichSavedCampaigns(saved, products),
+            activeEditorRef.current.activeId,
+            activeEditorRef.current.section === "editor",
+          ),
+        );
+        setSettings(resolveSettings(custom));
+      } else {
+        console.error(workspaceResult.reason);
+      }
+      if (
+        workspaceResult.status === "rejected" ||
+        catalogResult.status === "rejected"
+      )
+        setToast(
+          workspaceResult.status === "rejected"
+            ? workspaceResult.reason.message
+            : t("Could not load local data. Please refresh."),
+        );
+    });
+  }, [user?.email]);
+  useEffect(() => {
+    if (!user) return;
+    const refresh = async () => {
+      const active = document.activeElement;
+      if (
+        active?.matches?.("input, textarea, [contenteditable=true]") ||
+        hasPendingSaves()
+      )
+        return;
+      try {
+        const latest = await getCampaigns();
+        if (hasPendingSaves()) return;
+        setCampaigns((current) =>
+          mergeCampaignSnapshots(
+            current,
+            enrichSavedCampaigns(latest, catalog),
+            activeId,
+            section === "editor",
+          ),
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    const timer = setInterval(refresh, 15_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [user?.email, catalog, activeId, section]);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  const campaign = campaigns.find((item) => item.id === activeId);
+  const imageEditProduct = campaign?.products.find(
+    (product) => product.code === imageEditCode,
+  );
+  const screenEditProduct =
+    campaign &&
+    (campaign.products.find(
+      (product: Product) => String(product.code) === screenEditCode,
+    ) ||
+      campaignTelevisions(campaign).find(
+        (product: Product) => String(product.code) === screenEditCode,
+      ));
+  useEffect(() => {
+    if (
+      !pendingPrintId ||
+      campaign?.id !== pendingPrintId ||
+      section !== "editor" ||
+      editorTab !== "brochure"
+    )
+      return;
+    let cancelled = false;
+    const previousTitle = document.title;
+    const timer = requestAnimationFrame(async () => {
+      const images = [
+        ...document.querySelectorAll<HTMLImageElement>(".print-stack img"),
+      ];
+      await Promise.all(
+        images.map((image) =>
+          image.complete
+            ? Promise.resolve()
+            : new Promise((resolve) => {
+                image.addEventListener("load", resolve, { once: true });
+                image.addEventListener("error", resolve, { once: true });
+              }),
+        ),
+      );
+      await document.fonts.ready;
+      if (cancelled) return;
+      document.title = `${campaign.name} · NEPTUN`;
+      window.print();
+      document.title = previousTitle;
+      setPendingPrintId(null);
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(timer);
+      document.title = previousTitle;
+    };
+  }, [pendingPrintId, campaign?.id, campaign?.name, section, editorTab]);
+  async function runReviewAction(
+    action: string,
+    details: Record<string, JsonValue | undefined> = {},
+  ) {
+    if (!activeId) return false;
+    try {
+      const serializedDetails = Object.fromEntries(
+        Object.entries(details).filter(
+          (entry): entry is [string, JsonValue] => entry[1] !== undefined,
+        ),
+      );
+      const updated = await reviewCampaign(activeId, action, serializedDetails);
+      setCampaigns((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      return true;
+    } catch (error) {
+      setToast(errorMessage(error));
+      return false;
+    }
+  }
+  function openAiReview(destination = "manual") {
+    if (!campaign) return;
+    setAiTask(startCampaignAiReview(campaign, destination));
+    setAiDestination(destination);
+    setModal("ai");
+  }
+  function goToBrochure() {
+    setEditorTab("brochure");
+  }
+  async function finishAiReview(proposals: AiProposal[], acceptText: boolean) {
+    if (!campaign) return;
+    const result = updateCampaign(
+      (draft: Campaign) => {
+        applyAiProposals(
+          draft,
+          acceptText
+            ? proposals
+            : proposals
+                .filter((item: { type: string }) => item.type === "image")
+                .map((item) => ({ ...item, approved: false })),
+        );
+        if (aiDestination !== "images")
+          recordTextReview(
+            draft,
+            proposals,
+            aiTask?.getSnapshot().checkedText ?? [],
+          );
+      },
+      { group: null },
+    );
+    if (!result) return;
+    try {
+      const saved = await result.saved;
+      if (aiDestination === "complete") {
+        const completed = await reviewCampaign(saved.id, "complete");
+        setCampaigns((current) =>
+          current.map((item) => (item.id === completed.id ? completed : item)),
+        );
+      }
+    } catch (error) {
+      setToast(errorMessage(error));
+      return;
+    }
+    setModal(null);
+    if (
+      aiDestination === "brochure" ||
+      aiDestination === "print" ||
+      aiDestination === "export"
+    )
+      setEditorTab("brochure");
+    if (aiDestination === "print") setPendingPrintId(activeId);
+    if (aiDestination === "export") setExportId(activeId);
+    setToast(
+      t(
+        aiDestination === "complete"
+          ? "Campaign completed after AI review."
+          : "AI review saved.",
+      ),
+    );
+  }
+  function createCampaign(item: Campaign) {
+    if (item.products.some((product) => Number.isInteger(product.brochurePage))) materializeProductPages(item);
+    const searches = missingImageTargets(item.products).filter((target) => startMissingImageSearch(item, target));
+    setCampaigns((current) => [item, ...current]);
+    saveCampaign(item).catch((error: unknown) => setToast(errorMessage(error)));
+    setActiveId(item.id);
+    setSection("editor");
+    setEditorTab("brochure");
+    setModal(null);
+    setToast(t(item.products.length ? "Campaign created. Your brochure is ready to edit." : "Campaign created. Add products when you are ready."));
+    if (searches.length) searchImportedImages(searches, item.id);
+  }
+  function searchImportedImages(
+    targets: MissingImageTarget[],
+    campaignId: string,
+    retry = false,
+  ) {
+    for (const target of targets)
+      activeImageSearches.current.add(target.requestId);
+    void findMissingProductImages(
+      targets,
+      (target, result) => {
+        updateCampaign(
+          (draft: Campaign) => {
+            finishMissingImageSearch(draft, target, result);
+          },
+          {
+            id: campaignId,
+            group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
+          },
+        );
+      },
+      retry,
+    ).finally(() => {
+      for (const target of targets)
+        activeImageSearches.current.delete(target.requestId);
+    });
+  }
+  function findProductImage(offer: Product) {
+    if (!campaign) return;
+    const targets = missingImageTargets([offer], true);
+    const started: MissingImageTarget[] = [];
+    updateCampaign((draft: Campaign) => {
+      for (const target of targets) {
+        const liveOffer = draft.products.find(
+          (product) => product.code === target.offerCode,
+        );
+        const live = target.memberCode
+          ? liveOffer?.bundleProducts?.find(
+              (member) => member.code === target.memberCode,
+            )
+          : liveOffer;
+        if (
+          (!live?.imageSearch?.requestId ||
+            !activeImageSearches.current.has(live.imageSearch.requestId)) &&
+          startMissingImageSearch(draft, target)
+        )
+          started.push(target);
+      }
+    });
+    searchImportedImages(
+      started,
+      campaign.id,
+      targets.some((target) => {
+        const member = target.memberCode
+          ? offer.bundleProducts?.find(
+              (product) => product.code === target.memberCode,
+            )
+          : offer;
+        return ["not_found", "failed", "found"].includes(
+          member?.imageSearch?.status || "",
+        );
+      }),
+    );
+  }
+  function addProducts(
+    products: Product[],
+    skipped = 0,
+    importOptions: ImportOptions | null = null,
+  ) {
+    const targets = missingImageTargets(products);
+    const started: MissingImageTarget[] = [];
+    const updated = updateCampaign((draft: Campaign) => {
+      const byCode = new Map(draft.products.map((p) => [p.code, p]));
+      products.forEach((product: Product) =>
+        byCode.set(product.code, { ...byCode.get(product.code), ...product }),
+      );
+      if (importOptions?.brochureImport) {
+        const imported = new Set(
+          products.map((product: Product) => String(product.code)),
+        );
+        const lastPage = Math.max(
+          1,
+          ...products.map((product: Product) => product.brochurePage || 1),
+        );
+        const remaining = [...byCode.values()].filter(
+          (product: Product) => !imported.has(String(product.code)),
+        );
+        remaining.forEach((product: Product) => {
+          if (!Number.isInteger(product.brochurePage))
+            product.brochurePage = lastPage + 1;
+        });
+        draft.products = [
+          ...products.flatMap((product) => {
+            const merged = byCode.get(product.code);
+            return merged ? [merged] : [];
+          }),
+          ...remaining,
+        ];
+        draft.coverProductCodes = products
+          .filter((product: Product) => product.brochurePage === 1)
+          .map((product: Product) => String(product.code));
+        draft.brochureImportWarnings = importOptions.warnings || [];
+        materializeProductPages(draft);
+      } else draft.products = [...byCode.values()];
+      for (const target of targets) {
+        const liveOffer = draft.products.find(
+          (product) => product.code === target.offerCode,
+        );
+        const live = target.memberCode
+          ? liveOffer?.bundleProducts?.find(
+              (member) => member.code === target.memberCode,
+            )
+          : liveOffer;
+        if (
+          live?.imageSearch?.status !== "searching" &&
+          startMissingImageSearch(draft, target)
+        )
+          started.push(target);
+      }
+    });
+    if (updated) searchImportedImages(started, updated.campaign.id);
+    setModal(null);
+    setEditorTab("brochure");
+    setBrochurePreviewVersion((version) => version + 1);
+    setToast(
+      `${products.length} ${t(products.length === 1 ? "product" : "products")} ${t(products.length === 1 ? "was added to campaign" : "were added to campaign")}${skipped ? ` · ${skipped} ${t(skipped === 1 ? "row not added" : "rows not added")}` : ""}.`,
+    );
+  }
+  function duplicateCampaign(item: Campaign) {
+    const copy = structuredClone(item);
+    copy.id = crypto.randomUUID();
+    copy.status = "in_progress";
+    copy.reviewComments = [];
+    copy.reviewHistory = [];
+    copy.name += ` · ${t("Copy")}`;
+    copy.createdAt = copy.updatedAt = new Date().toISOString();
+    setCampaigns((current) => [copy, ...current]);
+    saveCampaign(copy).catch((error: unknown) => setToast(errorMessage(error)));
+    setToast(t("Campaign duplicated."));
+  }
+  async function confirmDeleteCampaign() {
+    if (!deleteTarget || deleteBusy) return;
+    setDeleteBusy(true);
+    try {
+      await removeCampaign(deleteTarget.id);
+      setCampaigns((current) =>
+        current.filter((item) => item.id !== deleteTarget.id),
+      );
+      if (activeId === deleteTarget.id) setActiveId(null);
+      setDeleteTarget(null);
+      setToast(t("Campaign deleted."));
+    } catch (error) {
+      setToast(errorMessage(error));
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+  const catalogItems = useMemo(
+    () => catalogWithExcelProducts(catalog, campaigns),
+    [catalog, campaigns],
+  );
+  const catalogMatches = useMemo(
+    () => searchProducts(filterCatalog(catalogItems, catalogSelection), catalogQuery),
+    [catalogItems, catalogQuery, catalogSelection],
+  );
+  const catalogResults = catalogMatches.slice(0, catalogVisible);
+  if (!user)
+    return (
+      <div className="cs-signin">
+        <div className="cs-signin-art">
+          <img src={logo} alt="NEPTUN" />
+          <div>
+            <span>{t("CAMPAIGN STUDIO")}</span>
+            <h1>
+              {t("Every offer has")}
+              <br />
+              {t("a story to tell.")}
+            </h1>
+            <p>{t("From product data to a brochure ready to share.")}</p>
+          </div>
+        </div>
+        <div className="cs-signin-panel">
+          <LanguageSwitch language={language} onChange={changeLanguage} />
+          <span className="cs-eyebrow">NEPTUN KOSOVO</span>
+          <h2>
+            {t("Welcome to")}
+            <br />
+            {t("your workspace.")}
+          </h2>
+          <p>
+            {t(
+              "Sign in with your Staff or PM account to see shared campaigns and reviews.",
+            )}
+          </p>
+          {!authReady ? (
+            <p>{t("Checking session…")}</p>
+          ) : (
+            <form
+              className="cs-team-login"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setLoginBusy(true);
+                setAuthError("");
+                try {
+                  const result = await login(loginEmail, loginPassword);
+                  setUser(result.user);
+                  onAuthChange?.(result.user);
+                  setLoginPassword("");
+                } catch (error) {
+                  setAuthError(errorMessage(error));
+                } finally {
+                  setLoginBusy(false);
+                }
+              }}
+            >
+              <label>
+                {t("Email")}
+                <input
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  placeholder="staff@neptun-ks.com"
+                />
+              </label>
+              <label>
+                {t("Password")}
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                />
+              </label>
+              {authError && (
+                <p className="cs-team-auth-error" role="alert">
+                  {authError}
+                </p>
+              )}
+              {!authConfigured && (
+                <p className="cs-team-auth-error">
+                  {t(
+                    "Configure Staff and PM accounts in .env.local, then restart the app.",
+                  )}
+                </p>
+              )}
+              <Button
+                type="submit"
+                tone="primary"
+                disabled={loginBusy || !authConfigured}
+              >
+                {loginBusy ? t("Signing in…") : t("Sign in to studio →")}
+              </Button>
+            </form>
+          )}
+          <small>
+            {t("Shared campaigns and comments are saved on this local server.")}
+          </small>
+          <PromoAutomationCredit />
+        </div>
+      </div>
+    );
+  return (
+    <div className="campaign-app" {...interactionHandlers}>
+      <aside className={`cs-sidebar ${mobileMenuOpen ? "menu-open" : ""}`}>
+        <div className="cs-sidebar-brand">
+          <img src={logo} alt="NEPTUN" />
+          <span>{t("CAMPAIGN STUDIO")}</span>
+        </div>
+        <button
+          className="cs-mobile-menu-toggle"
+          type="button"
+          aria-label={t(mobileMenuOpen ? "Close menu" : "Open menu")}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="studio-navigation"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <nav className="cs-sidebar-nav" id="studio-navigation">
+          <span>{t("WORKSPACE")}</span>
+          {(
+            [
+              ["campaigns", "Campaigns"],
+              ["catalog", "Product catalog"],
+              ["social", "Social posts"],
+              ["stores", "Settings"],
+              ...(canManageUsers(user) ? [["users", "Team & access"]] : []),
+              ["profile", "Profile & security"],
+            ] as [string, string][]
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className={section === id ? "active" : ""}
+              onClick={() => {
+                setSection(id);
+                setActiveId(null);
+                setMobileMenuOpen(false);
+              }}
+            >
+              <i>{icons[id]}</i>
+              {t(label)}
+            </button>
+          ))}
+        </nav>
+        <div className="cs-sidebar-bottom">
+          <div className="cs-catalog-status">
+            <span className="cs-status-dot" />
+            <div>
+              <strong>{t("Catalog connected")}</strong>
+              <small>
+                {catalogMeta?.count || catalog.length} {t("products")} ·{" "}
+                {t("Backend database")}
+              </small>
+            </div>
+          </div>
+          <a href="/classic" className="cs-classic-link">
+            {t("Open classic editor ↗")}
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              if (section === "stores" && !canLeaveSettings()) return;
+              logout().finally(() => {
+                setUser(null);
+                onAuthChange?.(null);
+                setCampaigns([]);
+                setActiveId(null);
+                setSection("campaigns");
+              });
+            }}
+          >
+            {user.email} · {t(roleLabel(user.role))} ·{" "}
+            {t("Sign out")} <span>→</span>
+          </button>
+          <PromoAutomationCredit />
+        </div>
+      </aside>
+      <main className="cs-content">
+        <header className="cs-topbar">
+          <div className="cs-breadcrumb">
+            {t("Workspace")} <span>/</span>{" "}
+            {section === "editor"
+              ? campaign?.name
+              : section === "campaigns"
+                ? t("Campaigns")
+                : section === "catalog"
+                  ? t("Product catalog")
+                  : section === "social"
+                    ? "Social posts"
+                    : section === "users"
+                      ? t("Team & access")
+                      : section === "profile"
+                        ? t("Profile & security")
+                        : t("Settings")}
+          </div>
+          <div className="cs-topbar-right">
+            <CatalogRefreshControl onUpdated={async () => { const products = await loadCatalog(); setCatalog(products); setCatalogMeta({ count: products.length }); }} />
+            <span>NEPTUN KOSOVO</span>
+            <LanguageSwitch language={language} onChange={changeLanguage} />
+            <div className="cs-avatar">N</div>
+          </div>
+        </header>
+        {section === "campaigns" && (
+          <CampaignLibrary
+            campaigns={campaigns}
+            onCreate={() => setModal("create")}
+            onOpen={(id: string) => {
+              setActiveId(id);
+              setEditorTab("brochure");
+              setSection("editor");
+            }}
+            onDuplicate={duplicateCampaign}
+            onDelete={setDeleteTarget}
+            onPrint={(id: string) => {
+              setExportPage(0);
+              setActiveId(id);
+              setSection("editor");
+              setEditorTab("brochure");
+              setExportId(id);
+            }}
+          />
+        )}
+        {section === "catalog" && (
+          <div className="cs-main-panel">
+            <div className="cs-section-head">
+              <div>
+                <span className="cs-eyebrow">{t("PRODUCT SOURCE")}</span>
+                <h1>{t("Product catalog")}</h1>
+                <p>
+                  {catalog.length}{" "}
+                  {t("products · prices shown are regular catalog prices.")}
+                </p>
+              </div>
+            </div>
+            <CatalogNavigator products={catalogItems} selection={catalogSelection} onChange={(value) => { setCatalogSelection(value); setCatalogVisible(60); }} />
+            <div className="cs-search cs-catalog-search">
+              <span>⌕</span>
+              <input
+                type="search"
+                value={catalogQuery}
+                onChange={(event) => {
+                  setCatalogQuery(event.target.value);
+                  setCatalogVisible(60);
+                }}
+                placeholder={t("Search product code, name, brand or category")}
+              />
+            </div>
+            <p className="cs-catalog-result-count" role="status">
+              {catalogResults.length} {t("of")} {catalogMatches.length}{" "}
+              {t("products shown")}
+            </p>
+            {!catalogMatches.length && (
+              <div className="cs-empty-mini">
+                {t("No matching products. Try another code or filter.")}{" "}
+                <Button
+                  onClick={() => {
+                    setCatalogQuery("");
+                    setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
+                    setCatalogVisible(60);
+                  }}
+                >
+                  {t("Clear search")}
+                </Button>
+              </div>
+            )}
+            <div className="cs-catalog-grid">
+              {catalogResults.map((product: Product) => (
+                <button
+                  type="button"
+                  className="cs-catalog-card"
+                  key={product.code}
+                  onClick={() => {
+                    const imported = product.catalogMissing
+                      ? campaignContainingExcelProduct(campaigns, product.code)
+                      : undefined;
+                    if (imported) {
+                      setActiveId(imported.campaign.id);
+                      setSection("editor");
+                      setEditorTab("brochure");
+                      setDetail({ product: imported.offer, editable: true });
+                    } else setDetail({ product, editable: false });
+                  }}
+                >
+                  <div>
+                    <ProductImage product={product} preferRemote />
+                  </div>
+                  <span>
+                    {product.brand} · {product.code}
+                  </span>
+                  <strong>{product.name}</strong>
+                  <MissingCatalogNotice product={product} variant="badge" />
+                  <small title={product.categoryPath}>{product.categoryPath || product.subcategory}</small>
+                  {product.sourceMissing && <span className="cs-source-missing">No longer listed on neptun-ks.com · kept in catalog</span>}
+                  <b>
+                    {hasRegularPrice(product)
+                      ? money(Number(product.regular))
+                      : money(Number(product.sale))}{" "}
+                    €
+                  </b>
+                </button>
+              ))}
+            </div>
+            {catalogMatches.length > catalogVisible && (
+              <div className="cs-catalog-more">
+                <Button
+                  onClick={() => setCatalogVisible((value) => value + 60)}
+                >
+                  {t("Show more products")} ↓
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+        {section === "social" && (
+          <React.Suspense
+            fallback={
+              <div className="cs-main-panel">Loading social posts…</div>
+            }
+          >
+            <SocialStudio
+              catalog={catalog}
+              campaigns={campaigns}
+              seed={socialSeed}
+              onSeedUsed={() => setSocialSeed(null)}
+            />
+          </React.Suspense>
+        )}
+        {section === "users" && canManageUsers(user) && (
+          <UsersPage currentUser={user} onMembersChanged={() => {
+            void getMembers().then(setMembers).catch((error) => setToast(errorMessage(error)));
+          }} />
+        )}
+        {section === "profile" && (
+          <ProfilePage user={user} onPasswordChanged={(message, signInRequired) => {
+            if (signInRequired) {
+              setUser(null);
+              onAuthChange?.(null, message);
+              setCampaigns([]);
+              setActiveId(null);
+              setSection("campaigns");
+            } else setToast(message);
+          }} />
+        )}
+        {section === "stores" && (
+          <SettingsPage
+            previewProducts={catalog}
+            onSaved={setSettings}
+            onDirtyChange={setSettingsDirty}
+            onBusyChange={setSettingsBusy}
+          />
+        )}
+        {section === "editor" && !campaign && (
+          <div className="cs-main-panel cs-empty">
+            <h2>{t("Campaign is loading")}</h2>
+            <p>
+              {t(
+                "Your campaign is being saved or refreshed. You can return to the campaign list and reopen it.",
+              )}
+            </p>
+            <Button
+              onClick={() => {
+                setSection("campaigns");
+                setActiveId(null);
+              }}
+            >
+              {t("All campaigns")}
+            </Button>
+          </div>
+        )}
+        {section === "editor" && campaign && (
+          <div className="cs-main-panel cs-editor">
+            <div className="cs-editor-hero">
+              <div className="cs-editor-hero-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSection("campaigns");
+                    setActiveId(null);
+                  }}
+                >
+                  ← {t("All campaigns")}
+                </button>
+                <button
+                  type="button"
+                  className="cs-start-new"
+                  onClick={() => setModal("confirm-new")}
+                >
+                  ＋ {t("New campaign")}
+                </button>
+              </div>
+              <div>
+                <span className="cs-eyebrow">
+                  {t(campaign.type)} ·{" "}
+                  {campaign.startDate === campaign.endDate
+                    ? campaign.startDate
+                    : `${campaign.startDate} — ${campaign.endDate}`}
+                </span>
+                <h1>{campaign.name}</h1>
+                <p>
+                  {campaign.products.length} {t("products")} ·{" "}
+                  {brochurePageCount(campaign, splitPages(campaign).length)}{" "}
+                  {t("brochure pages")} · {t("Saved for the team")}
+                </p>
+                <button
+                  type="button"
+                  className="cs-social-shortcut"
+                  onClick={() => {
+                    setSocialSeed({
+                      campaignId: campaign.id,
+                      products: campaign.products.slice(0, 3),
+                    });
+                    setSection("social");
+                  }}
+                >
+                  <span className="cs-social-shortcut-icon" aria-hidden="true">
+                    ▧
+                  </span>
+                  <span className="cs-social-shortcut-copy">
+                    <strong>{t("Create social post")}</strong>
+                    <small>{t("From this brochure")}</small>
+                  </span>
+                  <span className="cs-social-shortcut-arrow" aria-hidden="true">
+                    →
+                  </span>
+                </button>
+                <div className="cs-editor-progress">
+                  <span
+                    className={`status-${campaign.status || "in_progress"} ${
+                      (campaign.status || "in_progress") === "completed"
+                        ? "completed"
+                        : "progress"
+                    }`}
+                  >
+                    {t(reviewStatusLabel(campaign.status))}
+                  </span>
+                  <button type="button" onClick={() => openAiReview("manual")}>
+                    {t("✦ AI review")}
+                  </button>
+                  {(user.role === "staff" || canManageUsers(user)) &&
+                    ["in_progress", "changes_requested"].includes(
+                      campaign.status || "in_progress",
+                    ) && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={(campaign.reviewComments || []).some(
+                            (comment) => !comment.fixed,
+                          )}
+                          onClick={() => runReviewAction("submit")}
+                        >
+                          {t("Send for PM review")}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={(campaign.reviewComments || []).some(
+                            (comment) => !comment.fixed,
+                          )}
+                          onClick={() => runReviewAction("complete")}
+                        >
+                          {t("Mark complete")}
+                        </button>
+                      </>
+                    )}
+                  {(user.role === "pm" || canManageUsers(user)) && campaign.status === "in_review" && (
+                    <button
+                      type="button"
+                      onClick={() => runReviewAction("complete")}
+                    >
+                      {t("Mark complete")}
+                    </button>
+                  )}
+                  {(user.role === "staff" || canManageUsers(user)) && campaign.status === "completed" && (
+                    <button
+                      type="button"
+                      onClick={() => runReviewAction("reopen")}
+                    >
+                      {t("Continue editing")}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="cs-editor-tabs">
+              <button
+                type="button"
+                className={editorTab === "brochure" ? "active" : ""}
+                onClick={goToBrochure}
+              >
+                01 <span>{t("Brochure design")}</span>
+              </button>
+              <button
+                type="button"
+                className={editorTab === "products" ? "active" : ""}
+                onClick={() => setEditorTab("products")}
+              >
+                02 <span>{t("Products & prices")}</span>
+              </button>
+              <CampaignHistoryControls
+                undoCount={historyCounts.undo}
+                redoCount={historyCounts.redo}
+                onUndo={undoCampaign}
+                onRedo={redoCampaign}
+                language={language}
+              />
+            </div>
+            {editorTab === "products" ? (
+              <ProductEditor
+                campaign={campaign}
+                onUpdate={updateCampaign}
+                onImport={() => setModal("import")}
+                onManual={() => setModal("manual")}
+                onAiReview={() => openAiReview("manual")}
+                onReCut={() => openAiReview("images")}
+                onNext={goToBrochure}
+                onMakeSocial={(products: Product[]) => {
+                  setSocialSeed({ campaignId: campaign.id, products });
+                  setSection("social");
+                }}
+                onDetails={(product: Product) =>
+                  setDetail({ product, editable: true })
+                }
+                onImageEdit={(product: Product) =>
+                  setImageEditCode(String(product.code))
+                }
+              />
+            ) : (
+              <BrochureEditor
+                key={`${campaign.id}-${brochurePreviewVersion}`}
+                campaign={campaign}
+                settings={settings}
+                user={user}
+                members={members}
+                onReviewAction={runReviewAction}
+                onUpdate={updateCampaign}
+                onToast={setToast}
+                onAiReview={() => openAiReview("manual")}
+                onReCut={() => openAiReview("images")}
+                onAddProducts={() => setModal("manual")}
+                onImportProducts={() => setModal("import")}
+                onEditImage={(product: Product) =>
+                  setImageEditCode(String(product.code))
+                }
+                onEditScreen={(product: Product) =>
+                  setScreenEditCode(String(product.code))
+                }
+                onEditDetails={(product: Product) =>
+                  setDetail({ product, editable: true })
+                }
+                onEditPrice={(product: Product) =>
+                  setPriceEdit({
+                    code: String(product.code),
+                    focusSavings: false,
+                  })
+                }
+                onEditSavings={(product: Product) =>
+                  setPriceEdit({
+                    code: String(product.code),
+                    focusSavings: true,
+                  })
+                }
+                onMakeSocial={(products: Product[]) => {
+                  setSocialSeed({ campaignId: campaign.id, products });
+                  setSection("social");
+                }}
+                onPrint={() => {
+                  window.print();
+                }}
+                onExport={(pageIndex: React.SetStateAction<number>) => {
+                  setExportPage(pageIndex);
+                  setExportId(campaign.id);
+                }}
+              />
+            )}
+          </div>
+        )}
+        <footer className="pa-app-footer" data-export-hide="true">
+          <PromoAutomationCredit />
+        </footer>
+      </main>
+      {deleteTarget && (
+        <Modal
+          title={t("Delete campaign")}
+          kicker={t("CONFIRM DELETION")}
+          onClose={() => {
+            if (!deleteBusy) setDeleteTarget(null);
+          }}
+        >
+          <div className="cs-delete-dialog">
+            <div className="cs-delete-icon">
+              <TrashIcon size={25} />
+            </div>
+            <strong>{deleteTarget.name}</strong>
+            <p>
+              {t(
+                "This will remove the campaign and all its page comments for both accounts. This cannot be undone.",
+              )}
+            </p>
+            <div className="cs-delete-actions">
+              <Button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteBusy}
+              >
+                {t("Cancel")}
+              </Button>
+              <button
+                className="cs-delete-confirm"
+                type="button"
+                disabled={deleteBusy}
+                onClick={confirmDeleteCampaign}
+              >
+                <TrashIcon size={16} />
+                {deleteBusy ? t("Deleting…") : t("Delete campaign")}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {modal === "confirm-new" && campaign && (
+        <Modal
+          title={t("New campaign")}
+          kicker={t("START FRESH")}
+          onClose={() => {
+            if (!newBusy) setModal(null);
+          }}
+        >
+          <div className="cs-new-confirm">
+            <p>
+              {t(
+                "Your current campaign is saved. Start a new campaign from scratch?",
+              )}
+            </p>
+            <div className="cs-delete-actions">
+              <Button onClick={() => setModal(null)} disabled={newBusy}>
+                {t("Cancel")}
+              </Button>
+              <Button
+                tone="primary"
+                disabled={newBusy}
+                onClick={async () => {
+                  setNewBusy(true);
+                  try {
+                    await saveCampaign({
+                      ...campaign,
+                      status: campaign.status || "in_progress",
+                    });
+                    setModal("create");
+                  } catch (error) {
+                    console.error(error);
+                    setToast(
+                      t("Could not save this campaign. Please try again."),
+                    );
+                  } finally {
+                    setNewBusy(false);
+                  }
+                }}
+              >
+                {newBusy ? t("Saving…") : t("＋ New campaign")}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {modal === "create" && (
+        <CreateCampaign
+          settings={settings}
+          catalog={catalog}
+          onCreate={createCampaign}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "import" && campaign && (
+        <ImportSales
+          catalog={catalog}
+          onApply={addProducts}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "manual" && campaign && (
+        <ManualPicker
+          catalog={catalog}
+          existing={campaign.products}
+          onApply={addProducts}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "ai" && campaign && (
+        <AiReview
+          task={aiTask ?? undefined}
+          campaign={campaign}
+          mode={
+            aiDestination === "print" || aiDestination === "export"
+              ? "brochure"
+              : aiDestination
+          }
+          onApply={(proposals) => finishAiReview(proposals, true)}
+          onDecline={(proposals) => finishAiReview(proposals, false)}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {exportId && campaigns.find((item) => item.id === exportId) && (
+        <BrochureExport
+          campaign={campaigns.find((item) => item.id === exportId)!}
+          settings={settings}
+          initialPage={exportPage}
+          onClose={() => setExportId(null)}
+        />
+      )}
+      {detail && (
+        <Details
+          product={
+            detail.editable
+              ? campaign?.products.find(
+                  (product: Product) =>
+                    String(product.code) === String(detail.product.code),
+                ) || detail.product
+              : detail.product
+          }
+          campaign={detail.editable ? campaign ?? undefined : undefined}
+          onAppearanceChange={
+            detail.editable
+              ? (
+                  field: "offerStyle" | "priceStyle" | "savingMode",
+                  value?: string,
+                ) =>
+                  updateCampaign((draft: Campaign) => {
+                    draft.products = draft.products.map((product: Product) => {
+                      if (String(product.code) !== String(detail.product.code))
+                        return product;
+                      const copy = { ...product };
+                      if (value) copy[field] = value;
+                      else delete copy[field];
+                      return copy;
+                    });
+                  })
+              : undefined
+          }
+          onProductChange={
+            detail.editable
+              ? (
+                  field: keyof Product | Partial<Product>,
+                  value?: Product[keyof Product],
+                ) =>
+                  updateCampaign((draft: Campaign) => {
+                    const current = draft.products.find(
+                      (product: Product) =>
+                        String(product.code) === String(detail.product.code),
+                    );
+                    if (current) {
+                      const changes =
+                        typeof field === "object" ? field : { [field]: value };
+                      Object.assign(current, changes);
+                      if (Object.hasOwn(changes, "specs"))
+                        current.autoSpecsDisabled = true;
+                    }
+                  })
+              : undefined
+          }
+          onImageEdit={
+            detail.editable
+              ? () => {
+                  setImageEditCode(String(detail.product.code));
+                  setDetail(null);
+                }
+              : undefined
+          }
+          onClose={() => setDetail(null)}
+        />
+      )}
+      {imageEditCode && campaign && imageEditProduct && (
+        <ProductImageEditor
+          product={imageEditProduct}
+          catalogProduct={catalog.find(
+            (product: Product) => String(product.code) === imageEditCode,
+          )}
+          backgroundContext={productImageBackgroundContext(
+            campaign,
+            imageEditProduct,
+          )}
+          canResumeSearch={Boolean(
+            campaign.products.find(
+              (item: Product) => String(item.code) === imageEditCode,
+            )?.imageSearch?.status === "searching" &&
+            !activeImageSearches.current.has(
+              campaign.products.find(
+                (item: Product) => String(item.code) === imageEditCode,
+              )?.imageSearch?.requestId || "",
+            ),
+          )}
+          onFindImage={() => {
+            const product = campaign.products.find(
+              (item: Product) => String(item.code) === imageEditCode,
+            );
+            if (product) findProductImage(product);
+          }}
+          onSave={({
+            image,
+            aiOriginalImage,
+            skipAiCutout,
+            ...preparationMetadata
+          }) =>
+            updateCampaign((draft: Campaign) => {
+              const current = draft.products.find(
+                (product: Product) => String(product.code) === imageEditCode,
+              );
+              if (!current) return;
+              current.screenArtwork = screenArtworkForPhotoChange(
+                current.screenArtwork,
+                current.image,
+                image,
+              );
+              if (current.image !== image) delete current.imageSearch;
+              current.image = image;
+              if (aiOriginalImage) current.aiOriginalImage = aiOriginalImage;
+              else delete current.aiOriginalImage;
+              current.skipAiCutout = skipAiCutout;
+              if (skipAiCutout) current.aiReviewedImageSource = image;
+              else delete current.aiReviewedImageSource;
+              for (const field of [
+                "aiInchesEmbedded",
+                "aiPreparedScreenInches",
+                "aiAnnotationStyle",
+                "aiPreparationRevision",
+                "aiBackgroundSignature",
+                "aiReviewedPreparationRevision",
+                "aiReviewedBackgroundSignature",
+              ])
+                delete current[field as keyof Product];
+              Object.assign(current, preparationMetadata);
+            })
+          }
+          onClose={() => setImageEditCode(null)}
+        />
+      )}
+      {screenEditCode && screenEditProduct && (
+        <ScreenImageEditor
+          product={screenEditProduct}
+          tvCount={campaignTelevisions(campaign).length}
+          onSave={(screenArtwork, scope) =>
+            updateCampaign((draft: Campaign) => {
+              applyTvWallpaper(draft, screenEditCode, screenArtwork, scope);
+            })
+          }
+          onClose={() => setScreenEditCode(null)}
+        />
+      )}
+      {priceEdit &&
+        campaign &&
+        campaign.products.some(
+          (product: Product) => String(product.code) === priceEdit.code,
+        ) && (
+          <ProductPriceEditor
+            key={`${campaign.id}-${priceEdit.code}`}
+            product={campaign.products.find(
+              (product: Product) => String(product.code) === priceEdit.code,
+            )!}
+            campaign={campaign}
+            focusSavings={priceEdit.focusSavings}
+            onSave={({
+              regular,
+              sale,
+              savingMode,
+              confirmedAboveRegular,
+            }: Pick<
+              Product,
+              "regular" | "sale" | "savingMode" | "confirmedAboveRegular"
+            >) =>
+              updateCampaign((draft: Campaign) => {
+                const product = draft.products.find(
+                  (item) => String(item.code) === priceEdit.code,
+                );
+                if (!product) return;
+                product.regular = regular;
+                product.sale = sale;
+                product.savingMode = savingMode;
+                product.confirmedAboveRegular = confirmedAboveRegular;
+              })
+            }
+            onClose={() => setPriceEdit(null)}
+          />
+        )}
+      {toast && (
+        <div className="cs-toast" role="status">
+          ✓ {toast}
+        </div>
+      )}
+    </div>
+  );
+}

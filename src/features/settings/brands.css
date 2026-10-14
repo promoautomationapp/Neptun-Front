@@ -1,0 +1,159 @@
+.ns-brands-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+}
+.ns-brands-heading > div {
+  flex: 1;
+}
+.ns-brands-heading > button {
+  flex-shrink: 0;
+}
+.ns-brands-status {
+  font-size: 12px;
+  color: #6d8192;
+  padding: 12px 14px;
+  background: #f2f6fa;
+  border: 1px solid #dbe5ee;
+  border-radius: 10px;
+}
+.ns-brand-count {
+  font-size: 12px;
+  color: #607c93;
+}
+.ns-brand-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.ns-brand-gallery > button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #dce5ed;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+}
+.ns-brand-gallery > button.selected {
+  border-color: #2476ae;
+  box-shadow: 0 0 0 2px #2476ae25;
+  background: #f5fbff;
+}
+.ns-brand-gallery > button:focus-visible {
+  outline: 3px solid #2476ae55;
+  outline-offset: 2px;
+}
+.ns-brand-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  border: 1px solid #eef1f4;
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+  overflow: hidden;
+}
+.ns-brand-thumb img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ns-brand-gallery strong {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.ns-brand-gallery small {
+  color: #71869a;
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.ns-brand-wordmark {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.ns-brand-editor {
+  margin-top: 26px;
+}
+.ns-brand-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.ns-brand-comparison > div {
+  min-width: 0;
+}
+.ns-brand-comparison > div > span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #58758d;
+  margin-bottom: 8px;
+}
+.ns-brand-comparison small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 10px 0;
+  color: #6b8194;
+}
+.ns-brand-source-preview,
+.ns-brand-brochure-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  border-radius: 12px;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid #dce5ed;
+}
+.ns-brand-source-preview {
+  background: #fff;
+}
+.ns-brand-brochure-preview {
+  background: #1d4374;
+  color: white;
+}
+.ns-brand-source-preview img,
+.ns-brand-brochure-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ns-brand-brochure-preview strong {
+  font-size: 21px;
+  font-weight: 800;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.ns-brand-editor-note {
+  font-size: 12px;
+  color: #6b8194;
+}
+@media (max-width: 640px) {
+  .ns-brands-heading {
+    flex-direction: column;
+  }
+  .ns-brand-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ns-brand-comparison {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,7 @@
+.social-canvas .social-product-colors{display:flex;width:max-content;gap:.6cqw;padding:0;margin-bottom:1cqw;border:0;background:none;box-shadow:none}
+.social-product-colors>i:not(.product-detail-block-tools){display:block;width:1.8cqw;height:1.8cqw;border:1px solid #7491a8;border-radius:50%}
+.social-warranty-line{font-family:SkolaSans,Arial,sans-serif;font-weight:300;font-size:2cqw}
+.social-canvas .social-specs>.social-warranty-box>b{font-family:SkolaSans,Arial,sans-serif;font-size:5cqw;line-height:1}
+.social-canvas .social-specs .detail-energy{display:flex;gap:.1em;align-items:center;justify-content:center}.social-canvas .detail-energy>span{display:inline}
+.social-canvas .social-specs .detail-btu>span{display:block;font-size:inherit}
+.social-canvas .social-specs .detail-temperature-low,.social-canvas .social-specs .detail-temperature-high{font-size:2.5cqw}

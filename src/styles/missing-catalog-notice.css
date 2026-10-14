@@ -1,0 +1,134 @@
+/* Catalog notices are editing controls and are always omitted from artwork exports. */
+.missing-catalog-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  border: 1px solid #e5bd71;
+  border-radius: 10px;
+  background: #fff9ed;
+  color: #684715;
+  font:
+    400 12px/1.4 "DM Sans",
+    Arial,
+    sans-serif;
+  text-transform: none;
+  white-space: normal;
+}
+.missing-catalog-copy {
+  flex: 1;
+  min-width: 0;
+}
+.missing-catalog-copy > strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+.missing-catalog-copy > strong > span {
+  font-weight: 500;
+}
+.missing-catalog-copy > p {
+  margin: 4px 0 0;
+  color: inherit;
+}
+.missing-catalog-copy > small {
+  display: block;
+  margin-top: 4px;
+  color: inherit;
+}
+.missing-catalog-copy > a {
+  display: inline-block;
+  margin-top: 4px;
+  color: #195783;
+  text-decoration: underline;
+}
+.missing-catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: none;
+}
+.missing-catalog-actions > button {
+  padding: 7px 10px;
+  border: 1px solid #bdcddb;
+  border-radius: 7px;
+  background: #fff;
+  color: #19496f;
+  font:
+    700 12px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.missing-catalog-actions > button:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+.missing-catalog-badge {
+  display: inline-block;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.25cqw 0.5cqw;
+  border: 1px solid #e5bd71;
+  border-radius: 0.4cqw;
+  background: #fff9ed;
+  color: #684715;
+  font:
+    700 0.95cqw/1.25 "DM Sans",
+    Arial,
+    sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-transform: none;
+}
+.missing-catalog-placeholder {
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.6cqw;
+  border: 0.12cqw dashed #789bb4;
+  border-radius: 0.6cqw;
+  background: #f0f7fc;
+  color: #19496f;
+  text-align: center;
+  font-size: 1cqw;
+  pointer-events: auto;
+}
+.missing-catalog-placeholder .missing-catalog-copy {
+  flex: none;
+}
+.missing-catalog-placeholder .missing-catalog-copy > strong {
+  font-size: 1.1cqw;
+}
+.missing-catalog-placeholder .missing-catalog-copy > p {
+  font-size: 0.95cqw;
+}
+.missing-catalog-placeholder .missing-catalog-actions {
+  justify-content: center;
+}
+.missing-catalog-placeholder .missing-catalog-actions > button {
+  padding: 0.4cqw;
+  font-size: 0.95cqw;
+}
+.large-bundle-offer .large-bundle-missing-photo {
+  position: absolute;
+  z-index: 5;
+  pointer-events: auto;
+}
+.large-bundle-offer .large-bundle-missing-badge {
+  position: absolute;
+  z-index: 6;
+  pointer-events: auto;
+}
+@media (max-width: 650px) {
+  .missing-catalog-editor {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .missing-catalog-actions {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,55 @@
+.cs-settings-section-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 14px 0;
+}
+.cs-settings-section-tabs button {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 10px 5px;
+  min-height: 90px;
+  border: 1px solid #d9e4ed;
+  border-radius: 10px;
+  color: #34536d;
+  background: #f7fafc;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+.cs-settings-section-tabs button[aria-selected="true"] {
+  border-color: #238ac6;
+  background: #eaf6ff;
+  box-shadow: 0 0 0 1px #238ac6;
+  color: #154c7b;
+}
+.cs-settings-tab-illustration {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 30px;
+  border-radius: 4px;
+  background: #1c4075;
+  color: white;
+  font-size: 23px;
+  box-shadow: 0 2px 5px #14344d22;
+}
+.cs-settings-tab-illustration.appearance {
+  background: linear-gradient(135deg, #1c4075, #59b5da);
+}
+.cs-settings-tab-illustration.prices {
+  background: #ef4023;
+  border-bottom: 5px solid #079bc9;
+}
+.cs-settings-tab-illustration.logos {
+  font-size: 20px;
+  font-weight: 900;
+  border-bottom: 4px solid #ef4023;
+}
+.cs-settings-scope-note {
+  color: #6d8498;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 8px 0 14px;
+}

@@ -1,0 +1,87 @@
+/* May brochure source artwork. The Apple renderer has separate classes. */
+.brochure-page .brochure-price.red-reference-price {
+  display: block;
+  flex: none;
+  position: relative;
+  width: 50%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
+  font-family: TSTAR, Arial, sans-serif !important;
+}
+.red-reference-price-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: TSTAR, Arial, sans-serif;
+  font-kerning: none;
+}
+.red-reference-price-svg .red-price-label,
+.red-reference-price-svg .red-installment-label {
+  font-family: SkolaSans, Arial, sans-serif;
+}
+.red-reference-saving {
+  position: absolute;
+  z-index: 5;
+  display: block;
+  padding: 0;
+  font-family: TSTAR, Arial, sans-serif;
+  line-height: 1;
+}
+.red-reference-saving > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.brochure-red-reference-saving { top: 40%; right: 0; width: 22%; }
+/* The native white divider belongs between sale and installment, already inside the SVG. */
+.brochure-page .brochure-product.red-reference-offer > .brochure-product-bottom,
+.brochure-page .brochure-product.style-current > .brochure-product-bottom:has(> .brochure-price:not(.reference-price-card)) {
+  border-bottom: 0 !important;
+}
+.cs-page-preview.edit-view .red-reference-saving[role="button"] { cursor: pointer; }
+.cs-page-preview.edit-view .red-reference-saving[role="button"]:is(:hover, :focus-visible) { outline: 2px solid #31b6fb; outline-offset: 2px; }
+.brochure-page .red-reference-offer .brochure-product-copy > span {
+  font-family: TSTAR, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 2cqw;
+  line-height: 1.2;
+}
+.brochure-cover .cover-feature-products .brochure-price.red-reference-price { flex: 0 0 17cqw; width: 17cqw; max-width: 50%; }
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price.red-reference-price { flex-basis: 22cqw; width: 22cqw; }
+.social-canvas .social-price-stack.red-reference-price {
+  position: relative;
+  padding: 0;
+  margin-top: 2cqw;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
+  font-family: TSTAR, Arial, sans-serif !important;
+}
+.social-red-reference-saving { width: 25%; right: 0; bottom: calc(100% + 14cqw); }
+.social-canvas .red-reference-offer .social-product-copy > div:not(.social-product-brand) { font-family: TSTAR, Arial, sans-serif; font-weight: 700; }
+/* Full names and detail values remain readable; no artwork is ellipsized. */
+.brochure-page .brochure-product-copy>:is(span,small){white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.brochure-page .brochure-specs>.product-detail-block>:is(b,small){white-space:normal;overflow:visible;text-overflow:clip;-webkit-line-clamp:unset;line-clamp:unset;display:block;overflow-wrap:anywhere}
+.brochure-page .red-reference-offer .brochure-product-copy>span{font-size:1.6cqw}
+.brochure-page:is(.layout-grid6,.layout-grid9,.layout-classic8) .red-reference-offer .brochure-product-copy>span{font-size:1.2cqw}
+.brochure-page .red-reference-offer>.brochure-specs>.product-detail-block>b{font-size:1.4cqw}
+.brochure-page .red-reference-offer>.brochure-specs>.product-detail-block>small{font-size:.9cqw}
+.brochure-page .red-reference-offer .red-reference-saving:hover .cs-region-handle,.brochure-page .red-reference-offer .red-reference-saving:focus-within .cs-region-handle{opacity:1}
+.social-canvas .social-product-copy>div,.social-canvas .social-specs .product-detail-block :is(span,b,small){text-overflow:clip;white-space:normal;overflow:visible;overflow-wrap:anywhere;-webkit-line-clamp:unset;line-clamp:unset}
+/* Color swatches sit below the photo and above the brand, without a pill. */
+.brochure-page .brochure-product-copy>.brochure-colors{position:relative;inset:auto;display:flex;gap:.45cqw;width:max-content;max-width:100%;padding:0;margin:0 0 .7cqw;border:0;border-radius:0;background:none;box-shadow:none;line-height:1}
+.brochure-page .brochure-colors>.brochure-color-dot{width:1.4cqw;height:1.4cqw;border:.08cqw solid #6e8aa4;box-shadow:none;flex:none}
+.brochure-page .brochure-product-copy>.brochure-warranty-line{display:block;width:100%;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;font-family:SkolaSans,Arial,sans-serif;font-weight:300;font-size:1.45cqw;line-height:1.25}
+.brochure-page .brochure-product>.brochure-specs>.brochure-warranty{background:transparent;color:inherit;border-color:currentColor}
+.brochure-page .red-reference-offer>.brochure-specs>.brochure-warranty>b{font-size:3.8cqw;font-family:SkolaSans,Arial,sans-serif;line-height:.9}
+.brochure-page .red-reference-offer>.brochure-specs>.product-detail-block.detail-filled{background:#fff;color:#1c4075;border-color:#fff}
+.brochure-page .brochure-product>.brochure-specs .detail-energy{display:flex;align-items:center;justify-content:center;gap:.1em;white-space:nowrap;font-size:1.8cqw;font-weight:900}
+.detail-energy>em{font-style:normal;color:#8cd4e7}.detail-energy>em:last-child{color:#bf1e25}.detail-energy>span{font-size:inherit;color:inherit}
+.brochure-page .brochure-product>.brochure-specs .detail-btu{font-size:2cqw;line-height:1.05}.brochure-page .brochure-specs .detail-btu>span{display:block;padding:0;border:0;background:none;color:inherit;font-size:inherit;line-height:inherit}
+.brochure-page .brochure-product>.brochure-specs .detail-temperature-low,.brochure-page .brochure-product>.brochure-specs .detail-temperature-high{font-size:1.9cqw;line-height:1.05}.detail-temperature-high{color:#bf1e25}
+.brochure-page .brochure-specs .detail-temperature-to{font-size:.9cqw;font-weight:900;line-height:1;margin:.25cqw 0}
+.brochure-page .brochure-product>.brochure-specs .detail-gas-label{font-size:1.1cqw;line-height:1.2}

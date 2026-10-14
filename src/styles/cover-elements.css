@@ -1,0 +1,322 @@
+.brochure-page.cover-editable-elements {
+  isolation: isolate;
+  background: #1c4075;
+}
+.brochure-page.cover-editable-elements .cover-photo {
+  height: 49%;
+  background: none;
+  padding: 0;
+  pointer-events: none;
+}
+.brochure-page.cover-editable-elements .cover-photo::after {
+  display: none;
+}
+.brochure-page.cover-editable-elements .cover-content {
+  position: absolute;
+  top: 49%;
+  left: 0;
+  width: 100%;
+  height: 42%;
+  background: none;
+  z-index: 3;
+}
+.brochure-page.cover-editable-elements .cover-editable-element {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+  overflow: visible;
+}
+.cover-editable-element.editable {
+  cursor: grab;
+}
+.cover-editable-element.editable:is(:hover, :focus-within) {
+  outline: 1px solid #30baff;
+}
+.brochure-page.cover-editable-elements .cover-element-gradient {
+  z-index: 1;
+  cursor: default;
+  pointer-events: none;
+}
+.brochure-page.cover-editable-elements .cover-element-gradient.editable {
+  pointer-events: auto;
+}
+.cover-editable-element > img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+.brochure-page.cover-editable-elements .cover-element-logo .brochure-mark {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  padding: 0;
+  transform: none;
+}
+.brochure-page.cover-editable-elements .cover-element-logo .brochure-mark img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+.brochure-page.cover-editable-elements .cover-element-logo .brochure-mark em {
+  font-size: 1.65cqw;
+}
+.brochure-page.cover-editable-elements .cover-element-headline h1 {
+  font-family: SkolaSans, Arial, sans-serif;
+  line-height: 1.03;
+  font-weight: 900;
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.cover-element-headline > span {
+  font-size: 1.6cqw;
+  display: block;
+  margin-bottom: 1cqw;
+}
+.brochure-page.cover-editable-elements .cover-element-message p {
+  font-family: SkolaSans, Arial, sans-serif;
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.cover-element-tools {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  pointer-events: none;
+}
+.cover-editable-element:is(:hover, :focus-within) > .cover-element-tools {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cover-element-tools > button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: #1188c9;
+  color: white;
+  font: 700 14px/1 Arial;
+  touch-action: none;
+  pointer-events: auto;
+}
+.cover-element-tools > button:last-child {
+  background: #df4a32;
+}
+.cs-cover-design-controls {
+  display: grid;
+  gap: 12px;
+  font:
+    12px/1.4 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-cover-design-controls > p {
+  margin: 0;
+  color: #648198;
+}
+.cs-cover-design-controls label {
+  display: grid;
+  gap: 5px;
+}
+.cs-cover-design-controls
+  input:not([type="checkbox"]):not([type="color"]):not([type="range"]),
+.cs-cover-design-controls select,
+.cs-cover-design-controls textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #cbdce7;
+  border-radius: 6px;
+  padding: 7px;
+  background: white;
+  color: #244a66;
+  font: inherit;
+}
+.cs-cover-design-controls .cs-cover-visibility {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.cs-cover-design-controls .cs-cover-visibility label,
+.cs-cover-design-controls details > label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cs-cover-design-controls details {
+  border-top: 1px solid #e2e9ef;
+  padding-top: 10px;
+}
+.cs-cover-design-controls details[open] {
+  display: grid;
+  gap: 10px;
+}
+.cs-cover-design-controls summary {
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.cs-cover-design-controls .cs-cover-gradient-colors,
+.cs-cover-position-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.brochure-page.cover-editable-elements
+  .cover-content:has(.free-cover-products) {
+  position: static;
+  padding: 0;
+  width: 100%;
+  height: 0;
+}
+.brochure-page.cover-editable-elements .free-cover-products {
+  display: contents;
+}
+.brochure-page.cover-editable-elements .cover-product-frame {
+  z-index: 3;
+}
+.brochure-page.cover-editable-elements .brochure-red-reference-saving {
+  top: 30%;
+}
+.brochure-page.cover-editable-elements
+  .brochure-red-reference-saving:is(:not([style]),[style=""]) {
+  max-width: 12cqw;
+}
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-product-image-wrap {
+  height: calc(100% - 18cqw);
+  min-height: 30%;
+}
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-product-bottom {
+  height: 10cqw;
+  min-height: 10cqw;
+}
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-specs {
+  height: 6cqw;
+  min-height: 0;
+}
+
+/* Cover tiles reserve space for the price row and details before fitting photos. */
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-product-image-wrap {
+  height: calc(100% - 16cqw);
+  min-height: 0;
+}
+.brochure-page.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product
+  .brochure-product-image-wrap {
+  height: calc(100% - 14cqw);
+}
+.brochure-page.cover-editable-elements
+  .cover-featured-product
+  .brochure-product-image {
+  width: 100%;
+  max-width: 100%;
+}
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-specs:is(:not([style]),[style=""]) {
+  width: 87%;
+}
+.brochure-page.cover-editable-elements
+  .brochure-red-reference-saving:is(:not([style]),[style=""]) {
+  top: 6%;
+  right: 0.5%;
+  width: 18%;
+  max-width: 9cqw;
+}
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3cqw;
+  padding: 0.35cqw 0.15cqw;
+  box-sizing: border-box;
+}
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty > b {
+  font-size: 3.3cqw;
+  line-height: 0.95;
+  flex: none;
+  margin: 0;
+}
+.brochure-page
+  .brochure-product
+  > .brochure-specs
+  > .brochure-warranty
+  > small {
+  flex: none;
+  line-height: 1.08;
+  font-size: 0.65cqw;
+}
+.brochure-page
+  .brochure-product
+  > .brochure-specs
+  > .brochure-warranty
+  > small
+  .brochure-warranty-label {
+  font-size: inherit;
+}
+.brochure-page.brochure-cover.light {
+  color: #1c4075;
+}
+.brochure-page.brochure-cover.light .brochure-product-copy,
+.brochure-page.brochure-cover.light .brochure-brand-mark,
+.brochure-page.brochure-cover.light
+  .brochure-product
+  > .brochure-specs
+  > .product-detail-block {
+  color: #1c4075;
+  border-color: #1c4075;
+}
+
+.brochure-page.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product
+  .brochure-product-bottom {
+  height: 8cqw;
+  min-height: 8cqw;
+}
+
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty > b.detail-warranty-count {
+  font-size: 2.8cqw;
+  line-height: 1.15;
+}
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty {
+  padding-top: .5cqw;
+  padding-bottom: .3cqw;
+}
+
+.brochure-page.cover-editable-elements .cover-element-message p{text-align:center;font-family:SkolaSans,Arial,sans-serif;line-height:1.25;font-weight:600}
+
+/* The default ribbon bleeds beyond both edges like the printed brochure. */
+.brochure-page.cover-with-uuu .cover-element-band>img{width:104%;max-width:none;margin-left:-2%}
+.brochure-page.cover-with-uuu .cover-element-message p{font-style:italic;text-align:left}
+
+.brochure-page.cover-editable-elements .cover-featured-product .brochure-product-image{height:100%;max-height:100%;object-fit:contain}

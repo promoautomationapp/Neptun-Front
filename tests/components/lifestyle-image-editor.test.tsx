@@ -1,0 +1,37 @@
+import React from "react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { LifestyleImageEditor } from "../../src/features/brochure/LifestyleImageEditor";
+import { setLanguage } from "../../src/features/brochure/i18n";
+const api = vi.hoisted(() => ({ quota: vi.fn(), generate: vi.fn(), accept: vi.fn() }));
+vi.mock("../../src/features/brochure/lifestyleImageApi", () => ({ lifestyleQuota: api.quota, generateLifestyle: api.generate, acceptLifestyle: api.accept }));
+beforeEach(() => { setLanguage("en"); api.quota.mockResolvedValue({ month: "2026-10", used: 2, limit: 20, attempts: 3, attemptLimit: 30 }); });
+afterEach(() => { cleanup(); vi.resetAllMocks(); });
+it("refines the selected image, keeps earlier versions, and accepts only the chosen result", async () => {
+  api.generate.mockResolvedValue({ image: "/revision.png", resultId: "revision" }); api.accept.mockResolvedValue({ accepted: true });
+  const apply = vi.fn(); const close = vi.fn();
+  const view = render(<LifestyleImageEditor source="/original.png" context="brochure" onApply={apply} onClose={close} />);
+  fireEvent.click(view.getByRole("button", { name: "Create / refine with AI" }));
+  await view.findByText(/2 \/ 20 AI images/);
+  fireEvent.change(view.getByLabelText("AI image direction"), { target: { value: "Softer light" } });
+  fireEvent.click(view.getByRole("button", { name: "Refine this image" }));
+  await view.findByRole("button", { name: "Image version 2" });
+  expect(api.generate).toHaveBeenCalledWith(expect.objectContaining({ image: "/original.png", prompt: "Softer light", context: "brochure" }));
+  expect(apply).not.toHaveBeenCalled(); expect(api.accept).not.toHaveBeenCalled();
+  fireEvent.click(view.getByRole("button", { name: "Image version 1" }));
+  expect(view.getByAltText("Full image preview").getAttribute("src")).toBe("/original.png");
+  fireEvent.click(view.getByRole("button", { name: "Image version 2" }));
+  fireEvent.click(view.getByRole("button", { name: "Use this image" }));
+  await waitFor(() => expect(apply).toHaveBeenCalledWith("/revision.png"));
+  expect(api.accept).toHaveBeenCalledWith("revision"); expect(close).toHaveBeenCalledOnce();
+});
+it("blocks AI at the monthly limit while keeping uploads available", async () => {
+  api.quota.mockResolvedValue({ month: "2026-10", used: 20, limit: 20, attempts: 22, attemptLimit: 30 });
+  const view = render(<LifestyleImageEditor context="tv" onApply={vi.fn()} onClose={vi.fn()} />);
+  fireEvent.click(view.getByRole("button", { name: "Create / refine with AI" }));
+  await view.findByText(/Monthly AI image limit reached/);
+  fireEvent.change(view.getByLabelText("AI image direction"), { target: { value: "Autumn lake" } });
+  expect((view.getByRole("button", { name: "Generate image" }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(view.getByRole("button", { name: "Upload image" }));
+  expect(view.getByLabelText("Upload lifestyle image")).toBeTruthy();
+});

@@ -1,0 +1,203 @@
+.compact-stores-footer {
+  position: absolute;
+  z-index: 8;
+  inset: auto 0 0;
+  width: 100%;
+  height: var(--compact-footer-height, 18%);
+  background: transparent;
+  color: inherit;
+  font-family: SkolaSans, Arial, sans-serif;
+  line-height: 1.08;
+  isolation: isolate;
+}
+
+.compact-stores-footer-white {
+  position: absolute;
+  inset: 24% 0 0;
+  z-index: -1;
+  background: #fff;
+  border-bottom: .05cqw solid #b8b8b8;
+}
+
+.compact-stores-footer .compact-footer-disclaimer {
+  display: block;
+  color: inherit;
+  font-size: calc(.69cqw * var(--compact-footer-type-scale));
+  font-weight: 400;
+  line-height: 1.06;
+}
+
+.compact-footer-membership {
+  display: inline-block;
+  max-width: 100%;
+  margin: .2cqw 0 .19cqw;
+  padding: .08cqw .35cqw .12cqw;
+  background: #ef4023;
+  color: #fff;
+  font-size: calc(1.08cqw * var(--compact-footer-type-scale));
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.compact-footer-disclaimer p {
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.compact-footer-discount-disclaimer {
+  font-weight: 700;
+}
+
+.compact-stores-footer .compact-footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9%;
+  color: #1c4075;
+}
+
+.compact-footer-brand img {
+  display: block;
+  width: 100%;
+  object-fit: contain;
+  flex: none;
+}
+
+.compact-footer-brand .compact-footer-neptun {
+  height: 30%;
+}
+
+.compact-footer-brand .compact-footer-balfin {
+  height: 43%;
+}
+
+.compact-footer-neptun-fallback {
+  width: 100%;
+  border-bottom: .38cqw solid #ef4023;
+  background: #004981;
+  color: #fff;
+  text-align: center;
+  font-size: calc(1.85cqw * var(--compact-footer-type-scale));
+  font-weight: 900;
+}
+
+.compact-footer-balfin-fallback {
+  display: flex;
+  flex-direction: column;
+  color: #858585;
+  font-size: calc(.82cqw * var(--compact-footer-type-scale));
+  text-align: center;
+}
+
+.compact-footer-balfin-fallback b {
+  color: #ea2839;
+  font-size: calc(1.5cqw * var(--compact-footer-type-scale));
+  line-height: 1;
+}
+
+.compact-footer-balfin-fallback small {
+  letter-spacing: .32cqw;
+  font-size: calc(.6cqw * var(--compact-footer-type-scale));
+}
+
+.compact-stores-footer .compact-footer-stores {
+  display: block;
+  color: #1c4075;
+  font-size: calc(.75cqw * var(--compact-footer-type-scale));
+  font-weight: 500;
+  line-height: 1.06;
+}
+
+.compact-footer-stores-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.compact-footer-store-wrapper {
+  min-width: 0;
+}
+
+.compact-footer-store {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.compact-footer-store strong,
+.compact-footer-store span {
+  display: block;
+}
+
+.compact-footer-store strong {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.compact-footer-store .compact-footer-inline-text,
+.compact-footer-service .compact-footer-inline-text {
+  display: inline;
+}
+
+.compact-stores-footer [contenteditable="true"] {
+  cursor: text;
+  outline: none;
+}
+
+.compact-stores-footer [contenteditable="true"]:focus {
+  box-shadow: 0 0 0 .08cqw #01a2dd;
+}
+
+.compact-footer-online {
+  color: #ef4023;
+}
+
+.compact-stores-footer .compact-footer-service {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  border-left: .09cqw solid #004981;
+  padding-left: .85cqw;
+  color: #1c4075;
+  font-size: calc(.86cqw * var(--compact-footer-type-scale));
+  font-weight: 400;
+  line-height: 1.18;
+}
+
+.compact-footer-service-logo {
+  display: block;
+  flex: none;
+  width: 100%;
+  height: 23%;
+  margin-bottom: .75cqw;
+  object-fit: contain;
+}
+
+.compact-footer-service-title {
+  display: block;
+  font-weight: 700;
+}
+
+.compact-footer-service span {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.compact-footer-service-fallback {
+  color: #1c4075;
+  margin-bottom: .65cqw;
+  font-size: calc(.95cqw * var(--compact-footer-type-scale));
+  font-weight: 900;
+  line-height: 1;
+}
+
+.compact-footer-service-fallback small {
+  display: block;
+  text-align: right;
+  font-size: .65em;
+}

@@ -1,0 +1,8 @@
+/* This neutral wrapper keeps the photo's requested percentage coordinates intact. */
+.brochure-product-image-wrap > .apple-photo-clearance-primary {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}

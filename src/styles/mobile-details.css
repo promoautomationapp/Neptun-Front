@@ -1,0 +1,90 @@
+/* The blue mobile offers keep a vertical stack of details to the left of the
+   device. The same class also supports a user's placement choice on any offer. */
+.brochure-page .brochure-product.details-left {
+  position: relative;
+}
+.brochure-page .brochure-product.details-left .brochure-product-image-wrap {
+  height: calc(100% - 10.8cqw);
+}
+.brochure-page .brochure-product.details-left.style-compact .brochure-product-image-wrap {
+  height: calc(100% - 11.4cqw);
+}
+.brochure-page .brochure-product.details-left .brochure-product-image {
+  left: 63%;
+  top: 54%;
+  width: 65%;
+  max-width: 65%;
+  height: 88%;
+  max-height: 88%;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  top: 15%;
+  width: 25%;
+  height: 50%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  align-items: stretch;
+  justify-content: center;
+  overflow: visible;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > span {
+  flex: 0 1 5cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 3.6cqw;
+  padding: .3cqw .2cqw;
+  border: .14cqw solid #386f9f;
+  border-radius: .6cqw;
+  background: transparent;
+  color: inherit;
+  font-family: "SkolaSans", Arial, sans-serif;
+  font-size: 1.3cqw;
+  font-weight: 300;
+  line-height: 1.12;
+  overflow: hidden;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > span > b {
+  display: block;
+  font-size: inherit;
+  font-weight: 300;
+  line-height: inherit;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: unset;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > span > small {
+  margin-top: .2cqw;
+  font-size: 1.08cqw;
+  font-weight: 300;
+  line-height: 1.12;
+  white-space: normal;
+  opacity: 1;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > .detail-memory > b,
+.brochure-page .brochure-product.details-left > .brochure-specs > [data-detail-memory="true"] > b {
+  font-weight: 700;
+}
+.brochure-page:not(.light) .brochure-product.details-left > .brochure-specs > span {
+  border-color: #d8e9f4;
+}
+.brochure-page.light .brochure-product.details-left > .brochure-specs > span {
+  color: #000;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > .brochure-warranty {
+  margin-left: 0;
+}
+.brochure-page .brochure-product.details-left > .brochure-specs > .brochure-warranty b {
+  font-weight: 700;
+  font-size: 2.5cqw;
+}

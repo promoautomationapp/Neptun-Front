@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/app/**/*.tsx",
+    "src/features/settings/**/*.ts",
+    "src/features/settings/**/*.tsx",
+    "src/vite-env.d.ts",
+    "tests/unit/settings-defaults.test.ts",
+    "tests/components/settings-editor.test.tsx",
+    "tests/components/neptun-wordmark.test.tsx",
+    "tests/e2e/settings.spec.ts",
+    "playwright.config.ts"
+  ]
+}

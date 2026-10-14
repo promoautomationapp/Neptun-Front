@@ -1,0 +1,107 @@
+.brochure-page .brochure-specs > .product-detail-block,
+.social-canvas .social-specs > .product-detail-block {
+  position: relative;
+  overflow: visible;
+}
+.brochure-page .brochure-specs > .product-detail-block > :is(b, small),
+.social-canvas .social-specs > .product-detail-block > :is(b, small) {
+  max-width: 100%;
+}
+.product-detail-block-tools {
+  position: absolute;
+  z-index: 32;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .12s;
+  font-style: normal;
+}
+.product-detail-block.editable:is(:hover, :focus-within, .moving) > .product-detail-block-tools,
+.cs-page-preview.show-guides .product-detail-block.editable > .product-detail-block-tools {
+  opacity: 1;
+}
+.product-detail-block.editable:is(:hover, :focus-within, .moving) {
+  outline: 1px solid #20a1e8;
+  outline-offset: 1px;
+  z-index: 16;
+}
+.product-detail-block-tools > button {
+  position: absolute;
+  width: 2.3cqw;
+  height: 2.3cqw;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: #1688cf;
+  color: #fff;
+  box-shadow: 0 1px 5px #001d3c70;
+  display: grid;
+  place-items: center;
+  font: 700 1.5cqw/1 "DM Sans", Arial, sans-serif;
+  pointer-events: none;
+  touch-action: none;
+}
+.product-detail-block.editable:is(:hover, :focus-within, .moving) > .product-detail-block-tools > button,
+.cs-page-preview.show-guides .product-detail-block.editable > .product-detail-block-tools > button {
+  pointer-events: auto;
+}
+.detail-block-move { left: -.9cqw; top: -.9cqw; cursor: grab; }
+.product-detail-block-tools > .detail-block-reorder { left: 50%; top: -.9cqw; transform: translateX(-50%); cursor: grab; }
+.product-detail-block-tools > .detail-block-reorder:active { cursor: grabbing; }
+.detail-block-move:active { cursor: grabbing; }
+.detail-block-edit { left: -.9cqw; bottom: -.9cqw; cursor: pointer; }
+.product-detail-block-tools > .detail-block-remove { right: -.9cqw; top: -.9cqw; background: #d44e37; cursor: pointer; }
+.detail-block-resize { right: -.9cqw; bottom: -.9cqw; cursor: nwse-resize; }
+.detail-block-inline-editor{position:absolute;z-index:45;left:0;top:calc(100% + .3cqw);display:flex;gap:3px;align-items:center;min-width:max(12cqw,180px);max-width:32cqw;padding:4px;background:#fff;border:1px solid #62b5df;border-radius:6px;box-shadow:0 3px 10px #001d3c60;color:#173b5d}
+.detail-block-inline-editor input{flex:1;min-width:0;padding:4px;border:1px solid #bbd7e9;border-radius:4px;font:700 12px/1.2 Arial,sans-serif;color:#173b5d}
+.detail-block-inline-editor button{flex:none;border:0;background:#e5f3fb;color:#15598c;border-radius:4px;min-width:20px;height:22px;cursor:pointer}
+.brochure-page .brochure-product .brochure-specs > .product-detail-block.detail-style-filled,
+.social-canvas .social-specs > .product-detail-block.detail-style-filled {
+  background: #fff;
+  color: #1c4075;
+}
+.brochure-page .brochure-product .brochure-specs > .product-detail-block.detail-style-outline,
+.social-canvas .social-specs > .product-detail-block.detail-style-outline {
+  background: transparent;
+  color: inherit;
+}
+.brochure-page .brochure-specs .product-detail-block > .detail-fitted-value,
+.social-canvas .social-specs .product-detail-block > .detail-fitted-value {
+  display: block;
+  flex: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow-wrap: normal !important;
+  word-break: normal;
+}
+.brochure-page .brochure-product-copy .brochure-brand-mark {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.brochure-page .brochure-specs .detail-energy > span {
+  display: inline;
+  flex: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.brochure-brand-artwork{position:relative;display:block;max-width:100%;min-width:3cqw;min-height:2cqw}
+.brochure-brand-artwork .brochure-brand-mark{display:block;width:100%;height:100%}
+.brochure-brand-artwork[style*="height"] .brochure-brand-mark img{max-height:100%;object-fit:contain}
+.brand-artwork-restore{border:1px dashed #66bfee;border-radius:4px;padding:4px;background:#fff;color:#194977;font-size:11px}
+.brochure-photo-hidden :is(.brochure-product-image,.brochure-screen-image,.brochure-inch-label){visibility:hidden!important}
+
+.campaign-asset-artwork{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;max-width:100%}
+.campaign-asset-artwork>img{width:100%;height:100%;object-fit:contain}
+.brochure-interior-brand-footer .campaign-asset-artwork .neptun-wordmark{width:100%}
+.brochure-awards .campaign-asset-artwork>.award-badge{max-width:100%}

@@ -1,0 +1,45 @@
+.cs-team-login { display: grid; gap: 13px; margin: 24px 0 16px; width: min(100%, 400px); }
+.cs-team-login label { display: grid; gap: 6px; color: #35516d; font-size: 12px; font-weight: 800; }
+.cs-team-login input { width: 100%; min-height: 45px; border: 1px solid #d7e2ed; border-radius: 9px; padding: 10px 12px; background: #fff; color: #153958; }
+.cs-team-login .cs-button { width: 100%; margin-top: 4px; }
+.cs-team-auth-error { color: #c13426 !important; font-size: 12px; line-height: 1.4; }
+.cs-review-panel { margin: 14px 0 22px; padding: 16px; border: 1px solid #d7e4ef; border-radius: 13px; background: #f6faff; }
+.cs-review-panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.cs-review-panel-head h4 { margin: 5px 0 0; color: #163f66; font-size: 14px; }
+.cs-review-count { display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: #dcecf8; color: #164d79; font-size: 12px; font-weight: 800; }
+.cs-review-comments { display: grid; gap: 9px; margin-top: 14px; max-height: 320px; overflow: auto; }
+.cs-review-comments article { padding: 11px; border-radius: 9px; background: #fff; border: 1px solid #dce6ef; }
+.cs-review-comments article.open { border-left: 3px solid #ee523c; }
+.cs-review-comments article.fixed { border-left: 3px solid #2ca47b; }
+.cs-review-comment-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: #59718a; font-size: 10px; }
+.cs-review-comment-meta strong { color: #1d4367; }
+.cs-review-comments p { margin: 8px 0 !important; color: #253f5a !important; font-size: 12px !important; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cs-review-comment-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #a64d36; font-size: 10px; font-weight: 800; }
+.cs-review-comments article.fixed .cs-review-comment-bottom { color: #22836a; }
+.cs-review-reply{margin:8px 0 8px 9px;padding:8px;border-left:2px solid #a8cde5;background:#f5f9fc;font-size:10px;color:#385a75}.cs-review-reply p{margin:3px 0 0!important}.cs-review-reply small{overflow-wrap:anywhere}
+.cs-page-settings-content .cs-review-panel{margin:0;padding:0;border:0;background:transparent}
+.cs-review-reply-form{margin-top:9px}.cs-review-reply-form>summary{color:#1d638f;font-size:11px;font-weight:800;cursor:pointer}.cs-review-reply-form .cs-pin-form{margin-top:9px}
+.cs-review-comment-bottom button, .cs-review-panel form button { border: 0; border-radius: 7px; padding: 7px 10px; background: #1d5b8b; color: #fff; font-size: 11px; font-weight: 800; }
+.cs-review-comment-bottom button:disabled, .cs-review-panel form button:disabled { opacity: .5; cursor: default; }
+.cs-review-empty, .cs-review-help { margin: 12px 0 0 !important; color: #687f94 !important; font-size: 11px !important; line-height: 1.45; }
+.cs-review-panel form { display: grid; gap: 7px; margin-top: 15px; }
+.cs-review-panel form label { color: #315471; font-size: 11px; font-weight: 800; }
+.cs-review-panel form textarea { width: 100%; resize: vertical; border: 1px solid #d5e2ed; border-radius: 8px; padding: 9px; color: #213f59; background: #fff; font-size: 12px; }
+.cs-review-panel form button { justify-self: end; }
+.cs-editor-progress button:disabled { opacity: .5; cursor: default; }
+.cs-campaign-badges .status-in_review, .cs-editor-progress .status-in_review { background: #e4f2ff; color: #245a88; }
+.cs-campaign-badges .status-changes_requested, .cs-editor-progress .status-changes_requested { background: #fff0e7; color: #a64e27; }
+.cs-campaign-card-bottom button svg { display: block; }
+.cs-campaign-card-bottom button[aria-label^="Delete campaign"], .cs-campaign-card-bottom button[aria-label^="Fshi fushatën"] { color: #c84b38; }
+.cs-delete-dialog { display: grid; gap: 12px; color: #203f5c; }
+.cs-delete-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; color: #c34331; background: #fff0eb; }
+.cs-delete-dialog > strong { padding: 12px 14px; border: 1px solid #e4eaf0; border-radius: 9px; background: #f7f9fb; font-size: 14px; overflow-wrap: anywhere; }
+.cs-delete-dialog > p { margin: 0; color: #60758a; font-size: 12px; line-height: 1.55; }
+.cs-delete-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; padding-top: 16px; border-top: 1px solid #e5ebf1; }
+.cs-delete-confirm { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border: 0; border-radius: 9px; padding: 9px 15px; background: #dc4a37; color: #fff; font-size: 12px; font-weight: 800; }
+.cs-delete-confirm:disabled { opacity: .55; cursor: default; }
+.cs-new-confirm > p { margin: 0; color: #526b83; font-size: 13px; line-height: 1.6; }
+.cs-product-info { min-width: 0; }
+.cs-product-quick-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 9px; min-width: 0; }
+.cs-product-quick-actions > button { display: inline-flex; align-items: center; min-height: 27px; padding: 5px 7px; border-radius: 6px; background: #edf5fb; color: #1d5b87; font-size: 10px; font-weight: 800; line-height: 1.2; text-align: left; }
+.cs-product-quick-actions .cs-cover-checkbox { margin: 0; min-height: 27px; padding: 4px 7px; white-space: nowrap; }

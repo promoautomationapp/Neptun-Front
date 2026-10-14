@@ -1,0 +1,55 @@
+.brochure-page.stores-reference-page { padding: 0; display: block; color: #fff; }
+.brochure-page.stores-reference-page.stores-gray { background: #e4e4e4; color: #1c4075; }
+.stores-editable-element { z-index: 3; min-width: 0; min-height: 0; }
+.stores-editable-element.editable { touch-action: none; cursor: move; }
+.stores-editable-element.editable:hover { outline: 1px dashed #168ccc; }
+.stores-element-tools { position: absolute; right: 0; top: 0; display: flex; gap: 2px; opacity: 0; z-index: 30; }
+.stores-editable-element.editable:hover > .stores-element-tools,
+.stores-editable-element.editable:focus-within > .stores-element-tools { opacity: 1; }
+.stores-element-tools button { padding: 0; width: 22px; height: 22px; border: 1px solid #278cc8; border-radius: 3px; background: #fff; color: #165079; font: 15px Arial,sans-serif; cursor: grab; touch-action: none; }
+.stores-element-tools button:active { cursor: grabbing; }
+.stores-reference-page [contenteditable=true] { cursor: text; min-width: 1em; }
+.stores-reference-page [contenteditable=true]:focus { outline: 1px solid #168ccc; background: #ffffff30; }
+.brochure-page.stores-reference-page .stores-heading { display: flex; align-items: center; width: 100%; height: 100%; margin: 0; padding: 0 3.4cqw; border-radius: 0 5cqw 5cqw 0; background: #fff; color: #1c4075; font-size: 3.5cqw; letter-spacing: 0; font-weight: 300 !important; line-height: 1; }
+.stores-reference-page.stores-gray .stores-heading { background: #0b80bb; color: #fff; }
+.stores-reference-page .stores-hajde { width: 100%; height: 100%; margin: 0; }
+.stores-reference-page .stores-hajde img { width: 100%; height: 100%; max-height: none; object-fit: contain; object-position: center; filter: none !important; }
+.stores-reference-page .brochure-awards { position: static; width: 100%; height: 100%; }
+.stores-reference-page .brochure-awards img { max-width: 100%; max-height: 100%; }
+.stores-reference-page .stores-grid { position: relative; display: block; width: 100%; height: 100%; padding: 0; }
+.stores-reference-page .store-spot { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: .5cqw .65cqw; margin: 0; color: inherit; text-align: center; font-size: 1.72cqw; line-height: 1.09; gap: 0; }
+.stores-reference-page.stores-gray .store-spot { background: #c7c8ca; border-radius: 1.55cqw; box-shadow: 0 0 .3cqw #00000015; }
+.stores-reference-page .store-spot strong { font-size: 1.8cqw; line-height: 1.1; margin: .75cqw 0 .1cqw; }
+.stores-reference-page .store-spot b { font-size: inherit; font-weight: 400; line-height: inherit; }
+.stores-reference-page .store-spot :is(span,b,strong) { width: 100%; overflow-wrap: normal; }
+.stores-reference-page .store-pin { display: block; height: 4.25cqw; flex: none; margin-bottom: .4cqw; color: #ff4526; }
+.stores-reference-page .store-pin svg { width: 3.2cqw; height: 4.25cqw; margin: 0 auto; fill: currentColor; }
+.stores-reference-page .stores-online-spot .store-pin svg { width: 4.3cqw; fill: none; }
+.stores-reference-page.stores-gray .stores-online-spot { justify-content: center; font-size: 1.2cqw; }
+.stores-reference-page.stores-gray .stores-online-spot strong { margin-bottom: .7cqw; }
+.stores-reference-page .stores-disclaimer { display: block; width: 100%; height: 100%; margin: 0; font-size: 1.16cqw; line-height: 1.14; }
+.stores-reference-page .stores-disclaimer p { margin: .5cqw 0 0; font-size: inherit; line-height: inherit; }
+.stores-reference-page .stores-members-note { display: inline-block; max-width: 100%; padding: .2cqw .4cqw; background: #f44627; color: #fff; border-radius: .5cqw; font-size: 1.63cqw; font-weight: 700; line-height: 1.1; }
+.stores-reference-page.stores-gray .stores-members-note { background: #0782bc; }
+.stores-reference-page.stores-gray .stores-disclaimer { color: #2482b1; }
+.stores-reference-page .stores-service { width: 100%; height: 100%; padding-left: 1.6cqw; border-left: .12cqw solid currentColor; font-size: 1.15cqw; line-height: 1.12; display: flex; flex-direction: column; gap: .25cqw; }
+.stores-reference-page .stores-service img { width: 100%; max-height: 3.2cqw; margin: 0 0 .7cqw; object-fit: contain; filter: none !important; }
+.stores-reference-page .stores-balfin { width: 100%; height: 100%; display: flex; align-items: flex-start; }
+.stores-reference-page .stores-balfin img { width: 100%; height: auto; margin: 0; filter: none !important; }
+.stores-reference-page .stores-social { width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1cqw; border: 0; padding: 0; font-size: 1.55cqw; line-height: 1; }
+.stores-reference-page .stores-social > span { display: flex; align-items: center; min-width: 0; padding: 0 1cqw; border-right: .12cqw solid currentColor; }
+.stores-reference-page .stores-social > span:first-child { padding-left: 0; }
+.stores-reference-page .stores-social > span:last-child { border-right: 0; padding-right: 0; }
+.stores-reference-page .stores-social svg { width: 2.2cqw; height: 2.2cqw; flex: none; color: #f4482c; margin-right: .7cqw; }
+.cs-stores-display-options { display: grid; gap: 10px; margin-bottom: 14px; }
+.cs-stores-display-options label { display: grid; gap: 6px; font-size: 12px; }
+.cs-store-footer-size { display: grid; gap: 6px; margin-bottom: 14px; font-size: 12px; }
+.cs-store-elements-options { margin: 12px 0; }
+.cs-store-elements-options summary { cursor: pointer; font-size: 12px; }
+.cs-store-elements-options .cs-store-select-actions { flex-wrap: wrap; }
+.brochure-last-page-shell { padding: 0 !important; position: relative; overflow: hidden; }
+.brochure-last-page-scaled { position: absolute; top: 0; width: 100%; height: 100%; transform-origin: top left; }
+.brochure-last-page-scaled > .brochure-page { width: 100%; height: 100%; }
+@media print { .stores-element-tools { display: none !important; } .stores-editable-element { outline: none !important; } }
+
+.store-pin>img{width:100%;height:100%;object-fit:contain}.stores-custom-social-icon{width:1em;height:1em;object-fit:contain}

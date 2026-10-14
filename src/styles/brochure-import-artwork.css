@@ -1,0 +1,58 @@
+.brochure-floating-artworks{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.brochure-floating-artwork{position:absolute;pointer-events:none;min-width:5%;}
+.brochure-floating-artwork img{display:block;width:100%;height:auto;max-height:40cqw;object-fit:contain;pointer-events:auto;filter:drop-shadow(0 .18cqw .3cqw #071a3230)}
+.brochure-floating-artworks.editable .brochure-floating-artwork{outline:1px dashed #14a1e4;outline-offset:.35cqw}
+.brochure-floating-artworks.editable img{cursor:grab;touch-action:none}
+.brochure-floating-artworks.editable img:active{cursor:grabbing}
+.brochure-floating-artwork button{position:absolute;z-index:4;width:2.5cqw;height:2.5cqw;min-width:18px;min-height:18px;border:1px solid #fff;border-radius:50%;background:#1688cf;color:#fff;font-weight:900;box-shadow:0 2px 6px #00213b66;pointer-events:auto;opacity:0}
+.brochure-floating-artwork:hover button,.brochure-floating-artwork:focus-within button{opacity:1}
+.brochure-floating-artwork .artwork-resize{right:-1cqw;bottom:-1cqw;cursor:nwse-resize;touch-action:none}
+.brochure-floating-artwork .artwork-remove{right:-1cqw;top:-1cqw;cursor:pointer}
+.brochure-interior .brochure-products{z-index:3}
+.brochure-cover .cover-content,.brochure-cover .cover-photo,.brochure-cover .cover-ribbon,.brochure-cover .brochure-footer{z-index:3}
+.brochure-stores .stores-top,.brochure-stores .stores-grid,.brochure-stores .stores-bottom{position:relative;z-index:3}
+.brochure-interior .brochure-product:has(.brochure-imported-specs):not(.details-left) .brochure-product-image-wrap{height:calc(100% - 17.1cqw)}
+.brochure-specs.brochure-imported-specs{display:flex;flex-wrap:nowrap;height:6.3cqw;min-height:0;align-content:stretch;gap:.5cqw;padding-top:.35cqw}
+.brochure-imported-specs span{min-width:0;min-height:0;padding:.25cqw .35cqw;font-size:1.05cqw;line-height:1.15;overflow:hidden}
+.brochure-imported-specs b{white-space:normal;overflow:visible;text-overflow:clip;font-weight:700;display:block;-webkit-line-clamp:unset;line-clamp:unset}
+.cs-page-preview.edit-view .brochure-imported-specs span[draggable=true]{cursor:grab;outline:1px dashed transparent}
+.cs-page-preview.edit-view .brochure-imported-specs span[draggable=true]:hover{outline-color:#16a0e5;background:#148bd723}
+.cs-import-brochure-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px;margin:12px 0;border:1px solid #d8e6ef;border-radius:12px;background:#f7fbfd}
+.cs-import-brochure-fields>strong,.cs-import-brochure-fields>p{grid-column:1/-1;margin:0}
+.cs-import-brochure-fields>strong{color:#1f496c;font-size:14px}
+.cs-import-brochure-fields>p{color:#607e94;font-size:12px}
+.cs-import-brochure-fields .cs-field{margin:0;min-width:0}
+.cs-import-brochure-fields select{width:100%;min-width:0}
+.cs-import-brochure-summary{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 13px;border-radius:9px;background:#e8f6ed;color:#246547;font-size:12px}
+.cs-import-position-warnings,.cs-import-page-warning{padding:10px 12px;border:1px solid #f2d89f;border-radius:9px;background:#fff8e7;color:#845414;font-size:12px;line-height:1.4}
+.cs-import-position-warnings{max-height:140px;overflow:auto;margin:10px 0}
+.cs-import-position-warnings p{margin:5px 0 0}
+.cs-import-page-warning{margin:8px 0}
+.cs-import-brochure-row{position:relative}
+.cs-import-brochure-row>.cs-import-position{position:absolute;z-index:1;left:5px;top:5px;padding:2px 5px;border-radius:5px;background:#1f5c8a;color:#fff;font-size:10px;font-weight:800}
+.cs-import-brochure-row>small{display:block;margin:0 0 5px 58px;color:#648099;font-size:11px}
+.cs-page-artwork-controls{display:grid;gap:8px;padding:12px;margin:0 0 14px;border:1px solid #dce8f0;border-radius:10px;background:#f8fbfd}
+.cs-page-artwork-controls>strong{color:#20496c;font-size:13px}
+.cs-page-artwork-controls>p{margin:0;color:#668197;font-size:11px;line-height:1.45}
+.cs-page-artwork-controls>.cs-upload-button{justify-self:start}
+.cs-page-artwork-row{display:flex;align-items:center;gap:7px;min-width:0}
+.cs-page-artwork-row img{width:40px;height:34px;object-fit:contain;background:#eaf1f5;border-radius:5px}
+.cs-page-artwork-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.cs-page-artwork-row input{width:70px;accent-color:#1688cf}
+.cs-page-artwork-row button{border:0;background:#fff0ec;color:#ba4434;border-radius:5px;font-weight:900;cursor:pointer}
+@media(max-width:650px){.cs-import-brochure-fields{grid-template-columns:1fr}}
+.brochure-screen-image{position:absolute;z-index:1;display:block;object-fit:cover;border-radius:.2cqw;pointer-events:none;box-shadow:inset 0 0 .2cqw #0006}
+.cs-screen-editor>p{margin:0 0 14px;color:#607c91;font-size:13px}
+.cs-screen-editor-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(230px,.75fr);gap:18px}
+.cs-screen-editor-preview{position:relative;align-self:start;width:100%;background:#e9eef2;border-radius:10px;overflow:hidden}
+.cs-screen-editor-preview>img:first-child{display:block;width:100%;height:auto;object-fit:contain}
+.cs-screen-editor-preview .cs-screen-editor-overlay{position:absolute;border:2px solid #11a7ee;box-shadow:0 0 0 2px #fff8;cursor:grab;touch-action:none}
+.cs-screen-editor-preview .cs-screen-editor-overlay>img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.cs-screen-editor-preview .cs-screen-editor-overlay>button{position:absolute;right:-8px;bottom:-8px;width:22px;height:22px;border:1px solid #fff;border-radius:5px;background:#1688cf;color:#fff;box-shadow:0 1px 6px #0007;cursor:nwse-resize;touch-action:none}
+.cs-screen-editor-controls{display:grid;align-content:start;gap:11px}
+.cs-screen-editor-controls>.cs-upload-button{justify-self:start}
+.cs-screen-editor-controls>p{margin:0;color:#6a8295;font-size:11px}
+.cs-screen-editor-controls>label:not(.cs-upload-button){display:grid;gap:3px;color:#30556f;font-size:11px;font-weight:700}
+.cs-screen-editor-controls>label span{display:flex;justify-content:space-between}
+.cs-screen-editor-controls input[type=range]{width:100%;accent-color:#1688cf}
+@media(max-width:700px){.cs-screen-editor-grid{grid-template-columns:1fr}}

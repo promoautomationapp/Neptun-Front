@@ -1,0 +1,20 @@
+import React from "react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import { ProductDetailBlock } from "../../src/features/brochure/ProductDetailBlock";
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it("drags a detail directly with the grid visible and commits only on release", () => {
+  vi.stubGlobal("PointerEvent", MouseEvent);
+  Object.defineProperty(Element.prototype, "setPointerCapture", { configurable: true, value: vi.fn() });
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) { return DOMRect.fromRect(this.classList.contains("product-detail-block") ? { x: 100, y: 100, width: 200, height: 50 } : { width: 1000, height: 600 }); });
+  const change = vi.fn();
+  const view = render(<div className="cs-page-preview edit-view"><section className="brochure-page"><article className="brochure-product"><div><ProductDetailBlock product={{ code: "one", name: "Phone" }} detailKey="memory" onChange={change}>128 GB</ProductDetailBlock></div></article></section></div>);
+  const detail = view.getByText("128 GB");
+  fireEvent.pointerDown(detail, { button: 0, clientX: 100, clientY: 100 });
+  expect(view.container.querySelector(".dragging-guides")).toBeTruthy();
+  fireEvent.pointerMove(detail, { clientX: 80, clientY: 90 });
+  expect(change).not.toHaveBeenCalled();
+  fireEvent.pointerUp(detail, { clientX: 80, clientY: 90 });
+  expect(change).toHaveBeenCalledWith("detailBlockPlacements", { memory: { x: -2, y: -1 } });
+  expect(view.container.querySelector(".dragging-guides")).toBeNull();
+});

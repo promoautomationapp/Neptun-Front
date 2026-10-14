@@ -1,0 +1,59 @@
+.cs-ai-review { display: grid; gap: 18px; color: #243f5c; }
+.cs-ai-review p { margin: 0; line-height: 1.5; }
+.cs-ai-notice, .cs-ai-errors { padding: 14px 17px; border-radius: 12px; background: #fff3ed; color: #8e3929; border: 1px solid #fac9b7; }
+.cs-ai-success { background: #e9f8f0; color: #176840; border-color: #a6dfbe; }
+.cs-ai-errors { display: grid; gap: 7px; }
+.cs-ai-options, .cs-ai-fields { display: flex; flex-wrap: wrap; gap: 10px; }
+.cs-ai-options label, .cs-ai-fields label { display: flex; align-items: center; gap: 9px; border: 1px solid #d8e4f0; background: #f7faff; border-radius: 12px; padding: 11px 13px; font-weight: 700; }
+.cs-ai-options input, .cs-ai-fields input, .cs-ai-products input { accent-color: #1765a0; width: 18px; height: 18px; flex: none; }
+.cs-ai-fields label { font-size: 13px; padding: 8px 11px; }
+.cs-ai-select-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cs-ai-select-head > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.cs-ai-select-head button { border: 1px solid #cddfeb; border-radius: 8px; background: white; color: #195987; padding: 7px 10px; font-weight: 700; }
+.cs-ai-products { max-height: 260px; overflow: auto; border: 1px solid #dce7f1; border-radius: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cs-ai-products label { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 10px; border-bottom: 1px solid #e7edf4; cursor: pointer; }
+.cs-ai-products label:nth-child(odd) { border-right: 1px solid #e7edf4; }
+.cs-ai-products img { width: 51px; height: 51px; object-fit: contain; background: white; border: 1px solid #edf1f5; border-radius: 7px; flex: none; }
+.cs-ai-products span { min-width: 0; display: grid; gap: 3px; }
+.cs-ai-products strong { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-ai-products small { color: #697d90; }
+.cs-ai-ready-count { color: #176840; font-size: 12px; font-weight: 800; }
+.cs-ai-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; color: #325a78; }
+.cs-ai-bulk button { border: 1px solid #cbdfe9; background: #f7fbff; color: #1a5a85; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-weight: 800; }
+.cs-ai-image-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 220px; overflow: auto; border: 1px solid #dce7f1; border-radius: 12px; }
+.cs-ai-image-list button { display: flex; align-items: center; gap: 10px; min-width: 0; text-align: left; border: 0; border-bottom: 1px solid #e7edf4; background: white; padding: 9px; color: #24425f; }
+.cs-ai-image-list button.active { background: #e8f3fc; box-shadow: inset 3px 0 #1878b5; }
+.cs-ai-image-list img { width: 49px; height: 49px; object-fit: contain; border: 1px solid #e5ebf2; border-radius: 7px; background: white; flex: none; }
+.cs-ai-image-list span { display: grid; gap: 2px; min-width: 0; }
+.cs-ai-image-list strong { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 12px; }
+.cs-ai-image-list small { color: #74879b; }
+.cs-ai-disclosure { font-size: 12px; color: #677c90; }
+.cs-ai-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; border-top: 1px solid #e0e9f1; padding-top: 16px; position: sticky; bottom: -18px; background: white; padding-bottom: 4px; z-index: 1; }
+.cs-ai-footer button:disabled { opacity: .5; cursor: not-allowed; }
+.cs-ai-loading { display: flex; align-items: center; gap: 15px; min-height: 120px; font-weight: 700; }
+.cs-ai-loading-copy { display: grid; gap: 9px; min-width: 0; flex: 1; }
+.cs-ai-loading-copy small { color: #758ca1; font-size: 12px; font-weight: 500; }
+.cs-ai-progress { height: 7px; border-radius: 99px; background: #e4eef6; overflow: hidden; width: 100%; }
+.cs-ai-progress span { display: block; height: 100%; background: linear-gradient(90deg, #188ed0, #2fbedc); transition: width .3s ease; }
+.cs-ai-image-action { padding: 0 12px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cs-ai-image-action small { color: #a63d2c; font-weight: 700; }
+.cs-ai-spinner { width: 26px; height: 26px; border: 3px solid #d9eaf6; border-top-color: #1765a0; border-radius: 50%; animation: cs-ai-spin .8s linear infinite; flex: none; }
+@keyframes cs-ai-spin { to { transform: rotate(360deg); } }
+.cs-ai-proposals { display: grid; grid-auto-rows: max-content; align-content: start; gap: 14px; max-height: 55vh; overflow: auto; padding-right: 3px; }
+.cs-ai-proposal { border: 1px solid #dae6ef; border-radius: 14px; overflow: hidden; }
+.cs-ai-proposal header { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #eff6fc; padding: 11px 14px; }
+.cs-ai-proposal header strong { font-size: 13px; }
+.cs-ai-proposal header span { color: #5680a4; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.cs-ai-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
+.cs-ai-compare > div { min-width: 0; background: #f7f9fc; border: 1px solid #e3e9f0; border-radius: 9px; padding: 8px; display: grid; align-content: start; gap: 7px; }
+.cs-ai-compare small { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: #678098; }
+.cs-ai-compare img { width: 100%; height: 200px; object-fit: contain; }
+.cs-ai-compare .cs-ai-checker { background: repeating-conic-gradient(#e4eaf0 0% 25%, #fff 0% 50%) 50% / 20px 20px; }
+.cs-ai-checker small { background: #fff; padding: 2px 5px; width: fit-content; border-radius: 4px; }
+.cs-ai-copy p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.cs-ai-reason { padding: 0 13px 8px; color: #5f7386; font-size: 12px; }
+.cs-ai-choice { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 12px 12px; }
+.cs-ai-choice button { border: 1px solid #ccdae5; background: white; color: #3f5f7b; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 800; }
+.cs-ai-choice button.active { background: #e5eff8; border-color: #86b0d1; color: #174e7a; }
+.cs-ai-choice button.approve { background: #e6f7ef; border-color: #80c9a2; color: #176840; }
+@media (max-width: 640px) { .cs-ai-products, .cs-ai-image-list { grid-template-columns: 1fr; } .cs-ai-products label:nth-child(odd) { border-right: 0; } .cs-ai-compare img { height: 140px; } .cs-ai-proposal header { align-items: flex-start; flex-direction: column; } }

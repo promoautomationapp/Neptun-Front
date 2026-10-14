@@ -1,0 +1,4 @@
+.neptun-wordmark { position: relative; display: inline-block; width: 100%; aspect-ratio: 414 / 89; flex: none; }
+.neptun-wordmark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.neptun-wordmark.light img { filter: brightness(0) saturate(100%) invert(22%) sepia(38%) saturate(1657%) hue-rotate(175deg) brightness(89%) contrast(93%); }
+.neptun-wordmark.light::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; background: #ee4028; }

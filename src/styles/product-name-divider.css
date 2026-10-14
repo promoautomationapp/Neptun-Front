@@ -1,0 +1,21 @@
+.brochure-product-bottom:has(
+  .brochure-product-name-divider[data-active="true"]
+) {
+  position: relative;
+  border-bottom: 0 !important;
+}
+.brochure-product-name-divider {
+  position: absolute;
+  display: block;
+  background: #fff;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.brochure-page.light .brochure-product-name-divider {
+  background: #7a96ac;
+}
+
+.brochure-page .brochure-saving {
+  right: 0;
+}

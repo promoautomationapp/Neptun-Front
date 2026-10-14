@@ -1,0 +1,8 @@
+.cs-import-source-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:17px 0 4px}
+.cs-import-source-options .cs-field{min-width:0;margin:0}
+.cs-import-source-options select{min-width:0;border:1px solid #d4e1eb;border-radius:9px;padding:10px;background:#fff;color:#234966;font-size:12px}
+.cs-import-loading{display:flex;align-items:center;gap:9px;padding:12px;margin:14px 0;border-radius:9px;background:#eaf5fc;color:#245e86!important;font-size:12px;font-weight:800}
+.cs-import-loading span{width:16px;height:16px;border:2px solid #b5d5e8;border-top-color:#f34832;border-radius:50%;animation:cs-image-spin .8s linear infinite}
+.cs-import-no-match{padding:11px 13px;margin:14px 0;border:1px solid #eccab4;border-radius:8px;background:#fff6ef;color:#9a4a25!important;font-size:12px;line-height:1.45}
+.cs-import-preview-limit{padding:9px 0;color:#607d96!important;font-size:11px}
+@media(max-width:650px){.cs-import-source-options{grid-template-columns:1fr}}

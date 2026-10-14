@@ -1,0 +1,47 @@
+.screen-size-annotation {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  font-family: SkolaSans, Arial, sans-serif;
+  line-height: 1;
+}
+.screen-size-television,
+.screen-size-phone {
+  aspect-ratio: 1;
+  transform-origin: top right;
+}
+.screen-size-television > svg,
+.screen-size-phone > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.screen-size-other {
+  width: 7.9519cqw;
+  aspect-ratio: 67.1693479534/34.9477117807;
+  color: inherit;
+}
+.screen-size-other > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.brochure-product.has-tv-inch-ribbon .brochure-product-image {
+  left: 50%;
+  top: 50%;
+  width: 91%;
+  max-width: 91%;
+  height: 94%;
+  max-height: 94%;
+}
+.brochure-cover .brochure-product.has-tv-inch-ribbon .brochure-product-image {
+  width: 96%;
+  max-width: 96%;
+  height: 100%;
+  max-height: 100%;
+}
+.brochure-page.light .screen-size-other {
+  color: #000;
+}

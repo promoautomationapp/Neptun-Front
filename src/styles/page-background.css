@@ -1,0 +1,129 @@
+.cs-background-picker {
+  margin: 18px 0 22px;
+  padding: 15px;
+  border: 1px solid #d7e5ef;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f9fcff, #eef6fb);
+}
+.cs-background-picker-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 11px; }
+.cs-background-picker-heading small { color: #7590a5; font-size: 11px; text-align: right; }
+.cs-background-featured { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cs-background-featured button {
+  display: flex; align-items: center; gap: 9px; min-width: 0; padding: 8px;
+  border: 1.5px solid #d6e3ed; border-radius: 11px; background: #fff;
+  color: #234761; text-align: left; cursor: pointer;
+}
+.cs-background-featured button.chosen { border-color: #ef4933; box-shadow: 0 0 0 2px #ef49331d; }
+.cs-background-featured button i { width: 34px; height: 34px; flex: none; border: 1px solid #142a3b25; border-radius: 8px; }
+.cs-background-featured button span { min-width: 0; font-size: 12px; font-weight: 800; line-height: 1.2; }
+.cs-background-featured button b { display: none; margin-left: auto; color: #ef4933; }
+.cs-background-featured button.chosen b { display: block; }
+.cs-background-palette { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.cs-background-palette > button, .cs-background-custom {
+  width: 29px; height: 29px; flex: none; border: 1px solid #17365030; border-radius: 50%;
+  cursor: pointer; box-shadow: 0 1px 3px #17365018;
+}
+.cs-background-palette > button.chosen { outline: 2px solid #ef4933; outline-offset: 2px; }
+.cs-background-custom {
+  position: relative; display: grid; place-items: center;
+  background: conic-gradient(#ed4935, #e9bd3d, #58ae71, #408bbb, #945dc1, #ed4935);
+  color: #fff; font-size: 18px; font-weight: 900;
+}
+.cs-background-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.cs-background-picker-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 8px; }
+.cs-background-current { display: inline-flex; align-items: center; gap: 7px; color: #5a7589; font-size: 11px; font-weight: 800; letter-spacing: .03em; }
+.cs-background-current i { width: 15px; height: 15px; border: 1px solid #17365030; border-radius: 4px; }
+.cs-background-picker-foot button, .cs-background-apply-all { border: 0; background: transparent; color: #225f88; font-size: 11px; font-weight: 800; cursor: pointer; }
+.cs-background-apply-all { margin-top: 10px; padding: 0; text-align: left; }
+.cs-background-apply-all:hover, .cs-background-picker-foot button:hover { text-decoration: underline; }
+.cs-background-color-control{margin-top:11px}.cs-background-color-control .studio-color-trigger{min-height:38px}.cs-background-gradient .cs-gradient-colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cs-gradient-colors>div{min-width:0;display:grid;gap:5px}.cs-gradient-directions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}.cs-gradient-directions button{position:relative;height:36px;border:1px solid #c5dbe8;border-radius:8px;background:#fff;cursor:pointer;overflow:hidden}.cs-gradient-directions button.chosen{outline:2px solid #ef4933;outline-offset:1px}.cs-gradient-directions button i{position:absolute;inset:0}.cs-gradient-directions button b{position:relative;z-index:1;display:grid;place-items:center;width:22px;height:22px;margin:auto;border-radius:50%;background:#fff;color:#204b70;font-size:15px;box-shadow:0 1px 5px #0b273b44}
+.cs-background-gradient{margin-top:14px;padding-top:13px;border-top:1px solid #d7e5ef;display:grid;gap:9px;color:#295878;font-size:12px;font-weight:800}.cs-background-gradient>button{border:1px solid #b8d5e6;background:#fff;color:#1c5b82;border-radius:9px;padding:9px;text-align:left;font-weight:800;cursor:pointer}.cs-background-gradient>button.chosen{border-color:#ef4933}.cs-background-gradient>div{display:grid;grid-template-columns:1fr 1fr;gap:9px}.cs-background-gradient label{display:flex;align-items:center;gap:7px}.cs-background-gradient input[type=color]{width:40px;height:29px;border:0;background:transparent}.cs-background-gradient input[type=range]{flex:1}
+.cs-cover-ai-controls{display:grid;gap:10px;padding:15px;margin:12px 0 18px;background:#f1f8fc;border:1px solid #cde3ef;border-radius:14px}.cs-cover-ai-controls p{font-size:12px;color:#6a8799;line-height:1.45;margin:0}.cs-cover-ai-controls textarea,.cs-cover-ai-controls select{width:100%;border:1px solid #c6dae8;border-radius:9px;background:#fff;padding:9px;color:#214f70}.cs-cover-ai-controls>button{border:0;border-radius:9px;padding:11px;background:#1d5b86;color:#fff;font-weight:800;cursor:pointer}.cs-cover-ai-toggles{display:grid;gap:6px}.cs-cover-ai-controls label{color:#355f7d;font-size:12px;font-weight:750}.cs-cover-ai-controls input[type=checkbox]{accent-color:#ef4933;margin-right:5px}
+
+.brochure-interior { background: var(--brochure-page-background, linear-gradient(110deg, #1f507f, #326d9c)) !important; }
+.brochure-interior.light { background: var(--brochure-page-background, #f1f2f4) !important; }
+.brochure-cover.has-custom-background .cover-photo,
+.brochure-cover.has-custom-background .cover-content { background: transparent !important; }
+.brochure-cover.has-custom-background .cover-photo::after { display: none; }
+.brochure-cover.has-custom-background.light .cover-headline,
+.brochure-cover.has-custom-background.light .cover-headline span,
+.brochure-cover.has-custom-background.light .cover-content { color: #173856; }
+.brochure-cover.has-custom-background.light .cover-headline h1 { text-shadow: none; }
+.brochure-cover.has-custom-background.has-cover-art.light .cover-headline,
+.brochure-cover.has-custom-background.has-cover-art.light .cover-headline span { color: #fff; }
+.brochure-cover.has-custom-background.has-cover-art.light .cover-headline h1 { text-shadow: 0 .3cqw .9cqw #092944d9; }
+.brochure-cover.has-custom-background.light .cover-feature-products .brochure-product-copy,
+.brochure-cover.has-custom-background.light .cover-no-products { color: #173856; }
+.brochure-cover.has-custom-background.light .cover-photo .brochure-mark { padding: 2% 3%; border-radius: 1cqw; background: #174574; }
+.brochure-stores.custom-light { color: #173856; }
+.brochure-stores.custom-light .stores-hajde { color: #173856; }
+.brochure-stores.custom-light .stores-hajde img,
+.brochure-stores.custom-light .stores-service img,
+.brochure-stores.custom-light .stores-balfin img { filter: brightness(0) saturate(100%) invert(18%) sepia(24%) saturate(1848%) hue-rotate(170deg); }
+.brochure-stores.custom-light .stores-social,
+.brochure-stores.custom-light .stores-bottom { border-color: #17385655; }
+
+/* Compact background controls shared by campaign setup and the page editor. */
+.brochure-page { isolation: isolate; }
+/* Uploaded data URLs can exceed the browser's CSS custom-property size limit. */
+.brochure-page > .brochure-page-background-image { position:absolute; inset:0; width:100%; height:100%; max-width:none; max-height:none; object-fit:cover; z-index:-1; pointer-events:none; }
+.cs-background-preview { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 58px; padding: 10px 13px; border: 1px solid #17365020; border-radius: 10px; overflow: hidden; }
+.cs-background-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cs-background-preview > span, .cs-background-preview > small { position: relative; z-index: 1; }
+.cs-background-preview > span { font-size: 26px; line-height: 1; font-weight: 700; }
+.cs-background-preview > small { font-size: 11px; padding: 4px 7px; border-radius: 5px; background: #ffffffdf; color: #214563; }
+.cs-background-modes { display: flex; gap: 3px; padding: 3px; margin: 9px 0 11px; border: 1px solid #d7e5ef; border-radius: 8px; background: #edf4f8; }
+.cs-background-modes button { flex: 1; min-width: 0; padding: 7px 4px; border: 0; border-radius: 5px; background: transparent; color: #54758c; font-size: 11px; font-weight: 700; white-space: normal; cursor: pointer; }
+.cs-background-modes button.chosen { background: #fff; color: #194f77; box-shadow: 0 1px 4px #17365020; }
+.cs-background-color-control > span { color: #54758c; font-size: 11px; font-weight: 700; }
+.cs-background-color-control { display: grid; gap: 5px; }
+.cs-background-gradient { margin-top: 0; padding-top: 0; border-top: 0; }
+.cs-background-image-control { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.cs-background-image-control input[type=file] { display: none; }
+.cs-background-image-control button { flex: 1; min-width: 0; padding: 8px 9px; border: 1px solid #bcd5e4; border-radius: 8px; background: #fff; color: #245b7e; text-align: center; font-size: 11px; font-weight: 700; cursor: pointer; }
+.cs-background-image-control button:disabled { opacity: .55; cursor: wait; }
+.cs-background-image-control.active > button:first-of-type { border-style: dashed; background: #f6fbff; }
+.cs-background-image-control button.remove { flex: none; border-color: #f0d7d0; color: #bc4c37; }
+.cs-background-image-control small { flex: 0 0 100%; color: #7590a5; font-size: 10px; line-height: 1.4; }
+.cs-background-picker.compact { padding: 9px; margin: 10px 0 12px; border-radius: 11px; background: #f8fbfd; }
+.cs-background-picker.compact .cs-background-picker-heading { margin-bottom: 8px; }
+.cs-background-picker.compact .cs-background-picker-heading small { font-size: 10px; }
+.cs-background-picker.compact .cs-background-preview { min-height: 36px; padding: 6px 10px; border-radius: 7px; }
+.cs-background-picker.compact .cs-background-preview > span { font-size: 22px; }
+.cs-background-picker.compact .cs-background-palette { margin-top: 0; gap: 7px; }
+.cs-background-picker.compact .cs-background-palette button { width: 24px; height: 24px; }
+.cs-background-picker.compact .cs-background-modes { margin: 7px 0; }
+.cs-background-picker.compact .studio-color-trigger { min-height: 34px; padding: 4px 8px; }
+.cs-background-picker.compact .studio-color-trigger i { width: 24px; height: 24px; }
+.cs-background-picker.compact .cs-gradient-colors .studio-color-trigger { min-height: 31px; padding: 4px 5px; gap: 4px; font-size: 10px; }
+.cs-background-picker.compact .cs-gradient-colors .studio-color-trigger i { width: 16px; height: 16px; }
+.cs-background-picker.compact .cs-background-image-control { margin-top: 8px; }
+.cs-background-picker.compact .cs-background-picker-foot { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cs-background-picker.compact .cs-background-apply-all { margin-top: 0; }
+.cs-background-picker.compact .cs-gradient-directions button { height: 28px; }
+.cs-background-picker.compact .cs-gradient-directions button b { width: 19px; height: 19px; font-size: 13px; }
+
+.cs-layout-options.compact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 9px 0 0; }
+.cs-layout-options.compact-grid button { position: relative; display: flex; align-items: center; gap: 7px; min-width: 0; min-height: 44px; padding: 6px; border: 1px solid #d7e3ec; border-radius: 8px; background: #fff; color: #3b627e; text-align: left; }
+.cs-layout-options.compact-grid button.chosen { border-color: #ef4933; background: #fff8f5; box-shadow: 0 0 0 1px #ef493319; }
+.cs-layout-options.compact-grid .cs-layout-glyph { display: grid; flex: 0 0 28px; width: 28px; height: 30px; gap: 3px; padding: 0; }
+.cs-layout-options.compact-grid .cs-layout-glyph i { min-width: 0; min-height: 0; border-radius: 2px; background: #a8bfce; }
+.cs-layout-options.compact-grid button.chosen .cs-layout-glyph i { background: #ed6b57; }
+.cs-layout-options.compact-grid .cs-layout-glyph i.empty { opacity: .18; }
+.cs-layout-options.compact-grid button > span:last-of-type { display: grid; gap: 3px; min-width: 0; }
+.cs-layout-options.compact-grid strong { font-size: 11px; line-height: 1.2; }
+.cs-layout-options.compact-grid small { color: #7c95a7; font-size: 10px; line-height: 1; }
+.cs-layout-options.compact-grid .cs-layout-check { display: none; position: absolute; top: 4px; right: 5px; color: #ef4933; font-size: 10px; }
+.cs-layout-options.compact-grid button.chosen .cs-layout-check { display: block; }
+.cs-create-design > h3 { font-size: 20px; margin: 8px 0; }
+.cs-create-design { padding: 15px; }
+.cs-create-design > p { margin-bottom: 8px; font-size: 11px; line-height: 1.45; }
+.cs-create-design .cs-background-color-control { grid-template-columns: 90px minmax(0, 1fr); align-items: center; }
+.cs-create-design .cs-gradient-colors > div { display: flex; align-items: center; }
+.cs-create-design .cs-gradient-colors .studio-color-field { flex: 1; min-width: 0; }
+.cs-create-design .cs-gradient-directions { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
+.cs-create-design .cs-create-design-reminder { margin: 10px 0 0; padding: 7px 8px; border: 1px solid #dbe6ee; border-radius: 7px; background: #f4f8fb; color: #617e93; font-size: 10px; line-height: 1.45; }
+.cs-create-grid ~ .cs-modal-actions { margin-top: 12px; }
+.cs-ai-background-reminder { display: grid; gap: 8px; margin: 10px 0 14px; padding: 10px; border: 1px solid #ecc989; border-radius: 9px; background: #fff9ed; color: #7c5a26; }
+.cs-ai-background-reminder p { margin: 0; color: inherit; font-size: 11px; line-height: 1.45; }
+.cs-ai-background-reminder button { justify-self: start; padding: 7px 10px; border: 1px solid #d9b56f; border-radius: 7px; background: #fff; color: #79521d; font-size: 11px; font-weight: 700; cursor: pointer; }

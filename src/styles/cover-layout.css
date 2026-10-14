@@ -1,0 +1,132 @@
+/* Cover offers use one fixed row for copy and price, like the printed flyer. */
+.brochure-page.brochure-cover {
+  color: #fff;
+}
+.brochure-cover .cover-feature-products .brochure-product {
+  min-width: 0;
+  overflow: hidden;
+}
+.brochure-cover .cover-feature-products .brochure-product-image-wrap,
+.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-image-wrap {
+  height: calc(100% - 18.5cqw);
+  overflow: hidden;
+}
+.brochure-cover .cover-feature-products.triple .brochure-product-image-wrap,
+.brochure-cover .cover-feature-products.triple .brochure-product.style-compact .brochure-product-image-wrap {
+  height: calc(100% - 20.5cqw);
+}
+.brochure-cover .cover-feature-products .brochure-product-image {
+  width: 88%;
+  height: 88%;
+  max-width: 88%;
+  max-height: 88%;
+}
+.brochure-cover .cover-feature-products .brochure-product.has-screen-annotation .brochure-product-image {
+  width: 80%;
+  height: 80%;
+  max-width: 80%;
+  max-height: 80%;
+}
+.brochure-cover .cover-feature-products .brochure-product-bottom,
+.brochure-cover .cover-feature-products.triple .brochure-product-bottom,
+.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-bottom {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5cqw;
+  height: 10.8cqw;
+  min-height: 10.8cqw;
+}
+.brochure-cover .cover-feature-products .brochure-product-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: flex-end;
+  padding-bottom: 1cqw;
+  color: #fff;
+  text-shadow: 0 0.1cqw 0.25cqw #0b35553d;
+}
+.brochure-cover .cover-feature-products .brochure-product-copy strong {
+  font-size: 2.2cqw;
+  line-height: 1;
+}
+.brochure-cover .cover-feature-products .brochure-product-copy span {
+  font-size: 1.17cqw;
+  line-height: 1.2;
+  white-space: normal;
+}
+.brochure-cover .cover-feature-products .brochure-product-copy small {
+  font-size: 1.05cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price,
+.brochure-cover .cover-feature-products.triple .brochure-price {
+  flex: 0 0 17cqw;
+  width: 17cqw;
+  max-width: 58%;
+  margin-left: auto;
+}
+.brochure-cover .cover-feature-products .brochure-price-sale,
+.brochure-cover .cover-feature-products .brochure-price.light .brochure-price-sale {
+  padding-inline: 0.5cqw;
+  gap: 0.25cqw;
+}
+.brochure-cover .cover-feature-products .brochure-happy-mark {
+  width: 4.4cqw;
+  height: 3.7cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price-sale strong,
+.brochure-cover .cover-feature-products.triple .brochure-price-sale strong {
+  font-size: 3cqw;
+  letter-spacing: -0.03em;
+}
+.brochure-cover .cover-feature-products .brochure-price.compact .brochure-price-sale strong {
+  font-size: 2.6cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.extra-compact .brochure-price-sale strong {
+  font-size: 2.25cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-price-sale strong,
+.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-price-sale strong {
+  font-size: 2.35cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.style-card.compact .brochure-price-sale strong,
+.brochure-cover .cover-feature-products .brochure-price.style-compact.compact .brochure-price-sale strong {
+  font-size: 2.1cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.style-card.extra-compact .brochure-price-sale strong,
+.brochure-cover .cover-feature-products .brochure-price.style-compact.extra-compact .brochure-price-sale strong {
+  font-size: 1.8cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-happy-mark,
+.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-happy-mark {
+  width: 3.25cqw;
+}
+.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-happy-label,
+.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-happy-label {
+  font-size: 0.9cqw;
+}
+.brochure-cover .cover-feature-products .brochure-specs,
+.brochure-cover .cover-feature-products.triple .brochure-specs {
+  order: 2;
+  margin-top: auto;
+  height: 6cqw;
+  min-height: 6cqw;
+}
+.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-bottom {
+  order: 1;
+}
+.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-specs {
+  order: 2;
+}
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price {
+  flex-basis: 22cqw;
+  width: 22cqw;
+  max-width: 48%;
+}
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price-sale strong {
+  font-size: 3.65cqw;
+}
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price.style-card .brochure-price-sale strong,
+.brochure-cover .cover-feature-products:not(.triple) .brochure-price.style-compact .brochure-price-sale strong {
+  font-size: 2.8cqw;
+}

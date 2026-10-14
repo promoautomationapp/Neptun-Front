@@ -1,0 +1,144 @@
+.cs-preview-edit-hint{margin:-4px 0 10px!important;color:#567f9f!important;font-size:11px!important;font-weight:700}
+.cs-product-photo{position:relative;border:0;padding:0;cursor:pointer}
+.cs-product-photo:hover,.cs-product-photo:focus-visible{outline:2px solid #f24b35;outline-offset:2px}
+.cs-photo-edit-label{position:absolute;inset:auto 0 0;background:#123c68db;color:#fff;font-size:9px;font-weight:800;padding:3px;opacity:0;transition:opacity .15s}
+.cs-product-photo:hover .cs-photo-edit-label,.cs-product-photo:focus-visible .cs-photo-edit-label{opacity:1}
+.cs-product-quick-actions{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;row-gap:3px}
+.brochure-product-copy{position:relative}
+.cs-brochure-edit-image,.cs-brochure-edit-details,.cs-brochure-edit-specs{position:absolute;z-index:8;inset:0;border:0;background:transparent;color:#123f6c;cursor:pointer;padding:0;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .15s,background .15s}
+.cs-brochure-edit-image:hover,.cs-brochure-edit-image:focus-visible,.cs-brochure-edit-details:hover,.cs-brochure-edit-details:focus-visible,.cs-brochure-edit-specs:hover,.cs-brochure-edit-specs:focus-visible{opacity:1;background:#dff1fc26;outline:2px solid #fff;outline-offset:-2px}
+.cs-brochure-edit-image span,.cs-brochure-edit-details span,.cs-brochure-edit-specs span{background:#fff;color:#154a74;border-radius:4px 4px 0 0;font-size:1.3cqw;font-weight:900;line-height:1.2;padding:.4cqw .7cqw;box-shadow:0 1px 7px #002d4c55;white-space:nowrap}
+.cs-brochure-edit-details{inset:0;align-items:center}
+.cs-brochure-edit-details span{border-radius:4px}
+.brochure-specs{position:relative}
+.cs-brochure-edit-specs{align-items:center}
+.cs-brochure-edit-specs span{border:0;flex:none;border-radius:4px;padding:.4cqw .7cqw;font-size:1.3cqw}
+.cs-detail-image{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:auto!important;min-height:280px;padding:12px}
+.cs-detail-image img{height:230px!important;max-height:230px!important;width:100%!important;object-fit:contain}
+.cs-detail-image .cs-button{margin-top:0;width:100%}
+.cs-detail-edit-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:8px 0 14px}
+.cs-detail-edit-fields .cs-field:nth-child(2){grid-column:1/-1;grid-row:1}
+.cs-detail-edit-fields .cs-field{margin:0}
+.cs-detail-edit-fields input{width:100%}
+.cs-detail-description-edit{width:100%;min-height:90px;resize:vertical;background:#fff;border:1px solid #dce4ed;border-radius:8px;padding:10px;color:#203d5c;font-size:12px;line-height:1.5}
+.cs-spec-edit{margin-top:20px;padding-top:18px;border-top:1px solid #e2e8ed}
+.cs-spec-edit h4{font-size:14px;margin:0 0 4px}
+.cs-spec-edit p{font-size:11px;color:#71869b;margin:0 0 12px}
+.cs-spec-edit-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) 30px;gap:7px;margin:7px 0}
+.cs-spec-edit-row input{width:100%;min-width:0;border:1px solid #dce4ed;border-radius:7px;padding:8px;color:#203d5c;font-size:12px}
+.cs-spec-edit-row button{border:0;background:#fff0ed;color:#ce3e2c;border-radius:6px;font-size:20px}
+.cs-spec-edit>.cs-button{margin-top:6px}
+.cs-detail-appearance summary{font-size:13px;font-weight:900;color:#174570;cursor:pointer}
+.cs-detail-appearance summary+p{margin-top:10px}
+.cs-image-editor>p{color:#678198;font-size:12px;margin:0 0 16px}
+.cs-image-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cs-image-editor-grid>div{min-width:0}
+.cs-image-editor-grid strong{color:#1a3d60;font-size:13px}
+.cs-image-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:230px;overflow:auto;margin:11px 0 16px}
+.cs-image-choices button{height:82px;border:2px solid #dce6ee;border-radius:9px;background:#f8fafb;padding:5px;overflow:hidden}
+.cs-image-choices button.selected{border-color:#f44731;box-shadow:0 0 0 2px #f4473122}
+.cs-image-choices img{width:100%;height:100%;object-fit:contain}
+.cs-image-upload{display:grid;gap:6px;font-weight:800;color:#1b466c;font-size:12px;margin:10px 0}
+.cs-image-upload input{font-size:11px;max-width:100%}
+.cs-image-upload{position:relative;cursor:pointer}.cs-image-upload input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.cs-image-upload-button{display:inline-flex;align-items:center;justify-content:center;width:max-content;padding:10px 14px;border:1px dashed #89bddc;border-radius:10px;background:#eff8fc;color:#1b567e;font-size:13px;font-weight:850}.cs-image-upload:hover .cs-image-upload-button,.cs-image-upload:focus-within .cs-image-upload-button{border-color:#ef4933;background:#fff7f4}
+.cs-image-cutout{display:flex;align-items:flex-start;gap:9px;background:#ecf5fc;padding:12px;border-radius:9px;margin-top:15px;cursor:pointer}
+.cs-image-cutout input{margin:3px 0 0;accent-color:#f44731}
+.cs-image-cutout span{display:grid;gap:3px}
+.cs-image-cutout small{font-size:10px;color:#607d96}
+.cs-image-preview-panel{border:1px solid #dde7ef;border-radius:12px;padding:14px;background:#fbfdff}
+.cs-image-preview{height:280px;display:grid;place-items:center;overflow:hidden;background:repeating-conic-gradient(#edf1f5 0% 25%,#fff 0% 50%) 50% / 24px 24px;border-radius:8px;margin:9px 0}
+.cs-image-preview img{max-width:100%;max-height:100%;object-fit:contain}
+.cs-image-preview-panel>small{display:block;font-size:10px;color:#63819b;line-height:1.5}
+.cs-image-error{font-size:11px;color:#ce3e2c;margin:8px 0}
+.cs-image-progress{display:flex;align-items:center;gap:8px;font-size:11px;color:#1e679c;font-weight:800;margin-top:10px}
+.cs-image-progress i{width:16px;height:16px;border:2px solid #bbd6e7;border-top-color:#f44731;border-radius:50%;animation:cs-image-spin .8s linear infinite}
+@keyframes cs-image-spin{to{transform:rotate(360deg)}}
+.cs-image-editor-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:15px}
+.cs-category-savings{border:1px solid #dce7ef;border-radius:10px;margin:17px 0;padding:12px;background:#f7fbfe}
+.cs-category-savings summary{cursor:pointer;display:grid;gap:3px;font-size:12px;color:#1a466c}
+.cs-category-savings summary span{font-size:10px;color:#67859d;line-height:1.4}
+.cs-category-saving-group{border-top:1px solid #dfe9ef;margin-top:12px;padding-top:10px}
+.cs-category-saving-line{display:grid;gap:6px;margin:6px 0 11px}
+.cs-category-saving-line>strong,.cs-category-saving-line>span{font-size:11px;color:#1b476e}
+.cs-category-saving-line.subcategory{padding-left:11px;border-left:2px solid #c5d9e7}
+.cs-category-saving-options{display:flex;flex-wrap:wrap;gap:4px}
+.cs-category-saving-options button{border:1px solid #cbdce8;border-radius:6px;background:#fff;color:#2c587b;font-size:10px;font-weight:800;padding:5px 7px}
+.cs-category-saving-options button.chosen{border-color:#f44731;background:#fff0ed;color:#d84530}
+.brochure-brand-mark{display:flex!important;align-items:center;height:2.8cqw;min-height:2.8cqw;overflow:visible!important}
+.brochure-brand-mark img{display:block;max-width:14cqw;max-height:2.8cqw;width:auto;height:auto;object-fit:contain;filter:brightness(0) invert(1)}
+.brochure-page.light .brochure-brand-mark img{filter:brightness(0)}
+.brochure-cover .cover-feature-products .brochure-brand-mark{height:2.8cqw}
+.brochure-cover .cover-feature-products .brochure-brand-mark img{max-height:2.7cqw;max-width:13cqw}
+.cs-brand-manager{border:1px solid #dce7ef;border-radius:10px;margin:17px 0;padding:12px;background:#f7fbfe}
+.cs-brand-manager summary{cursor:pointer;display:grid;gap:3px;font-size:12px;color:#1a466c}
+.cs-brand-manager summary span{font-size:10px;color:#67859d;line-height:1.4}
+.cs-brand-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:14px 0}
+.cs-brand-grid button{background:#185080;border:2px solid transparent;border-radius:7px;color:#fff;padding:7px;min-width:0;display:grid;gap:5px;text-align:center}
+.cs-brand-grid button.chosen{border-color:#f44731}
+.cs-brand-grid button span{height:24px;display:grid;place-items:center;font-size:11px;font-weight:900}
+.cs-brand-grid button img{max-width:100%;max-height:24px;object-fit:contain}
+.cs-brand-grid button b{font-size:9px;opacity:.85}
+.cs-brand-prepare{border-top:1px solid #dce7ef;padding-top:12px;display:grid;gap:8px}
+.cs-brand-prepare>strong{font-size:12px;color:#164871}
+.cs-brand-prepare label{display:grid;gap:5px;font-size:10px;font-weight:800;color:#426681}
+.cs-brand-prepare input{width:100%;font-size:10px}
+.cs-brand-prepared{background:#185080;border-radius:7px;padding:10px;display:grid;place-items:center;gap:4px}
+.cs-brand-prepared img{max-width:100%;max-height:55px;object-fit:contain}
+.cs-brand-prepared small{color:#bddcf3;font-size:9px}
+.cs-brand-logo-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cs-brand-logo-pair>div{min-width:0;min-height:86px;border:1px solid #d7e4ed;border-radius:9px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:9px}
+.cs-brand-logo-pair .light{background:#f6f7f9;color:#222}
+.cs-brand-logo-pair .dark{background:#173b63;color:#fff;border-color:#173b63}
+.cs-brand-logo-pair small{font-size:10px;font-weight:800;color:inherit}
+.cs-brand-logo-pair img{display:block;max-width:100%;max-height:44px;object-fit:contain;filter:brightness(0)}
+.cs-brand-logo-pair .dark img{filter:brightness(0) invert(1)}
+.cs-brand-actions{display:flex;flex-wrap:wrap;gap:6px}
+.cs-brand-actions .cs-button{font-size:10px;white-space:normal;min-height:32px;padding:5px 8px}
+/* Leave more air between offer groups and make the inch marker proportionate to its image. */
+.brochure-interior .brochure-products{gap:3.2cqw 3.1cqw}
+.brochure-interior .brochure-product-image{width:91%;max-width:91%;height:94%;max-height:94%}
+.brochure-interior .brochure-product.has-screen-annotation .brochure-product-image{width:81%;max-width:81%;height:82%;max-height:82%}
+.brochure-screen-annotation b{font-size:2.45cqw}
+.brochure-screen-annotation small{font-size:.9cqw}
+.brochure-screen-annotation .guide-horizontal{width:4.5cqw}
+.brochure-screen-annotation .guide-vertical{height:4.5cqw}
+@media(max-width:650px){.cs-image-editor-grid{grid-template-columns:1fr}.cs-image-preview{height:200px}.cs-detail-edit-fields{grid-template-columns:1fr}.cs-detail-edit-fields .cs-field:nth-child(2){grid-column:auto;grid-row:auto}}
+
+/* Editing controls appear only in the interactive preview; exported pages do not receive these props. */
+.cs-product-edit-pins{position:absolute;z-index:12;top:3%;left:2%;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #c5d9e9;border-radius:999px;background:#f8fcffeb;box-shadow:0 3px 10px #03284b45;backdrop-filter:blur(4px)}
+.cs-product-edit-pins button,.cs-product-edit-pins span{display:grid;place-items:center;flex:none;width:clamp(20px,2.7cqw,27px);height:clamp(20px,2.7cqw,27px);border:0;border-radius:50%;background:#fff;color:#14517f;font-size:clamp(12px,1.7cqw,17px);font-weight:900;line-height:1;cursor:pointer;user-select:none}
+.cs-product-edit-pins button:hover,.cs-product-edit-pins span:hover,.cs-product-edit-pins button:focus-visible,.cs-product-edit-pins span:focus-visible{background:#f34832;color:#fff}
+.cs-product-edit-pins span{cursor:grab}
+.cs-product-edit-pins span:active,.cs-list-drag-handle:active{cursor:grabbing}
+.brochure-product.cs-product-dragging,.cs-offer-row.cs-product-dragging{opacity:.45}
+.brochure-product.cs-product-drop-target{outline:2px dashed #f34832;outline-offset:-2px;background:#ffebdf18}
+.cs-offer-row{position:relative;padding-left:39px}
+.cs-list-drag-handle{position:absolute;left:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:25px;height:36px;border:1px solid #d8e5ed;border-radius:7px;background:#f5f9fc;color:#537a98;font-size:22px;line-height:1;cursor:grab;user-select:none}
+.cs-list-drag-handle:hover,.cs-list-drag-handle:focus-visible{background:#e7f4fb;color:#17618e}
+.cs-offer-row.cs-product-drop-target{border-color:#f34832;box-shadow:0 0 0 2px #f3483233}
+.cs-pages-sidebar>button.cs-page-drop-target{border-color:#f34832;background:#fff0e9;box-shadow:0 0 0 2px #f3483233}
+.cs-move-product-intro{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:18px;background:#f1f7fb;border-radius:10px}
+.cs-move-product-intro>img,.cs-move-product-intro>.cs-product-placeholder{width:58px;height:58px;object-fit:contain;flex:none;background:#fff;border-radius:7px}
+.cs-move-product-intro>div{display:grid;gap:4px;min-width:0}
+.cs-move-product-intro strong{font-size:13px;color:#1a405f}
+.cs-move-product-intro small{font-size:11px;color:#7690a2}
+.cs-move-product-note{font-size:11px;color:#667f94;line-height:1.5}
+
+.cs-detail-prices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.cs-detail-prices>span{min-width:0;min-height:78px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #e5ebf0;background:#f6f8fa;padding:11px 13px;font-size:11px;color:#5d7389}
+.cs-detail-prices>span strong,.cs-detail-prices>span b{font-size:21px;line-height:1.1;white-space:nowrap}
+.cs-detail-prices>.cs-detail-discount{background:#eaf3fa;border-color:#d4e7f4;color:#245279}
+.cs-detail-prices>.cs-detail-discount b{color:#194774}
+.cs-detail-prices>.cs-detail-discount.higher{background:#fff3ec;color:#b6522d}
+.cs-detail-saving-picker{margin-top:14px;padding:15px;border:1px solid #d8e8f2;border-radius:12px;background:#f8fbfd}
+.cs-detail-saving-picker>strong,.cs-detail-saving-picker>small{display:block}
+.cs-detail-saving-picker>strong{font-size:13px;color:#183f65}
+.cs-detail-saving-picker>small{margin-top:3px;font-size:11px;color:#75899b;line-height:1.4}
+.cs-detail-saving-picker>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.cs-detail-saving-picker button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 13px;border:1px solid #cadae7;border-radius:9px;background:#fff;color:#294965;text-align:left;font-size:12px;font-weight:800}
+.cs-detail-saving-picker button b{font-size:16px;color:#ed4d35;white-space:nowrap}
+.cs-detail-saving-picker button.chosen{border-color:#ef4c35;box-shadow:0 0 0 2px #ef4c3524;background:#fff8f5}
+.cs-detail-saving-picker button:disabled{opacity:.5;cursor:not-allowed}
+.cs-catalog-result-count{margin:0 0 14px!important;font-size:12px;color:#6c8296}
+.cs-catalog-more,.cs-picker-more{display:flex;justify-content:center;padding:18px}
+@media(max-width:650px){.cs-detail-prices{grid-template-columns:repeat(2,minmax(0,1fr))}.cs-detail-prices>.cs-detail-discount{grid-column:1/-1}.cs-detail-saving-picker>div{grid-template-columns:1fr}}

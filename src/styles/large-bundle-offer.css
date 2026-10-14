@@ -1,0 +1,230 @@
+.brochure-product.large-bundle-product {
+  grid-column: 1 / -1;
+}
+.large-bundle-offer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: var(--large-bundle-copy-color, #fff);
+}
+.large-bundle-panel {
+  position: absolute;
+  inset: 0.5cqw;
+  border-radius: 1.7cqw;
+  background: var(--large-bundle-panel-color, #205079);
+  pointer-events: none;
+}
+.large-bundle-photo-area {
+  position: absolute;
+  pointer-events: none;
+}
+.large-bundle-artwork-slot,
+.large-bundle-brand-slot,
+.large-bundle-savings-slot,
+.large-bundle-price-slot,
+.large-bundle-controls-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.large-bundle-artwork-slot {
+  z-index: 2;
+}
+.large-bundle-brand-slot,
+.large-bundle-savings-slot,
+.large-bundle-price-slot {
+  z-index: 4;
+}
+.large-bundle-controls-slot {
+  z-index: 8;
+}
+.large-bundle-controls-slot button,
+.large-bundle-brand-slot > *,
+.large-bundle-savings-slot > *,
+.large-bundle-price-slot > * {
+  pointer-events: auto;
+}
+.large-bundle-offer .large-bundle-plus {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  font-family: SkolaSans, sans-serif;
+  font-size: 3.8cqw;
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  pointer-events: none;
+}
+.large-bundle-offer .large-bundle-member-copy {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.12cqw;
+  padding: 0 0.2cqw;
+  color: inherit;
+  font-family: SkolaSans, sans-serif;
+  font-size: calc(1.05cqw * var(--large-bundle-member-font-scale, 1));
+  font-weight: 400;
+  line-height: 1.18;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+.large-bundle-offer .large-bundle-member-name {
+  display: block;
+  margin: 0;
+  font-family: TSTAR, SkolaSans, sans-serif;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  color: inherit;
+}
+.large-bundle-offer .large-bundle-member-details {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1cqw;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+.cs-page-preview.edit-view
+  .large-bundle-offer
+  :is(
+    .large-bundle-brand-artwork,
+    .brochure-red-reference-saving,
+    .large-bundle-member-details
+  ):is(:hover, :focus-within)
+  .cs-region-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+.large-bundle-edit-controls {
+  position: absolute;
+  top: 0.8cqw;
+  left: 1.2cqw;
+  display: flex;
+  align-items: center;
+  gap: 0.3cqw;
+  padding: 0.25cqw;
+  border: 1px solid #c5d9e9;
+  border-radius: 0.8cqw;
+  background: #f8fcffeb;
+  opacity: 0;
+  pointer-events: none;
+}
+.cs-page-preview.edit-view
+  .large-bundle-product:is(:hover, :focus-within)
+  .large-bundle-edit-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+.large-bundle-edit-controls button {
+  padding: 0.35cqw 0.5cqw;
+  border: 0;
+  border-radius: 0.45cqw;
+  background: #fff;
+  color: #14517f;
+  font-size: 1cqw;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+}
+.large-bundle-edit-controls button:is(:hover, :focus-visible) {
+  background: #f34832;
+  color: #fff;
+}
+.large-bundle-offer .large-bundle-member-line,
+.large-bundle-offer .large-bundle-member-warranty {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  text-align: left;
+  overflow: visible;
+}
+.large-bundle-offer
+  .large-bundle-member-line:not(.detail-style-filled):not(
+    .detail-style-outline
+  ),
+.large-bundle-offer
+  .large-bundle-member-warranty:not(.detail-style-filled):not(
+    .detail-style-outline
+  ) {
+  border: 0;
+  background: transparent;
+}
+.large-bundle-offer .large-bundle-member-warranty {
+  font-weight: 700;
+}
+.brochure-page
+  .brochure-product
+  .large-bundle-offer
+  .large-bundle-brand-slot
+  > :is(.brochure-brand-mark, .large-bundle-brand-artwork) {
+  position: absolute;
+  top: 4.5%;
+  right: 3%;
+  width: 11%;
+  height: 15%;
+  margin: 0;
+  color: inherit;
+  text-align: right;
+}
+.brochure-page
+  .brochure-product
+  .large-bundle-offer
+  .large-bundle-brand-slot
+  > :is(.brochure-brand-mark, .large-bundle-brand-artwork)
+  img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: right top;
+  filter: var(--large-bundle-brand-filter);
+}
+.brochure-page
+  .brochure-product
+  .large-bundle-offer
+  .large-bundle-savings-slot
+  > :is(.brochure-saving, .brochure-red-reference-saving) {
+  position: absolute;
+  top: 31%;
+  right: 5%;
+  width: 8.7%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.brochure-page
+  .brochure-product
+  .large-bundle-offer
+  .large-bundle-price-slot
+  > .brochure-price:is(
+    .red-reference-price,
+    .reference-price-card,
+    .style-current,
+    .style-minimal
+  ) {
+  position: absolute;
+  right: 3%;
+  bottom: 3.5%;
+  width: 20.5%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  flex: none;
+  overflow: visible;
+}

@@ -1,0 +1,99 @@
+/* Physical brochure units keep editor previews and downloaded pages identical. */
+.brochure-page .brochure-product-bottom > .brochure-price {
+  flex: 0 0 42%;
+  width: 42%;
+  margin-left: auto;
+}
+.brochure-cover
+  .cover-feature-products
+  .brochure-product-bottom
+  > .brochure-price {
+  flex-basis: 14.5cqw;
+  width: 14.5cqw;
+  max-width: 42%;
+}
+.brochure-cover
+  .cover-feature-products:not(.triple)
+  .brochure-product-bottom
+  > .brochure-price {
+  flex-basis: 18.5cqw;
+  width: 18.5cqw;
+}
+.brochure-page .brochure-red-reference-saving {
+  top: 32%;
+  right: 0;
+  width: 17%;
+}
+.brochure-page .brochure-saving {
+  top: 32%;
+  right: 0;
+  width: 6.5cqw;
+  height: 6.5cqw;
+}
+.brochure-page .brochure-saving i {
+  font-size: 0.95cqw;
+}
+.brochure-page .brochure-saving-amount {
+  font-size: 2cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card)
+  .brochure-price-sale {
+  height: 4.4cqw;
+  min-height: 4.4cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card)
+  .brochure-happy-mark {
+  width: 3.8cqw;
+  height: 3.4cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card)
+  .brochure-price-sale
+  strong {
+  font-size: 2.7cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card).compact
+  .brochure-price-sale
+  strong {
+  font-size: 2.3cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card).extra-compact
+  .brochure-price-sale
+  strong {
+  font-size: 1.9cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card)
+  .brochure-price-top
+  del {
+  font-size: 1.65cqw;
+}
+.brochure-page
+  .brochure-product-bottom
+  > .brochure-price:not(.reference-price-card)
+  .brochure-price-month {
+  font-size: 1.1cqw;
+}
+/* A short row stays compact rather than stretching three facts across a card. */
+.brochure-page
+  .brochure-product:not(.details-left)
+  > .brochure-specs
+  > .product-detail-block {
+  max-width: 7cqw;
+}
+
+/* Workspace palettes apply to SVG reference prices and editable HTML prices. */
+.brochure-page .brochure-saving { color: var(--brochure-price-saving, #ec442f); }
+.brochure-page .brochure-price:not(.reference-price-card):not(.red-reference-price-card) .brochure-price-sale { background: var(--brochure-price-red, #f3412b); }
+.brochure-page .brochure-price:is(.style-card,.style-compact):not(.reference-price-card) :is(.brochure-price-sale,.brochure-price-month) { background: var(--brochure-price-blue, #1b4272); }
+.brochure-page .brochure-product.style-minimal .brochure-price .brochure-price-sale { background: transparent; color: var(--brochure-price-red, #e44738); }

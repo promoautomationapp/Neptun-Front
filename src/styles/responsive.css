@@ -1,0 +1,1076 @@
+.cs-language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #dce5ed;
+  border-radius: 9px;
+  background: #f4f7fa;
+  flex: none;
+}
+.cs-language-switch button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #5b7086;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 34px;
+  min-height: 28px;
+  padding: 4px 6px;
+}
+.cs-language-switch button.active {
+  color: #fff;
+  background: #174b7a;
+  box-shadow: 0 2px 6px #0b33502b;
+}
+.cs-signin-panel > .cs-language-switch {
+  align-self: flex-end;
+  margin-bottom: 28px;
+}
+.cs-cover-selection-help {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 8px;
+  padding: 11px 14px;
+  border: 1px solid #bfd5e8;
+  border-radius: 11px;
+  background: #eaf4fb;
+  color: #245273;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.cs-cover-selection-help strong {
+  color: #143d65;
+}
+.cs-cover-selection-help button {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #1b5681;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.cs-cover-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  margin-top: 8px;
+  padding: 5px 9px;
+  border: 1px solid #bdd5e8;
+  border-radius: 7px;
+  color: #1e5b86;
+  background: #f4faff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.cs-cover-checkbox:has(input:checked) {
+  border-color: #f16a50;
+  background: #fff1ed;
+  color: #c8432d;
+}
+.cs-cover-checkbox:has(input:disabled) {
+  cursor: default;
+  opacity: 0.76;
+}
+.cs-cover-checkbox input {
+  accent-color: #ed4b34;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+.cs-mobile-menu-toggle {
+  display: none;
+}
+@media (max-width: 850px) {
+  .campaign-app {
+    display: block;
+  }
+  .cs-sidebar {
+    width: 100%;
+    min-height: 0;
+    height: 58px;
+    padding: 8px 16px;
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    z-index: 20;
+    box-shadow: 0 2px 12px #09264d24;
+  }
+  .cs-sidebar-brand {
+    display: block;
+    padding: 0;
+    flex: none;
+  }
+  .cs-sidebar-brand img {
+    width: 104px;
+  }
+  .cs-sidebar-brand span,
+  .cs-sidebar-nav > span,
+  .cs-sidebar-bottom {
+    display: none;
+  }
+  .cs-mobile-menu-toggle {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #3d638a;
+    border-radius: 9px;
+    background: #174674;
+  }
+  .cs-mobile-menu-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 3px;
+    background: #fff;
+  }
+  .cs-sidebar-nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 10px;
+    right: 10px;
+    padding: 8px;
+    border: 1px solid #325479;
+    border-radius: 0 0 12px 12px;
+    background: #0d2c53;
+    box-shadow: 0 12px 28px #082b4d55;
+    min-width: 0;
+    gap: 4px;
+  }
+  .cs-sidebar.menu-open .cs-sidebar-nav {
+    display: grid;
+  }
+  .cs-sidebar-nav button,
+  .cs-sidebar-nav button:not(.active) {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 13px;
+    gap: 12px;
+    white-space: normal;
+    font-size: 13px;
+    text-align: left;
+  }
+  .cs-sidebar-nav i {
+    width: 22px;
+    font-size: 19px;
+  }
+  .cs-content {
+    width: 100%;
+  }
+  .cs-topbar {
+    height: 54px;
+  }
+  .cs-topbar-right {
+    gap: 9px;
+  }
+  .cs-hero-visual {
+    right: -4%;
+  }
+}
+@media (max-width: 620px) {
+  .cs-sidebar {
+    padding: 7px 14px;
+  }
+  .cs-sidebar-brand {
+    display: block;
+  }
+  .cs-sidebar-brand img {
+    width: 98px;
+  }
+  .cs-main-panel {
+    padding: 14px;
+  }
+  .cs-topbar {
+    padding: 0 14px;
+  }
+  .cs-topbar-right {
+    gap: 7px;
+  }
+  .cs-topbar-right .cs-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  .cs-language-switch button {
+    min-width: 30px;
+    min-height: 26px;
+    font-size: 10px;
+  }
+  .cs-editor-tabs {
+    gap: 8px;
+  }
+  .cs-editor-tabs button {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+  }
+  .cs-editor-tabs button span {
+    display: block;
+    margin: 4px 0 0;
+    font-size: 11px;
+  }
+  .cs-cover-selection-help {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .cs-cover-checkbox {
+    margin-top: 6px;
+  }
+  .cs-offer-row {
+    grid-template-columns: 72px minmax(0, 1fr) 104px;
+    gap: 9px;
+  }
+  .cs-product-photo {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 72px;
+    height: 88px;
+  }
+  .cs-product-info {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+  .cs-regular-price {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+  .cs-sale-field {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    min-width: 0;
+  }
+  .cs-sale-field > div {
+    min-height: 52px;
+  }
+  .cs-sale-field input {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    font-size: 20px;
+    padding: 10px 9px;
+  }
+  .cs-sale-field > div span {
+    font-size: 18px;
+    padding: 0 10px 0 4px;
+  }
+  .cs-percent {
+    grid-column: 3;
+    grid-row: 3;
+    align-self: end;
+    min-height: 52px;
+    display: grid;
+    align-content: center;
+    text-align: center;
+  }
+  .cs-row-actions {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+  .cs-list-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .cs-list-tools .cs-search {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .cs-list-tools select {
+    grid-column: 1;
+    width: 100%;
+    min-width: 0;
+  }
+  .cs-list-tools > span {
+    grid-column: 2;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .cs-brochure-workspace {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cs-pages-sidebar {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .cs-page-preview,
+  .cs-page-controls,
+  .cs-preview-paper {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .cs-page-controls {
+    overflow: visible;
+    max-height: none;
+  }
+  .cs-settings-card {
+    padding: 16px;
+  }
+  .cs-store-edit {
+    grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1fr) 25px;
+  }
+}
+.cs-campaign-filters {
+  margin: -5px 0 20px;
+  padding: 16px;
+  border: 1px solid #e0e9f0;
+  border-radius: 13px;
+  background: #fff;
+}
+.cs-campaign-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.cs-filter-control {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  position: relative;
+}
+.cs-filter-control.is-open {
+  z-index: 5;
+}
+.cs-filter-label {
+  color: #63788d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+.cs-filter-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  height: 39px;
+  padding: 7px 11px;
+  border: 1px solid #d7e2eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #24435e;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  box-shadow: 0 1px 2px #21415d0a;
+}
+.cs-filter-trigger:hover,
+.cs-filter-control.is-open .cs-filter-trigger {
+  border-color: #7db8de;
+  background: #fafdff;
+}
+.cs-filter-trigger span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cs-filter-trigger svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: #4d7596;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cs-filter-date .cs-filter-trigger:not(.has-value) span {
+  color: #91a2b2;
+  font-weight: 600;
+}
+.cs-filter-options,
+.cs-calendar {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 10;
+  border: 1px solid #dbe6ee;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 16px 38px #0c355426;
+}
+.cs-filter-options {
+  width: max(100%, min(230px, calc(100vw - 52px)));
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 5px;
+}
+.cs-filter-options button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #284661;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+}
+.cs-filter-options button:hover,
+.cs-filter-options button:focus-visible {
+  background: #eaf4fb;
+}
+.cs-filter-options button[aria-selected="true"] {
+  background: #e8f2fa;
+  color: #145580;
+  font-weight: 800;
+}
+.cs-calendar {
+  width: min(312px, calc(100vw - 52px));
+  padding: 12px;
+}
+.cs-calendar-head,
+.cs-calendar-head > div,
+.cs-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cs-calendar-head strong {
+  color: #183b5c;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.cs-calendar-head > div {
+  gap: 4px;
+}
+.cs-calendar-head button {
+  width: 27px;
+  height: 27px;
+  border: 1px solid #e0e8ef;
+  border-radius: 6px;
+  background: #f7fafc;
+  color: #315d80;
+  font-size: 21px;
+  line-height: 1;
+}
+.cs-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 9px;
+}
+.cs-calendar-weekday {
+  display: grid;
+  place-items: center;
+  height: 25px;
+  color: #8698a9;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.cs-calendar-grid button {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #24455f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.cs-calendar-grid button:hover:not(:disabled),
+.cs-calendar-grid button:focus-visible {
+  background: #e8f3fb;
+}
+.cs-calendar-grid button.today {
+  box-shadow: inset 0 0 0 1px #6caad2;
+}
+.cs-calendar-grid button.selected {
+  background: #1c6598;
+  box-shadow: none;
+  color: #fff;
+}
+.cs-calendar-grid button:disabled {
+  color: #c4ced7;
+  cursor: default;
+}
+.cs-calendar-footer {
+  gap: 8px;
+  padding-top: 10px;
+  margin-top: 8px;
+  border-top: 1px solid #e9eef2;
+}
+.cs-calendar-footer button {
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #edf5fa;
+  color: #225f89;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-calendar-footer button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.cs-campaign-filter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #70859a;
+  font-size: 11px;
+}
+.cs-campaign-filter-footer button {
+  border: 0;
+  background: transparent;
+  color: #1b69a4;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px;
+}
+.cs-campaign-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.cs-campaign-card {
+  container-type: inline-size;
+}
+.cs-campaign-cover {
+  position: relative;
+  height: auto;
+  min-height: 0;
+  background: #e8eef4;
+  overflow: hidden;
+  padding: 44px 14px 16px;
+  display: block;
+}
+.cs-campaign-cover::after {
+  display: none;
+}
+.cs-campaign-cover .cs-campaign-badges {
+  position: absolute;
+  z-index: 2;
+  top: 11px;
+  left: 12px;
+  right: 12px;
+}
+.cs-campaign-mini-cover {
+  position: relative;
+  z-index: 1;
+  top: auto;
+  left: auto;
+  width: min(100%, 360px);
+  aspect-ratio: var(--brochure-page-aspect, 1080 / 1350);
+  margin: 0 auto;
+  overflow: hidden;
+  transform: none;
+  box-shadow: 0 8px 22px #001d3930;
+  pointer-events: none;
+}
+.cs-campaign-mini-cover-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 794px;
+  transform: scale(var(--mini-cover-scale, .4));
+  transform-origin: top left;
+}
+.cs-campaign-card-title {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e7eef3;
+}
+.cs-campaign-card-title strong {
+  color: #1f3d5a;
+  font-size: 15px;
+  line-height: 1.25;
+}
+.cs-campaign-card-title small {
+  color: #8295a7;
+  font-size: 11px;
+}
+.cs-create-fields > .cs-filter-control {
+  margin-bottom: 14px;
+}
+.cs-campaign-type-picker {
+  margin-bottom: 16px;
+}
+.cs-campaign-type-picker .cs-filter-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  width: min(620px, calc(100vw - 60px));
+  max-height: min(340px, calc(100vh - 170px));
+  padding: 8px;
+}
+.cs-campaign-type-picker .cs-filter-options button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 7px 8px;
+  border: 1px solid #e0e8ef;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.cs-campaign-type-picker .cs-filter-options button:hover {
+  border-color: #84b9db;
+  background: #f5faff;
+}
+.cs-campaign-type-picker .cs-filter-options button[aria-selected="true"] {
+  border-color: #ed513e;
+  background: #fff3f0;
+  color: #c63a29;
+  box-shadow: 0 0 0 2px #f0453222;
+}
+@media (max-width: 620px) {
+  .cs-campaign-type-picker .cs-filter-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+}
+.cs-layout-glyph.grid9 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.cs-import-columns {
+  margin: 18px 0;
+}
+.cs-import-columns .cs-filter-control {
+  min-width: 0;
+}
+.cs-import-results .cs-result-list {
+  max-height: min(54vh, 520px);
+  display: grid;
+  gap: 8px;
+  padding: 2px;
+}
+.cs-import-price-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #e0e8ef;
+  border-radius: 10px;
+  background: #fff;
+}
+.cs-import-price-image {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f5f8fa;
+}
+.cs-import-price-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cs-import-price-image .cs-product-placeholder {
+  padding: 5px;
+  text-align: center;
+  font-size: 9px;
+}
+.cs-import-price-product {
+  min-width: 0;
+}
+.cs-import-price-product strong {
+  display: block;
+  color: #173b5d;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.cs-import-price-product small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 5px;
+  color: #71879a;
+  font-size: 11px;
+  font-weight: 700;
+}
+.cs-import-price-values {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+.cs-import-price-values > div {
+  display: grid;
+  gap: 2px;
+}
+.cs-import-price-values > div > span {
+  color: #7890a2;
+  font-size: 10px;
+  font-weight: 700;
+}
+.cs-import-price-values del,
+.cs-import-price-values strong {
+  color: #163c60;
+  font-size: 14px;
+  font-weight: 800;
+}
+.cs-import-price-values del {
+  color: #758da2;
+}
+.cs-import-price-values > em {
+  border-radius: 7px;
+  padding: 6px 8px;
+  background: #e8f6ef;
+  color: #176f4e;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+.cs-import-price-values > em.higher {
+  background: #fff0eb;
+  color: #c53929;
+}
+.cs-import-group-label {
+  margin: 14px 0 6px;
+  color: #246b55;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-import-higher {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #f3b9ad;
+  border-radius: 10px;
+  background: #fff4f1;
+}
+.cs-import-higher .cs-result-title h3,
+.cs-import-higher .cs-result-title span,
+.cs-import-higher .cs-result-list em {
+  color: #c53929;
+}
+.cs-import-higher > p {
+  margin: 8px 0 12px;
+  color: #9d493e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.cs-import-higher .cs-result-list {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.cs-import-confirm-higher {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  color: #9f3024;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.cs-import-confirm-higher input {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin: 0;
+  accent-color: #dd4833;
+}
+.cs-sale-field .cs-confirm-higher {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: #c73c2c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.cs-sale-field .cs-confirm-higher input {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  padding: 0;
+  accent-color: #d74732;
+}
+.cs-percent.higher {
+  border: 1px solid #efa696;
+  background: #ffe9e3;
+  color: #bf3829;
+}
+.cs-detail-discount.higher {
+  color: #bf3829;
+  background: #fff0eb;
+}
+.cs-detail-warranty {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  margin: 8px 0 0 !important;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #eaf3fa;
+  color: #21547d !important;
+  font-size: 11px;
+}
+.cs-import-unchanged {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #edf3f7;
+  color: #526c82 !important;
+  font-size: 11px !important;
+}
+@media (max-width: 620px) {
+  .cs-import-higher .cs-result-title {
+    flex-wrap: wrap;
+    gap: 3px 10px;
+  }
+  .cs-import-higher .cs-result-list {
+    padding: 0;
+  }
+  .cs-import-price-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 8px 12px;
+  }
+  .cs-import-price-image {
+    width: 52px;
+    height: 52px;
+  }
+  .cs-import-price-values {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 10px;
+    white-space: normal;
+  }
+  .cs-import-price-values > em {
+    grid-column: 2;
+    justify-self: end;
+  }
+  .cs-import-price-values del,
+  .cs-import-price-values strong {
+    font-size: 12px;
+  }
+  .cs-import-results .cs-result-list > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .cs-import-results .cs-result-list > div b {
+    align-self: flex-end;
+  }
+}
+.cs-campaign-cover .cs-campaign-badges span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  margin: 0;
+  padding: 3px 7px;
+}
+.cs-campaign-cover .cs-campaign-badges .progress {
+  background: #fff0d8;
+  color: #683c00;
+  border-color: #ffcf79;
+}
+.cs-campaign-cover .cs-campaign-badges .completed {
+  background: #d9f5e9;
+  color: #145a43;
+  border-color: #90dfb8;
+}
+.cs-campaign-card-bottom .cs-open-arrow {
+  min-width: 72px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.cs-campaign-pdf {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #e7eef3;
+  background: #f8fbfd;
+  padding: 11px 14px;
+  text-align: left;
+  color: #1f6497;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-campaign-pdf:hover {
+  background: #edf6fc;
+}
+.cs-editor-hero-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.cs-editor-hero-actions button {
+  border: 0;
+  background: transparent;
+  color: #60758a;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 0;
+}
+.cs-editor-hero-actions .cs-start-new {
+  border: 1px solid #f5a798;
+  background: #fff2ee;
+  color: #d4452d;
+  border-radius: 8px;
+  padding: 8px 11px;
+}
+.cs-social-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 7px 13px 7px 7px;
+  border: 1px solid #c9ddec;
+  border-radius: 11px;
+  background: #fff;
+  color: #194d77;
+  box-shadow: 0 3px 12px #194d7710;
+  text-align: left;
+  transition: border-color .15s, background .15s, box-shadow .15s, transform .15s;
+}
+.cs-social-shortcut:hover {
+  border-color: #8dbbd9;
+  background: #f8fcff;
+  box-shadow: 0 6px 18px #194d771b;
+  transform: translateY(-1px);
+}
+.cs-social-shortcut-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e7f2fa;
+  color: #206190;
+  font-size: 18px;
+  line-height: 1;
+}
+.cs-social-shortcut-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.cs-social-shortcut-copy strong {
+  font-size: 12px;
+  line-height: 1.2;
+}
+.cs-social-shortcut-copy small {
+  color: #7891a5;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.cs-social-shortcut-arrow {
+  margin-left: 4px;
+  color: #4485b2;
+  font-size: 16px;
+  font-weight: 800;
+}
+.cs-editor-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.cs-editor-progress > span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-editor-progress .progress {
+  background: #fff0d8;
+  color: #8a5100;
+}
+.cs-editor-progress .completed {
+  background: #dff5ea;
+  color: #146446;
+}
+.cs-editor-progress button {
+  border: 1px solid #cddde9;
+  border-radius: 7px;
+  background: #fff;
+  padding: 6px 9px;
+  color: #245477;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-date-mode {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  margin: 6px 0 13px;
+  border-radius: 9px;
+  background: #edf3f8;
+}
+.cs-date-mode button {
+  flex: 1;
+  border: 0;
+  border-radius: 7px;
+  padding: 9px 8px;
+  color: #5b748b;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+}
+.cs-date-mode button.active {
+  color: #fff;
+  background: #1a5485;
+  box-shadow: 0 2px 7px #1645702b;
+}
+.cs-one-date .cs-field {
+  display: block;
+}
+.cs-one-date input {
+  width: 100%;
+}
+@media (max-width: 850px) {
+  .cs-campaign-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .cs-campaign-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cs-campaign-filters {
+    padding: 12px;
+  }
+  .cs-campaign-card-bottom .cs-open-arrow {
+    min-width: 62px;
+  }
+}

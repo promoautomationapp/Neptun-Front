@@ -1,0 +1,78 @@
+.brochure-page .brochure-floating-artworks {
+  display: contents;
+}
+.brochure-page .brochure-floating-artwork {
+  pointer-events: none;
+  min-width: 0;
+}
+.brochure-page .brochure-floating-artwork img {
+  max-height: none;
+  filter: none;
+  pointer-events: none;
+}
+.brochure-page .brochure-floating-artworks.editable .brochure-floating-artwork {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+.brochure-page .brochure-floating-artwork .page-layer-text {
+  font-family: SkolaSans, Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.brochure-page .brochure-floating-artwork .page-layer-overlay {
+  width: 100%;
+  height: 100%;
+}
+.cs-page-layers-controls {
+  display: grid;
+  gap: 12px;
+  font:
+    12px/1.4 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-page-layers-controls > p {
+  margin: 0;
+  color: #648198;
+}
+.cs-page-layers-controls label {
+  display: grid;
+  gap: 4px;
+}
+.cs-page-layers-controls :is(select, textarea, input[type="number"]) {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbdce7;
+  border-radius: 6px;
+  padding: 7px;
+  background: white;
+  color: #244a66;
+  font: inherit;
+}
+.cs-page-layer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cs-page-layer-actions :is(button, label),
+.cs-page-layers-controls > button {
+  padding: 7px 9px;
+  background: #edf5fa;
+  border: 1px solid #b8d0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #244a66;
+  font: inherit;
+}
+.cs-page-layer-actions input[type="file"] {
+  width: 160px;
+}
+.cs-page-layer-coordinates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}

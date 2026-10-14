@@ -1,0 +1,68 @@
+.brochure-page { aspect-ratio:1080 / 1350; }
+.brochure-format-frame {
+  position:relative;
+  width:100%;
+  aspect-ratio:var(--brochure-page-aspect,1080 / 1350);
+  overflow:hidden;
+  isolation:isolate;
+}
+.brochure-format-background-image {
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
+}
+.brochure-format-content {
+  position:absolute;
+  z-index:1;
+  left:50%;
+  top:50%;
+  width:var(--brochure-format-content-width,100%);
+  aspect-ratio:1080 / 1350;
+  transform:translate(-50%,-50%);
+}
+.brochure-format-content > .brochure-page {
+  width:100%;
+  height:100%;
+  aspect-ratio:1080 / 1350;
+}
+.brochure-format-content .brochure-page {
+  background:transparent!important;
+}
+.brochure-format-content .brochure-page > .brochure-page-background-image {
+  display:none;
+}
+.cs-campaign-mini-cover { aspect-ratio:var(--brochure-page-aspect,1080 / 1350); }
+.cs-campaign-mini-cover .brochure-page { aspect-ratio:1080 / 1350; }
+@media print {
+  .print-stack .brochure-output-page {
+    break-after:page;
+    page-break-after:always;
+    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;
+  }
+  .print-stack .brochure-output-page:last-child {
+    break-after:auto;
+    page-break-after:auto;
+  }
+  .print-stack .brochure-output-page .brochure-page {
+    width:100%!important;
+    height:100%!important;
+    aspect-ratio:1080 / 1350!important;
+    break-after:auto;
+    page-break-after:auto;
+  }
+}
+.cs-brochure-format-picker select { width:100%; min-height:42px; border:1px solid #d5e0eb; border-radius:9px; background:#fff; padding:8px 10px; color:#21446c; }
+.cs-screen-wallpaper-scope { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0; padding:0; border:0; }
+.cs-screen-wallpaper-scope legend { padding:0 0 8px; font-size:12px; font-weight:700; color:#21446c; }
+.cs-screen-wallpaper-scope label { display:flex; align-items:center; gap:7px; padding:11px 9px; border:1px solid #d5e0eb; border-radius:9px; font-size:12px; color:#21446c; cursor:pointer; }
+.cs-screen-wallpaper-scope label:has(input:checked) { border-color:#1688cf; background:#edf7ff; }
+.cs-screen-fit-options { border:1px solid #d5e0eb; border-radius:9px; font-size:12px; color:#21446c; }
+.cs-screen-fit-options summary { padding:11px; cursor:pointer; font-weight:700; }
+.cs-screen-fit-options > div { display:grid; gap:10px; padding:0 11px 11px; }
+.cs-screen-fit-options label { display:grid; gap:4px; }
+.cs-screen-fit-options label span { display:flex; justify-content:space-between; }

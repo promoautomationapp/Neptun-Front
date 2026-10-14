@@ -1,0 +1,27 @@
+.cs-export-modal { display: grid; gap: 18px; }
+.cs-export-modal > p:first-child { margin: 0; color: #61758b; font-size: 13px; line-height: 1.5; }
+.cs-export-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.cs-export-options button { text-align: left; min-height: 87px; padding: 14px; border: 1px solid #d8e2ed; border-radius: 12px; background: #f8fbfe; color: #1d405f; }
+.cs-export-options button.active { border: 2px solid #f44731; padding: 13px; background: #fff7f4; box-shadow: 0 0 0 3px #f4473114; }
+.cs-export-options strong, .cs-export-options small { display: block; }
+.cs-export-options strong { font-size: 18px; }
+.cs-export-options small { margin-top: 5px; color: #60758b; font-size: 11px; line-height: 1.3; }
+.cs-export-scope { display: flex; gap: 9px; }
+.cs-export-scope button { flex: 1; border: 1px solid #d8e2ed; background: #fff; border-radius: 9px; padding: 11px 14px; color: #284864; font-weight: 800; }
+.cs-export-scope button.active { background: #174b7a; border-color: #174b7a; color: #fff; }
+.cs-export-scope small { opacity: .7; }
+.cs-export-page-select { display: grid; gap: 6px; color: #60758b; font-size: 12px; font-weight: 800; }
+.cs-export-page-select select { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid #d8e2ed; border-radius: 9px; background: #fff; color: #1d405f; }
+.cs-export-note { border-radius: 9px; padding: 11px 13px; background: #eef5fb; color: #365d7e !important; font-size: 12px; }
+.cs-export-error { color: #c33324 !important; font-size: 12px; }
+.cs-export-progress { display: flex; align-items: center; gap: 10px; color: #1d507d; font-size: 12px; font-weight: 800; }
+.cs-export-spinner { width: 18px; height: 18px; border: 2px solid #cce0ef; border-top-color: #f44731; border-radius: 50%; animation: cs-export-spin .8s linear infinite; }
+@keyframes cs-export-spin { to { transform: rotate(360deg); } }
+.cs-export-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.cs-export-stage { position: fixed; left: -10000px; top: 0; width: var(--export-page-width,794px); z-index: -1; pointer-events: none; }
+.cs-export-sheet, .cs-export-sheet > .brochure-output-page, .cs-export-sheet > .brochure-page { width: var(--export-page-width,794px) !important; height: var(--export-page-height,992.5px) !important; max-width: none !important; aspect-ratio: auto !important; }
+@media (max-width: 620px) {
+  .cs-export-options { grid-template-columns: 1fr; }
+  .cs-export-options button { min-height: 58px; }
+  .cs-export-options small { margin-top: 1px; }
+}

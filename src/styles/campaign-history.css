@@ -1,0 +1,6 @@
+.cs-campaign-history{display:flex;align-items:center;gap:7px;margin-left:auto;padding:7px 0;flex-wrap:wrap}
+.cs-campaign-history .cs-history-limit{font-size:10px;color:#75889a;white-space:nowrap;margin-right:4px}
+.cs-editor-tabs .cs-campaign-history button{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid #d6e1eb;border-radius:8px;background:white;color:#234968;font-size:11px;font-weight:700;min-height:34px}
+.cs-editor-tabs .cs-campaign-history button:hover:not(:disabled){background:#edf5fb;border-color:#8cb6d6}
+.cs-editor-tabs .cs-campaign-history button:disabled{opacity:.42;cursor:default}
+@media(max-width:760px){.cs-editor-tabs{flex-wrap:wrap;gap:4px 20px}.cs-campaign-history{width:100%;margin-left:0;justify-content:flex-end;padding:0 0 10px}.cs-campaign-history .cs-history-limit{margin-right:auto}}
