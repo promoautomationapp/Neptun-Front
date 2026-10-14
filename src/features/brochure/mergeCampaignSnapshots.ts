@@ -1,4 +1,5 @@
 import type {Campaign}from "../../domain/models";
+import {hasUnsavedCampaign} from "./campaignSaveStatus";
 // A refresh may start before a newly created or edited campaign is saved and
 // finish afterward. Keep the current editor draft until the server catches up.
 export function mergeCampaignSnapshots(current:Campaign[], remote:Campaign[], activeId:string|null, isEditing:boolean) {
@@ -9,7 +10,7 @@ export function mergeCampaignSnapshots(current:Campaign[], remote:Campaign[], ac
   if (!saved) return [active, ...remote];
   const localTime = Date.parse(active.updatedAt || "") || 0;
   const savedTime = Date.parse(saved.updatedAt || "") || 0;
-  return localTime > savedTime
+  return hasUnsavedCampaign(activeId) || localTime > savedTime
     ? remote.map((item) => item.id === activeId ? active : item)
     : remote;
 }

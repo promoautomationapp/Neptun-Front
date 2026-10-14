@@ -13,7 +13,7 @@ function Fixture({ enabled = true }) {
   return (
     <section className="brochure-page">
       <article className="brochure-product">
-        <div ref={ref}>
+        <div ref={ref} className="photo-area">
           <span className="brochure-red-reference-saving" />
         </div>
         <div className="brochure-product-bottom">
@@ -55,6 +55,7 @@ it.each([540, 1080])(
     vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
       function (this: Element) {
         if (
+          this.classList.contains("photo-area") ||
           this.classList.contains("brochure-page") ||
           this.classList.contains("brochure-product")
         )

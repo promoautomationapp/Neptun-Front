@@ -920,7 +920,7 @@ it("settles both observers after live price/name edits and keeps photos clear", 
     ?.getBoundingClientRect();
   if (!boundary || !row) throw new Error("Missing boundary");
   expect(Number.parseFloat(line.style.top)).toBeCloseTo(
-    (boundary.top + boundary.height / 2 - row.top) / 0.5,
+    (boundary.top - row.top) / 0.5,
   );
 
   const alignedStyle = copy.style.cssText;

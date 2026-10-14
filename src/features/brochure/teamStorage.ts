@@ -1,7 +1,8 @@
 import { loadSettings, persistSettings } from "../settings/settings.api";
 import { resolveSettings } from "../settings/settings.schema";
 import { z } from "zod";
-import { request } from "../../api/client";
+import { request, ApiError } from "../../api/client";
+import {setCampaignSaveStatus} from "./campaignSaveStatus";
 import { campaignSchema } from "../../domain/schemas";
 import type { Campaign, JsonValue, Settings } from "../../domain/models";
 
@@ -40,6 +41,7 @@ export function hasPendingSaves() {
   return pendingSaves.size > 0;
 }
 export function saveCampaign(campaign: Campaign): Promise<Campaign> {
+  setCampaignSaveStatus(campaign.id, {state: "saving"});
   const pending = pendingSaves.get(campaign.id);
   if (pending) {
     pending.latest = campaign;
@@ -71,8 +73,12 @@ export function saveCampaign(campaign: Campaign): Promise<Campaign> {
       ).campaign;
       if (saved.version) acknowledgedVersions.set(saved.id, saved.version);
     }
+    setCampaignSaveStatus(campaign.id, {state: "saved", savedAt: saved.updatedAt});
     return saved;
-  })().finally(() => pendingSaves.delete(campaign.id));
+  })().catch(error => {
+    setCampaignSaveStatus(campaign.id, {state: error instanceof ApiError && error.code === "VERSION_CONFLICT" ? "conflict" : "error", message: error instanceof Error ? error.message : "Could not save changes."});
+    throw error;
+  }).finally(() => pendingSaves.delete(campaign.id));
   return state.promise;
 }
 export async function removeCampaign(id: string) {

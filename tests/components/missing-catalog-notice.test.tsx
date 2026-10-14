@@ -172,7 +172,7 @@ it("allows a persisted interrupted search to resume while keeping an active requ
   expect(requestAi).not.toHaveBeenCalled();
 });
 
-it("allows direct upload and apply with no catalog photo and keeps AI cutout off", async () => {
+it("defaults an upload to background removal and allows an explicit original photo choice", async () => {
   const save = vi.fn();
   const close = vi.fn();
   const view = render(
@@ -194,6 +194,8 @@ it("allows direct upload and apply with no catalog photo and keeps AI cutout off
   fireEvent.change(view.getByLabelText("Upload another image"), {
     target: { files: [new File(["photo"], "own.png", { type: "image/png" })] },
   });
+  await waitFor(() => expect(cutout.checked).toBe(true));
+  fireEvent.click(cutout);
   await waitFor(() =>
     expect(
       (
@@ -323,6 +325,7 @@ it("does not replace the user's uploaded selection when an older search finishes
   expect(
     view.getByRole("img", { name: missing.name }).getAttribute("src"),
   ).toBe("data:image/png;base64,own-photo");
+  fireEvent.click(view.getByRole("checkbox", {name: /Remove background with AI/}));
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   expect(save).toHaveBeenCalledWith(
     expect.objectContaining({ image: "data:image/png;base64,own-photo" }),

@@ -37,7 +37,7 @@ function page(product: Product, offerStyle = "current", theme = "blue") {
   return { container, card };
 }
 
-it("puts current Apple capacity and the one-year warranty in one compact details row while preserving its HTML price", () => {
+it("puts current Apple capacity and the one-year warranty in one compact details row with the same native printed price as other brands", () => {
   const { card } = page(apple);
   const row = card.querySelector(".brochure-specs");
   const capacity = row?.querySelector('[data-detail-key="Memorje"]');
@@ -62,15 +62,9 @@ it("puts current Apple capacity and the one-year warranty in one compact details
   expect(
     card.querySelector(".brochure-product-copy .brochure-warranty-line"),
   ).toBeNull();
-  expect(card.querySelector(".brochure-price-sale strong")?.textContent).toBe(
-    "1.329€",
-  );
-  expect(card.querySelector(".brochure-price-month")?.textContent).toContain(
-    "KËSTI",
-  );
-  expect(
-    card.querySelector(".reference-price-svg,.red-reference-price-svg"),
-  ).toBeNull();
+  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain("1329");
+  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain("KËSTI");
+  expect(card.querySelector(".brochure-price-sale")).toBeNull();
 });
 
 it("keeps the gray Apple card's ordinary copy and warranty beside its name rather than adopting the current strip", () => {

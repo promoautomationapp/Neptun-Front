@@ -16,35 +16,31 @@ export interface DetailTypography {
   kind: DetailTypographyKind;
 }
 
-// Separate typography, never facts: an imported label/value pair keeps its
-// original wording and separator, including a colon or a manual line break.
-export function detailTypography(
-  text: unknown,
-  { label, imported = false }: DetailTypographyOptions = {},
-): DetailTypography {
+// This is display typography only. Saved source text stays in the editor; a
+// colon's label is omitted from the compact tile so its actual value has room.
+export function detailTypography(text: unknown, { label, imported = false }: DetailTypographyOptions = {}): DetailTypography {
   const source = String(text);
+  const colonPair = imported && source.match(/^([^:\r\n]+):[\t \r\n]*([\s\S]+)$/);
+  const colonValue = colonPair && /\p{L}/u.test(colonPair[1]!) && !/^\s*https?\s*$/i.test(colonPair[1]!)
+    ? colonPair[2]!.trim() : "";
+  if (colonValue) {
+    const kind = scalar.test(colonValue) ? "number"
+      : measurement.test(colonValue) ? "metric"
+      : colonValue.length > 24 || colonValue.split(/\s+/).length > 4 ? "copy-long" : "copy";
+    return { value: colonValue, kind };
+  }
   if (imported) {
-    const pair = source.match(
-      /^([^:\r\n]+:|[^:\r\n]+(?=\r?\n))([\t \r\n]+|(?=\S))([\s\S]+)$/,
-    );
-    const [, pairLabel, separator, value] = pair ?? [];
-    if (
-      pairLabel !== undefined &&
-      separator !== undefined &&
-      value !== undefined &&
-      scalar.test(value.trim())
-    ) {
-      return { label: pairLabel, separator, value, kind: "number" };
+    const pair = source.match(/^([^:\r\n]+(?=\r?\n))([\t \r\n]+)([\s\S]+)$/);
+    if (pair && scalar.test(pair[3]!.trim())) {
+      return { label: pair[1], separator: pair[2], value: pair[3]!, kind: "number" };
     }
   } else if (label && scalar.test(source.trim())) {
-    return { label, separator: "\n", value: source, kind: "number" };
+    const normalizedLabel = String(label).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const displayLabel = /program/.test(normalizedLabel) ? "PROGRAME:" : label;
+    return { label: displayLabel, separator: "\n", value: source, kind: "number" };
   }
   const content = source.trim();
-  const kind =
-    scalar.test(content) || measurement.test(content)
-      ? "metric"
-      : content.length > 24 || content.split(/\s+/).length > 4
-        ? "copy-long"
-        : "copy";
+  const kind = scalar.test(content) || measurement.test(content) ? "metric"
+    : content.length > 24 || content.split(/\s+/).length > 4 ? "copy-long" : "copy";
   return { value: source, kind };
 }

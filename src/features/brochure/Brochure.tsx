@@ -36,7 +36,6 @@ import {
 import { warrantyDuration } from "./warranty";
 import { productColors } from "./colors";
 import { offerStyleFor, savingModeFor } from "./offerStyles";
-import { includesOnlineStore, selectedStoreIndexes } from "./storesSelection";
 import { t } from "./i18n";
 import { MissingCatalogNotice } from "./MissingCatalogNotice";
 import { hasExcelOfferPrice, hasRegularPrice } from "./missingCatalog";
@@ -58,9 +57,8 @@ import { CoverElement } from "./CoverElement";
 import { coverGradientFill, coverProductPlacement } from "./coverElements";
 import {
   cardSize,
-  fittingProductCount,
+  occupiedProductRows,
   layoutGrid,
-  orderedStoreIndexes,
   BROCHURE_LAYOUTS,
 } from "./brochureLayout";
 import { ReferencePriceCard } from "./ReferencePriceCard";
@@ -92,7 +90,8 @@ import {
   isMobilePhone,
   mobileDetailEntries,
 } from "./mobileDetails";
-import { deleteDisplayedDetail } from "./detailRows";
+import { deleteDisplayedDetail, brochureVisibleDetailEntries, editDisplayedDetail } from "./detailRows";
+import { useProductImageFit } from "./useProductImageFit";
 import {
   conditionerDetailEntries,
   defaultFilledDetail,
@@ -105,7 +104,6 @@ import { CompactStoresFooter } from "./CompactStoresFooter";
 import {
   storePageEntries,
   storePlacement,
-  storeDisplayLines,
   storesPageIsLight,
 } from "./storesDesign";
 import {
@@ -837,9 +835,9 @@ function LargeBundleProductCard(props: ProductCardProps) {
   const photoAreaRef = React.useRef<HTMLDivElement>(null);
   const contentPlacement = product.brochureContentPlacement || {};
   const size = cardSize(product, layout || "classic8");
+  const brandLogo = product.brandLogo || brandLogoFor(campaign, product.brand);
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
-  const brandLogo = product.brandLogo || brandLogoFor(campaign, product.brand);
   const changeProduct = onProductChange
     ? (
         field: keyof Product | Partial<Product>,
@@ -1061,10 +1059,9 @@ function StandardProductCard({
 }: ProductCardProps) {
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
-  const brandLogo = product.brandLogo || brandLogoFor(campaign, product.brand);
   const colors = productColors(product);
   const importedSpecs = Array.isArray(product.brochureDetails);
-  const specs = importedSpecs
+  const allSpecs = importedSpecs
     ? savedDetailEntries(product) || []
     : (isMobilePhone(product) && !isAppleProduct(product)
         ? mobileDetailEntries(product, { includeFallback: false })
@@ -1094,6 +1091,7 @@ function StandardProductCard({
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
   const warrantyInStrip = referenceStrip && detailPlacement !== "left";
+  const specs = detailPlacement === "left" ? allSpecs : brochureVisibleDetailEntries(allSpecs, {columns: layoutGrid(layout || "grid6portrait").columns, warrantyInStrip: Boolean(warranty && warrantyInStrip)});
   const changeProduct = onProductChange
     ? (
         field: keyof Product | Partial<Product>,
@@ -1105,6 +1103,7 @@ function StandardProductCard({
   const priceRowRef = React.useRef<HTMLDivElement>(null);
   const contentPlacement = product.brochureContentPlacement || {};
   const gesture = React.useRef<ImageGesture | CardGesture | null>(null);
+  const [imageReady, setImageReady] = React.useState(0);
   const [placement, setPlacement] = React.useState(
     product.brochureImagePlacement || null,
   );
@@ -1119,6 +1118,7 @@ function StandardProductCard({
     () => setSize(cardSize(product, layout || "classic8")),
     [product.brochureCardSize, layout],
   );
+  const fittedImagePlacement = useProductImageFit({ imageRef, wrapRef, source: product.image, ready: imageReady, placement, base: {x: detailPlacement === "left" ? 63 : otherInches ? 46 : 50, y: otherInches ? 56 : 50, scale: defaultImageScale} });
   function beginImageGesture(
     event:
       | React.PointerEvent<HTMLButtonElement>
@@ -1136,13 +1136,7 @@ function StandardProductCard({
       x: event.clientX,
       y: event.clientY,
       rect,
-      initial: {
-        x:
-          placement?.x ??
-          (detailPlacement === "left" ? 63 : otherInches ? 46 : 50),
-        y: placement?.y ?? (otherInches ? 56 : 50),
-        scale: placement?.scale ?? defaultImageScale,
-      },
+      initial: { x: fittedImagePlacement.x ?? 50, y: fittedImagePlacement.y ?? 50, scale: fittedImagePlacement.scale ?? 1 },
     };
     event.currentTarget
       .closest(".cs-page-preview")
@@ -1265,7 +1259,6 @@ function StandardProductCard({
     height?: number;
     guides?: boolean;
   } | null>(null);
-  const [imageReady, setImageReady] = React.useState(0);
   const [screenOverlay, setScreenOverlay] =
     React.useState<React.CSSProperties | null>(null);
   React.useLayoutEffect(() => {
@@ -1316,7 +1309,7 @@ function StandardProductCard({
       area.removeEventListener("brochure-photo-clearance", update);
       card?.removeEventListener("brochure-photo-clearance", update);
     };
-  }, [product.screenArtwork, product.image, imageReady, placement]);
+  }, [product.screenArtwork, product.image, imageReady, placement, fittedImagePlacement]);
   React.useLayoutEffect(() => {
     if (!inches || !wrapRef.current || !imageRef.current) return;
     const update = () => {
@@ -1418,6 +1411,7 @@ function StandardProductCard({
     product.image,
     imageReady,
     placement,
+    fittedImagePlacement,
   ]);
   return (
     <article
@@ -1443,12 +1437,13 @@ function StandardProductCard({
         } else onProductDrop?.(product, event);
       }}
       onDragEnd={onProductDragEnd}
+      data-default-layout={redReference && !Object.values(contentPlacement).some(Boolean) ? "true" : undefined}
       style={{
         position: "relative",
         ...(onResizeCard || product.brochureCardSize
           ? { gridColumn: `span ${size.width}`, gridRow: `span ${size.height}` }
           : {}),
-        "--detail-strip-count": Math.max(
+        "--detail-strip-columns": Math.max(
           1,
           specs.length + Number(Boolean(warranty && warrantyInStrip)),
         ),
@@ -1529,19 +1524,7 @@ function StandardProductCard({
                 onLoad={() => {
                   setImageReady((value) => value + 1);
                 }}
-                style={
-                  placement
-                    ? {
-                        left: `${placement.x}%`,
-                        top: `${placement.y}%`,
-                        transform: `translate(-50%, -50%) scale(${placement.scale})`,
-                      }
-                    : defaultImageScale !== 1
-                      ? {
-                          transform: `translate(-50%, -50%) scale(${defaultImageScale})`,
-                        }
-                      : undefined
-                }
+                style={{ left: `${fittedImagePlacement.x}%`, top: `${fittedImagePlacement.y}%`, transform: `translate(-50%, -50%) scale(${fittedImagePlacement.scale})` }}
                 onPointerDown={
                   onPlaceImage
                     ? (event) => beginImageGesture(event, "move")
@@ -1865,7 +1848,7 @@ function StandardProductCard({
                       event.stopPropagation();
                       event.dataTransfer.setData(
                         "application/x-brochure-detail",
-                        `${product.code}:${index}`,
+                        `${product.code}:${allSpecs.findIndex(([sourceKey]) => sourceKey === key)}`,
                       );
                     }
                   : undefined
@@ -1894,8 +1877,8 @@ function StandardProductCard({
                         onReorderDetails(
                           product,
                           Number(source.slice(String(product.code).length + 1)),
-                          index,
-                          specs,
+                          allSpecs.findIndex(([sourceKey]) => sourceKey === key),
+                          allSpecs,
                         );
                       }
                     }
@@ -1907,29 +1890,15 @@ function StandardProductCard({
                   ? () => {
                       const changes = deleteDisplayedDetail(
                         product,
-                        specs,
-                        index,
+                        allSpecs,
+                        allSpecs.findIndex(([sourceKey]) => sourceKey === key),
                       );
                       changeProduct(changes);
                     }
                   : undefined
               }
               editText={importedSpecs ? String(value) : `${key}: ${value}`}
-              onSaveText={
-                changeProduct
-                  ? (text) =>
-                      changeProduct(
-                        "brochureDetails",
-                        specs.map(([detailKey, detailValue], detailIndex) =>
-                          detailIndex === index
-                            ? text
-                            : importedSpecs
-                              ? String(detailValue)
-                              : `${detailKey}: ${detailValue}`,
-                        ),
-                      )
-                  : undefined
-              }
+              onSaveText={changeProduct ? text => changeProduct(editDisplayedDetail(product, allSpecs, allSpecs.findIndex(([sourceKey]) => sourceKey === key), text)) : undefined}
             >
               <DetailContent
                 product={product}
@@ -2313,6 +2282,7 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="band"
+          className={!campaign.coverElementPlacements?.band && brochureAssetSource(campaign, "coverBand") === "/api/assets/legacy/assets/uuu-hajde-band.png" ? "cover-band-default-artwork" : ""}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
@@ -2327,6 +2297,7 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="message"
+          className={campaign.showCoverBand === true && !campaign.coverElementPlacements?.message ? "cover-band-default-message" : ""}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
@@ -2511,15 +2482,7 @@ function ProductPageContent({
       />
       <div
         className="brochure-products"
-        style={
-          page.spacing
-            ? {
-                columnGap: `${page.spacing.horizontal ?? 3.1}cqw`,
-                rowGap: `${page.spacing.vertical ?? 3.2}cqw`,
-                "--brochure-content-gap": `${page.spacing.content ?? 1}cqw`,
-              }
-            : undefined
-        }
+        style={{ gridTemplateRows: `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`, ...(page.spacing ? { columnGap: `${page.spacing.horizontal ?? 3.1}cqw`, rowGap: `${page.spacing.vertical ?? 3.2}cqw`, "--brochure-content-gap": `${page.spacing.content ?? 1}cqw` } : {}) }}
       >
         {page.products.map((product: Product) => (
           <ProductCard
@@ -2575,7 +2538,7 @@ export function StoresPage({
   settings = defaultStores,
   campaign,
   onPlaceStore,
-  onReorderStore,
+  onReorderStore: _onReorderStore,
   onArtworkChange,
   onArtworkRemove,
   onCampaignAssetChange,

@@ -1,0 +1,8 @@
+.cs-brochure-status-bar {display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:9px 12px;margin:0 0 10px;border:1px solid #ccddeb;border-radius:10px;background:#f4f9fd;font-size:11px;line-height:1.4;color:#365b7b;}
+.cs-brochure-mode {display:inline-flex;align-items:center;gap:5px;color:#175686;font-weight:800;}
+.cs-save-status {color:#46795f;}
+.cs-save-status.state-saving {color:#497693;}
+.cs-save-status:is(.state-conflict,.state-error),.cs-collaboration-status {color:#925019;font-weight:700;}
+.cs-presence-unavailable {color:#738398;}
+.cs-page-preview.view-only:not(.comment-view) .cs-brochure-status-bar {flex:none;margin:0;}
+@media print {.cs-brochure-status-bar {display:none!important;}}

@@ -62,7 +62,7 @@ export function tvScreenInches(product: Partial<Product>) {
 // Keep the largest supported TV inside the slot; saved manual scales take precedence.
 export function defaultProductImageScale(product: Partial<Product>) {
   const inches = tvScreenInches(product);
-  return inches ? Number((0.7 + (0.3 * (inches - 20)) / 100).toFixed(3)) : 1;
+  return inches ? Number((0.94 + (0.06 * (inches - 20)) / 100).toFixed(3)) : 1;
 }
 
 export function otherScreenInches(product: Partial<Product>) {

@@ -1,84 +1,44 @@
-.cs-catalog-refresh {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-width: 280px;
+.cs-catalog-refresh { display:flex; flex-direction:column; gap:4px; min-width:0; max-width:280px; letter-spacing:normal; font-weight:400; }
+.cs-catalog-refresh-button { display:flex; align-items:center; gap:8px; min-width:0; padding:7px 12px; border:1px solid #d5e2ed; border-radius:10px; background:#fff; color:#234563; font-weight:750; font-size:12px; letter-spacing:normal; text-align:left; cursor:pointer; }
+.cs-catalog-refresh-button>span:first-child { font-size:23px; line-height:1; color:#237caf; }
+.cs-catalog-refresh-button>span:last-child { min-width:0; }
+.cs-catalog-refresh-button small { display:block; margin-top:2px; font-size:9px; font-weight:500; color:#7890a4; }
+.cs-catalog-refresh-button:disabled { cursor:progress; background:#eaf5fc; }
+.cs-catalog-refresh>small { color:#6f879b; font-size:9px; font-weight:400; line-height:1.3; overflow-wrap:break-word; }
+.cs-catalog-refresh-result { display:flex; flex-wrap:wrap; gap:2px 4px; }
+.cs-catalog-refresh-result>span { white-space:nowrap; }
+.cs-catalog-refresh .cs-catalog-refresh-error { color:#c5493e; }
+.cs-catalog-refresh-button .is-refreshing { animation:catalog-spin 1.8s linear infinite; }
+@keyframes catalog-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .cs-catalog-refresh-button .is-refreshing { animation:none; } }
+@media(max-width:1100px) {
+  .campaign-app .cs-topbar { flex-wrap:wrap; height:auto; min-height:72px; gap:8px; padding:10px 22px; }
+  .cs-topbar .cs-breadcrumb { flex:1 1 100%; min-width:0; }
+  .cs-topbar .cs-topbar-right { width:100%; min-width:0; }
+  .cs-topbar .cs-catalog-refresh { flex:1 1 0; }
 }
-.cs-catalog-refresh-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  border: 1px solid #d5e2ed;
-  border-radius: 10px;
-  background: #fff;
-  color: #234563;
-  font-weight: 750;
-  font-size: 12px;
-  text-align: left;
-  cursor: pointer;
-}
-.cs-catalog-refresh-button > span:first-child {
-  font-size: 23px;
-  line-height: 1;
-  color: #237caf;
-}
-.cs-catalog-refresh-button small {
-  display: block;
-  margin-top: 2px;
-  font-size: 9px;
-  font-weight: 500;
-  color: #7890a4;
-}
-.cs-catalog-refresh-button:disabled {
-  cursor: progress;
-  background: #eaf5fc;
-}
-.cs-catalog-refresh > small {
-  color: #6f879b;
-  font-size: 9px;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-.cs-catalog-refresh .cs-catalog-refresh-error {
-  color: #c5493e;
-}
-.cs-catalog-refresh-button .is-refreshing {
-  animation: catalog-spin 1.8s linear infinite;
-}
-@keyframes catalog-spin {
-  to {
-    transform: rotate(360deg);
+@media(max-width:850px) {
+  .campaign-app .cs-topbar {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    align-items:start;
+    height:auto;
+    min-height:54px;
+    gap:8px;
+    padding:10px 22px;
   }
+  .cs-topbar .cs-breadcrumb { min-width:0; max-width:100%; }
+  .cs-topbar .cs-topbar-right { width:100%; min-width:0; align-items:flex-start; gap:8px; }
+  .cs-topbar-right>span { display:none; }
+  .cs-topbar .cs-catalog-refresh { flex:1 1 0; max-width:none; }
+  .cs-topbar .cs-catalog-refresh-button { align-self:flex-start; max-width:100%; min-height:34px; padding:5px 8px; font-size:11px; line-height:1.2; }
+  .cs-topbar .cs-catalog-refresh-button>span:first-child { flex:none; font-size:20px; }
+  .cs-topbar .cs-catalog-refresh-button small { display:none; }
+  .cs-topbar .cs-language-switch, .cs-topbar .cs-avatar { flex:none; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .cs-catalog-refresh-button .is-refreshing {
-    animation: none;
-  }
-}
-@media (max-width: 700px) {
-  .cs-topbar-right > span {
-    display: none;
-  }
-  .cs-catalog-refresh {
-    max-width: 190px;
-  }
-  .cs-catalog-refresh-button {
-    font-size: 10px;
-    padding: 5px 7px;
-  }
+@media(max-width:620px) {
+  .campaign-app .cs-topbar { padding:10px 14px; }
 }
 
-.cs-catalog-card .cs-source-missing {
-  display: block;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: #fff4de;
-  color: #936027;
-  font-size: 10px;
-  line-height: 1.4;
-}
-.cs-catalog-card > small {
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
+.cs-catalog-card .cs-source-missing { display:block; padding:5px 7px; border-radius:6px; background:#fff4de; color:#936027; font-size:10px; line-height:1.4; }
+.cs-catalog-card>small { overflow-wrap:anywhere; white-space:normal; }

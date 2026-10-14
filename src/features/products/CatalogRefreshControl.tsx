@@ -140,9 +140,10 @@ export function CatalogRefreshControl({
         </small>
       )}
     {!busy && status?.status === "completed" && (
-        <small role="status">
-          {status.added || 0} new · {status.updated || 0} updated ·{" "}
-          {status.missing || 0} no longer listed
+        <small role="status" className="cs-catalog-refresh-result">
+          <span>{status.added || 0} new</span><span aria-hidden="true">·</span>
+          <span>{status.updated || 0} updated</span><span aria-hidden="true">·</span>
+          <span>{status.missing || 0} no longer listed</span>
         </small>
     )}
     {!busy && Boolean(status?.imagesPending) && <small role="status">Preparing product photos in the background · {status?.imagesPending} remaining</small>}

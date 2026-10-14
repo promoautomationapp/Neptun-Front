@@ -1,58 +1,69 @@
 /* Imported details use the same source row as catalog details. Individual
    blocks retain their saved drag, size and fill overrides. */
 .brochure-page .brochure-product {
-  /* May source: font em / square side = .246563 capacity, .268978 number,
-     .141213 label, .179319 feature. The existing strip is 5.95cqw tall. */
-  --detail-copy-size: 1.067cqw;
-  --detail-copy-long-size: 0.8cqw;
-  --detail-metric-size: 1.467cqw;
-  --detail-number-size: 1.6cqw;
-  --detail-label-size: 0.84cqw;
+  /* Reference proportions: capacity .246563, number .268978,
+     label .141213 and feature .179319 of an 8.5cqw square. */
+  --detail-copy-size: 1.524cqw;
+  --detail-copy-long-size: 1.14cqw;
+  --detail-metric-size: 2.096cqw;
+  --detail-number-size: 2.286cqw;
+  --detail-label-size: 1.2cqw;
   --detail-text-weight: 900;
+  --detail-strip-gap: min(.95cqw, calc(10% / var(--detail-strip-columns, 5)));
 }
 
 .brochure-page .brochure-product:is(.blue-reference-offer, .details-left) {
   /* August source is already 1080×1350: Light 10.479pt / 8.221pt. */
-  --detail-copy-size: 0.970275cqw;
-  --detail-copy-long-size: 0.761177cqw;
-  --detail-metric-size: 0.970275cqw;
-  --detail-number-size: 0.970275cqw;
-  --detail-label-size: 0.761177cqw;
+  --detail-copy-size: .970275cqw;
+  --detail-copy-long-size: .761177cqw;
+  --detail-metric-size: .970275cqw;
+  --detail-number-size: .970275cqw;
+  --detail-label-size: .761177cqw;
   --detail-text-weight: 300;
 }
 
-.brochure-page .brochure-product:not(.details-left) > .brochure-specs {
+.brochure-page .brochure-product.blue-reference-offer:not(.details-left) {
+  --detail-copy-size: 1.524cqw;
+  --detail-copy-long-size: 1.14cqw;
+  --detail-metric-size: 2.096cqw;
+  --detail-number-size: 2.286cqw;
+  --detail-label-size: 1.2cqw;
+}
+
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs[data-detail-layout="strip"] {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+  align-items: flex-start;
+  align-content: flex-start;
   order: 3;
   flex: none;
   width: 100%;
-  height: 6.3cqw;
+  height: auto;
   min-height: 0;
-  gap: 0.5cqw;
+  gap: var(--detail-strip-gap);
   margin: 0;
-  padding: 0.35cqw 0 0;
+  padding: .35cqw 0 0;
   overflow: visible;
 }
 
-.brochure-page
-  .brochure-product:not(.details-left)
-  > .brochure-specs
-  > .product-detail-block {
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs[data-detail-layout="strip"] > .product-detail-block {
   display: flex;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-width: 0;
   min-height: 0;
-  width: auto;
-  height: 100%;
+  width: min(8.5cqw, calc((100% - (var(--detail-strip-columns, 5) - 1) * var(--detail-strip-gap)) / var(--detail-strip-columns, 5)));
+  max-width: none;
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   margin: 0;
-  padding: 0.28cqw;
-  border: 0.13cqw solid currentColor;
-  border-radius: 0.55cqw;
+  padding: .42cqw;
+  border: .13cqw solid currentColor;
+  border-radius: .55cqw;
   background: transparent;
   color: inherit;
   font-family: SkolaSans, Arial, sans-serif;
@@ -63,11 +74,7 @@
   overflow: visible;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > :is(b, small) {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > :is(b, small) {
   display: block;
   max-width: 100%;
   min-height: 0;
@@ -78,142 +85,88 @@
   text-overflow: clip;
   -webkit-line-clamp: unset;
   line-clamp: unset;
+  overflow-wrap: normal;
   word-break: normal;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > small {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > small {
   flex: none;
   font-size: var(--detail-label-size);
   line-height: 1.2;
   opacity: 1;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > b.detail-fitted-value {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > b.detail-fitted-value {
   font-size: var(--detail-copy-size);
   font-weight: var(--detail-text-weight);
   line-height: 1.2;
   white-space: pre-line;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > b.detail-copy-long {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > b.detail-copy-long {
   font-size: var(--detail-copy-long-size);
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > b.detail-metric {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > b.detail-metric {
   font-size: var(--detail-metric-size);
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > b.detail-number {
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > b.detail-number {
   font-size: var(--detail-number-size);
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .product-detail-block
-  > .detail-strip-label {
-  margin: 0 0 0.18cqw;
+.brochure-page .brochure-product > .brochure-specs > .product-detail-block > .detail-strip-label {
+  margin: 0 0 .18cqw;
   text-transform: uppercase;
-  letter-spacing: -0.05em;
+  letter-spacing: -.025em;
 }
 
-.brochure-page
-  .brochure-product:is(.blue-reference-offer, .details-left)
-  > .brochure-specs
-  > .product-detail-block
-  > .detail-strip-label {
+.brochure-page .brochure-product:is(.blue-reference-offer, .details-left) > .brochure-specs > .product-detail-block > .detail-strip-label {
   text-transform: none;
   letter-spacing: 0;
 }
 
-.brochure-page
-  .brochure-product:is(.red-reference-offer, .style-current):not(.details-left)
-  > .brochure-specs
-  > .detail-filled:not(.detail-style-outline) {
+.brochure-page .brochure-product.red-reference-offer:not(.details-left) > .brochure-specs > .detail-filled:not(.detail-style-outline) {
   background: #fff;
   color: #1c4075;
 }
 
-.brochure-page
-  .brochure-product:not(.details-left)
-  > .brochure-specs
-  > .detail-style-filled {
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .detail-style-filled {
   background: #fff;
   color: #1c4075;
 }
 
-.brochure-page
-  .brochure-product:not(.details-left)
-  > .brochure-specs
-  > .detail-style-outline {
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .detail-style-outline {
   background: transparent;
   color: inherit;
 }
 
-.brochure-page
-  .brochure-product:not(.details-left)
-  > .brochure-specs
-  > .brochure-warranty {
-  flex: 1 1 0;
-  width: auto;
-  padding: 0.16cqw;
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty {
+  padding: .16cqw;
   background: transparent;
   color: inherit;
   gap: 0;
 }
 
-.brochure-page
-  .brochure-product:not(.details-left)
-  > .brochure-specs
-  > .brochure-warranty
-  > b {
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty > b {
   font-family: SkolaSans, Arial, sans-serif;
   font-size: 3.866cqw;
   font-weight: 900 !important;
-  line-height: 0.9;
-  margin: 0 0 0.1cqw;
+  line-height: .9;
+  margin: 0 0 .1cqw;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .brochure-warranty
-  > small {
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty > small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.717cqw;
+  font-size: 1.05cqw;
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
 }
 
-.brochure-page
-  .brochure-product
-  > .brochure-specs
-  > .brochure-warranty
-  > small
-  > span {
+.brochure-page .brochure-product > .brochure-specs > .brochure-warranty > small > span {
   display: block;
   flex: none;
   min-width: 0;
@@ -230,26 +183,20 @@
   white-space: nowrap;
 }
 
-.brochure-page
-  .brochure-product.blue-reference-offer
-  > .brochure-specs
-  > .product-detail-block:not(.detail-style-filled) {
+.brochure-page .brochure-product.blue-reference-offer > .brochure-specs > .product-detail-block:not(.detail-style-filled) {
   background: transparent;
   color: inherit;
-  border: 0.12cqw solid currentColor;
+  border: .12cqw solid currentColor;
 }
 
-.brochure-page.light
-  .brochure-product.blue-reference-offer
-  > .brochure-specs
-  > .product-detail-block:not(.detail-style-filled) {
+.brochure-page.light .brochure-product.blue-reference-offer > .brochure-specs > .product-detail-block:not(.detail-style-filled) {
   border-color: #386f9f;
 }
 
 .brochure-page .brochure-product.blue-reference-offer .brochure-warranty-line,
 .brochure-page .brochure-product.details-left .brochure-warranty-line {
   display: block;
-  margin-top: 0.3cqw;
+  margin-top: .3cqw;
   font-family: SkolaSans, Arial, sans-serif;
   font-size: 1.388889cqw;
   font-weight: 300;
@@ -262,68 +209,65 @@
   line-clamp: unset;
 }
 
-.brochure-page
-  .brochure-product.details-left
-  > .brochure-specs
-  > .product-detail-block
-  > b {
+.brochure-page .brochure-product.details-left > .brochure-specs > .product-detail-block > b {
   font-weight: 300;
   white-space: pre-line;
 }
 
-.brochure-page
-  .brochure-product.details-left
-  > .brochure-specs
-  > .product-detail-block
-  > small {
+.brochure-page .brochure-product.details-left > .brochure-specs > .product-detail-block > small {
   font-size: var(--detail-label-size);
   font-weight: 300;
   line-height: 1.2;
 }
 
-.brochure-page
-  .brochure-product.details-left
-  > .brochure-specs
-  > .detail-memory
-  > b {
+.brochure-page .brochure-product.details-left > .brochure-specs > .detail-memory > b {
   font-weight: 700;
 }
 
-.brochure-page
-  .brochure-product:is(.blue-reference-offer, .details-left)
-  > .brochure-specs
-  > .detail-memory
-  > b.detail-fitted-value {
+.brochure-page .brochure-product:is(.blue-reference-offer, .details-left) > .brochure-specs > .detail-memory > b.detail-fitted-value {
   font-weight: 700;
 }
 
-.brochure-page
-  .brochure-product.blue-reference-offer
-  .brochure-product-copy
-  > span:not(.brochure-colors) {
+.brochure-page .brochure-product.blue-reference-offer .brochure-product-copy > span:not(.brochure-colors) {
   font-family: SkolaSans, Arial, sans-serif;
   font-size: 1.388889cqw;
   font-weight: 300;
   line-height: 1.2;
 }
 
-.brochure-page
-  .brochure-product.red-reference-offer
-  .brochure-product-copy
-  > span:not(.brochure-colors):not(.brochure-warranty-line) {
+.brochure-page .brochure-product.red-reference-offer .brochure-product-copy > span:not(.brochure-colors):not(.brochure-warranty-line) {
   font-family: TSTAR, Arial, sans-serif;
   font-size: 1.205465cqw;
   font-weight: 700;
   line-height: 1.2;
 }
 .brochure-page .brochure-product-copy > span {
-  display: block;
-  max-height: none;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  display:block;
+  max-height:none;
+  -webkit-line-clamp:unset;
+  line-clamp:unset;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+
+/* Keep the number's full line box and both warranty labels inside the tile. */
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty {
+  padding: .22cqw;
+  gap: .18cqw;
+}
+.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty > b.detail-warranty-count {
+  font-size: 4.5cqw;
+  line-height: .95;
+  margin: 0;
+}
+
+/* Every detail stays in one row. The complete fact count sets square widths,
+   and the row reserves its own height within the product card. */
+.brochure-page .brochure-product:not(.details-left):has(> .brochure-specs[data-detail-layout="strip"]) > .brochure-product-image-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
 }
 
 /* Related phone facts share one compact box; amounts retain the reference's
@@ -448,13 +392,3 @@
   font-size: var(--detail-copy-size);
 }
 
-/* Keep the number's full line box and both warranty labels inside the tile. */
-.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty {
-  padding: .5cqw .25cqw .3cqw;
-  gap: .25cqw;
-}
-.brochure-page .brochure-product:not(.details-left) > .brochure-specs > .brochure-warranty > b.detail-warranty-count {
-  font-size: 2.8cqw;
-  line-height: 1.15;
-  margin: 0;
-}

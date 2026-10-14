@@ -105,23 +105,23 @@ function fixture(native: boolean, manual: boolean) {
   };
 }
 
-it("starts below the product name at the native orange/installment boundary and follows a live price move", async () => {
+it("starts after the product name at the native orange/installment boundary and follows a live price move", async () => {
   const view = fixture(true, false);
   const line = () =>
     view.container.querySelector<HTMLElement>(".brochure-product-name-divider");
-  expect(line()?.style.top).toBe("50.5px");
-  expect(line()?.style.left).toBe("0px");
-  expect(line()?.style.width).toBe("500px");
+  expect(line()?.style.top).toBe("50px");
+  expect(line()?.style.left).toBe("232px");
+  expect(line()?.style.width).toBe("268px");
   expect(
     view.container.querySelector<HTMLElement>(".brochure-product-copy")?.style
       .translate,
-  ).toBe("0 -1.5px");
+  ).toBe("0 0.5px");
   view.move(10);
-  await waitFor(() => expect(line()?.style.top).toBe("60.5px"));
+  await waitFor(() => expect(line()?.style.top).toBe("60px"));
   expect(
     view.container.querySelector<HTMLElement>(".brochure-product-copy")?.style
       .translate,
-  ).toBe("0 8.5px");
+  ).toBe("0 10.5px");
 });
 
 it("uses the HTML orange/installment boundary without changing a manually moved product name", () => {
@@ -129,7 +129,7 @@ it("uses the HTML orange/installment boundary without changing a manually moved 
   const line = view.container.querySelector<HTMLElement>(
     ".brochure-product-name-divider",
   );
-  expect(line?.style.top).toBe("50.5px");
+  expect(line?.style.top).toBe("50px");
   const copy = view.container.querySelector<HTMLElement>(
     ".brochure-product-copy",
   );
@@ -145,12 +145,12 @@ it("materializes default alignment for a live name drag and restores it after ca
   if (!copy) throw new Error("Missing copy fixture");
   const originalStyle = copy.style.cssText;
   const offset = materializeProductNameAlignment(copy, 1080, 1);
-  expect(offset.y).toBeCloseTo((-1.5 / 1080) * 100);
+  expect(offset.y).toBeCloseTo((0.5 / 1080) * 100);
   copy.style.transform = "translateY(8.5px)";
   await waitFor(() => expect(copy.style.translate).toBe(""));
   expect(copy.style.transform).toBe("translateY(8.5px)");
   copy.style.cssText = originalStyle;
   delete copy.dataset.nameDividerManual;
   view.move(10);
-  await waitFor(() => expect(copy.style.translate).toBe("0 8.5px"));
+  await waitFor(() => expect(copy.style.translate).toBe("0 10.5px"));
 });

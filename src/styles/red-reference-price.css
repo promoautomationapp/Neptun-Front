@@ -34,12 +34,7 @@
   line-height: 1;
 }
 .red-reference-saving > svg { display: block; width: 100%; height: auto; overflow: visible; }
-.brochure-red-reference-saving { top: 40%; right: 0; width: 22%; }
-/* The native white divider belongs between sale and installment, already inside the SVG. */
-.brochure-page .brochure-product.red-reference-offer > .brochure-product-bottom,
-.brochure-page .brochure-product.style-current > .brochure-product-bottom:has(> .brochure-price:not(.reference-price-card)) {
-  border-bottom: 0 !important;
-}
+.brochure-red-reference-saving { top: 40%; right: .5%; width: 24%; }
 .cs-page-preview.edit-view .red-reference-saving[role="button"] { cursor: pointer; }
 .cs-page-preview.edit-view .red-reference-saving[role="button"]:is(:hover, :focus-visible) { outline: 2px solid #31b6fb; outline-offset: 2px; }
 .brochure-page .red-reference-offer .brochure-product-copy > span {

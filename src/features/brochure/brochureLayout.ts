@@ -135,7 +135,7 @@ export function cardSize(product: Partial<Product>, layout: string) {
 
 // Place blocks row by row. A wider block wraps to the next available row;
 // when no rectangle remains, the caller starts a new brochure page.
-export function fittingProductCount(
+function placeProductGrid(
   products: Product[],
   layout: string,
   limit = products.length,
@@ -144,7 +144,7 @@ export function fittingProductCount(
   const cells = Array.from({ length: rows }, () =>
     Array.from({ length: columns }, () => false),
   );
-  let count = 0;
+  let count = 0, occupiedRows = 0;
   for (const product of products.slice(0, limit)) {
     const size = cardSize(product, layout);
     let slot = null;
@@ -169,8 +169,9 @@ export function fittingProductCount(
         if (row) row[x] = true;
       }
     count++;
+    occupiedRows = Math.max(occupiedRows, slot.y + size.height);
   }
-  return Math.max(1, count);
+  return {count, occupiedRows};
 }
 
 export function orderedStoreIndexes(
@@ -198,3 +199,6 @@ export function moveStore(order: number[], from: number, to: number) {
   next.splice(end, 0, from);
   return next;
 }
+
+export function fittingProductCount(products: Product[], layout: string, limit = products.length) { return Math.max(1, placeProductGrid(products, layout, limit).count); }
+export function occupiedProductRows(products: Product[], layout: string, limit = products.length) { return Math.max(1, placeProductGrid(products, layout, limit).occupiedRows); }

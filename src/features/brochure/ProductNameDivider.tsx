@@ -95,38 +95,32 @@ export function ProductNameDivider({
             ? (saleBox.bottom + monthBox.top) / 2
             : 0;
         const boundaryRight = boundary?.right ?? saleBox?.right ?? rowBox.right;
-        const text = () => {
-          const range = document.createRange();
-          range.selectNodeContents(name);
-          const lines =
-            typeof range.getClientRects === "function"
-              ? [...range.getClientRects()]
-              : [];
-          return (
-            lines.filter((line) => line.width > 0).at(-1) ??
-            name.getBoundingClientRect()
-          );
+        const textRects = (element: Element) => {
+          const range = document.createRange(); range.selectNodeContents(element);
+          const lines = typeof range.getClientRects === "function" ? [...range.getClientRects()].filter(line => line.width > 0 && line.height > 0) : [];
+          return lines.length ? lines : [element.getBoundingClientRect()];
         };
-        const before = text();
+        const before = textRects(name)[0]!;
         if (alignName && copy.dataset.nameDividerManual !== "true") {
-          const correction =
-            Math.round(
-              ((boundaryY - before.bottom - gap) / scale + nameCorrection) *
-                10000,
-            ) / 10000;
+          const style = getComputedStyle(name);
+          const canvas = document.createElement("canvas").getContext("2d");
+          let descent = 0;
+          if (canvas) { canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`; const metrics = canvas.measureText("Hg"); descent = Math.max(0, metrics.fontBoundingBoxDescent ?? metrics.actualBoundingBoxDescent ?? 0); }
+          const baseline = before.bottom - descent * scale;
+          const correction = Math.round(((boundaryY - baseline) / scale + nameCorrection) * 10000) / 10000;
           const translate = `0 ${correction}px`;
-          if (copy.style.translate !== translate)
-            copy.style.translate = translate;
+          if (copy.style.translate !== translate) copy.style.translate = translate;
           nameCorrection = correction;
         }
-        const left = Math.max(rowBox.left, name.getBoundingClientRect().left);
+        const height = boundary?.height || pageWidth / 1080;
+        const lines = textRects(name);
+        const distance = (rect: DOMRect) => Math.max(rect.top - boundaryY, boundaryY - rect.bottom, 0);
+        const closest = Math.min(...lines.map(distance));
+        const beside = lines.filter(line => distance(line) <= closest + .1);
+        const protectedRects = [...copy.querySelectorAll("[data-product-name], .brochure-product-code, .brochure-warranty-line, .brochure-brand-mark")].flatMap(textRects).filter(rect => rect.top - gap <= boundaryY + height / 2 && rect.bottom + gap >= boundaryY - height / 2);
+        const left = Math.max(rowBox.left, ...[...beside, ...protectedRects].map(rect => rect.right + gap));
         const right = Math.min(rowBox.right, boundaryRight);
-        const next = {
-          left: (left - rowBox.left) / scale,
-          top: (boundaryY - rowBox.top) / scale,
-          width: Math.max(0, right - left) / scale,
-          height: Math.max(boundary?.height ?? 0, pageWidth / 1080) / scale,
-        };
+        const next = { left: (left - rowBox.left) / scale, top: (boundaryY - height / 2 - rowBox.top) / scale, width: Math.max(0, right - left) / scale, height: height / scale };
         setPlacement((current) =>
           JSON.stringify(current) === JSON.stringify(next) ? current : next,
         );

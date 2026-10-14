@@ -43,6 +43,8 @@ export function DefaultSavingsClearance({
         const scale = cardBox.width / (card.offsetWidth || cardBox.width);
         if (!scale || !cardBox.width) return;
         const badgeBox = badge.getBoundingClientRect();
+        const photoBox = photoAreaRef.current?.getBoundingClientRect();
+        if (!photoBox) return;
         const priceBox = price.getBoundingClientRect();
         const svg = price.querySelector<SVGSVGElement>(
           ".red-reference-price-svg",
@@ -60,9 +62,11 @@ export function DefaultSavingsClearance({
         const requestedBottom = badgeBox.bottom - offset * scale;
         const horizontalOverlap =
           badgeBox.right > priceBox.left && badgeBox.left < priceBox.right;
-        const next = horizontalOverlap
+        const clearance = horizontalOverlap
           ? Math.min(0, (priceTop - gap - requestedBottom) / scale)
           : 0;
+        const originalTop = badgeBox.top - offset * scale;
+        const next = Math.max(clearance, (photoBox.top + gap - originalTop) / scale);
         offset = next;
         const translate = next ? `0 ${next}px` : original;
         if (badge.style.translate !== translate)

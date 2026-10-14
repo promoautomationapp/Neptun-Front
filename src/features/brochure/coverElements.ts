@@ -7,7 +7,7 @@ export const COVER_ELEMENT_DEFAULTS: Record<string, CoverPlacement> = {
   logo: { x: 27, y: 4, width: 46 },
   headline: { x: 10, y: 15, width: 85 },
   band: { x: 0, y: 25, width: 100 },
-  message: { x: 47, y: 40, width: 49 },
+  message: { x: 47, y: 39.5, width: 49, height: 7.5 },
   gradient: { x: 0, y: 13, width: 100, height: 30 },
 };
 export const COVER_GRADIENT_REGIONS: Record<

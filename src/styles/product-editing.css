@@ -38,6 +38,8 @@
 .cs-image-choices button{height:82px;border:2px solid #dce6ee;border-radius:9px;background:#f8fafb;padding:5px;overflow:hidden}
 .cs-image-choices button.selected{border-color:#f44731;box-shadow:0 0 0 2px #f4473122}
 .cs-image-choices img{width:100%;height:100%;object-fit:contain}
+.cs-missing-image-search{display:grid;justify-items:start;gap:7px;margin:0 0 14px;padding:11px;border:1px solid #d4e5f0;border-radius:10px;background:#f5fafe}
+.cs-missing-image-search small{color:#426681;line-height:1.35}
 .cs-image-upload{display:grid;gap:6px;font-weight:800;color:#1b466c;font-size:12px;margin:10px 0}
 .cs-image-upload input{font-size:11px;max-width:100%}
 .cs-image-upload{position:relative;cursor:pointer}.cs-image-upload input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.cs-image-upload-button{display:inline-flex;align-items:center;justify-content:center;width:max-content;padding:10px 14px;border:1px dashed #89bddc;border-radius:10px;background:#eff8fc;color:#1b567e;font-size:13px;font-weight:850}.cs-image-upload:hover .cs-image-upload-button,.cs-image-upload:focus-within .cs-image-upload-button{border-color:#ef4933;background:#fff7f4}
@@ -46,8 +48,8 @@
 .cs-image-cutout span{display:grid;gap:3px}
 .cs-image-cutout small{font-size:10px;color:#607d96}
 .cs-image-preview-panel{border:1px solid #dde7ef;border-radius:12px;padding:14px;background:#fbfdff}
-.cs-image-preview{height:280px;display:grid;place-items:center;overflow:hidden;background:repeating-conic-gradient(#edf1f5 0% 25%,#fff 0% 50%) 50% / 24px 24px;border-radius:8px;margin:9px 0}
-.cs-image-preview img{max-width:100%;max-height:100%;object-fit:contain}
+.cs-image-preview{height:280px;display:grid;grid-template: minmax(0,1fr) / minmax(0,1fr);place-items:center;overflow:hidden;background:#f1f4f7;border-radius:8px;margin:9px 0}
+.cs-image-preview img{display:block;width:100%;height:100%;min-width:0;min-height:0;object-fit:contain}
 .cs-image-preview-panel>small{display:block;font-size:10px;color:#63819b;line-height:1.5}
 .cs-image-error{font-size:11px;color:#ce3e2c;margin:8px 0}
 .cs-image-progress{display:flex;align-items:center;gap:8px;font-size:11px;color:#1e679c;font-weight:800;margin-top:10px}

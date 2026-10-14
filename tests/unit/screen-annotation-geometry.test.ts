@@ -37,7 +37,7 @@ describe("TV inch sticker geometry", () => {
 
   it("keeps explicit manual coordinates and scale, including zero coordinates", () => {
     const manual = { x: 0, y: 3, scale: 1.4, horizontalLength: 0.7, hidden: false };
-    expect(resolveScreenAnnotationPlacement("television", manual)).toEqual(manual);
+    expect(resolveScreenAnnotationPlacement("television", manual)).toEqual({...manual, textPosition: "original"});
     const sticker = renderedScreenAnnotationBox(base, 1080, "television", manual);
     expect(sticker.left + sticker.width).toBeCloseTo(screen.left + screen.width);
     expect(sticker.top).toBeCloseTo(screen.top + 32.4);

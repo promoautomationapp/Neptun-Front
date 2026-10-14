@@ -11,7 +11,7 @@ it("uses the ten-percent-smaller TV default while retaining the source rotated t
   expect(label.style.transformOrigin).toBe("top right");
   expect(label.style.width).toBe("198px");
   const text = label.querySelector("text")!;
-  expect(text.getAttribute("transform")).toBe("rotate(53 53.9218715547 32.0116815921)");
+  expect(text.getAttribute("transform")).toBe("rotate(53 51.5 37)");
   expect(text.getAttribute("font-family")).toBe("TSTAR Headline,TSTAR,Arial,sans-serif");
   expect(label.querySelectorAll("defs stop")).toHaveLength(6);
 });

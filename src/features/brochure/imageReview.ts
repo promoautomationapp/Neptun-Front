@@ -1,6 +1,6 @@
 import type {Product,JsonValue}from '../../domain/models';
-import { screenAnnotationType, isTelevision, otherScreenInches, tvScreenInches } from "./tvSpecs";
-import { IMAGE_PREPARATION_REVISION, imageBackgroundSignature, normalizeImageBackgroundContext } from "./imagePreparationContext";
+import { screenAnnotationType, otherScreenInches, tvScreenInches } from "./tvSpecs";
+import { IMAGE_PREPARATION_REVISION, normalizeImageBackgroundContext } from "./imagePreparationContext";
 
 export { IMAGE_PREPARATION_REVISION, imageBackgroundSignature, normalizeImageBackgroundContext } from "./imagePreparationContext";
 
@@ -11,6 +11,7 @@ export function imagePreparationSource(product: Product) {
 export function buildImagePreparationRequest(product: Product, { backgroundContext, orientation, retry = false, image }: {backgroundContext?:unknown;orientation?:string;retry?:boolean;image?:string} = {}) {
   const picturedProduct = product.bundleProducts?.[0] || product;
   return {
+    provider: "openai" as const,
     image: image || imagePreparationSource(product),
     name: picturedProduct.name,
     brand: picturedProduct.brand ?? "",
@@ -32,6 +33,8 @@ export function imagePreparationMetadata(result:Record<string,JsonValue>) {
     aiInchesEmbedded: Boolean(ribbon && result.inchesEmbedded),
     aiPreparedScreenInches: ribbon ? Number(result.screenInches) : null,
     aiBackgroundSignature: String(result.backgroundSignature || ""),
+    aiCutoutProvider: String(result.provider || "openai"),
+    aiAnnotationCleanup: result.annotationCleanup === true,
   };
 }
 
@@ -43,22 +46,11 @@ export function tvInchesEmbedded(product: Product) {
     Number(product.aiPreparedScreenInches) === inches);
 }
 
-export function needsImagePreparation(product: Product, backgroundContext?:unknown, { force = false } = {}) {
+export function needsImagePreparation(product: Product, _backgroundContext?:unknown, { force = false } = {}) {
   if (!product.image || product.skipAiCutout) return false;
   if (force) return true;
-  const contextProvided = backgroundContext && typeof backgroundContext === "object";
-  const signature = contextProvided ? imageBackgroundSignature(backgroundContext) : "";
-  if (product.aiOriginalImage) {
-    // Reference documents already contain approved cutouts, but older versions did
-    // not record preparation metadata. Keep them until an explicit regeneration.
-    if(product.aiPreparationRevision==null && !product.aiBackgroundSignature)return false;
-    const annotationChanged = Boolean(product.aiInchesEmbedded) ||
-      isTelevision(product) && tvScreenInches(product) && product.aiAnnotationStyle !== "external-tv-corner";
-    return Boolean(annotationChanged || contextProvided && (
-      (product.aiPreparationRevision ?? 0) < IMAGE_PREPARATION_REVISION ||
-      product.aiPreparationRevision == null || product.aiBackgroundSignature !== signature));
-  }
-  if (product.aiReviewedImageSource !== product.image) return true;
-  return Boolean(contextProvided && (product.aiReviewedPreparationRevision !== IMAGE_PREPARATION_REVISION ||
-    product.aiReviewedBackgroundSignature !== signature));
+  // A prepared or approved source remains reusable across backgrounds and
+  // display revisions. Only a new photo or an explicit re-cut needs AI.
+  if (product.aiOriginalImage) return false;
+  return product.aiReviewedImageSource !== product.image;
 }

@@ -166,7 +166,7 @@ export function ProductImageEditor({
     try {
       setSource(await readImage(file));
       setKind("upload");
-      setCutout(false);
+      setCutout(true);
     } catch {
       setError(t("Could not read this image."));
     }

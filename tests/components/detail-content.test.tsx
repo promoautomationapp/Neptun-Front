@@ -22,7 +22,7 @@ it("renders semantic imported values without losing wording or line breaks", () 
     />,
   );
   expect(numeric).toBe(
-    '<small class="detail-strip-label">RROTULLIME:</small>\n<b class="detail-fitted-value detail-number">1400</b>',
+    '<b class="detail-fitted-value detail-number">1400</b>',
   );
 
   const metric = renderToStaticMarkup(

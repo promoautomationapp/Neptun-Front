@@ -219,7 +219,7 @@
   min-height: 0;
 }
 
-/* Cover tiles reserve space for the price row and details before fitting photos. */
+/* Legacy/manual cover layouts keep their original reserved photo area. */
 .brochure-page.cover-editable-elements
   .cover-product-frame
   > .brochure-product
@@ -243,11 +243,11 @@
   .cover-product-frame
   > .brochure-product
   .brochure-specs:is(:not([style]),[style=""]) {
-  width: 87%;
+  width: 100%;
 }
 .brochure-page.cover-editable-elements
   .brochure-red-reference-saving:is(:not([style]),[style=""]) {
-  top: 6%;
+  top: 32%;
   right: 0.5%;
   width: 18%;
   max-width: 9cqw;
@@ -317,6 +317,33 @@
 
 /* The default ribbon bleeds beyond both edges like the printed brochure. */
 .brochure-page.cover-with-uuu .cover-element-band>img{width:104%;max-width:none;margin-left:-2%}
+/* Complete the ribbon's inward-sloping right cut at the page edge. The
+   original UUU / hajde artwork remains untouched above this backing. */
+.brochure-page.cover-with-uuu .cover-element-band.cover-band-default-artwork::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, #0f64ab 45%, #4daef1 100%);
+  clip-path: polygon(45% 55.7%, 100% 46.1%, 100% 77.4%, 45% 83.7%);
+}
+/* Only the decorative cover photo stops beneath the ribbon. Product photos
+   and saved/custom ribbon placements retain their existing geometry. */
+.brochure-page.cover-with-uuu:has(> .cover-element-band.cover-band-default-artwork) > .cover-campaign-art {
+  clip-path: polygon(0 0, 100% 0, 100% 57.95cqw, 0 60.25cqw);
+}
 .brochure-page.cover-with-uuu .cover-element-message p{font-style:italic;text-align:left}
+.brochure-page.cover-with-uuu .cover-element-message.cover-band-default-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brochure-page.cover-with-uuu .cover-element-message.cover-band-default-message p {
+  width: 100%;
+  text-align: center;
+  transform: rotate(-3deg);
+  transform-origin: center;
+}
 
 .brochure-page.cover-editable-elements .cover-featured-product .brochure-product-image{height:100%;max-height:100%;object-fit:contain}

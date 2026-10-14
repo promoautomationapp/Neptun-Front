@@ -80,3 +80,14 @@ export function reorderDisplayedDetails(
   reordered.splice(to, 0, ...moved);
   return displayedRowsChanges(product, reordered);
 }
+
+export function brochureVisibleDetailEntries(entries: readonly DetailEntry[], {columns = 2, warrantyInStrip = false}: {columns?: number; warrantyInStrip?: boolean} = {}): DetailEntry[] {
+  const blocks = columns >= 3 ? 3 : 5;
+  return entries.slice(0, Math.max(1, blocks - Number(warrantyInStrip)));
+}
+
+export function editDisplayedDetail(product: Partial<Product>, rows: readonly DetailEntry[], index: number, text: string): DetailRowsChanges {
+  const manual = Array.isArray(product.brochureDetails);
+  const values: DetailEntry[] = rows.map(([key, value], position) => [key, position === index ? text : manual ? value : `${key}: ${value}`]);
+  return displayedRowsChanges({...product, brochureDetails: product.brochureDetails || []}, values);
+}

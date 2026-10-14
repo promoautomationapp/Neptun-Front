@@ -1,3 +1,6 @@
+import {CampaignActivityStatus} from "../brochure/CampaignActivityStatus";
+import {hasUnsavedCampaignChanges} from "../brochure/campaignSaveStatus";
+import {applyPreparedProductPhoto, createProductImagePreparationQueue, currentProductPhotoTarget, productImagePreparationTargets, retainPreparedProductPhoto, type ProductPhotoTarget} from "../brochure/productImagePreparationQueue";
 import { CatalogNavigator, filterCatalog } from "../products/CatalogNavigator";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
 import { CatalogRefreshControl } from "../products/CatalogRefreshControl";
@@ -19,10 +22,6 @@ import type {
 } from "../../domain/models";
 import type { AiProposal } from "../brochure/AiReview";
 import type { DetailEntry } from "../brochure/detailFacts";
-import { productSchema } from "../../domain/schemas";
-import { z } from "zod";
-import { apiFetch as fetch } from "../../api/client";
-import { requestAi } from "../ai/ai.api";
 import {
   missingImageTargets,
   startMissingImageSearch,
@@ -204,6 +203,7 @@ interface ProductEditorProps extends CampaignControlsProps {
   onMakeSocial: (products: Product[]) => void;
 }
 interface BrochureEditorProps extends StoreControlsProps {
+  onPreparePhotos?: (snapshot: Campaign, products?: Product[]) => Promise<unknown>;
   user: SessionUser;
   members: TeamMember[];
   onReviewAction: (
@@ -260,10 +260,6 @@ function reviewStatusLabel(status: string | undefined): string {
 function brochureAspectStyle(aspect: string | number): BrochureCssStyle {
   return { "--brochure-page-aspect": aspect };
 }
-const catalogSnapshotSchema = z.object({
-  products: z.array(productSchema),
-  count: z.number().optional(),
-});
 const SocialStudio = React.lazy(() =>
   import("../social/SocialStudio").then((module) => ({
     default: module.SocialStudio,
@@ -1445,180 +1441,6 @@ function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
   );
 }
 
-function CoverAiBackground({
-  campaign,
-  onUpdate,
-  onToast,
-}: CampaignControlsProps & { onToast: (message: string) => void }) {
-  const [prompt, setPrompt] = useState("");
-  const [busy, setBusy] = useState(false);
-  async function generate() {
-    setBusy(true);
-    try {
-      const data = await requestAi("ai-generate-background", {
-        context: "brochure",
-        prompt,
-        products: coverProducts(campaign),
-        orientation: "portrait",
-      });
-      onUpdate((draft: Campaign) => {
-        draft.coverImage = data.image;
-      });
-      onToast(
-        "AI cover background ready. Logos, title and UUU band stay editable.",
-      );
-    } catch (error) {
-      onToast(errorMessage(error));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="cs-cover-ai-controls">
-      <span className="cs-label">AI COVER ARTWORK</span>
-      <p>
-        Generate a background for the selected cover products. The product
-        photos and text are layered separately.
-      </p>
-      <textarea
-        rows={3}
-        value={prompt}
-        onChange={(event) => setPrompt(event.target.value)}
-        placeholder="Describe the mood, room or campaign scene…"
-      />
-      <button type="button" disabled={busy} onClick={generate}>
-        {busy ? "Generating cover…" : "✦ Generate cover background"}
-      </button>
-      <div className="cs-cover-ai-toggles">
-        <label>
-          <input
-            type="checkbox"
-            checked={campaign.showCoverLogo !== false}
-            onChange={(event) =>
-              onUpdate((draft: Campaign) => {
-                draft.showCoverLogo = event.target.checked;
-              })
-            }
-          />{" "}
-          NEPTUN logo
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={campaign.showCoverBand === true}
-            onChange={(event) =>
-              onUpdate((draft: Campaign) => {
-                draft.showCoverBand = event.target.checked;
-              })
-            }
-          />{" "}
-          UUU / hajde! band
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={campaign.showCoverHeadline !== false}
-            onChange={(event) =>
-              onUpdate((draft: Campaign) => {
-                draft.showCoverHeadline = event.target.checked;
-              })
-            }
-          />{" "}
-          Cover title
-        </label>
-      </div>
-      <label>
-        Cover logo
-        <select
-          value={campaign.brandAssets?.neptun || "default"}
-          onChange={(event) =>
-            onUpdate((draft: Campaign) => {
-              draft.brandAssets ||= {};
-              if (event.target.value === "default")
-                delete draft.brandAssets.neptun;
-              else draft.brandAssets.neptun = event.target.value;
-            })
-          }
-        >
-          <option value="default">Brochure logo setting</option>
-          {campaign.brandAssets?.neptun &&
-            ![
-              "/api/assets/legacy/assets/social/neptun-white.png",
-              "/api/assets/legacy/assets/social/neptun-blue.png",
-            ].includes(campaign.brandAssets.neptun) && (
-              <option value={campaign.brandAssets.neptun}>
-                Selected custom logo
-              </option>
-            )}
-          <option value="/api/assets/legacy/assets/social/neptun-white.png">
-            White N + red bar
-          </option>
-          <option value="/api/assets/legacy/assets/social/neptun-blue.png">
-            Blue N + red bar
-          </option>
-        </select>
-      </label>
-    </div>
-  );
-}
-
-function CampaignArtworkPicker({ campaign, onUpdate }: CampaignControlsProps) {
-  return (
-    <div className="cs-cover-artwork-picker">
-      <span className="cs-label">
-        {t("COVER IMAGE · OPTIONAL FOR EVERY TEMPLATE")}
-      </span>
-      <label className="cs-cover-artwork-upload">
-        <input
-          type="file"
-          accept="image/*"
-          aria-label={t("Upload campaign background image")}
-          onChange={async (event) => {
-            const image = await readImage(event.target.files?.[0]);
-            if (image)
-              onUpdate((draft: Campaign) => {
-                draft.coverImage = image;
-              });
-            event.target.value = "";
-          }}
-        />
-        {campaign.coverImage ? (
-          <img
-            src={campaign.coverImage}
-            alt={t("Current campaign background")}
-          />
-        ) : (
-          <span className="cs-artwork-upload-icon" aria-hidden="true">
-            ↑
-          </span>
-        )}
-        <span>
-          <strong>
-            {t(campaign.coverImage ? "Replace image" : "Upload an image")}
-          </strong>
-          <small>
-            {t(
-              "Layered over the template through the UUU band. Logos and text stay above it.",
-            )}
-          </small>
-        </span>
-      </label>
-      {campaign.coverImage && (
-        <button
-          type="button"
-          onClick={() =>
-            onUpdate((draft: Campaign) => {
-              draft.coverImage = "";
-            })
-          }
-        >
-          {t("Remove image")}
-        </button>
-      )}
-    </div>
-  );
-}
-
 function CoverHeadlineEditor({ campaign, onUpdate }: CampaignControlsProps) {
   const styles = [
     { id: "strong", label: "Bold", sample: "BLACK" },
@@ -2087,6 +1909,7 @@ export function BrochureEditor({
   onEditPrice,
   onEditSavings,
   onMakeSocial,
+  onPreparePhotos,
 }: BrochureEditorProps) {
   const pages = splitPages(campaign);
   const pageFormat = resolveBrochureFormat(campaign);
@@ -2230,7 +2053,8 @@ export function BrochureEditor({
     }
     try {
       const image = await readImage(file);
-      onUpdate((draft: Campaign) => {
+      const snapshot = structuredClone(campaign);
+      const replace = (draft: Campaign) => {
         const item = draft.products.find(
           (entry) => String(entry.code) === String(product.code),
         );
@@ -2241,11 +2065,12 @@ export function BrochureEditor({
           image,
         );
         item.image = image;
-        item.skipAiCutout = true;
-        item.aiReviewedImageSource = image;
-        delete item.aiOriginalImage;
-        delete item.aiInchesEmbedded;
-      });
+        item.skipAiCutout = false;
+        for (const key of ["aiOriginalImage", "aiInchesEmbedded", "aiPreparationRevision", "aiBackgroundSignature", "aiCutoutProvider", "aiReviewedImageSource", "aiReviewedPreparationRevision", "aiReviewedBackgroundSignature"] as const) delete item[key];
+      };
+      replace(snapshot);
+      onUpdate(replace);
+      void onPreparePhotos?.(snapshot);
       onToast(t("Product image updated."));
     } catch {
       onToast(t("Could not read this image."));
@@ -2726,9 +2551,11 @@ export function BrochureEditor({
                 <label className="cs-button secondary cs-preview-file">{t(selected === -1 ? "Add campaign logo / image" : "Add image to page")}<input type="file" accept="image/*" aria-label={t("Add image to page")} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addPageArtwork(file); event.target.value = ""; }} /></label>
                 <button type="button" className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`} aria-expanded={showSettings} aria-controls="brochure-page-settings" onClick={() => setShowSettings((value) => !value)}>{t(showSettings ? "Hide settings" : "More settings")}</button>
               </>}
+              {previewMode && <Button tone="primary" onClick={() => onExport(selected === pages.length && !hasStoresPage ? 0 : selected + 1)}>{t("↓ Download brochure")}</Button>}
               <button type="button" className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`} onClick={() => { setPreviewMode(commentMode ? false : !previewMode); setCommentMode(false); setShowSettings(false); }}>{t(canEditCanvas ? "Preview only" : "Edit brochure")}</button>
             </div>
           </div>
+          <CampaignActivityStatus campaignId={campaign.id} mode={canEditCanvas ? "edit" : "preview"} pageLabel={title} />
           {canEditCanvas && (
             <p className="cs-preview-edit-hint">
               {t(
@@ -3496,12 +3323,21 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
       setToast(errorMessage(error));
     },
   });
+  const latestCampaigns = useRef(campaigns); latestCampaigns.current = campaigns;
+  const productPhotoQueue = useRef(createProductImagePreparationQueue());
+  const failedPhotoTargets = useRef(new Map<string, ProductPhotoTarget>());
+  const [preparingProductPhotos, setPreparingProductPhotos] = useState<Record<string, number>>({});
+  const [failedProductPhotos, setFailedProductPhotos] = useState<Record<string, boolean>>({});
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogSelection, setCatalogSelection] = useState({ categoryPath: "", brand: "", availability: "all" });
   const [catalogVisible, setCatalogVisible] = useState(60);
   const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
   const [exportId, setExportId] = useState<string | null>(null);
   const [exportPage, setExportPage] = useState(0);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {if (hasPendingSaves() || hasUnsavedCampaignChanges()) {event.preventDefault(); event.returnValue = "";}};
+    window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
+  }, []);
   useEffect(() => {
     if (section === "editor") window.scrollTo(0, 0);
   }, [section, activeId]);
@@ -3672,7 +3508,32 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     setModal("ai");
   }
   function goToBrochure() {
+    if (campaign) void prepareProductPhotos(campaign);
     setEditorTab("brochure");
+  }
+  function trackProductPhotoWork(campaignId: string, change: number) {
+    setPreparingProductPhotos(current => ({...current, [campaignId]: Math.max(0, (current[campaignId] || 0) + change)}));
+  }
+  function prepareProductPhotos(snapshot: Campaign, products = snapshot.products, retryFailed = false) {
+    const targets = productImagePreparationTargets(snapshot, products).filter(target => !productPhotoQueue.current.has(target.key));
+    if (!targets.length) return Promise.resolve([]);
+    const retries = new Set(retryFailed ? targets.filter(target => failedPhotoTargets.current.has(target.key)).map(target => target.key) : []);
+    for (const target of targets) failedPhotoTargets.current.delete(target.key);
+    setFailedProductPhotos(current => ({...current, [snapshot.id]: [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id)}));
+    trackProductPhotoWork(snapshot.id, targets.length);
+    const jobs = targets.map(target => productPhotoQueue.current.enqueue(target, async (preparedTarget, result) => {
+      const changed = updateCampaign(draft => {applyPreparedProductPhoto(draft, preparedTarget, result);}, {id: snapshot.id, group: `product-photos:${snapshot.id}`});
+      if (changed?.changed) await changed.saved;
+    }, {retry: retries.has(target.key)}).finally(() => trackProductPhotoWork(snapshot.id, -1)));
+    return Promise.all(jobs).then(outcomes => {
+      const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
+      for (const outcome of outcomes) if (!outcome.ok && currentProductPhotoTarget(currentCampaign, outcome.target)) failedPhotoTargets.current.set(outcome.target.key, outcome.target);
+      for (const [key, target] of failedPhotoTargets.current) if (target.campaignId === snapshot.id && !currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.delete(key);
+      const failed = [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id);
+      setFailedProductPhotos(current => ({...current, [snapshot.id]: failed}));
+      if (failed) setToast(t("Some product photos could not be prepared. Try again."));
+      return outcomes;
+    });
   }
   async function finishAiReview(proposals: AiProposal[], acceptText: boolean) {
     if (!campaign) return;
@@ -3735,6 +3596,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     setEditorTab("brochure");
     setModal(null);
     setToast(t(item.products.length ? "Campaign created. Your brochure is ready to edit." : "Campaign created. Add products when you are ready."));
+    void prepareProductPhotos(item);
     if (searches.length) searchImportedImages(searches, item.id);
   }
   function searchImportedImages(
@@ -3747,7 +3609,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     void findMissingProductImages(
       targets,
       (target, result) => {
-        updateCampaign(
+        const changed = updateCampaign(
           (draft: Campaign) => {
             finishMissingImageSearch(draft, target, result);
           },
@@ -3756,6 +3618,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
           },
         );
+        if (changed && !(result instanceof Error) && result.found) void prepareProductPhotos(changed.campaign);
       },
       retry,
     ).finally(() => {
@@ -3810,7 +3673,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     const updated = updateCampaign((draft: Campaign) => {
       const byCode = new Map(draft.products.map((p) => [p.code, p]));
       products.forEach((product: Product) =>
-        byCode.set(product.code, { ...byCode.get(product.code), ...product }),
+        byCode.set(product.code, { ...byCode.get(product.code), ...retainPreparedProductPhoto(byCode.get(product.code), product) }),
       );
       if (importOptions?.brochureImport) {
         const imported = new Set(
@@ -3856,7 +3719,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           started.push(target);
       }
     });
-    if (updated) searchImportedImages(started, updated.campaign.id);
+    if (updated) { void prepareProductPhotos(updated.campaign); searchImportedImages(started, updated.campaign.id); }
     setModal(null);
     setEditorTab("brochure");
     setBrochurePreviewVersion((version) => version + 1);
@@ -4109,6 +3972,8 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             campaigns={campaigns}
             onCreate={() => setModal("create")}
             onOpen={(id: string) => {
+              const selectedCampaign = campaigns.find(item => item.id === id);
+              if (selectedCampaign) void prepareProductPhotos(selectedCampaign);
               setActiveId(id);
               setEditorTab("brochure");
               setSection("editor");
@@ -4427,6 +4292,10 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                   setImageEditCode(String(product.code))
                 }
               />
+            ) : (preparingProductPhotos[campaign.id] || 0) > 0 ? (
+              <div className="cs-editor-section" role="status" aria-live="polite"><p>{t("Preparing product photos…")}</p></div>
+            ) : failedProductPhotos[campaign.id] ? (
+              <div className="cs-editor-section" role="status"><p>{t("Some product photos could not be prepared. Try again.")}</p><Button onClick={() => void prepareProductPhotos(campaign, campaign.products, true)}>{t("Try again")}</Button></div>
             ) : (
               <BrochureEditor
                 key={`${campaign.id}-${brochurePreviewVersion}`}
@@ -4436,6 +4305,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 members={members}
                 onReviewAction={runReviewAction}
                 onUpdate={updateCampaign}
+                onPreparePhotos={prepareProductPhotos}
                 onToast={setToast}
                 onAiReview={() => openAiReview("manual")}
                 onReCut={() => openAiReview("images")}

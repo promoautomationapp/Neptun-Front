@@ -97,7 +97,7 @@ it("renders power as a value-only measurement and keeps unrelated imported facts
         reference="red"
       />,
     ),
-  ).toContain("Bluetooth: v5.4");
+  ).toContain("v5.4");
 });
 
 it("keeps energy/temperature in one fitted block each and preserves supplied range signs", () => {

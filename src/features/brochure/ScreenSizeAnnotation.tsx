@@ -8,6 +8,7 @@ import "../../styles/screen-size-annotation.css";
 export interface ScreenSizeAnnotationProps extends React.HTMLAttributes<HTMLSpanElement> {
   inches?: number | string | null;
   type?: ScreenAnnotationType;
+  textPosition?: "balanced" | "original";
   guideLengths?: Pick<
     ScreenAnnotationPlacement,
     "horizontalLength" | "verticalLength"
@@ -20,10 +21,13 @@ export function ScreenSizeAnnotation({
   className = "",
   style,
   guideLengths = {},
+  textPosition = "balanced",
   children,
   ...props
 }: ScreenSizeAnnotationProps) {
   const id = useId().replace(/:/g, "");
+  const labelX = type === "television" && textPosition !== "original" ? "51.5" : "53.9218715547";
+  const labelY = type === "television" && textPosition !== "original" ? "37" : "32.0116815921";
   if (!inches) return null;
   return (
     <span
@@ -91,9 +95,9 @@ export function ScreenSizeAnnotation({
             />
           </g>
           <text
-            x="53.9218715547"
-            y="32.0116815921"
-            transform="rotate(53 53.9218715547 32.0116815921)"
+            x={labelX}
+            y={labelY}
+            transform={`rotate(53 ${labelX} ${labelY})`}
             textAnchor="middle"
             fill="#243a6a"
             fontFamily="TSTAR Headline,TSTAR,Arial,sans-serif"

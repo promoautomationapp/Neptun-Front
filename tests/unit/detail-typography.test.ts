@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { detailTypography } from "../../src/features/brochure/detailTypography";
 
-it("preserves every imported label, separator and numeric value", () => {
+it("shows imported numeric values while keeping non-colon line breaks", () => {
   for (const source of [
     "RROTULLIME:\n1400",
     "PROGRAME: 16",
@@ -13,7 +13,7 @@ it("preserves every imported label, separator and numeric value", () => {
     const detail = detailTypography(source, { imported: true });
     expect(detail.kind).toBe("number");
     expect((detail.label ?? "") + (detail.separator ?? "") + detail.value).toBe(
-      source,
+      source.includes(":") ? source.split(":").slice(1).join(":").trim() : source,
     );
   }
 });
@@ -45,7 +45,7 @@ it("retains text, units and manual line breaks when choosing short or long copy"
   ]) {
     const detail = detailTypography(source, { imported: true });
     expect(detail.label).toBeUndefined();
-    expect(detail.value).toBe(source);
+    expect(detail.value).toBe(source.includes(":") ? source.split(":").slice(1).join(":").trim() : source);
     expect(["copy", "copy-long"]).toContain(detail.kind);
   }
   expect(detailTypography("Bluetooth: v5.4", { imported: true }).kind).toBe(

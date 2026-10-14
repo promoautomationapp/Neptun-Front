@@ -4,6 +4,7 @@ export function inspectImage(source: string) {
     const image = new Image();
     image.crossOrigin = "use-credentials";
     image.onload = () => {
+      try {
       const canvas = document.createElement("canvas");
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
@@ -28,6 +29,7 @@ export function inspectImage(source: string) {
           new Error(t("AI did not return a usable transparent product image.")),
         );
       resolve(source);
+      } catch (error) { reject(error); }
     };
     image.onerror = () =>
       reject(new Error(t("Could not open the edited image.")));

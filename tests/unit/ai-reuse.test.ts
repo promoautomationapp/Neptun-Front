@@ -53,6 +53,11 @@ describe("invisible persisted AI reuse", () => {
       false,
     );
   });
+  it("reuses checked modern images after background, provider and display revision changes", () => {
+    const checked = {...product, aiPreparationRevision: 2, aiBackgroundSignature: "previous-background", aiCutoutProvider: "openai", aiAnnotationStyle: "external-tv-corner"};
+    expect(needsImagePreparation(checked, {kind: "solid", color: "#ffffff"})).toBe(false);
+    expect(needsImagePreparation(checked, undefined, {force:true})).toBe(true);
+  });
   it("persists checked text with no corrections and only rechecks changed fields", () => {
     const draft = campaign();
     recordTextReview(draft);

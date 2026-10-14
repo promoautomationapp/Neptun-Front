@@ -6,6 +6,7 @@ import { isAppleProduct, isMobilePhone } from "./productTypes";
 export type ScreenAnnotationType = "television" | "phone" | "other";
 export interface ScreenAnnotationPlacement extends Placement {
   hidden?: boolean;
+  textPosition?: "balanced" | "original";
   horizontalLength?: number;
   verticalLength?: number;
 }
@@ -33,11 +34,14 @@ const canonicalInset =
 // default only to fields the user has not already adjusted.
 export function resolveScreenAnnotationPlacement(
   type: ScreenAnnotationType,
-  saved: ScreenAnnotationPlacement = {},
+  saved?: ScreenAnnotationPlacement,
 ): ResolvedScreenAnnotationPlacement {
+  const manual = saved && (Number.isFinite(saved.x) || Number.isFinite(saved.y) || Number.isFinite(saved.scale) && Number(saved.scale) > 0);
+  saved ||= {};
   const television = type === "television" || type === "phone";
   return {
     ...saved,
+    ...(type === "television" ? {textPosition: saved.textPosition || (manual ? "original" : "balanced")} : {}),
     x: Number.isFinite(saved.x) ? saved.x! : television ? -canonicalInset : 0,
     y: Number.isFinite(saved.y) ? saved.y! : television ? canonicalInset : 0,
     scale:

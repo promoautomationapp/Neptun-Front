@@ -318,6 +318,10 @@ export interface Product {
   aiPreparedScreenInches?: number | null;
   aiAnnotationStyle?: string;
   aiBackgroundSignature?: string;
+  aiCutoutProvider?: string;
+  aiAnnotationCleanup?: boolean;
+  aiCutoutReviewRevision?: number;
+  aiCutoutReviewAccepted?: boolean;
   originalImage?: string;
   autoSpecsDisabled?: boolean;
   hideWarranty?: boolean;
@@ -373,6 +377,7 @@ export interface ProductBrochureImagePlacement {
 }
 
 export interface Placement {
+  textPosition?: "balanced" | "original";
   hidden?: boolean;
   horizontalLength?: number;
   verticalLength?: number;

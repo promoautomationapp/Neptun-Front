@@ -42,9 +42,9 @@ export function EditableScreenAnnotation({
   const saved: ScreenAnnotationPlacement | undefined =
     product.screenAnnotationPlacement;
   const [placement, setPlacement] = React.useState<ScreenAnnotationPlacement>(
-    saved || {},
+    resolveScreenAnnotationPlacement(type, saved),
   );
-  React.useEffect(() => setPlacement(saved || {}), [saved]);
+  React.useEffect(() => setPlacement(resolveScreenAnnotationPlacement(type, saved)), [saved, type]);
   const gesture = React.useRef<AnnotationGesture | null>(null);
   if (placement.hidden) return null;
   function begin(
@@ -92,7 +92,7 @@ export function EditableScreenAnnotation({
   function end(event: React.PointerEvent<HTMLElement>, cancelled = false) {
     event.stopPropagation();
     if (!gesture.current) return;
-    if (cancelled) setPlacement(saved || {});
+    if (cancelled) setPlacement(resolveScreenAnnotationPlacement(type, saved));
     else if (gesture.current.next)
       onChange?.("screenAnnotationPlacement", gesture.current.next);
     gesture.current = null;
@@ -100,6 +100,7 @@ export function EditableScreenAnnotation({
   const cancel = (event: React.PointerEvent<HTMLElement>) => end(event, true);
   return (
     <ScreenSizeAnnotation
+      textPosition={placement.textPosition}
       inches={inches}
       type={type}
       className={`${className} ${onChange ? "cs-editable-inch" : ""}`}
