@@ -30,28 +30,25 @@ it.each([540, 1080])(
   "keeps the savings circle clear of the overflowing old price at page width %i",
   (width) => {
     const scale = width / 1080;
-    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-      function (this: Element) {
-        const badge = this.classList.contains("brochure-red-reference-saving");
-        const translated = badge
-          ? Number.parseFloat(
-              (this as HTMLElement).style.translate.split(" ")[1] || "0",
-            )
-          : 0;
-        return {
-          x: 400 * scale,
-          y: 150 * scale + translated,
-          left: 400 * scale,
-          right: 500 * scale,
-          top: 150 * scale + translated,
-          bottom: 210 * scale + translated,
-          width: 100 * scale,
-          height: 60 * scale,
-          toJSON: () => ({}),
-        } as DOMRect;
-      },
-    );
-    const getRect = Element.prototype.getBoundingClientRect;
+    function getBadgeRect(this: Element) {
+      const badge = this.classList.contains("brochure-red-reference-saving");
+      const translated = badge
+        ? Number.parseFloat(
+            (this as HTMLElement).style.translate.split(" ")[1] || "0",
+          )
+        : 0;
+      return {
+        x: 400 * scale,
+        y: 150 * scale + translated,
+        left: 400 * scale,
+        right: 500 * scale,
+        top: 150 * scale + translated,
+        bottom: 210 * scale + translated,
+        width: 100 * scale,
+        height: 60 * scale,
+        toJSON: () => ({}),
+      } as DOMRect;
+    }
     vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
       function (this: Element) {
         if (
@@ -79,7 +76,7 @@ it.each([540, 1080])(
             width: 100 * scale,
             height: 70 * scale,
           } as DOMRect;
-        return getRect.call(this);
+        return getBadgeRect.call(this);
       },
     );
     const view = render(<Fixture />);
