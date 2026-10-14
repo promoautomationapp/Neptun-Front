@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { login } from "./auth.api";
 import { forgotPassword } from "../../api/users";
-import { resolveAsset } from "../../api/client";
 import "../../styles/review.css";
 import "../../styles/account-management.css";
 import type { User } from "./auth.api";
@@ -23,7 +22,7 @@ export function SignIn({
   return (
     <div className="cs-signin">
       <div className="cs-signin-art">
-        <img src={resolveAsset("/api/assets/app/logo")} alt="NEPTUN" />
+        <img src="/branding/neptun-logo.png" alt="NEPTUN" />
         <div>
           <span className="cs-eyebrow">NEPTUN KOSOVO · CAMPAIGN STUDIO</span>
           <h1>

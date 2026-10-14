@@ -1164,7 +1164,8 @@ const translations: Record<string, string> = {
 };
 
 let language =
-  localStorage.getItem("neptun-studio-language") === "sq" ? "sq" : "en";
+  localStorage.getItem("neptun-studio-language") === "en" ? "en" : "sq";
+if (typeof document !== "undefined") document.documentElement.lang = language;
 export function getLanguage() {
   return language;
 }

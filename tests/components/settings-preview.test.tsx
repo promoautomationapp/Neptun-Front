@@ -1,14 +1,16 @@
 import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it } from "vitest";
 import { SettingsPreview } from "../../src/features/settings/SettingsPreview";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
+import { setLanguage } from "../../src/features/brochure/i18n";
 import {
   PageSettingsTabs,
   PageSettingsGroup,
 } from "../../src/features/brochure/PageSettingsTabs";
 
 afterEach(cleanup);
+beforeEach(() => setLanguage("en"));
 
 it("renders real backgrounds, logos and price palettes while comparing saved defaults", () => {
   const initial = resolveSettings(null);

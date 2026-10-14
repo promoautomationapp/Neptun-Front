@@ -6,8 +6,10 @@ import { CoverElement } from "../../src/features/brochure/CoverElement";
 import { StoresElement } from "../../src/features/brochure/StoresElement";
 import { ProductArtworkLayer } from "../../src/features/brochure/ProductArtworkLayer";
 import { ProductDetailBlock } from "../../src/features/brochure/ProductDetailBlock";
+import { setLanguage } from "../../src/features/brochure/i18n";
 
 beforeEach(() => {
+  setLanguage("en");
   vi.stubGlobal("PointerEvent", MouseEvent);
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
     () => ({

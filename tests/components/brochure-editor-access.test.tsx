@@ -1,7 +1,10 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { expect, it } from "vitest";
+import { beforeEach, expect, it } from "vitest";
 import { BrochureEditor } from "../../src/features/studio/Studio";
+import { setLanguage } from "../../src/features/brochure/i18n";
+
+beforeEach(() => setLanguage("en"));
 
 it("opens the brochure with product, logo and page edit controls available", () => {
   const campaign = {

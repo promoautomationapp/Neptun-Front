@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { resolveAsset } from "../../api/client";
 import "../../styles/account-management.css";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
 
@@ -7,7 +6,7 @@ export function AccountFrame({ children }: { children: ReactNode }) {
   return (
     <div className="na-account-screen">
       <div className="na-account-brand">
-        <img src={resolveAsset("/api/assets/app/logo")} alt="NEPTUN" />
+        <img src="/branding/neptun-logo.png" alt="NEPTUN" />
         <span>Brochure workspace</span>
       </div>
       <main className="na-account-card">{children}</main>

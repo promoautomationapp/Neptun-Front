@@ -2182,7 +2182,7 @@ function CoverPageContent({
   );
   return (
     <section
-      className={`brochure-page brochure-cover cover-editable-elements has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
+      className={`brochure-page brochure-cover cover-editable-elements ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
