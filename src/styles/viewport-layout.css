@@ -1,4 +1,20 @@
 /* Application chrome only: exported brochure and social artwork keep their dimensions. */
+html {
+  scrollbar-gutter: stable;
+  background: #f4f6f9;
+}
+body {
+  min-height: 100dvh;
+  background: #f4f6f9;
+}
+.campaign-app > .cs-content {
+  min-height: 100dvh;
+  background: #f4f6f9;
+}
+.cs-content > .cs-page-loading {
+  min-height: calc(100dvh - 88px);
+  width: 100%;
+}
 .campaign-app > .cs-content,
 .cs-main-panel,
 .na-users-page,

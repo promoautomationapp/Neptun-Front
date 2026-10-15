@@ -1,3 +1,4 @@
+import { StudioPageBoundary } from "./StudioPageBoundary";
 import { NavIcon } from "./NavIcon";
 import { catalogFacets } from "../products/products.api";
 import {
@@ -450,20 +451,27 @@ export function CampaignLibrary({
     ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
   );
   const advancedFilterCount = Object.entries(effectiveFilters).filter(
-    ([key, value]) => key !== "query" && value !== emptyFilters[key as keyof CampaignFilters],
+    ([key, value]) =>
+      key !== "query" && value !== emptyFilters[key as keyof CampaignFilters],
   ).length;
   return (
     <div className="cs-main-panel cs-library">
       <div className="cs-library-heading">
         <div>
           <h1>{t("Campaigns")}</h1>
-          <p>{campaigns.length} {t("saved for the team")}</p>
+          <p>
+            {campaigns.length} {t("saved for the team")}
+          </p>
         </div>
         <Button tone="primary" onClick={onCreate}>
-          <NavIcon name="plus" />{t("New campaign")}
+          <NavIcon name="plus" />
+          {t("New campaign")}
         </Button>
       </div>
-      <section className="cs-campaign-filters" aria-label={t("Campaign filters")}>
+      <section
+        className="cs-campaign-filters"
+        aria-label={t("Campaign filters")}
+      >
         <div className="cs-library-filter-bar">
           <label className="cs-search cs-library-search">
             <NavIcon name="search" />
@@ -475,89 +483,105 @@ export function CampaignLibrary({
               placeholder={t("Search campaigns, products or codes")}
             />
           </label>
-          <button type="button" className="cs-library-filter-toggle" aria-expanded={filtersOpen} aria-controls={filterPanelId} onClick={() => setFiltersOpen(!filtersOpen)}>
-            <NavIcon name="filter" />{t("Filters")}
-            {advancedFilterCount > 0 && <span className="cs-filter-count">{advancedFilterCount}</span>}
+          <button
+            type="button"
+            className="cs-library-filter-toggle"
+            aria-expanded={filtersOpen}
+            aria-controls={filterPanelId}
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <NavIcon name="filter" />
+            {t("Filters")}
+            {advancedFilterCount > 0 && (
+              <span className="cs-filter-count">{advancedFilterCount}</span>
+            )}
             <NavIcon name="chevron-down" />
           </button>
         </div>
-        <div id={filterPanelId} className="cs-library-advanced" hidden={!filtersOpen}>
-        <div className="cs-campaign-filter-grid">
-          <FilterSelect
-            label={t("Status")}
-            value={filters.status}
-            onChange={(value: string) => setFilter("status", value)}
-            options={[
-              { value: "all", label: t("All statuses") },
-              { value: "in_progress", label: t("In progress") },
-              { value: "in_review", label: t("In review") },
-              { value: "changes_requested", label: t("Changes requested") },
-              { value: "completed", label: t("Completed") },
-              { value: "expired", label: t("Expired") },
-            ]}
-          />
-          <FilterSelect
-            label={t("Campaign period")}
-            value={filters.period}
-            onChange={(value: string) => setFilter("period", value)}
-            options={[
-              { value: "all", label: t("Any time") },
-              { value: "past", label: t("Past") },
-              { value: "current", label: t("Current") },
-              { value: "upcoming", label: t("Upcoming") },
-              { value: "one_day", label: t("One day") },
-            ]}
-          />
-          <FilterSelect
-            label={t("Type")}
-            value={effectiveFilters.type}
-            onChange={(value: string) => setFilter("type", value)}
-            options={[
-              { value: "all", label: t("All types") },
-              ...campaignTypes.map((type) => ({ value: type, label: t(type) })),
-            ]}
-          />
-          <FilterSelect
-            label={t("Format")}
-            value={effectiveFilters.format}
-            onChange={(value: string) => setFilter("format", value)}
-            options={[
-              { value: "all", label: t("All formats") },
-              ...formats.map((format) => ({
-                value: format.id,
-                label: format.label,
-              })),
-            ]}
-          />
-          <FilterDate
-            label={t("From date")}
-            value={filters.from}
-            min={undefined}
-            max={filters.to || undefined}
-            onChange={(value: string) => setFilter("from", value)}
-          />
-          <FilterDate
-            label={t("To date")}
-            value={filters.to}
-            max={undefined}
-            min={filters.from || undefined}
-            onChange={(value: string) => setFilter("to", value)}
-          />
-          <FilterSelect
-            label={t("Sort by")}
-            value={filters.sort}
-            onChange={(value: string) => setFilter("sort", value)}
-            options={[
-              { value: "updated_desc", label: t("Recently edited") },
-              { value: "updated_asc", label: t("Oldest edited") },
-              { value: "start_desc", label: t("Newest campaign date") },
-              { value: "start_asc", label: t("Oldest campaign date") },
-              { value: "name", label: t("Name A–Z") },
-            ]}
-          />
+        <div
+          id={filterPanelId}
+          className="cs-library-advanced"
+          hidden={!filtersOpen}
+        >
+          <div className="cs-campaign-filter-grid">
+            <FilterSelect
+              label={t("Status")}
+              value={filters.status}
+              onChange={(value: string) => setFilter("status", value)}
+              options={[
+                { value: "all", label: t("All statuses") },
+                { value: "in_progress", label: t("In progress") },
+                { value: "in_review", label: t("In review") },
+                { value: "changes_requested", label: t("Changes requested") },
+                { value: "completed", label: t("Completed") },
+                { value: "expired", label: t("Expired") },
+              ]}
+            />
+            <FilterSelect
+              label={t("Campaign period")}
+              value={filters.period}
+              onChange={(value: string) => setFilter("period", value)}
+              options={[
+                { value: "all", label: t("Any time") },
+                { value: "past", label: t("Past") },
+                { value: "current", label: t("Current") },
+                { value: "upcoming", label: t("Upcoming") },
+                { value: "one_day", label: t("One day") },
+              ]}
+            />
+            <FilterSelect
+              label={t("Type")}
+              value={effectiveFilters.type}
+              onChange={(value: string) => setFilter("type", value)}
+              options={[
+                { value: "all", label: t("All types") },
+                ...campaignTypes.map((type) => ({
+                  value: type,
+                  label: t(type),
+                })),
+              ]}
+            />
+            <FilterSelect
+              label={t("Format")}
+              value={effectiveFilters.format}
+              onChange={(value: string) => setFilter("format", value)}
+              options={[
+                { value: "all", label: t("All formats") },
+                ...formats.map((format) => ({
+                  value: format.id,
+                  label: format.label,
+                })),
+              ]}
+            />
+            <FilterDate
+              label={t("From date")}
+              value={filters.from}
+              min={undefined}
+              max={filters.to || undefined}
+              onChange={(value: string) => setFilter("from", value)}
+            />
+            <FilterDate
+              label={t("To date")}
+              value={filters.to}
+              max={undefined}
+              min={filters.from || undefined}
+              onChange={(value: string) => setFilter("to", value)}
+            />
+            <FilterSelect
+              label={t("Sort by")}
+              value={filters.sort}
+              onChange={(value: string) => setFilter("sort", value)}
+              options={[
+                { value: "updated_desc", label: t("Recently edited") },
+                { value: "updated_asc", label: t("Oldest edited") },
+                { value: "start_desc", label: t("Newest campaign date") },
+                { value: "start_asc", label: t("Oldest campaign date") },
+                { value: "name", label: t("Name A–Z") },
+              ]}
+            />
+          </div>
         </div>
-        </div>
-        <div className="cs-campaign-filter-footer">
+        <div className="cs-campaign-filter-footer" hidden={!filterActive}>
           <span>
             {t("Showing")} {filtered.length} {t("of")} {campaigns.length}{" "}
             {t("campaigns")}
@@ -574,9 +598,17 @@ export function CampaignLibrary({
           {filtered.map((item) => (
             <article className="cs-campaign-card" key={item.id}>
               <div className="cs-campaign-badges">
-                <span className="cs-campaign-type">{t(item.type || "Campaign")}</span>
-                <span className={`cs-campaign-status status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}>
-                  {t(campaignValidity(item, now) === "expired" ? "Expired" : reviewStatusLabel(item.status))}
+                <span className="cs-campaign-type">
+                  {t(item.type || "Campaign")}
+                </span>
+                <span
+                  className={`cs-campaign-status status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}
+                >
+                  {t(
+                    campaignValidity(item, now) === "expired"
+                      ? "Expired"
+                      : reviewStatusLabel(item.status),
+                  )}
                 </span>
               </div>
               <button
@@ -596,24 +628,64 @@ export function CampaignLibrary({
                 </small>
               </div>
               <div className="cs-campaign-card-meta">
-                <span>{item.products.length} {t("products")}</span>
+                <span>
+                  {item.products.length} {t("products")}
+                </span>
                 <span>{resolveBrochureFormat(item).label}</span>
-                {(item.reviewComments || []).some((comment) => !comment.fixed) && (
-                  <span>{(item.reviewComments || []).filter((comment) => !comment.fixed).length} {t("open comments")}</span>
+                {(item.reviewComments || []).some(
+                  (comment) => !comment.fixed,
+                ) && (
+                  <span>
+                    {
+                      (item.reviewComments || []).filter(
+                        (comment) => !comment.fixed,
+                      ).length
+                    }{" "}
+                    {t("open comments")}
+                  </span>
                 )}
               </div>
               <div className="cs-campaign-card-actions">
-                <button type="button" className="cs-card-utility" onClick={() => onDuplicate(item)} aria-label={`${t("Duplicate campaign")}: ${item.name}`}>
-                  <NavIcon name="copy" />{t("Duplicate")}
+                <button
+                  type="button"
+                  className="cs-card-utility"
+                  onClick={() => onDuplicate(item)}
+                  aria-label={`${t("Duplicate campaign")}: ${item.name}`}
+                >
+                  <NavIcon name="copy" />
+                  {t("Duplicate")}
                 </button>
-                <button type="button" className="cs-card-utility cs-card-delete" onClick={() => onDelete(item)} aria-label={`${t("Delete campaign")}: ${item.name}`}>
-                  <NavIcon name="trash" />{t("Delete")}
+                <button
+                  type="button"
+                  className="cs-card-utility cs-card-delete"
+                  onClick={() => onDelete(item)}
+                  aria-label={`${t("Delete campaign")}: ${item.name}`}
+                >
+                  <NavIcon name="trash" />
+                  {t("Delete")}
                 </button>
-                <button className="cs-card-open" type="button" onClick={() => onOpen(item.id)} aria-label={`${t("Open campaign")}: ${item.name}`}>
-                  {t((item.status || "in_progress") === "completed" ? "Open" : "Continue")}<NavIcon name="arrow-right" />
+                <button
+                  className="cs-card-open"
+                  type="button"
+                  onClick={() => onOpen(item.id)}
+                  aria-label={`${t("Open campaign")}: ${item.name}`}
+                >
+                  {t(
+                    (item.status || "in_progress") === "completed"
+                      ? "Open"
+                      : "Continue",
+                  )}
+                  <NavIcon name="arrow-right" />
                 </button>
-                <button className="cs-card-download" type="button" onClick={() => onPrint(item.id)}>
-                  <NavIcon name="download" />{t("Download brochure")}
+                <button
+                  className="cs-card-download"
+                  type="button"
+                  aria-label={t("Download brochure")}
+                  title={t("Download brochure")}
+                  onClick={() => onPrint(item.id)}
+                >
+                  <NavIcon name="download" />
+                  {t("Brochure")}
                 </button>
               </div>
             </article>
@@ -3398,7 +3470,7 @@ export default function App({
   }, [language]);
   const [user, setUser] = useState<SessionUser | null>(initialUser || null);
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [authReady, setAuthReady] = useState(false);
+  const [authReady, setAuthReady] = useState(Boolean(initialUser));
   const [authConfigured, setAuthConfigured] = useState(true);
   const [authError, setAuthError] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
@@ -3492,18 +3564,26 @@ export default function App({
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, []);
-  useEffect(() => {
-    if (section === "editor") window.scrollTo(0, 0);
+  React.useLayoutEffect(() => {
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
   }, [section, activeId]);
   useEffect(() => {
+    if (initialUser) return;
+    let active = true;
     getSession()
       .then(({ configured, user: sessionUser }) => {
+        if (!active) return;
         setAuthConfigured(configured);
         setUser(sessionUser);
         onAuthChange?.(sessionUser);
       })
-      .catch((error) => setAuthError(errorMessage(error)))
-      .finally(() => setAuthReady(true));
+      .catch((error) => {
+        if (active) setAuthError(errorMessage(error));
+      })
+      .finally(() => {
+        if (active) setAuthReady(true);
+      });
+    return () => { active = false; };
   }, []);
   useEffect(() => {
     if (!user) return;
@@ -4182,7 +4262,6 @@ export default function App({
           <NavIcon name={mobileMenuOpen ? "close" : "menu"} />
         </button>
         <nav className="cs-sidebar-nav" id="studio-navigation">
-          <span>{t("WORKSPACE")}</span>
           {(
             [
               ["campaigns", "Campaigns"],
@@ -4311,63 +4390,6 @@ export default function App({
                 </p>
               </div>
             </div>
-            <div className="cs-catalog-searches">
-              <label className="cs-catalog-search-field">
-                <span>{t("Search products")}</span>
-                <div className="cs-search cs-catalog-search">
-                  <span aria-hidden="true">⌕</span>
-                  <input
-                    type="search"
-                    value={catalogQuery}
-                    onChange={(event) => {
-                      if (
-                        !catalogQuery.trim() &&
-                        !catalogCodeQuery.trim() &&
-                        event.target.value.trim()
-                      )
-                        setCatalogSelection({
-                          categoryPath: "",
-                          brand: "",
-                          availability: "all",
-                        });
-                      setCatalogQuery(event.target.value);
-                      setCatalogVisible(60);
-                    }}
-                    placeholder={t("Name, brand, model or category")}
-                  />
-                </div>
-              </label>
-              <label className="cs-catalog-search-field">
-                <span>{t("Product codes only")}</span>
-                <div className="cs-search cs-catalog-search">
-                  <span aria-hidden="true">#</span>
-                  <input
-                    type="search"
-                    value={catalogCodeQuery}
-                    onChange={(event) => {
-                      if (
-                        !catalogQuery.trim() &&
-                        !catalogCodeQuery.trim() &&
-                        event.target.value.trim()
-                      )
-                        setCatalogSelection({
-                          categoryPath: "",
-                          brand: "",
-                          availability: "all",
-                        });
-                      setCatalogCodeQuery(event.target.value);
-                      setCatalogVisible(60);
-                    }}
-                    placeholder={t("Enter or paste product codes")}
-                  />
-                </div>
-              </label>
-            </div>
-            <p className="cs-catalog-search-hint">
-              {t(
-                "Search ignores case and spaces. Use commas to look up several codes; choose filters to narrow the results.",
-              )}
-            </p>
             <CatalogNavigator
               products={catalogItems}
               sourcePaths={catalogSourcePaths}
@@ -4377,7 +4399,69 @@ export default function App({
                 setCatalogSelection(value);
                 setCatalogVisible(60);
               }}
-            />
+              onClear={() => {
+                setCatalogQuery("");
+                setCatalogCodeQuery("");
+              }}
+            >
+              <div className="cs-catalog-searches">
+                <label className="cs-catalog-search-field">
+                  <span>{t("Search products")}</span>
+                  <div className="cs-search cs-catalog-search">
+                    <NavIcon name="search" />
+                    <input
+                      type="search"
+                      value={catalogQuery}
+                      onChange={(event) => {
+                        if (
+                          !catalogQuery.trim() &&
+                          !catalogCodeQuery.trim() &&
+                          event.target.value.trim()
+                        )
+                          setCatalogSelection({
+                            categoryPath: "",
+                            brand: "",
+                            availability: "all",
+                          });
+                        setCatalogQuery(event.target.value);
+                        setCatalogVisible(60);
+                      }}
+                      placeholder={t("Name, brand, model or category")}
+                    />
+                  </div>
+                </label>
+                <label className="cs-catalog-search-field">
+                  <span>{t("Product codes only")}</span>
+                  <div className="cs-search cs-catalog-search">
+                    <span aria-hidden="true">#</span>
+                    <input
+                      type="search"
+                      value={catalogCodeQuery}
+                      onChange={(event) => {
+                        if (
+                          !catalogQuery.trim() &&
+                          !catalogCodeQuery.trim() &&
+                          event.target.value.trim()
+                        )
+                          setCatalogSelection({
+                            categoryPath: "",
+                            brand: "",
+                            availability: "all",
+                          });
+                        setCatalogCodeQuery(event.target.value);
+                        setCatalogVisible(60);
+                      }}
+                      placeholder={t("Enter or paste product codes")}
+                    />
+                  </div>
+                </label>
+              </div>
+              <p className="cs-catalog-search-hint">
+                {t(
+                  "Search ignores case and spaces. Use commas to look up several codes; choose filters to narrow the results.",
+                )}
+              </p>
+            </CatalogNavigator>
             {catalogLoading && (
               <p role="status" className="cs-catalog-loading">
                 {t("Loading the complete product catalog…")}
@@ -4463,19 +4547,23 @@ export default function App({
           </div>
         )}
         {section === "social" && (
-          <React.Suspense
-            fallback={
-              <div className="cs-main-panel">Loading social posts…</div>
-            }
-          >
-            <SocialStudio
-              settings={settings}
-              catalog={catalog}
-              campaigns={campaigns}
-              seed={socialSeed}
-              onSeedUsed={() => setSocialSeed(null)}
-            />
-          </React.Suspense>
+          <StudioPageBoundary onReturn={() => setSection("campaigns")}>
+            <React.Suspense
+              fallback={
+                <div className="cs-main-panel cs-page-loading" role="status">
+                  {language === "sq" ? "Duke ngarkuar postimet sociale…" : "Loading social posts…"}
+                </div>
+              }
+            >
+              <SocialStudio
+                settings={settings}
+                catalog={catalog}
+                campaigns={campaigns}
+                seed={socialSeed}
+                onSeedUsed={() => setSocialSeed(null)}
+              />
+            </React.Suspense>
+          </StudioPageBoundary>
         )}
         {section === "users" && canManageUsers(user) && (
           <UsersPage

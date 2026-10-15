@@ -11,6 +11,7 @@ import type { Product } from "../../domain/models";
 import { t } from "./i18n";
 import { normalizeSearch, matchesSearch } from "./searchText";
 import {
+  type CategoryNode,
   categoryNodes,
   categorySegments,
   productCategoryPath,
@@ -39,6 +40,7 @@ export function CategoryTreeSelect({
 }: CategoryTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const root = useRef<HTMLDivElement>(null);
   const popover = useRef<HTMLDivElement>(null);
   const [placement, setPlacement] = useState<React.CSSProperties>({});
@@ -84,14 +86,29 @@ export function CategoryTreeSelect({
   const matched = nodes.filter((node) =>
     matchesSearch(`${node.path} ${translatedPath(node.path)}`, term),
   );
-  const visible = nodes.filter(
-    (node) =>
-      !term ||
-      matched.some(
+  const branches = new Set(nodes.map((node) => node.parent));
+  const visible = nodes.filter((node) => {
+    if (term)
+      return matched.some(
         (match) =>
           match.path === node.path || match.path.startsWith(`${node.path} > `),
+      );
+    const ancestors = categorySegments(node.parent);
+    return ancestors.every((_part, depth) =>
+      expanded.has(ancestors.slice(0, depth + 1).join(" > ")),
+    );
+  });
+  function showPicker() {
+    setQuery("");
+    setExpanded(
+      new Set(
+        selectedParts.map((_part, depth) =>
+          selectedParts.slice(0, depth + 1).join(" > "),
+        ),
       ),
-  );
+    );
+    setOpen(true);
+  }
   const groups = visible
     .filter((node) => !node.parent)
     .map((parent) => ({
@@ -199,6 +216,53 @@ export function CategoryTreeSelect({
     buttons[next]?.focus();
   }
 
+  function renderNode(node: CategoryNode) {
+    const hasChildren = branches.has(node.path);
+    return (
+      <div
+        className={`cs-category-tree-row${node.depth ? " is-child" : ""}`}
+        key={node.path}
+        style={{ paddingLeft: node.depth * 13 }}
+      >
+        <button
+          type="button"
+          className={node.depth ? "cs-category-child" : "cs-category-parent"}
+          aria-pressed={selectedPath === node.path}
+          aria-label={`${translatedPath(node.path)} · ${counts.get(node.path) || 0} ${t("products")}`}
+          onClick={() => choose(node.path)}
+        >
+          <span>
+            <strong>{t(node.label)}</strong>
+            {term && node.parent && (
+              <small>{translatedPath(node.parent)}</small>
+            )}
+          </span>
+          <b>{counts.get(node.path) || 0}</b>
+        </button>
+        {hasChildren && !term && (
+          <button
+            className="cs-category-expand"
+            type="button"
+            aria-label={`${t("Show subcategories")}: ${translatedPath(node.path)}`}
+            aria-expanded={expanded.has(node.path)}
+            onClick={() =>
+              setExpanded((current) => {
+                const next = new Set(current);
+                if (next.has(node.path)) next.delete(node.path);
+                else next.add(node.path);
+                return next;
+              })
+            }
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m7 5 5 5-5 5" />
+            </svg>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`cs-category-select ${open ? "is-open" : ""}`} ref={root}>
       <span className="cs-filter-label">{label}</span>
@@ -214,12 +278,12 @@ export function CategoryTreeSelect({
           if (open) keyNavigation(event);
           else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault();
-            setOpen(true);
+            showPicker();
           }
         }}
         onClick={() => {
-          setQuery("");
-          setOpen((value) => !value);
+          if (open) setOpen(false);
+          else showPicker();
         }}
       >
         <span className="cs-category-trigger-text">
@@ -246,7 +310,10 @@ export function CategoryTreeSelect({
             aria-label={label}
           >
             <div className="cs-category-search">
-              <span aria-hidden="true">⌕</span>
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="8.5" cy="8.5" r="5.5" />
+                <path d="m12.5 12.5 4.5 4.5" />
+              </svg>
               <input
                 ref={search}
                 type="search"
@@ -275,40 +342,8 @@ export function CategoryTreeSelect({
               )}
               {groups.map(({ parent, children }) => (
                 <div className="cs-category-group" key={parent.path}>
-                  <button
-                    type="button"
-                    className="cs-category-parent"
-                    aria-pressed={selectedPath === parent.path}
-                    aria-label={`${translatedPath(parent.path)} · ${counts.get(parent.path) || 0} ${t("products")}`}
-                    onClick={() => choose(parent.path)}
-                  >
-                    <span>
-                      <strong>{t(parent.label)}</strong>
-                      <small>{t("All products in this category")}</small>
-                    </span>
-                    <b>{counts.get(parent.path) || 0}</b>
-                  </button>
-                  {children.map((node) => (
-                    <button
-                      type="button"
-                      className="cs-category-child"
-                      key={node.path}
-                      style={{ paddingLeft: 11 + node.depth * 14 }}
-                      aria-label={`${translatedPath(node.path)} · ${counts.get(node.path) || 0} ${t("products")}`}
-                      aria-pressed={selectedPath === node.path}
-                      onClick={() => choose(node.path)}
-                    >
-                      <span>
-                        <span>{t(node.label)}</span>
-                        {term && (
-                          <small>
-                            {categorySegments(node.parent).map(t).join(" > ")}
-                          </small>
-                        )}
-                      </span>
-                      <b>{counts.get(node.path) || 0}</b>
-                    </button>
-                  ))}
+                  {renderNode(parent)}
+                  {children.map(renderNode)}
                 </div>
               ))}
               {!visible.length && (

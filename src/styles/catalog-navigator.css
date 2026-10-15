@@ -111,16 +111,131 @@
   }
 }
 /* The category tree opens above content; adding depth never moves the filter bar. */
-.cs-catalog-filter-fields { display: grid; grid-template-columns: minmax(240px, 1.6fr) minmax(160px, 1fr) minmax(200px, 1.2fr); align-items: start; }
-.cs-catalog-field { min-width: 0 !important; }
-.cs-catalog-field .cs-category-select { width: 100%; }
-.cs-catalog-field .cs-category-trigger, .cs-catalog-field .cs-filter-trigger { height: 48px; }
-.cs-catalog-field .cs-category-trigger-text { min-width: 0; }
-.cs-catalog-field .cs-category-trigger-text strong, .cs-catalog-field .cs-category-trigger-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-.cs-catalog-field .cs-category-trigger-text small { max-width: 100%; font-size: 10px; }
-.cs-catalog-crumbs { min-height: 25px; margin-top: 10px; }
-.cs-category-portal { z-index: 12001; display: flex; flex-direction: column; overflow: hidden; }
-.cs-category-portal .cs-category-search { flex: none; }
-.cs-category-portal .cs-category-options { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
-@media(max-width: 950px) { .cs-catalog-filter-fields { grid-template-columns: 1fr 1fr; } .cs-catalog-category-field { grid-column: 1 / -1; } }
-@media(max-width: 540px) { .cs-catalog-filter-fields { grid-template-columns: minmax(0, 1fr); } }
+.cs-catalog-filter-fields {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) minmax(160px, 1fr) minmax(
+      200px,
+      1.2fr
+    );
+  align-items: start;
+}
+.cs-catalog-field {
+  min-width: 0 !important;
+}
+.cs-catalog-field .cs-category-select {
+  width: 100%;
+}
+.cs-catalog-field .cs-category-trigger,
+.cs-catalog-field .cs-filter-trigger {
+  height: 48px;
+}
+.cs-catalog-field .cs-category-trigger-text {
+  min-width: 0;
+}
+.cs-catalog-field .cs-category-trigger-text strong,
+.cs-catalog-field .cs-category-trigger-text small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.cs-catalog-field .cs-category-trigger-text small {
+  max-width: 100%;
+  font-size: 10px;
+}
+.cs-catalog-crumbs {
+  min-height: 25px;
+  margin-top: 10px;
+}
+.cs-category-portal {
+  z-index: 12001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cs-category-portal .cs-category-search {
+  flex: none;
+}
+.cs-category-portal .cs-category-options {
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 950px) {
+  .cs-catalog-filter-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cs-catalog-category-field {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 540px) {
+  .cs-catalog-filter-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Search and category selection belong to one compact filter surface. */
+.cs-catalog-navigator {
+  background: #fff;
+  padding: 16px;
+}
+.cs-catalog-filter-searches {
+  margin-bottom: 15px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5edf4;
+}
+.cs-catalog-filter-head small {
+  display: none;
+}
+.cs-catalog-navigator .cs-catalog-searches {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.cs-catalog-navigator .cs-catalog-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: none;
+  min-height: 42px;
+  padding: 9px 12px;
+}
+.cs-catalog-navigator .cs-catalog-search svg {
+  color: #7693a9;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.cs-catalog-navigator .cs-catalog-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+.cs-catalog-navigator .cs-catalog-search-hint {
+  margin: 7px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.cs-catalog-navigator .cs-catalog-crumbs {
+  height: 32px;
+  min-height: 32px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.cs-catalog-crumbs button {
+  flex: none;
+  white-space: nowrap;
+}
+@media (max-width: 650px) {
+  .cs-catalog-navigator .cs-catalog-searches {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cs-catalog-filter-head {
+    gap: 8px;
+  }
+  .cs-catalog-filter-head strong {
+    font-size: 12px;
+  }
+}

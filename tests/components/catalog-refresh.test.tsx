@@ -58,6 +58,9 @@ it("keeps refresh available while cached photos finish and reloads once without 
   const updated = vi.fn();
   const view = render(<CatalogRefreshControl onUpdated={updated} />);
   await act(async () => {});
+  fireEvent.click(
+    view.getByRole("button", { name: "View catalog update details" }),
+  );
   expect(
     view
       .getByRole("button", { name: /Fetch products again/ })
@@ -105,10 +108,14 @@ it("starts asynchronously, shows background progress and reloads once a complete
   });
   const updated = vi.fn();
   const view = render(<CatalogRefreshControl onUpdated={updated} />);
+  fireEvent.click(
+    view.getByRole("button", { name: "View catalog update details" }),
+  );
   await waitFor(() =>
-    expect(view.getByText(/Last updated:/).textContent).not.toContain(
-      "Not synced",
-    ),
+    expect(
+      view.container.ownerDocument.querySelector(".cs-catalog-last-update dd")
+        ?.textContent,
+    ).not.toBe("Not synced yet"),
   );
   vi.useFakeTimers();
   fireEvent.click(view.getByRole("button", { name: /Fetch products again/ }));
@@ -153,14 +160,41 @@ it("hides update time in the local Campaign version and reports launch failures 
     <CatalogRefreshControl showLastUpdated={false} onUpdated={vi.fn()} />,
   );
   await act(async () => {});
+  fireEvent.click(
+    view.getByRole("button", { name: "View catalog update details" }),
+  );
   fireEvent.click(view.getByRole("button", { name: /Fetch products again/ }));
   await waitFor(() =>
     expect(view.getByRole("alert").textContent).toBe("Retry later"),
   );
-  expect(view.queryByText(/Last updated:/)).toBeNull();
+  expect(view.queryByText("Last updated")).toBeNull();
   expect(
     view
       .getByRole("button", { name: /Fetch products again/ })
       .getAttribute("disabled"),
   ).toBeNull();
+});
+
+it("opening details never starts an update and a running update stays accessible", async () => {
+  vi.mocked(apiFetch).mockImplementation(() =>
+    response({ status: "running", processed: 15, total: 100 }),
+  );
+  const view = render(<CatalogRefreshControl onUpdated={vi.fn()} />);
+  await act(async () => {});
+  const trigger = view.getByRole("button", {
+    name: "View catalog update details",
+  });
+  expect(trigger.hasAttribute("disabled")).toBe(false);
+  expect(view.queryByRole("dialog")).toBeNull();
+  fireEvent.click(trigger);
+  expect(view.getByRole("dialog", { name: "Catalog update" })).toBeTruthy();
+  expect(view.getByRole("progressbar").getAttribute("value")).toBe("15");
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(view.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(trigger);
+  expect(
+    vi
+      .mocked(apiFetch)
+      .mock.calls.every(([, options]) => options?.method === "GET"),
+  ).toBe(true);
 });

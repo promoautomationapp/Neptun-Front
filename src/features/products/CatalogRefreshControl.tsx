@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Modal } from "../../components/Modal";
+import { NavIcon } from "../studio/NavIcon";
 import { apiFetch } from "../../api/client";
 import { getLanguage, t } from "../brochure/i18n";
 import "../../styles/catalog-refresh.css";
@@ -41,6 +44,8 @@ export function CatalogRefreshControl({
   onUpdated: () => Promise<void> | void;
   showLastUpdated?: boolean;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   const [status, setStatus] = useState<RefreshStatus | null>(null);
   const [error, setError] = useState("");
   const [startError, setStartError] = useState("");
@@ -141,40 +146,142 @@ export function CatalogRefreshControl({
     (status?.status === "failed"
       ? status.error || t("Update failed. Existing products are kept.")
       : "");
-  const metadata = busy
+  const progress = busy
     ? status?.total
       ? `${status.processed || 0}/${status.total} ${t("products")}`
       : t("Starting update…")
-    : showLastUpdated
-      ? `${t("Last updated")}: ${time}`
-      : "";
+    : t(status?.status === "completed" ? "Up to date" : "Not synced yet");
+  const percent = status?.total
+    ? Math.min(100, Math.max(0, ((status.processed || 0) / status.total) * 100))
+    : undefined;
+  const closeDetails = () => {
+    setDetailsOpen(false);
+    trigger.current?.focus();
+  };
   return (
     <div className="cs-catalog-refresh">
       <button
-        className="cs-catalog-refresh-button"
+        ref={trigger}
+        className={`cs-catalog-refresh-button${busy ? " is-busy" : ""}${failure ? " has-error" : ""}`}
         type="button"
-        onClick={start}
-        disabled={busy}
-        aria-busy={busy}
-        title={t("Refresh manually or once daily at 03:00")}
+        onClick={() => setDetailsOpen(true)}
+        aria-haspopup="dialog"
+        aria-label={t("View catalog update details")}
+        title={t(
+          busy
+            ? "Catalog is updating"
+            : failure
+              ? "Catalog needs attention"
+              : "View catalog update details",
+        )}
       >
-        <span aria-hidden="true" className={busy ? "is-refreshing" : ""}>
-          ↻
+        <span className={busy ? "is-refreshing" : ""}>
+          <NavIcon name="refresh" size={18} />
         </span>
-        <span>
-          {t(busy ? "Updating catalog…" : "Fetch products again")}
-          <small>neptun-ks.com</small>
-        </span>
+        <span>{t("Catalog")}</span>
+        {(busy || failure) && (
+          <span
+            className="cs-catalog-indicator"
+            aria-label={t(
+              busy ? "Catalog is updating" : "Catalog needs attention",
+            )}
+          />
+        )}
       </button>
-      {(failure || metadata) && (
-        <small
-          className={`cs-catalog-refresh-meta${failure ? " cs-catalog-refresh-error" : ""}`}
-          role={failure ? "alert" : "status"}
-          title={failure || metadata}
-        >
-          {failure || metadata}
-        </small>
-      )}
+      {detailsOpen &&
+        createPortal(
+          <Modal
+            title={t("Catalog update")}
+            kicker="NEPTUN"
+            onClose={closeDetails}
+          >
+            <div className="cs-catalog-details">
+              <div className="cs-catalog-source">
+                <span className="cs-catalog-source-icon">
+                  <NavIcon name="catalog" size={25} />
+                </span>
+                <div>
+                  <strong>neptun-ks.com</strong>
+                  <small>{t("Source")}</small>
+                </div>
+              </div>
+              <p>
+                {t(
+                  "Updates run once daily at 03:00. You can also start an update here.",
+                )}
+              </p>
+              {showLastUpdated && (
+                <dl className="cs-catalog-last-update">
+                  <dt>{t("Last updated")}</dt>
+                  <dd>{time}</dd>
+                </dl>
+              )}
+              <div
+                className="cs-catalog-progress"
+                role="status"
+                aria-live="polite"
+              >
+                <strong>{progress}</strong>
+                {busy && (
+                  <progress
+                    aria-label={t("Catalog update progress")}
+                    max={100}
+                    {...(percent === undefined ? {} : { value: percent })}
+                  />
+                )}
+              </div>
+              {!busy && status?.status === "completed" && (
+                <dl className="cs-catalog-counts">
+                  <div>
+                    <dt>{t("Added")}</dt>
+                    <dd>{status.added ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("Updated")}</dt>
+                    <dd>{status.updated ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("Kept from earlier updates")}</dt>
+                    <dd>{status.missing ?? "—"}</dd>
+                  </div>
+                </dl>
+              )}
+              {failure && (
+                <div className="cs-catalog-refresh-error" role="alert">
+                  {failure}
+                </div>
+              )}
+              <p className="cs-catalog-retention-note">
+                {t(
+                  "Saved products remain available while the catalog updates.",
+                )}{" "}
+                {t(
+                  "Products not found on the website are kept in your catalog.",
+                )}
+              </p>
+            </div>
+            <div className="cs-modal-actions">
+              <button
+                type="button"
+                className="cs-button"
+                onClick={closeDetails}
+              >
+                {t("Close")}
+              </button>
+              <button
+                className="cs-button primary cs-catalog-detail-action"
+                type="button"
+                onClick={start}
+                disabled={busy}
+                aria-busy={busy}
+              >
+                <NavIcon name="refresh" size={17} />
+                {t(busy ? "Updating catalog…" : "Fetch products again")}
+              </button>
+            </div>
+          </Modal>,
+          document.body,
+        )}
     </div>
   );
 }

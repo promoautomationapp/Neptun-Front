@@ -40,7 +40,7 @@ it("opens the full authenticated studio and loads its catalog through the backen
   });
   vi.stubGlobal("fetch", api);
   const view = render(<App />);
-  const create = await view.findByRole("button", { name: "＋ New campaign" });
+  const create = await view.findByRole("button", { name: "New campaign" });
   await waitFor(() =>
     expect(
       api.mock.calls.some(([input]) =>

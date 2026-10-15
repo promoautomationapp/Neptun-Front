@@ -61,13 +61,33 @@ it("lists all four levels with descendant counts and returns a complete unambigu
     view.getByRole("button", { name: "Computers · 3 products" }),
   ).toBeTruthy();
   expect(
+    view.queryByRole("button", {
+      name: "Computers > Accessories · 3 products",
+    }),
+  ).toBeNull();
+  fireEvent.click(
+    view.getByRole("button", { name: "Show subcategories: Computers" }),
+  );
+  expect(change).not.toHaveBeenCalled();
+  expect(path).not.toHaveBeenCalled();
+  expect(
     view.getByRole("button", { name: "Computers > Accessories · 3 products" }),
   ).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("button", {
+      name: "Show subcategories: Computers > Accessories",
+    }),
+  );
   expect(
     view.getByRole("button", {
       name: "Computers > Accessories > Cables · 2 products",
     }),
   ).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("button", {
+      name: "Show subcategories: Computers > Accessories > Cables",
+    }),
+  );
   fireEvent.click(
     view.getByRole("button", {
       name: "Computers > Accessories > Cables > USB C · 1 products",
@@ -146,6 +166,12 @@ it("filters manual product and brand choices by full branch, including descendan
     />,
   );
   fireEvent.click(view.getByRole("button", { name: "Category & subcategory" }));
+  fireEvent.change(
+    view.getByRole("searchbox", {
+      name: "Search categories or subcategories…",
+    }),
+    { target: { value: "USB C" } },
+  );
   fireEvent.click(
     view.getByRole("button", {
       name: "Computers > Accessories > Cables > USB C · 1 products",

@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .cs-library-heading h1 {
   margin: 0;
@@ -26,7 +26,7 @@
   min-height: 42px;
 }
 .cs-library .cs-campaign-filters {
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   padding: 12px 14px;
 }
 .cs-library-filter-bar {
@@ -167,7 +167,13 @@
   border: 0;
 }
 .cs-library .cs-campaign-mini-cover {
-  width: min(100%, calc(230px * var(--brochure-page-aspect, 1080 / 1350)));
+  width: min(
+    100%,
+    calc(
+      clamp(170px, calc(100dvh - 540px), 260px) *
+        var(--brochure-page-aspect, 1080 / 1350)
+    )
+  );
   margin: 0 auto;
   box-shadow: 0 3px 12px #163d651a;
 }
@@ -225,7 +231,7 @@
   color: #ac4635;
 }
 .cs-campaign-card-actions .cs-card-open {
-  grid-column: 1/-1;
+  grid-column: auto;
   background: #194d7c;
   border-color: #194d7c;
   color: #fff;
@@ -235,7 +241,7 @@
   padding-inline: 13px;
 }
 .cs-campaign-card-actions .cs-card-download {
-  grid-column: 1/-1;
+  grid-column: auto;
   border-color: transparent;
   color: #266c9c;
   min-height: 32px;
@@ -289,4 +295,14 @@
   .cs-library .cs-campaign-filter-footer {
     font-size: 10px;
   }
+}
+
+.cs-library .cs-campaign-filter-footer[hidden] {
+  display: none;
+}
+.cs-campaign-card-actions .cs-card-download {
+  border-color: #d5e2ec;
+  background: #f5f9fc;
+  min-height: 40px;
+  padding: 8px;
 }

@@ -1,9 +1,9 @@
 const translations: Record<string, string> = {
+  "Show subcategories": "Shfaq nënkategoritë",
+  Brochure: "Broshura",
   "Campaign filters": "Filtrat e fushatave",
   Filters: "Filtrat",
   Duplicate: "Dupliko",
-  Delete: "Fshi",
-  "Download brochure": "Shkarko broshurën",
   Catalog: "Katalogu",
   "Catalog update": "Përditësimi i katalogut",
   "View catalog update details": "Shiko detajet e përditësimit të katalogut",
@@ -16,7 +16,6 @@ const translations: Record<string, string> = {
     "Produktet e ruajtura mbeten në dispozicion gjatë përditësimit të katalogut.",
   "Products not found on the website are kept in your catalog.":
     "Produktet që nuk gjenden në faqe ruhen në katalogun tuaj.",
-  Added: "Të shtuara",
   Updated: "Të përditësuara",
   "Kept from earlier updates": "Të ruajtura nga përditësimet e mëparshme",
   "Catalog update progress": "Ecuria e përditësimit të katalogut",

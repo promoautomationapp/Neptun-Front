@@ -46,9 +46,13 @@ it("keeps one stable category field as depth changes and resets brand on selecti
     ".cs-catalog-filter-fields > div",
   ).length;
   fireEvent.click(view.getByRole("button", { name: "Category" }));
+  fireEvent.change(view.getByRole("searchbox"), {
+    target: { value: "mouse pad" },
+  });
   expect(
     view.getByRole("button", { name: /IT > AKSESORË > MOUSE > MOUSE PAD/ }),
   ).toBeTruthy();
+  fireEvent.change(view.getByRole("searchbox"), { target: { value: "" } });
   fireEvent.click(view.getByRole("button", { name: /All categories/ }));
   expect(onChange).toHaveBeenCalledWith({
     categoryPath: "",
@@ -210,4 +214,37 @@ it("uses the source menu including empty branches instead of inventing legacy ro
       availability: "all",
     }),
   ).toHaveLength(3);
+});
+
+it("contains the search controls in the same filter surface and clears them with category filters", () => {
+  const clear = vi.fn(),
+    change = vi.fn();
+  const view = render(
+    <CatalogNavigator
+      products={products}
+      selection={{ categoryPath: "IT", brand: "", availability: "all" }}
+      onChange={change}
+      onClear={clear}
+    >
+      <label>
+        Search products
+        <input type="search" />
+      </label>
+      <label>
+        Product codes only
+        <input type="search" />
+      </label>
+    </CatalogNavigator>,
+  );
+  const filters = view.getByRole("region", {
+    name: "Catalog categories and brands",
+  });
+  expect(filters.querySelectorAll('input[type="search"]')).toHaveLength(2);
+  fireEvent.click(view.getByRole("button", { name: "Clear filters" }));
+  expect(clear).toHaveBeenCalledOnce();
+  expect(change).toHaveBeenCalledWith({
+    categoryPath: "",
+    brand: "",
+    availability: "all",
+  });
 });

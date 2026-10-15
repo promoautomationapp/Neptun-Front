@@ -1,70 +1,47 @@
-.campaign-app .cs-topbar {
-  height: auto;
-  min-height: 72px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
 .cs-catalog-refresh {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: inline-flex;
   min-width: 0;
-  max-width: 260px;
   letter-spacing: normal;
   font-weight: 400;
+  flex: none;
 }
 .cs-catalog-refresh-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 7px 12px;
+  gap: 7px;
+  min-height: 36px;
   border: 1px solid #d5e2ed;
-  border-radius: 10px;
+  border-radius: 9px;
+  padding: 7px 10px;
   background: #fff;
-  color: #234563;
+  color: #315a7c;
+  font-family: inherit;
+  font-size: 11px;
   font-weight: 750;
-  font-size: 12px;
+  line-height: 1.2;
   letter-spacing: normal;
-  text-align: left;
   cursor: pointer;
+  white-space: nowrap;
+}
+.cs-catalog-refresh-button:hover {
+  background: #f1f7fc;
+  border-color: #9bbdd8;
 }
 .cs-catalog-refresh-button > span:first-child {
-  font-size: 23px;
-  line-height: 1;
-  color: #237caf;
+  display: inline-flex;
+  color: #277cac;
 }
-.cs-catalog-refresh-button > span:last-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.cs-catalog-refresh-button.is-busy {
+  background: #edf7ff;
 }
-.cs-catalog-refresh-button small {
-  display: block;
-  margin-top: 2px;
-  font-size: 9px;
-  font-weight: 500;
-  color: #7890a4;
+.cs-catalog-indicator {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #2696bc;
 }
-.cs-catalog-refresh-button:disabled {
-  cursor: progress;
-  background: #eaf5fc;
-}
-.cs-catalog-refresh > .cs-catalog-refresh-meta {
-  display: block;
-  min-width: 0;
-  max-width: 100%;
-  color: #6f879b;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.35;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.cs-catalog-refresh .cs-catalog-refresh-error {
-  color: #c5493e;
+.cs-catalog-refresh-button.has-error .cs-catalog-indicator {
+  background: #d67e20;
 }
 .cs-catalog-refresh-button .is-refreshing {
   animation: catalog-spin 1.8s linear infinite;
@@ -74,84 +51,102 @@
     transform: rotate(360deg);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .cs-catalog-refresh-button .is-refreshing {
-    animation: none;
-  }
+.cs-catalog-details {
+  color: #526e85;
+  font-size: 13px;
+  line-height: 1.6;
 }
-@media (max-width: 1100px) {
-  .campaign-app .cs-topbar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 72px;
-    gap: 8px;
-    padding: 10px 22px;
-  }
-  .cs-topbar .cs-breadcrumb {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
-  .cs-topbar .cs-topbar-right {
-    width: 100%;
-    min-width: 0;
-  }
-  .cs-topbar .cs-catalog-refresh {
-    flex: 1 1 0;
-  }
+.cs-catalog-details p {
+  margin: 16px 0;
 }
-@media (max-width: 850px) {
-  .campaign-app .cs-topbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    height: auto;
-    min-height: 54px;
-    gap: 8px;
-    padding: 10px 22px;
-  }
-  .cs-topbar .cs-breadcrumb {
-    min-width: 0;
-    max-width: 100%;
-  }
-  .cs-topbar .cs-topbar-right {
-    width: 100%;
-    min-width: 0;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .cs-topbar-right > span {
-    display: none;
-  }
-  .cs-topbar .cs-catalog-refresh {
-    flex: 1 1 0;
-    max-width: none;
-  }
-  .cs-topbar .cs-catalog-refresh-button {
-    align-self: flex-start;
-    max-width: 100%;
-    min-height: 34px;
-    padding: 5px 8px;
-    font-size: 11px;
-    line-height: 1.2;
-  }
-  .cs-topbar .cs-catalog-refresh-button > span:first-child {
-    flex: none;
-    font-size: 20px;
-  }
-  .cs-topbar .cs-catalog-refresh-button small {
-    display: none;
-  }
-  .cs-topbar .cs-language-switch,
-  .cs-topbar .cs-avatar {
-    flex: none;
-  }
+.cs-catalog-source {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-@media (max-width: 620px) {
-  .campaign-app .cs-topbar {
-    padding: 10px 14px;
-  }
+.cs-catalog-source-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 12px;
+  color: #225f8f;
+  background: #e9f3fb;
 }
-
+.cs-catalog-source strong {
+  display: block;
+  font-size: 16px;
+  color: #203f5c;
+}
+.cs-catalog-source small {
+  display: block;
+  color: #8297a8;
+  font-size: 11px;
+}
+.cs-catalog-last-update {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding-block: 12px;
+  border-block: 1px solid #e4edf4;
+}
+.cs-catalog-last-update dd {
+  margin: 0;
+  font-weight: 700;
+  color: #284c6c;
+}
+.cs-catalog-progress {
+  margin-block: 16px;
+  font-size: 13px;
+  color: #285b7c;
+}
+.cs-catalog-progress progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  accent-color: #2579ae;
+  margin-top: 10px;
+}
+.cs-catalog-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 16px;
+}
+.cs-catalog-counts > div {
+  padding: 12px;
+  border: 1px solid #deebf4;
+  border-radius: 9px;
+  background: #f8fbfe;
+}
+.cs-catalog-counts dt {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #6b8399;
+}
+.cs-catalog-counts dd {
+  font-size: 21px;
+  color: #214d72;
+  font-weight: 800;
+  margin: 7px 0 0;
+}
+.cs-catalog-details .cs-catalog-retention-note {
+  font-size: 11px;
+  color: #72879b;
+}
+.cs-catalog-details .cs-catalog-refresh-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff3ec;
+  color: #a64a2f;
+}
+.cs-catalog-detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .cs-catalog-card .cs-source-missing {
   display: block;
   padding: 5px 7px;
@@ -164,4 +159,20 @@
 .cs-catalog-card > small {
   overflow-wrap: anywhere;
   white-space: normal;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-catalog-refresh-button .is-refreshing {
+    animation: none;
+  }
+}
+@media (max-width: 620px) {
+  .cs-catalog-counts {
+    gap: 5px;
+  }
+  .cs-catalog-counts > div {
+    padding: 9px;
+  }
+  .cs-catalog-refresh-button {
+    padding: 7px 8px;
+  }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
-import { afterEach, beforeEach, it, expect } from "vitest";
+import { afterEach, beforeEach, it, expect, vi } from "vitest";
 import { CampaignLibrary } from "../../src/features/studio/Studio";
 import { setLanguage } from "../../src/features/brochure/i18n";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
@@ -56,6 +56,7 @@ it("filters real library cards, includes Settings campaign types and historical 
       (item) => item.textContent,
     );
   expect(cards()).toHaveLength(2);
+  fireEvent.click(view.getByRole("button", { name: "Filters" }));
   fireEvent.click(view.getByRole("button", { name: "Type" }));
   const list = view.getByRole("listbox", { name: "Type" });
   expect(
@@ -97,10 +98,59 @@ it("ignores an obsolete saved type and format instead of silently returning no c
   expect(
     view.container.querySelectorAll(".cs-campaign-card-title strong"),
   ).toHaveLength(2);
+  fireEvent.click(view.getByRole("button", { name: "Filters" }));
   expect(view.getByRole("button", { name: "Type" }).textContent).toBe(
     "All types",
   );
   expect(view.getByRole("button", { name: "Format" }).textContent).toBe(
     "All formats",
   );
+});
+
+it("keeps the search inside compact filters and separates readable card actions", () => {
+  const onDuplicate = vi.fn(),
+    onDelete = vi.fn(),
+    onOpen = vi.fn(),
+    onPrint = vi.fn();
+  const view = render(
+    <CampaignLibrary
+      {...props}
+      onDuplicate={onDuplicate}
+      onDelete={onDelete}
+      onOpen={onOpen}
+      onPrint={onPrint}
+    />,
+  );
+  expect(view.container.querySelector(".cs-hero")).toBeNull();
+  const filters = view.getByRole("region", { name: "Campaign filters" });
+  expect(within(filters).getByRole("searchbox")).toBeTruthy();
+  expect(
+    view.getByRole("button", { name: "Filters" }).getAttribute("aria-expanded"),
+  ).toBe("false");
+  expect(view.queryByRole("button", { name: "Status" })).toBeNull();
+  const card = view.container.querySelector(".cs-campaign-card") as HTMLElement;
+  expect(card.querySelector(".cs-campaign-type")?.textContent).toBe(
+    "Autumn offer",
+  );
+  expect(
+    card.querySelector(".cs-campaign-cover .cs-campaign-badges"),
+  ).toBeNull();
+  fireEvent.click(
+    within(card).getByRole("button", {
+      name: "Duplicate campaign: Autumn sale",
+    }),
+  );
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Delete campaign: Autumn sale" }),
+  );
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Open campaign: Autumn sale" }),
+  );
+  fireEvent.click(
+    within(card).getByRole("button", { name: "Download brochure" }),
+  );
+  expect(onDuplicate).toHaveBeenCalledWith(campaigns[0]);
+  expect(onDelete).toHaveBeenCalledWith(campaigns[0]);
+  expect(onOpen).toHaveBeenCalledWith("1");
+  expect(onPrint).toHaveBeenCalledWith("1");
 });

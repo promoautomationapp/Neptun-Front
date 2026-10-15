@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { Product } from "../../domain/models";
 import { t } from "../brochure/i18n";
 import { CategoryTreeSelect } from "../brochure/CategoryTreeSelect";
@@ -53,8 +53,12 @@ export function CatalogNavigator({
   selection,
   onChange,
   sourcePaths = [],
+  children,
+  onClear,
 }: {
   products: Product[];
+  children?: ReactNode;
+  onClear?: () => void;
   sourcePaths?: string[];
   selection: CatalogSelection;
   onChange: (selection: CatalogSelection) => void;
@@ -80,13 +84,15 @@ export function CatalogNavigator({
         </small>
         <button
           type="button"
-          onClick={() =>
-            onChange({ categoryPath: "", brand: "", availability: "all" })
-          }
+          onClick={() => {
+            onChange({ categoryPath: "", brand: "", availability: "all" });
+            onClear?.();
+          }}
         >
           {t("Clear filters")}
         </button>
       </div>
+      {children && <div className="cs-catalog-filter-searches">{children}</div>}
       <div className="cs-catalog-filter-fields">
         <div className="cs-catalog-field cs-catalog-category-field">
           <CategoryTreeSelect
