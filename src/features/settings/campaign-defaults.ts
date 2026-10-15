@@ -61,6 +61,23 @@ export function campaignDefaults(
     ? settings.campaignTypes.find((item) => item.name === typeName)
     : defaultCampaignType(settings);
   return {
+    ...(type?.logo
+      ? {
+          campaignLogo: type.logo,
+          pageArtworks: {
+            cover: [
+              {
+                id: crypto.randomUUID(),
+                name: `${type.name} logo`,
+                image: type.logo,
+                x: 5,
+                y: 22,
+                width: 20,
+              },
+            ],
+          },
+        }
+      : {}),
     ...(version !== undefined ? { defaultsVersion: version } : {}),
     ...brochureFormatSelection(b.format, settings.customFormats),
     layout: b.layout,

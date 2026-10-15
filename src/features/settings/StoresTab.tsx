@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { Field, Toggle, OrderButtons } from "./components";
 import { CONTACT_LABELS, STORE_ELEMENTS, FOOTER_ELEMENTS } from "./options";
@@ -14,7 +15,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
         its own store list.
       </p>
       <Field label="Default store information placement">
-        <select
+        <SearchableSelect
           value={b.storesDisplay}
           onChange={(event) =>
             update((next) => {
@@ -26,7 +27,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           <option value="page">Separate stores page</option>
           <option value="footer">Bottom of the last product page</option>
           <option value="none">No store information</option>
-        </select>
+        </SearchableSelect>
       </Field>
       <Toggle
         label="Show online store"

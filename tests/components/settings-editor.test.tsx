@@ -1,4 +1,8 @@
-import { openSettingsSections } from "../helpers/settings-sections";
+import {
+  openSettingsSections,
+  openSettingsTab,
+  selectSetting,
+} from "../helpers/settings-sections";
 import type * as ApiClient from "../../src/api/client";
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -26,24 +30,20 @@ it("manages formats, stores, category rules and campaign types in one saved draf
       facets={[{ category: "TV", subcategory: "OLED" }]}
     />,
   );
-  fireEvent.click(view.getByRole("tab", { name: "Stores & contacts" }));
+  openSettingsTab(view, "Stores & contacts");
   openSettingsSections(view.container);
   fireEvent.click(view.getByRole("checkbox", { name: "Show store phone" }));
   fireEvent.click(
     view.getByRole("checkbox", { name: "Show Central Park in new brochures" }),
   );
   fireEvent.click(view.getByRole("button", { name: "Move Royal Mall up" }));
-  fireEvent.click(view.getByRole("tab", { name: "Format & layout" }));
+  openSettingsTab(view, "Format & layout");
   openSettingsSections(view.container);
-  fireEvent.change(view.getByLabelText("Default brochure format"), {
-    target: { value: "a4" },
-  });
-  fireEvent.click(view.getByRole("tab", { name: "Category defaults" }));
+  selectSetting(view, "Default brochure format", "a4");
+  openSettingsTab(view, "Category defaults");
   openSettingsSections(view.container);
-  fireEvent.change(view.getByLabelText("TV savings default"), {
-    target: { value: "percentage" },
-  });
-  fireEvent.click(view.getByRole("tab", { name: "Campaign types" }));
+  selectSetting(view, "TV savings default", "percentage");
+  openSettingsTab(view, "Campaign types");
   openSettingsSections(view.container);
   fireEvent.click(
     view.getByRole("checkbox", {
@@ -117,7 +117,7 @@ it("uploads a private logo, blocks saving during upload and uses it as the cover
   const view = render(
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
-  fireEvent.click(view.getByRole("tab", { name: "Logos & icons" }));
+  openSettingsTab(view, "Logos & icons");
   openSettingsSections(view.container);
   const file = new File(["image"], "New logo.png", { type: "image/png" });
   fireEvent.change(view.getByLabelText("Upload Cover logo"), {
@@ -148,7 +148,8 @@ it("supports keyboard tab navigation and rejects duplicate campaign type names",
   const view = render(
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
-  fireEvent.keyDown(view.getByRole("tab", { name: "Cover & colors" }), {
+  openSettingsTab(view, "Format & layout");
+  fireEvent.keyDown(view.getByRole("tab", { name: "Format & layout" }), {
     key: "End",
   });
   expect(

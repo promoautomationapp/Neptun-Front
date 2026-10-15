@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { LifestyleImageEditor } from "./LifestyleImageEditor";
 import type { Box, Product, ScreenArtwork } from "../../domain/models";
 import React, { useRef, useState } from "react";
@@ -196,7 +197,7 @@ export function ScreenImageEditor({
             )}
           </div>
           <div className="cs-screen-editor-controls">
-          <label>{t("Image fit")}<select aria-label={t("Screen image fit")} value={fit} onChange={(event) => setFit(event.target.value as "contain" | "cover")}><option value="contain">{t("Show whole image")}</option><option value="cover">{t("Fill screen")}</option></select></label>
+          <label>{t("Image fit")}<SearchableSelect aria-label={t("Screen image fit")} value={fit} onChange={(event) => setFit(event.target.value as "contain" | "cover")}><option value="contain">{t("Show whole image")}</option><option value="cover">{t("Fill screen")}</option></SearchableSelect></label>
           {television && <Button onClick={() => setLifestyleOpen(true)}>{t("Create / refine wallpaper with AI")}</Button>}
             <label className="cs-upload-button">
               ↑ {t("Upload screen picture")}

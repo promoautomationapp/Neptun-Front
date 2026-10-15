@@ -22,13 +22,33 @@ test("shared Settings work in the browser, retain the original font and fit mobi
             user: {
               id: "qa",
               email: "qa@example.test",
-              role: "pm",
+              role: "admin",
               organizationId: "12345678-1234-4234-8234-123456789012",
               permissions: "admin",
               mustChangePassword: false,
             },
           },
         });
+      if (url.pathname === "/api/team/campaigns")
+        return route.fulfill({ json: { campaigns: [] } });
+      if (url.pathname === "/api/team/members")
+        return route.fulfill({ json: { members: [] } });
+      if (url.pathname === "/api/team/posts")
+        return route.fulfill({ json: { posts: [] } });
+      if (url.pathname === "/api/products")
+        return route.fulfill({
+          json: {
+            products: [],
+            total: 0,
+            limit: 100,
+            offset: 0,
+            nextOffset: null,
+          },
+        });
+      if (url.pathname === "/api/brand-logos")
+        return route.fulfill({ json: {} });
+      if (url.pathname === "/api/catalog/brands")
+        return route.fulfill({ json: { brands: [] } });
       if (url.pathname === "/api/products/facets")
         return route.fulfill({
           json: {
@@ -87,6 +107,9 @@ test("shared Settings work in the browser, retain the original font and fit mobi
       });
     },
   );
+  await page.addInitScript(() =>
+    localStorage.setItem("neptun-studio-language", "en"),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(
@@ -110,20 +133,31 @@ test("shared Settings work in the browser, retain the original font and fit mobi
       ),
     ).toBe(true);
   }
-  await expect(page.getByLabel("Default cover style")).toHaveValue(
-    "blueRibbon",
-  );
+  const openGroups = async () => {
+    for (const group of await page.locator("details.ns-settings-group").all()) {
+      if ((await group.getAttribute("open")) === null)
+        await group.locator(":scope > summary").click();
+    }
+  };
+  const openTab = async (area: string, label: string) => {
+    await page.getByRole("tab", { name: area, exact: true }).click();
+    await page.getByRole("tab", { name: label, exact: true }).click();
+    await openGroups();
+  };
+  const choose = async (label: string, option: string) => {
+    await page.getByRole("combobox", { name: label, exact: true }).click();
+    await page.getByRole("option", { name: option, exact: true }).click();
+  };
+  await expect(
+    page.getByRole("combobox", { name: "Default cover style" }),
+  ).toContainText("Blue UUU cover");
   const screenshotDirectory = process.env.NEPTUN_SCREENSHOT_DIR;
   if (screenshotDirectory)
     await page.screenshot({
       path: resolve(screenshotDirectory, "settings-design.png"),
       fullPage: true,
     });
-  await page.getByRole("tab", { name: "Logos & icons" }).click();
-  await page
-    .locator("summary")
-    .filter({ hasText: "Product brand logos" })
-    .click();
+  await openTab("Cover", "Logos & icons");
   await page.getByLabel("Search product brands").fill("samsung");
   await page
     .getByRole("checkbox", { name: "Hide SAMSUNG logo", exact: true })
@@ -131,12 +165,9 @@ test("shared Settings work in the browser, retain the original font and fit mobi
   await expect(
     page.getByText("The logo is hidden. Product cards show SAMSUNG as text."),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Prices & categories" }).click();
-  await page.locator("summary").filter({ hasText: "TV ·" }).click();
-  await page
-    .getByLabel("TV savings default", { exact: true })
-    .selectOption("percentage");
-  await page.getByRole("tab", { name: "Stores & contacts" }).click();
+  await openTab("Inside pages", "Category defaults");
+  await choose("TV savings default", "Zbritje (%) — Discount %");
+  await openTab("Stores page", "Stores & contacts");
   await page
     .getByRole("checkbox", { name: "Show store phone", exact: true })
     .uncheck();
@@ -154,9 +185,9 @@ test("shared Settings work in the browser, retain the original font and fit mobi
       path: resolve(screenshotDirectory, "settings-stores.png"),
       fullPage: true,
     });
-  await page.getByRole("tab", { name: "Format & layout" }).click();
-  await page.getByLabel("Default brochure format").selectOption("a4");
-  await page.getByRole("tab", { name: "Campaign types" }).click();
+  await openTab("Campaign types & sizes", "Format & layout");
+  await choose("Default brochure format", "A4 · 210 × 297 mm");
+  await openTab("Campaign types & sizes", "Campaign types");
   await page
     .getByRole("checkbox", {
       name: "Show Black Friday when creating brochures",
@@ -170,18 +201,19 @@ test("shared Settings work in the browser, retain the original font and fit mobi
   ).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page.getByRole("tab", { name: "Format & layout" }).click();
-  await expect(page.getByLabel("Default brochure format")).toHaveValue("a4");
-  await page.getByRole("tab", { name: "Prices & categories" }).click();
-  await page.locator("summary").filter({ hasText: "TV ·" }).click();
+  await openTab("Campaign types & sizes", "Format & layout");
   await expect(
-    page.getByLabel("TV savings default", { exact: true }),
-  ).toHaveValue("percentage");
+    page.getByRole("combobox", { name: "Default brochure format" }),
+  ).toContainText("A4");
+  await openTab("Inside pages", "Category defaults");
+  await expect(
+    page.getByRole("combobox", { name: "TV savings default", exact: true }),
+  ).toContainText("Zbritje");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("tab", { name: "Campaign types" }).click();
-  await expect(page.getByLabel("Default campaign type")).toHaveValue(
-    "campaign-type-2",
-  );
+  await openTab("Campaign types & sizes", "Campaign types");
+  await expect(
+    page.getByRole("combobox", { name: "Default campaign type" }),
+  ).toContainText("Happy Hour");
   if (screenshotDirectory)
     await page.screenshot({
       path: resolve(screenshotDirectory, "settings-mobile.png"),

@@ -1,4 +1,7 @@
-import { openSettingsSections } from "../helpers/settings-sections";
+import {
+  openSettingsSections,
+  openSettingsTab,
+} from "../helpers/settings-sections";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { SettingsEditor } from "../../src/features/settings/SettingsEditor";
@@ -13,7 +16,7 @@ it("adds and edits a named size, chooses it as the default and safely hides it",
   const view = render(
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
-  fireEvent.click(view.getByRole("tab", { name: "Format & layout" }));
+  openSettingsTab(view, "Format & layout");
   openSettingsSections(view.container);
   fireEvent.click(
     view.getByRole("button", { name: "+ Add custom dimensions" }),
@@ -49,8 +52,8 @@ it("adds and edits a named size, chooses it as the default and safely hides it",
     }),
   );
   expect(
-    (view.getByLabelText("Default brochure format") as HTMLSelectElement).value,
-  ).toBe("neptun1080x1350");
+    view.getByRole("combobox", { name: "Default brochure format" }).textContent,
+  ).toContain("1080 × 1350");
 });
 it("keeps the brochure's saved size selectable after its workspace definition changes", () => {
   setLanguage("en");
@@ -76,6 +79,7 @@ it("keeps the brochure's saved size selectable after its workspace definition ch
       onChange={vi.fn()}
     />,
   );
+  fireEvent.click(view.getByRole("combobox", { name: "Brochure size" }));
   expect(
     view.getByRole("option", { name: "Counter · 1400 × 800 px" }),
   ).toBeTruthy();

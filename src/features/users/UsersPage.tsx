@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { useEffect, useMemo, useState } from "react";
 import {
   inviteUser,
@@ -267,7 +268,7 @@ export function UsersPage({
             </label>
             <label>
               Role
-              <select
+              <SearchableSelect
                 aria-label="Invitation role"
                 value={inviteRole}
                 disabled={!!busy}
@@ -280,7 +281,7 @@ export function UsersPage({
                     {item.label}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
               <small className="na-field-help">
                 {roles.find((item) => item.value === inviteRole)?.description}
               </small>
@@ -342,7 +343,7 @@ export function UsersPage({
             </label>
             <label>
               Role
-              <select
+              <SearchableSelect
                 aria-label="User role"
                 value={editRole}
                 disabled={!!busy || editing.id === currentUser.id}
@@ -355,7 +356,7 @@ export function UsersPage({
                     {item.label}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
               <small className="na-field-help">
                 {editing.id === currentUser.id
                   ? "Another admin can change your role."
@@ -395,7 +396,7 @@ export function UsersPage({
           </label>
           <label>
             Role
-            <select
+            <SearchableSelect
               value={role}
               onChange={(event) => setRole(event.target.value)}
             >
@@ -408,11 +409,11 @@ export function UsersPage({
               {currentUser.role === "superadmin" && (
                 <option value="superadmin">Support superadmin</option>
               )}
-            </select>
+            </SearchableSelect>
           </label>
           <label>
             Status
-            <select
+            <SearchableSelect
               value={status}
               onChange={(event) => setStatus(event.target.value)}
             >
@@ -420,7 +421,7 @@ export function UsersPage({
               <option value="active">Active</option>
               <option value="invited">Invited</option>
               <option value="disabled">Disabled</option>
-            </select>
+            </SearchableSelect>
           </label>
           <button
             className="cs-button"

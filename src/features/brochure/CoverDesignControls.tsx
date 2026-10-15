@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
 import type {
   Campaign,
@@ -125,7 +126,7 @@ export function CoverDesignControls({
       </div>
       <label>
         Product layout
-        <select
+        <SearchableSelect
           aria-label="Cover product layout"
           value={
             campaign.coverProductLayout ||
@@ -136,12 +137,12 @@ export function CoverDesignControls({
           <option value="pair">Two products beside each other</option>
           <option value="hero">One featured product above two</option>
           <option value="row">Products in one row</option>
-        </select>
+        </SearchableSelect>
       </label>
       {campaign.showCoverBand !== true && (
         <label>
           {t("Product in the banner area")}
-          <select
+          <SearchableSelect
             aria-label="Product in cover banner area"
             value={campaign.coverBannerProductCode || ""}
             onChange={(event) =>
@@ -156,7 +157,7 @@ export function CoverDesignControls({
                 {product.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
       )}
       <p>
@@ -165,7 +166,7 @@ export function CoverDesignControls({
       </p>
       <label>
         Logo
-        <select
+        <SearchableSelect
           aria-label="Cover logo artwork"
           value={campaign.coverLogoSource || "default"}
           onChange={(event) =>
@@ -193,7 +194,7 @@ export function CoverDesignControls({
             ].includes(campaign.coverLogoSource) && (
               <option value={campaign.coverLogoSource}>Uploaded logo</option>
             )}
-        </select>
+        </SearchableSelect>
       </label>
       <label className="cs-cover-file">
         Upload logo
@@ -288,7 +289,7 @@ export function CoverDesignControls({
           <>
             <label>
               Gradient area
-              <select
+              <SearchableSelect
                 aria-label="Cover gradient area"
                 value={campaign.coverGradientRegion || "between"}
                 onChange={(event) => {
@@ -308,7 +309,7 @@ export function CoverDesignControls({
                 <option value="right">Right side</option>
                 <option value="bottom">Bottom half</option>
                 <option value="custom">Custom · drag and resize</option>
-              </select>
+              </SearchableSelect>
             </label>
             <div className="cs-cover-gradient-colors">
               {(["from", "to"] as const).map((key) => (
@@ -366,7 +367,7 @@ export function CoverDesignControls({
         <summary>Position & size</summary>
         <label>
           Element
-          <select
+          <SearchableSelect
             aria-label="Cover element to position"
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
@@ -376,7 +377,7 @@ export function CoverDesignControls({
             <option value="band">UUU</option>
             <option value="message">Message</option>
             <option value="gradient">Gradient</option>
-          </select>
+          </SearchableSelect>
         </label>
         <div className="cs-cover-position-fields">
           {coordinates.map((key) => (

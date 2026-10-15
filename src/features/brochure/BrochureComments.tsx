@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import React, { useState } from "react";
 import type {
   Campaign,
@@ -93,7 +94,7 @@ export function CommentForm({
       </label>
       <label>
         {t("Mention a teammate")}
-        <select
+        <SearchableSelect
           value={mention}
           onChange={(event) => setMention(event.target.value)}
         >
@@ -106,7 +107,7 @@ export function CommentForm({
                 {t(roleLabel(member.role))}
               </option>
             ))}
-        </select>
+        </SearchableSelect>
       </label>
       <button type="submit" disabled={busy || !text.trim()}>
         {busy ? t("Saving…") : t(buttonLabel)}

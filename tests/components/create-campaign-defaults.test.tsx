@@ -118,8 +118,8 @@ it("creates an independent snapshot of a configured custom default size", () => 
     <CreateCampaign settings={settings} onCreate={create} onClose={vi.fn()} />,
   );
   expect(
-    (view.getByLabelText("Brochure size") as HTMLSelectElement).value,
-  ).toBe("custom-counter");
+    view.getByRole("combobox", { name: "Brochure size" }).textContent,
+  ).toContain("Counter");
   fireEvent.click(view.getByRole("button", { name: "Create campaign →" }));
   expect(create.mock.calls[0]?.[0]).toMatchObject({
     brochureFormat: "custom-counter",

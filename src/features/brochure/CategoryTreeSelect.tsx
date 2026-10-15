@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Product } from "../../domain/models";
 import { t } from "./i18n";
-import { normalize } from "./utils";
+import { normalizeSearch, matchesSearch } from "./searchText";
 
 export interface CategoryTreeSelectProps {
   catalog: readonly Product[];
@@ -53,16 +53,14 @@ export function CategoryTreeSelect({
         children: [...group.children].sort(([a], [b]) => a.localeCompare(b)),
       }));
   }, [catalog]);
-  const term = normalize(query);
+  const term = normalizeSearch(query);
   const visible = groups
     .map((group) => {
-      const parentMatch = normalize(`${group.name} ${t(group.name)}`).includes(
-        term,
-      );
+      const parentMatch = matchesSearch(`${group.name} ${t(group.name)}`, term);
       const children =
         term && !parentMatch
           ? group.children.filter(([name]) =>
-              normalize(`${name} ${t(name)}`).includes(term),
+              matchesSearch(`${name} ${t(name)}`, term),
             )
           : group.children;
       return parentMatch || children.length ? { ...group, children } : null;

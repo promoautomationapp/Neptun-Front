@@ -1,9 +1,30 @@
 /* These variables are present only for an explicit non-reference default. */
-.brochure-page .brochure-product[data-custom-product-font="true"] :is([data-product-name], .brochure-product-code, .brochure-specs > .product-detail-block, .brochure-specs > .product-detail-block :is(b,small)) {
+.brochure-page
+  .brochure-product[data-custom-product-font="true"]
+  :is(
+    [data-product-name],
+    .brochure-product-code,
+    .brochure-specs > .product-detail-block,
+    .brochure-specs > .product-detail-block :is(b, small)
+  ) {
   font-family: var(--product-default-font) !important;
 }
-.brochure-page .brochure-product [data-product-name] { zoom: var(--product-name-scale, 1); }
-.brochure-page .brochure-product .brochure-product-code { zoom: var(--product-code-scale, 1); }
-.brochure-page .brochure-product .brochure-specs > .product-detail-block > :is(b,small) { zoom: var(--product-detail-scale, 1); }
-.brochure-product-name-divider { background: var(--product-divider-color, #fff); }
-.brochure-page.light .brochure-product-name-divider { background: var(--product-divider-light-color, #7a96ac); }
+.brochure-page .brochure-product [data-product-name] {
+  zoom: var(--product-name-scale, 1);
+}
+.brochure-page .brochure-product .brochure-product-code {
+  zoom: var(--product-code-scale, 1);
+}
+.brochure-page
+  .brochure-product
+  .brochure-specs
+  > .product-detail-block
+  > :is(b, small) {
+  zoom: var(--product-detail-scale, 1);
+}
+.brochure-product-name-divider {
+  background: var(--product-divider-color, #fff);
+}
+.brochure-page.light .brochure-product-name-divider {
+  background: var(--product-divider-light-color, #7a96ac);
+}

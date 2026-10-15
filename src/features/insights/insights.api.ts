@@ -53,6 +53,8 @@ export const mediaUsageSchema = z.object({
     .object({ objects: z.number(), bytes: z.number(), checkedAt: z.string() })
     .nullable(),
   bucketError: z.boolean(),
+  bucketPending: z.boolean().default(false),
+  bucketStale: z.boolean().default(false),
   registered: z.object({ objects: z.number(), bytes: z.number() }),
   kinds: z.array(
     z.object({ kind: z.string(), count: z.number(), bytes: z.number() }),

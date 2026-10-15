@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import {
   cleanup,
@@ -57,15 +58,11 @@ it("keeps advanced groups closed, previews logo defaults live, saves color rules
     }),
   );
   fireEvent.click(view.getByRole("button", { name: "+ Add color rule" }));
-  fireEvent.change(view.getByLabelText("Logo rule 1 background"), {
-    target: { value: "color" },
-  });
+  selectSetting(view, "Logo rule 1 background", "color");
   fireEvent.change(view.getByLabelText("Logo rule 1 color"), {
     target: { value: "#112233" },
   });
-  fireEvent.change(view.getByLabelText("Logo rule 1 image"), {
-    target: { value: asset },
-  });
+  selectSetting(view, "Logo rule 1 image", asset);
   fireEvent.click(view.getByRole("button", { name: "Save settings" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(save.mock.calls[0]![0]).toMatchObject({

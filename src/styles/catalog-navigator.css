@@ -9,3 +9,12 @@
 .cs-catalog-filter-fields select { width:100%; background:white; border:1px solid #d5e2ed; color:#234661; padding:10px; border-radius:9px; font-size:12px; min-height:38px; }
 .cs-catalog-crumbs { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
 .cs-catalog-crumbs button { border:0; background:#eaf2f9; border-radius:6px; padding:5px 8px; color:#365d7e; font-size:10px; cursor:pointer; }
+.cs-catalog-filter-fields .cs-catalog-field { flex: 1 1 190px; min-width: 160px; }
+.cs-catalog-field .cs-filter-control { width: 100%; }
+.cs-catalog-field .cs-filter-label { display: block; margin-bottom: 7px; }
+.cs-catalog-field .cs-filter-trigger { min-height: 44px; }
+.cs-catalog-searches { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 16px; }
+.cs-catalog-search-field { display: grid; gap: 7px; color: #31516c; font-size: 12px; font-weight: 750; }
+.cs-catalog-searches .cs-catalog-search { width: 100%; margin: 0; }
+.cs-catalog-search-hint { margin: 10px 0 18px; font-size: 12px; color: #6c8296; }
+@media(max-width: 650px) { .cs-catalog-searches { grid-template-columns: 1fr; } }

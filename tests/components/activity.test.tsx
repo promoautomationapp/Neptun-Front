@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import { render, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -87,19 +88,13 @@ it("shows Neptun admins readable activity, filters by date/user/action/outcome/s
   expect(view.getByText("Password changed")).toBeTruthy();
   fireEvent.click(view.getByText("Request details"));
   expect(view.getByText("POST /api/team/campaigns")).toBeTruthy();
-  fireEvent.change(view.getByLabelText("Period"), {
-    target: { value: "date" },
-  });
+  selectSetting(view, "Period", "date");
   fireEvent.change(view.getByLabelText("Date"), {
     target: { value: "2026-10-05" },
   });
-  fireEvent.change(view.getByLabelText("User"), { target: { value: actor } });
-  fireEvent.change(view.getByLabelText("Action"), {
-    target: { value: "campaign.save" },
-  });
-  fireEvent.change(view.getByLabelText("Outcome"), {
-    target: { value: "success" },
-  });
+  selectSetting(view, "User", actor);
+  selectSetting(view, "Action", "campaign.save");
+  selectSetting(view, "Outcome", "success");
   fireEvent.change(view.getByLabelText("Search activity"), {
     target: { value: "black friday" },
   });

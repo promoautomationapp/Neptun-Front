@@ -1,4 +1,4 @@
-import { resolveAsset } from "../../api/client";
+import { API_URL, resolveAsset } from "../../api/client";
 import { logoRuleDefaults } from "./logoLibraryData";
 import type { Settings } from "../../domain/models";
 import type { LogoAsset } from "./settings.schema";
@@ -26,15 +26,16 @@ export function reusableImages(settings?: Settings): LogoAsset[] {
 export function droppedReusableImage(transfer: DataTransfer): LogoAsset | null {
   try {
     const asset = JSON.parse(transfer.getData(REUSABLE_IMAGE_TYPE));
+    const source = typeof asset.url === "string" && API_URL && asset.url.startsWith(`${API_URL}/api/assets/`) ? asset.url.slice(API_URL.length) : asset.url;
     return typeof asset.name === "string" &&
-      typeof asset.url === "string" &&
+      typeof source === "string" &&
       /^\/api\/assets\/(?:[a-f0-9-]{36}|legacy\/[^?#]+|app\/logo)$/i.test(
-        asset.url,
+        source,
       )
       ? {
           id: crypto.randomUUID(),
           name: asset.name.slice(0, 200),
-          url: asset.url,
+          url: source,
         }
       : null;
   } catch {

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import type { PageArtworkLayer } from "./PageArtwork";
@@ -147,7 +148,7 @@ export function PageLayersControls({
         <>
           <label>
             Layer
-            <select
+            <SearchableSelect
               aria-label="Selected page layer"
               value={selected.id}
               onChange={(event) => setSelectedId(event.target.value)}
@@ -157,11 +158,11 @@ export function PageLayersControls({
                   {item.name || "Image"}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
           <label>
             Layer order
-            <select
+            <SearchableSelect
               aria-label="Page layer order"
               value={selected.zIndex ?? 2}
               onChange={(event) =>
@@ -173,7 +174,7 @@ export function PageLayersControls({
               <option value={4}>Over products · under logo</option>
               <option value={6}>Over logo & products</option>
               <option value={10}>In front of everything</option>
-            </select>
+            </SearchableSelect>
           </label>
           <label>
             Opacity · {Math.round((selected.opacity ?? 1) * 100)}%
@@ -241,7 +242,7 @@ export function PageLayersControls({
               {selected.height != null && (
                 <label>
                   Image fit
-                  <select
+                  <SearchableSelect
                     aria-label="Page image fit"
                     value={selected.imageFit || "cover"}
                     onChange={(event) =>
@@ -252,7 +253,7 @@ export function PageLayersControls({
                   >
                     <option value="cover">Fill the frame</option>
                     <option value="contain">Fit entire image</option>
-                  </select>
+                  </SearchableSelect>
                 </label>
               )}
               <label>
@@ -286,7 +287,7 @@ export function PageLayersControls({
           {selected.type === "overlay" && (
             <label>
               Fade
-              <select
+              <SearchableSelect
                 aria-label="Page shadow fade"
                 value={selected.fade || "solid"}
                 onChange={(event) => change({ fade: event.target.value })}
@@ -295,7 +296,7 @@ export function PageLayersControls({
                 <option value="top">Fade from top</option>
                 <option value="bottom">Fade from bottom</option>
                 <option value="edges">Soft edges / vignette</option>
-              </select>
+              </SearchableSelect>
             </label>
           )}
           <div className="cs-page-layer-coordinates">

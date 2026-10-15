@@ -189,3 +189,230 @@
     font-size: 13px;
   }
 }
+.campaign-app .cs-insights-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+}
+.campaign-app .cs-insights-subtabs button {
+  padding: 9px 14px;
+  font-size: 12px;
+}
+.campaign-app .cs-insights-subtabs button[aria-selected="true"] {
+  background: #e5f1fb;
+  border-color: #80b4da;
+  color: #164b75;
+}
+.campaign-app .cs-insights-filters > .cs-filter-control {
+  min-width: 155px;
+  flex: 1;
+  max-width: 240px;
+}
+.campaign-app .cs-insights-filters .cs-filter-trigger {
+  height: 40px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+}
+.campaign-app .cs-insights-filters .cs-filter-options button {
+  border: 0;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.campaign-app .cs-insights-filters .cs-filter-options input {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.campaign-app .cs-insights-table table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+.campaign-app .cs-insights-table table tbody tr:hover {
+  background: #edf5fc;
+}
+.campaign-app .cs-insights-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.campaign-app .cs-insight-status {
+  display: inline-flex;
+  border-radius: 20px;
+  padding: 4px 8px;
+  background: #edf2f7;
+  color: #54697d;
+  font-size: 10px;
+  font-weight: 700;
+}
+.campaign-app .cs-insight-status[data-status="succeeded"],
+.campaign-app .cs-insight-status[data-status="completed"] {
+  background: #e4f5ed;
+  color: #257256;
+}
+.campaign-app .cs-insight-status[data-status="failed"] {
+  background: #ffebe6;
+  color: #ad3d2e;
+}
+.campaign-app .cs-insight-status[data-status="uncertain"] {
+  background: #fff3d8;
+  color: #90651f;
+}
+.campaign-app .cs-usage-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 20px 0;
+}
+.campaign-app .cs-usage-chart {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #d8e4ee;
+  border-radius: 14px;
+  background: #fff;
+  min-width: 0;
+}
+.campaign-app .cs-usage-chart figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #173f63;
+}
+.campaign-app .cs-usage-chart figcaption > span {
+  font-size: 10px;
+  color: #70869a;
+}
+.campaign-app .cs-usage-chart > p {
+  color: #74889b;
+  font-size: 11px;
+  margin: 9px 0 18px;
+}
+.campaign-app .cs-usage-chart ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 17px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+.campaign-app .cs-usage-chart li {
+  min-width: 0;
+  padding-right: 5px;
+}
+.campaign-app .cs-usage-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  margin-bottom: 6px;
+  color: #567189;
+}
+.campaign-app .cs-usage-bar-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.campaign-app .cs-usage-bar-label strong {
+  white-space: nowrap;
+  color: #254b6b;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.campaign-app .cs-usage-bar-track {
+  display: flex;
+  height: 13px;
+  border-radius: 4px;
+  background: #eef3f8;
+  overflow: hidden;
+}
+.campaign-app .cs-usage-bar-track > span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+.campaign-app .cs-usage-bar-cost {
+  background: linear-gradient(90deg, #7eacd4, #275e90);
+  border-radius: 4px;
+}
+.campaign-app .cs-usage-bar-input {
+  background: #397db3;
+}
+.campaign-app .cs-usage-bar-output {
+  background: #ea8065;
+}
+.campaign-app .cs-usage-bar-track.is-unknown {
+  background: repeating-linear-gradient(
+    135deg,
+    #edf1f5,
+    #edf1f5 5px,
+    #d9e1e9 5px,
+    #d9e1e9 9px
+  );
+}
+.campaign-app .cs-usage-chart li > small {
+  display: block;
+  font-size: 10px;
+  color: #96722c;
+  margin-top: 4px;
+}
+.campaign-app .cs-usage-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.campaign-app .cs-usage-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-left: 5px;
+}
+.campaign-app .cs-insights-chart-data {
+  margin-top: 14px;
+}
+.campaign-app .cs-insights-chart-data > summary {
+  cursor: pointer;
+  color: #345e7d;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 0;
+}
+.campaign-app .cs-insights-inventory {
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: #edf6ff;
+  color: #3e7298;
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .campaign-app .cs-usage-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.campaign-app .cs-insights-table td {
+  font-variant-numeric: tabular-nums;
+}
+.campaign-app .cs-insights-table .cs-insight-drill {
+  border: 0;
+  background: transparent;
+  color: #216497;
+  padding: 0;
+  text-align: left;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.campaign-app .cs-insights-filters .cs-filter-options button:hover,
+.campaign-app .cs-insights-filters .cs-filter-options button:focus-visible,
+.campaign-app
+  .cs-insights-filters
+  .cs-filter-options
+  button[aria-selected="true"] {
+  background: #eaf4fb;
+  color: #194f7b;
+}

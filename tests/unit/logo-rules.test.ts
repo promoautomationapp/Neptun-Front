@@ -75,3 +75,52 @@ it("rejects an unowned external logo or an incomplete color choice", () => {
     }).success,
   ).toBe(false);
 });
+it("keeps store-page and footer rules separate through schema round-trip and campaign snapshots", () => {
+  const settings = resolveSettings(null);
+  settings.logoRules = [
+    {
+      id: "store",
+      target: "stores",
+      background: "dark",
+      color: "",
+      image: "/api/assets/legacy/assets/store-logo.png",
+      enabled: true,
+    },
+    {
+      id: "footer",
+      target: "footer",
+      background: "dark",
+      color: "",
+      image: "/api/assets/legacy/assets/footer-logo.png",
+      enabled: true,
+    },
+    {
+      id: "disabled",
+      target: "stores",
+      background: "color",
+      color: "#112233",
+      image: "/api/assets/legacy/assets/disabled.png",
+      enabled: false,
+    },
+  ];
+  const saved = workspaceSettingsSchema.parse(
+    JSON.parse(JSON.stringify(settings)),
+  );
+  const campaign = campaignDefaults(saved);
+  expect(logoForBackground(campaign, "stores", "#112233", "original")).toBe(
+    "/api/assets/legacy/assets/store-logo.png",
+  );
+  expect(logoForBackground(campaign, "footer", "#112233", "original")).toBe(
+    "/api/assets/legacy/assets/footer-logo.png",
+  );
+  expect(logoForBackground(campaign, "pages", "#112233", "original")).toBe(
+    "original",
+  );
+  expect(logoForBackground(campaign, "cover", "#112233", "original")).toBe(
+    "original",
+  );
+  saved.logoRules[0]!.image = "/api/assets/legacy/assets/future-logo.png";
+  expect(logoForBackground(campaign, "stores", "#112233", "original")).toBe(
+    "/api/assets/legacy/assets/store-logo.png",
+  );
+});

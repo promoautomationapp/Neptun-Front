@@ -1,0 +1,117 @@
+.ns-searchable-select {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+.ns-searchable-trigger {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #c8d8e6;
+  border-radius: 9px;
+  background: #fff;
+  color: #244764;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.ns-searchable-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ns-searchable-trigger svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  flex: none;
+}
+.ns-searchable-trigger:focus-visible {
+  outline: 3px solid #77bce6;
+  outline-offset: 2px;
+}
+.ns-searchable-trigger:disabled,
+.ns-searchable-trigger[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.ns-searchable-panel {
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #cbdbe7;
+  border-radius: 12px;
+  background: #fff;
+  color: #244764;
+  box-shadow: 0 16px 48px #12365535;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: 13px;
+}
+.ns-searchable-search {
+  width: 100%;
+  flex: none;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #b8cddd;
+  border-radius: 7px;
+  font: inherit;
+  background: #f7fafc;
+  color: inherit;
+}
+.ns-searchable-options {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  display: grid;
+  gap: 3px;
+}
+.ns-searchable-options > button {
+  width: 100%;
+  border: 0;
+  border-radius: 7px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.ns-searchable-options > button[aria-selected="true"] {
+  background: #e9f3fa;
+  color: #154a78;
+  font-weight: 700;
+}
+.ns-searchable-options > button:hover:not(:disabled),
+.ns-searchable-options > button:focus-visible {
+  background: #eef5fa;
+  outline: 2px solid #8db9d7;
+  outline-offset: -2px;
+}
+.ns-searchable-options > button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ns-searchable-group {
+  padding: 10px 10px 5px;
+  color: #61798f;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ns-searchable-options > p {
+  margin: 8px 4px;
+  color: #61798f;
+}

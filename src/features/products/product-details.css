@@ -1,0 +1,311 @@
+/* Product catalog and brochure detail dialogs share one compact photo/summary layout. */
+.cs-modal:has(.np-product-detail) {
+  width: min(1040px, 100%);
+}
+.np-product-detail .cs-detail-layout {
+  grid-template-columns: minmax(250px, 0.9fr) minmax(0, 1.15fr);
+  gap: 26px;
+  align-items: start;
+}
+.np-product-detail .cs-detail-image {
+  display: flex !important;
+  justify-content: flex-start;
+  padding: 0;
+  gap: 12px;
+  min-height: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.np-product-gallery {
+  width: 100%;
+  min-width: 0;
+}
+.np-gallery-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1.15;
+  max-height: 340px;
+  overflow: hidden;
+  border: 1px solid #e1e8ef;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+.np-product-detail .np-gallery-main,
+.np-product-gallery .np-gallery-main {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 310px !important;
+  padding: 24px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.np-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #d9e3ed;
+  border-radius: 10px;
+  background: #ffffffed;
+  color: #164e83;
+  font-size: 29px;
+  line-height: 1;
+  box-shadow: 0 2px 8px #183e5910;
+}
+.np-gallery-arrow:hover {
+  background: #eaf4fb;
+  border-color: #93bddb;
+}
+.np-gallery-arrow.previous {
+  left: 10px;
+}
+.np-gallery-arrow.next {
+  right: 10px;
+}
+.np-gallery-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #ffffffeb;
+  color: #34516b;
+  font-size: 10px;
+  font-weight: 700;
+}
+.np-gallery-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 1px;
+  font-size: 11px;
+  color: #7b8da0;
+}
+.np-gallery-caption a,
+.np-gallery-caption button {
+  border: 0;
+  background: transparent;
+  color: #1d5d8b;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 0;
+}
+.np-gallery-thumbnails {
+  display: flex;
+  gap: 7px;
+  width: 100%;
+  overflow-x: auto;
+  padding: 3px 2px 7px;
+}
+.np-gallery-thumbnails button {
+  flex: 0 0 59px;
+  height: 58px;
+  padding: 5px;
+  border: 1px solid #e0e7ef;
+  border-radius: 9px;
+  background: #fff;
+}
+.np-gallery-thumbnails button.selected {
+  border-color: #1d5b8b;
+  box-shadow: 0 0 0 2px #1d5b8b18;
+}
+.np-product-detail .np-gallery-thumbnails img,
+.np-product-gallery .np-gallery-thumbnails img {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 46px !important;
+  object-fit: contain;
+}
+.np-gallery-empty {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 35px;
+  color: #7b8da0;
+  font-size: 12px;
+  text-align: center;
+}
+.np-gallery-empty svg {
+  width: 40px;
+  height: 40px;
+  stroke: #9ab1c4;
+  stroke-width: 1.5;
+}
+.np-product-detail .cs-detail-copy {
+  min-width: 0;
+}
+.np-product-detail .cs-detail-copy h3 {
+  margin: 8px 0 13px;
+  font-size: clamp(19px, 2vw, 25px);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.np-product-category {
+  display: block;
+  margin-bottom: 10px;
+  color: #668098;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.np-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 13px;
+}
+.np-product-meta span {
+  padding: 5px 8px;
+  border: 1px solid #e3eaf0;
+  border-radius: 5px;
+  background: #f8fafc;
+  color: #5b748b;
+  font-size: 10px;
+}
+.np-product-detail .cs-detail-warranty {
+  margin: 0 0 14px;
+}
+.np-product-detail .cs-detail-prices {
+  margin: 14px 0 16px;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+.np-product-detail .cs-detail-prices > span {
+  min-height: 72px;
+  padding: 12px;
+  border-radius: 10px;
+}
+.np-product-detail .cs-detail-prices > span strong {
+  color: #ef4b32;
+}
+.np-product-detail .np-product-website {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 18px;
+  padding: 11px 15px;
+  border: 1px solid #164e83;
+  border-radius: 9px;
+  background: #164e83;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.np-product-detail .np-product-website:hover {
+  background: #0e3f6d;
+}
+.np-product-website svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.np-product-info {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e4ebf1;
+}
+.np-product-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #e4ebf1;
+  margin-bottom: 17px;
+}
+.np-product-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  margin-bottom: -1px;
+  padding: 0 0 12px;
+  color: #71879a;
+  font-size: 12px;
+  font-weight: 800;
+}
+.np-product-tabs button[aria-selected="true"] {
+  color: #164e83;
+  border-bottom-color: #ef4b32;
+}
+.np-product-tabs button span {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #f0f5f8;
+  font-size: 10px;
+}
+.np-product-description {
+  max-height: 250px;
+  overflow: auto;
+  white-space: pre-line;
+  margin: 0;
+  color: #5e7488;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.np-product-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 25px;
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+.np-product-specs > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.9fr) minmax(0, 1.1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 11px 0;
+  border-bottom: 1px solid #edf1f5;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.np-product-specs dt {
+  color: #778da0;
+  overflow-wrap: anywhere;
+}
+.np-product-specs dd {
+  margin: 0;
+  color: #29475f;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.np-product-overview-note {
+  margin: 0;
+  color: #778da0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+@media (max-width: 700px) {
+  .np-product-detail .cs-detail-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .np-gallery-stage {
+    aspect-ratio: 1.4;
+    max-height: 280px;
+  }
+  .np-product-detail .np-gallery-main {
+    max-height: 250px !important;
+  }
+  .np-product-specs {
+    grid-template-columns: 1fr;
+  }
+  .np-product-detail .np-product-website {
+    width: 100%;
+  }
+  .np-product-detail .cs-detail-copy h3 {
+    font-size: 21px;
+  }
+}

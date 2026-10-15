@@ -14,9 +14,9 @@
   width: 32px;
   height: 32px;
   overflow: hidden;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px #0c2b5012;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .pa-powered-by-logo > img {
   position: absolute;

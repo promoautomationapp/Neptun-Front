@@ -1,9 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { matchesSearch } from "./searchText";
 import { getLanguage, t } from "./i18n";
 
 export interface FilterOption<Value extends string | number = string> {
   value: Value;
   label: string;
+  disabled?: boolean;
 }
 
 export interface FilterSelectProps<Value extends string | number = string> {
@@ -11,6 +14,11 @@ export interface FilterSelectProps<Value extends string | number = string> {
   value: Value;
   options: readonly FilterOption<Value>[];
   onChange: (value: Value) => void;
+  disabled?: boolean;
+  id?: string;
+  hideLabel?: boolean;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
 }
 
 export interface FilterDateProps {
@@ -48,101 +56,74 @@ function useDismiss(
 }
 
 export function FilterSelect<Value extends string | number>({
-  label,
-  value,
-  options,
-  onChange,
+  label, value, options, onChange, disabled = false, id, hideLabel = false,
+  "aria-labelledby": labelledby, "aria-describedby": describedby,
 }: FilterSelectProps<Value>) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [placement, setPlacement] = useState<React.CSSProperties>({});
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
-  useDismiss(open, () => setOpen(false), root);
-  const selected =
-    options.find((option) => option.value === value) || options[0];
-
+  const selected = options.find(option => option.value === value) || options[0];
+  const visible = options.filter(option => matchesSearch(option.label, query));
+  function close() { setOpen(false); }
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: PointerEvent) => {
+      if (event.target instanceof Node && !root.current?.contains(event.target) && !popover.current?.contains(event.target)) close();
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { close(); trigger.current?.focus(); }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape); };
+  }, [open]);
+  useEffect(() => { if (disabled) close(); }, [disabled]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = Math.min(Math.max(rect.width, 240), window.innerWidth - 16);
+      const below = window.innerHeight - rect.bottom - 12;
+      const above = rect.top - 12;
+      const upward = below < 240 && above > below;
+      setPlacement({ position: "fixed", left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), top: upward ? undefined : rect.bottom + 5, bottom: upward ? window.innerHeight - rect.top + 5 : undefined, width, maxHeight: Math.max(120, Math.min(340, upward ? above : below)) });
+    };
+    place(); window.addEventListener("resize", place); document.addEventListener("scroll", place, true);
+    return () => { window.removeEventListener("resize", place); document.removeEventListener("scroll", place, true); };
+  }, [open]);
   function onKeys(event: React.KeyboardEvent<HTMLElement>) {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (!open) {
-        setOpen(true);
-        requestAnimationFrame(() =>
-          list.current
-            ?.querySelector<HTMLButtonElement>("[aria-selected='true']")
-            ?.focus(),
-        );
-      } else {
-        const buttons = [
-          ...(list.current?.querySelectorAll<HTMLButtonElement>(
-            "[role='option']",
-          ) || []),
-        ];
-        const index = buttons.findIndex(
-          (button) => button === document.activeElement,
-        );
-        buttons[
-          (index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) %
-            buttons.length
-        ]?.focus();
-      }
+    const input = event.target instanceof HTMLInputElement;
+    if (event.key === "Tab") { close(); return; }
+    if (!open && ["ArrowDown", "ArrowUp"].includes(event.key)) {
+      event.preventDefault(); setQuery(""); setOpen(true); return;
     }
-    if (event.key === "Home" || event.key === "End") {
-      event.preventDefault();
-      const buttons = [
-        ...(list.current?.querySelectorAll<HTMLButtonElement>(
-          "[role='option']",
-        ) || []),
-      ];
-      buttons[event.key === "Home" ? 0 : buttons.length - 1]?.focus();
-    }
+    const buttons = [...(list.current?.querySelectorAll<HTMLButtonElement>("[role='option']:not(:disabled)") || [])];
+    if (input && event.key === "Enter") { event.preventDefault(); buttons[0]?.click(); return; }
+    if (!["ArrowDown", "ArrowUp", ...(!input ? ["Home", "End"] : [])].includes(event.key)) return;
+    event.preventDefault();
+    const index = buttons.findIndex(button => button === document.activeElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : index < 0 ? (event.key === "ArrowDown" ? 0 : buttons.length - 1) : event.key === "ArrowDown" ? (index + 1) % buttons.length : (index - 1 + buttons.length) % buttons.length;
+    buttons[next]?.focus();
   }
-
-  return (
-    <div className={`cs-filter-control ${open ? "is-open" : ""}`} ref={root}>
-      <span className="cs-filter-label">{label}</span>
-      <button
-        ref={trigger}
-        type="button"
-        className="cs-filter-trigger"
-        aria-label={label}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-        onKeyDown={onKeys}
-      >
-        <span>{selected?.label}</span>
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <path d="m5 7 5 5 5-5" />
-        </svg>
-      </button>
-      {open && (
-        <div
-          className="cs-filter-options"
-          role="listbox"
-          aria-label={label}
-          ref={list}
-          onKeyDown={onKeys}
-        >
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-                trigger.current?.focus();
-              }}
-            >
-              <span>{option.label}</span>
-              {option.value === value && <span aria-hidden="true">✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <div className={`cs-filter-control ${open ? "is-open" : ""}`} ref={root}>
+    {!hideLabel && <span className="cs-filter-label">{label}</span>}
+    <button ref={trigger} id={id} type="button" className="cs-filter-trigger" aria-label={labelledby ? undefined : label} aria-labelledby={labelledby} aria-describedby={describedby} aria-haspopup="listbox" aria-expanded={open} disabled={disabled}
+      onClick={() => { setQuery(""); setOpen(current => !current); }} onKeyDown={onKeys}>
+      <span>{selected?.label}</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg>
+    </button>
+    {open && !disabled && createPortal(<div className="cs-filter-options cs-searchable-options" ref={popover} style={placement} onKeyDown={onKeys}>
+      <div className="cs-filter-option-search"><input autoFocus type="search" value={query} onChange={event => setQuery(event.target.value)} aria-label={`${t("Search")} ${label}`} placeholder={t("Search options…")} /></div>
+      <div role="listbox" aria-label={label} ref={list}>
+        {visible.map(option => <button key={option.value} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} onClick={() => { onChange(option.value); close(); trigger.current?.focus(); }}><span>{option.label}</span>{option.value === value && <span aria-hidden="true">✓</span>}</button>)}
+        {!visible.length && <p className="cs-filter-no-results">{t("No matches found")}</p>}
+      </div>
+    </div>, document.body)}
+  </div>;
 }
 
 function parseDate(value: string | undefined): Date | null {

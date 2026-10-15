@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { LogoLibrary } from "./LogoLibrary";
 import { SettingsGroup } from "./components";
 import { AssetPicker, Field, Toggle } from "./components";
@@ -34,7 +35,7 @@ export function LogosTab({
           }
         />
         <Field label="Default cover logo style">
-          <select
+          <SearchableSelect
             value={b.coverLogoStyle}
             onChange={(event) =>
               update((next) => {
@@ -48,7 +49,7 @@ export function LogosTab({
             <option value="original">Current NEPTUN cover logo</option>
             <option value="framed">Framed NEPTUN logo</option>
             <option value="custom">Uploaded logo</option>
-          </select>
+          </SearchableSelect>
         </Field>
         <AssetPicker
           label="Cover logo"
@@ -64,7 +65,7 @@ export function LogosTab({
           }
         />
         <Field label="Default NEPTUN logo style inside pages">
-          <select
+          <SearchableSelect
             value={b.neptunLogoOption}
             onChange={(event) =>
               update((next) => {
@@ -75,7 +76,7 @@ export function LogosTab({
           >
             <option value="classic">Current logo</option>
             <option value="framed">Framed logo</option>
-          </select>
+          </SearchableSelect>
         </Field>
       </SettingsGroup>
       <div className="ns-grid">

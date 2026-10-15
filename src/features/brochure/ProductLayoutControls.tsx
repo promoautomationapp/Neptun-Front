@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import React from "react";
 import type { Campaign, Product } from "../../domain/models";
 import {
@@ -5,10 +6,7 @@ import {
   usesPhoneCornerAnnotation,
 } from "./screenAnnotationGeometry";
 import { defaultProductDetailPlacement } from "./mobileDetails";
-import {
-  otherScreenInches,
-  tvScreenInches,
-} from "./tvSpecs";
+import { otherScreenInches, tvScreenInches } from "./tvSpecs";
 import { t } from "./i18n";
 import { defaultPhotoPlacement } from "../settings/product-design-defaults";
 import "../../styles/product-layout-controls.css";
@@ -23,7 +21,11 @@ export function ProductLayoutControls({
   onChange: (field: keyof Product, value: Product[keyof Product]) => void;
 }) {
   const photo = {
-    ...defaultPhotoPlacement(product, campaign, defaultProductDetailPlacement(product, campaign)),
+    ...defaultPhotoPlacement(
+      product,
+      campaign,
+      defaultProductDetailPlacement(product, campaign),
+    ),
     ...product.brochureImagePlacement,
   };
   const annotationType = tvScreenInches(product)
@@ -71,13 +73,13 @@ export function ProductLayoutControls({
       <h4>{t("Position & size")}</h4>
       <label className="cs-details-placement">
         <span>{t("Product details")}</span>
-        <select
+        <SearchableSelect
           value={defaultProductDetailPlacement(product, campaign)}
           onChange={(event) => onChange("detailPlacement", event.target.value)}
         >
           <option value="left">{t("Left of image")}</option>
           <option value="bottom">{t("Below image")}</option>
-        </select>
+        </SearchableSelect>
       </label>
       <p>
         {t(

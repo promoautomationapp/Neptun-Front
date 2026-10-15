@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import {
   cloneElement,
   createContext,
@@ -136,7 +137,7 @@ export function AssetPicker({
   return (
     <div className="ns-asset-picker">
       <Field label={label}>
-        <select
+        <SearchableSelect
           value={value}
           onChange={(event) => onChange(event.target.value)}
         >
@@ -147,7 +148,7 @@ export function AssetPicker({
               {item.name}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
       </Field>
       {(value || defaultImage) && (
         <img

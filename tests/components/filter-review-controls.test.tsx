@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -122,16 +123,14 @@ it("preserves a rejected comment draft and clears only after a successful save",
   const text = view.getByRole("textbox", { name: "Your comment" });
   const mention = view.getByRole("combobox", { name: "Mention a teammate" });
   fireEvent.change(text, { target: { value: "  Move this label  " } });
-  fireEvent.change(mention, { target: { value: manager.email } });
+  selectSetting(view, "Mention a teammate", manager.email);
   fireEvent.click(view.getByRole("button", { name: "Post comment" }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   expect(save).toHaveBeenLastCalledWith("Move this label", manager.email);
   expect(text).toHaveProperty("value", "  Move this label  ");
   fireEvent.click(view.getByRole("button", { name: "Post comment" }));
   await waitFor(() => expect(text).toHaveProperty("value", ""));
-  expect(mention.querySelector("option:checked")?.getAttribute("value")).toBe(
-    "",
-  );
+  expect(mention.textContent).toContain("No mention");
 });
 
 it("keeps comment page anchors, thread replies and resolution actions intact", async () => {

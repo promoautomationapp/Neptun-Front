@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import {
   act,
@@ -219,9 +220,7 @@ it("saves edit-mode dimensions, guide visibility and product grid while preservi
   const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
   await open(view);
   const canvas = view.getByLabelText("existing.png").closest(".social-canvas")!;
-  fireEvent.change(view.getByLabelText("Post size"), {
-    target: { value: "custom" },
-  });
+  selectSetting(view, "Post size", "custom");
   fireEvent.change(view.getByLabelText("Post width in pixels"), {
     target: { value: "1440" },
   });

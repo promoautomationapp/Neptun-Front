@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { matchesSearch } from "../brochure/searchText";
+import { t } from "../brochure/i18n";
 
 export interface StudioSelectOption<Value extends string | number = string> {
   value: Value;
@@ -28,7 +30,7 @@ export function StudioSelect<Value extends string | number>({
   options,
   onChange,
   label,
-  searchable = false,
+  searchable = true,
   disabled = false,
 }: StudioSelectProps<Value>) {
   const [open, setOpen] = useState(false);
@@ -42,11 +44,7 @@ export function StudioSelect<Value extends string | number>({
     if (disabled) setOpen(false);
   }, [disabled]);
   const selected = options.find((item) => item.value === value) || options[0];
-  const visible = options.filter((item) =>
-    `${item.label} ${item.detail || ""} ${item.group || ""}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
+  const visible = options.filter(item => matchesSearch(`${item.label} ${item.detail || ""} ${item.group || ""}`, query));
   useEffect(() => {
     if (!open) return;
     const close = (event: PointerEvent) => {
@@ -159,7 +157,7 @@ export function StudioSelect<Value extends string | number>({
                   <b aria-hidden="true">{value === item.value ? "✓" : ""}</b>
                 </button>
               ))}
-              {!visible.length && <p>No matches found</p>}
+              {!visible.length && <p>{t("No matches found")}</p>}
             </div>
           </div>,
           document.body,

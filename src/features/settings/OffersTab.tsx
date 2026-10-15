@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { AssetPicker, Field } from "./components";
 import { OFFER_STYLES } from "../brochure/offerStyles";
@@ -18,11 +19,14 @@ export function SavingSelect({
 }) {
   return (
     <Field label={label}>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <SearchableSelect
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
         {inherit && <option value="">Use the default above</option>}
         <option value="amount">Kurse (€) — Save €</option>
         <option value="percentage">Zbritje (%) — Discount %</option>
-      </select>
+      </SearchableSelect>
     </Field>
   );
 }
@@ -40,7 +44,7 @@ export function OffersTab({
         choices take priority over category choices.
       </p>
       <Field label="Default price design">
-        <select
+        <SearchableSelect
           value={draft.offerStyle}
           onChange={(event) =>
             update((next) => {
@@ -54,7 +58,7 @@ export function OffersTab({
               {item.name} — {item.detail}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
       </Field>
       <SavingSelect
         label="Default savings display"
@@ -66,7 +70,7 @@ export function OffersTab({
         }
       />
       <Field label="Default haPPy price logo">
-        <select
+        <SearchableSelect
           value={draft.brochure.priceLogo}
           onChange={(event) =>
             update((next) => {
@@ -78,7 +82,7 @@ export function OffersTab({
           <option value="symbol">haPPy with symbol (current)</option>
           <option value="wordmark">haPPy wordmark</option>
           <option value="custom">Uploaded price logo</option>
-        </select>
+        </SearchableSelect>
       </Field>
       <AssetPicker
         label="Price logo"

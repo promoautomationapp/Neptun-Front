@@ -1,3 +1,4 @@
+import { campaignValidity } from "./campaignValidity";
 import type { Campaign, Product } from "../../domain/models";
 import { normalize } from "../brochure/utils";
 import { resolveBrochureFormat } from "../brochure/brochureFormat";
@@ -27,6 +28,7 @@ const statuses = [
   "in_review",
   "changes_requested",
   "completed",
+  "expired",
 ];
 const periods = ["all", "past", "current", "upcoming", "one_day"];
 const sorts = [
@@ -122,7 +124,7 @@ export function filterCampaigns(
       if (!terms.every((term) => searchable.includes(term))) return false;
       if (
         filters.status !== "all" &&
-        (item.status || "in_progress") !== filters.status
+        (filters.status === "expired" ? campaignValidity(item, now) !== "expired" : (item.status || "in_progress") !== filters.status)
       )
         return false;
       if (filters.type !== "all" && item.type !== filters.type) return false;

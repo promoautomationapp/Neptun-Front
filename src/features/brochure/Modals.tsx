@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import type {
   Product,
   Settings,
@@ -42,6 +43,9 @@ import { searchProducts } from "./productSearch";
 import { BackgroundPicker } from "./BackgroundPicker";
 import { BrochureGridPicker } from "./BrochureGridPicker";
 import { BrochureFormatPicker } from "./BrochureFormatPicker";
+import { ProductGallery, productWebsiteLink } from "../products/ProductGallery";
+import { ProductInformation } from "../products/ProductInformation";
+import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import { brochureFormatSelection } from "./brochureFormat";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 
@@ -135,7 +139,12 @@ export function Modal({
   const backdrop = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (event: { key: string }) => {
-      if (event.key === "Escape" && [...document.querySelectorAll(".cs-modal-backdrop")].at(-1) === backdrop.current) onClose();
+      if (
+        event.key === "Escape" &&
+        [...document.querySelectorAll(".cs-modal-backdrop")].at(-1) ===
+          backdrop.current
+      )
+        onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -208,13 +217,19 @@ export function CreateCampaign({
   );
   const [backgroundEdited, setBackgroundEdited] = useState(false);
   const [layout, setLayout] = useState<string>(initialSettings.brochure.layout);
-  const [autoProductLayout, setAutoProductLayout] = useState(initialSettings.brochure.automaticProductLayout);
+  const [autoProductLayout, setAutoProductLayout] = useState(
+    initialSettings.brochure.automaticProductLayout,
+  );
   const [brochureFormat, setBrochureFormat] = useState<string>(
     initialSettings.brochure.format,
   );
-  const [tagline, setTagline] = useState(initialSettings.brochure.showCoverMessage ? initialType.tagline : "");
+  const [tagline, setTagline] = useState(
+    initialSettings.brochure.showCoverMessage ? initialType.tagline : "",
+  );
   const [taglineEdited, setTaglineEdited] = useState(false);
-  const [showCoverBand, setShowCoverBand] = useState(initialSettings.brochure.showCoverBand);
+  const [showCoverBand, setShowCoverBand] = useState(
+    initialSettings.brochure.showCoverBand,
+  );
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | undefined>(undefined);
   const [importedProducts, setImportedProducts] = useState<Product[]>([]);
@@ -251,7 +266,12 @@ export function CreateCampaign({
   }
   function chooseType(value: string) {
     setType(value);
-    if (!taglineEdited) setTagline(initialSettings.brochure.showCoverMessage ? typeOptions.find(item => item.name === value)?.tagline || "" : "");
+    if (!taglineEdited)
+      setTagline(
+        initialSettings.brochure.showCoverMessage
+          ? typeOptions.find((item) => item.name === value)?.tagline || ""
+          : "",
+      );
 
     if (value !== "Other") setName(`${t(value)} ${new Date().getFullYear()}`);
   }
@@ -262,7 +282,7 @@ export function CreateCampaign({
     if (finalEndDate < startDate)
       return setError(t("End date must be on or after the start date."));
     onCreate({
-      ...campaignDefaults(initialSettings,undefined,type),
+      ...campaignDefaults(initialSettings, undefined, type),
       id: crypto.randomUUID(),
       name: name.trim(),
       type: type === "Other" ? "Custom campaign" : type,
@@ -771,9 +791,14 @@ export function ImportSales({
           ),
     [rows, brochureColumns, codeCol, priceCol, catalog, rowOffset],
   );
-  const isBrochureImport = Boolean(brochureAnalysis?.products.length || brochureAnalysis?.incompleteProducts.length);
+  const isBrochureImport = Boolean(
+    brochureAnalysis?.products.length ||
+    brochureAnalysis?.incompleteProducts.length,
+  );
   const ready = [
-    ...(isBrochureImport && includeIncomplete ? brochureAnalysis.incompleteProducts : []),
+    ...(isBrochureImport && includeIncomplete
+      ? brochureAnalysis.incompleteProducts
+      : []),
     ...(isBrochureImport
       ? brochureAnalysis.products.filter(
           (product: Product) =>
@@ -868,7 +893,7 @@ export function ImportSales({
             <div className="cs-import-source-options">
               {sheets.length > 1 && (
                 <Field label={t("Spreadsheet tab")}>
-                  <select
+                  <SearchableSelect
                     value={sheetName}
                     onChange={(event) => {
                       const table = selectImportTable(sheets, catalog, {
@@ -882,11 +907,11 @@ export function ImportSales({
                         {sheet.name}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </Field>
               )}
               <Field label={t("Header row")}>
-                <select
+                <SearchableSelect
                   value={headerIndex}
                   onChange={(event) => {
                     const table = selectImportTable(sheets, catalog, {
@@ -910,7 +935,7 @@ export function ImportSales({
                       </option>
                     ) : null,
                   )}
-                </select>
+                </SearchableSelect>
               </Field>
             </div>
             <div className="cs-two-fields cs-import-columns">
@@ -940,7 +965,7 @@ export function ImportSales({
               />
             </div>
             <Field label={t("Set column (Pulla, optional)")}>
-              <select
+              <SearchableSelect
                 value={brochureColumns.setCol}
                 onChange={(event) =>
                   setBrochureColumns((current) => ({
@@ -955,7 +980,7 @@ export function ImportSales({
                     {value || `${t("Column")} ${index + 1}`}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
               <small>
                 {t(
                   "Consecutive rows marked Set become one offer with one shared price.",
@@ -984,7 +1009,7 @@ export function ImportSales({
                   ] satisfies Array<[keyof BrochureImportColumns, string]>
                 ).map(([field, label]) => (
                   <Field key={field} label={label}>
-                    <select
+                    <SearchableSelect
                       value={brochureColumns[field]}
                       onChange={(event) =>
                         setBrochureColumns((current) => ({
@@ -1002,7 +1027,7 @@ export function ImportSales({
                           · {value}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </Field>
                 ))}
               </div>
@@ -1069,14 +1094,44 @@ export function ImportSales({
               )}
             </p>
           )}
-          {isBrochureImport && brochureAnalysis.incompleteProducts.length > 0 && (
-            <div className="cs-import-missing-info" role="status">
-              <strong>{brochureAnalysis.incompleteProducts.length} {t("incomplete Excel rows")}</strong>
-              <p>{t("These rows are missing a product code/name or a sale price in the file. Keep them as editable drafts with the Excel details. Add the missing name and price, then upload a photo or search for the exact model.")}</p>
-              <label><input type="checkbox" checked={includeIncomplete} onChange={(event) => setIncludeIncomplete(event.target.checked)} /> {t("Keep incomplete rows for editing")}</label>
-              <details><summary>{t("View incomplete rows")}</summary>{brochureAnalysis.incompleteProducts.map((product) => <p key={product.code}>{t("Row")} {product.excelSource?.row} · {product.name === product.excelSource?.placeholderName ? t("Missing product code and name in Excel") : product.name}{!(Number(product.sale) > 0) ? ` · ${t("Missing sale price in Excel")}` : ""}</p>)}</details>
-            </div>
-          )}
+          {isBrochureImport &&
+            brochureAnalysis.incompleteProducts.length > 0 && (
+              <div className="cs-import-missing-info" role="status">
+                <strong>
+                  {brochureAnalysis.incompleteProducts.length}{" "}
+                  {t("incomplete Excel rows")}
+                </strong>
+                <p>
+                  {t(
+                    "These rows are missing a product code/name or a sale price in the file. Keep them as editable drafts with the Excel details. Add the missing name and price, then upload a photo or search for the exact model.",
+                  )}
+                </p>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={includeIncomplete}
+                    onChange={(event) =>
+                      setIncludeIncomplete(event.target.checked)
+                    }
+                  />{" "}
+                  {t("Keep incomplete rows for editing")}
+                </label>
+                <details>
+                  <summary>{t("View incomplete rows")}</summary>
+                  {brochureAnalysis.incompleteProducts.map((product) => (
+                    <p key={product.code}>
+                      {t("Row")} {product.excelSource?.row} ·{" "}
+                      {product.name === product.excelSource?.placeholderName
+                        ? t("Missing product code and name in Excel")
+                        : product.name}
+                      {!(Number(product.sale) > 0)
+                        ? ` · ${t("Missing sale price in Excel")}`
+                        : ""}
+                    </p>
+                  ))}
+                </details>
+              </div>
+            )}
           {analysis.discounted.length +
             analysis.withoutRegular.length +
             analysis.higher.length +
@@ -1597,7 +1652,7 @@ export function ManualPicker({
 }
 
 export function Details({
-  product,
+  product: originalProduct,
   campaign,
   onAppearanceChange,
   onProductChange,
@@ -1617,6 +1672,13 @@ export function Details({
   onImageEdit?: () => void;
   onClose: () => void;
 }) {
+  const catalogPhotos = useCatalogPhotos(
+    originalProduct.catalogMissing ? undefined : originalProduct,
+  );
+  const product = onProductChange
+    ? originalProduct
+    : catalogPhotos.product || originalProduct;
+  const website = productWebsiteLink(product.url);
   const specs = Object.entries(displaySpecs(product)).filter(
     ([, value]) => value,
   );
@@ -1639,341 +1701,379 @@ export function Details({
       onClose={onClose}
       wide
     >
-      <div className="cs-detail-layout">
-        <div className="cs-detail-image">
-          <MissingCatalogNotice
-            product={product}
-            onUploadImage={onImageEdit || undefined}
-          />
-          <ProductImage product={product} preferRemote={!campaign} />
-          {onImageEdit && (
-            <Button onClick={onImageEdit}>{t("Change image")}</Button>
-          )}
-        </div>
-        <div className="cs-detail-copy">
-          <span className="cs-eyebrow">
-            {product.category} / {product.subcategory}
-          </span>
-          {onProductChange ? (
-            <div className="cs-detail-edit-fields">
-              <Field label={t("Brand shown in brochure")}>
-                <input
-                  value={product.brand || ""}
-                  onChange={(event) =>
-                    onProductChange("brand", event.target.value)
-                  }
-                />
-              </Field>
-              <Field label={t("Product name shown in brochure")}>
-                <input
-                  value={product.name || ""}
-                  onChange={(event) =>
-                    onProductChange("name", event.target.value)
-                  }
-                />
-              </Field>
-              <Field label={t("Warranty shown in brochure")}>
-                <input
-                  value={product.warranty || ""}
-                  onChange={(event) =>
-                    onProductChange("warranty", event.target.value)
-                  }
-                  placeholder="2 vite"
-                />
-              </Field>
-            </div>
-          ) : (
-            <h3>{product.name}</h3>
-          )}
-          {warranty && (
-            <p className="cs-detail-warranty">
-              <b>{t("Warranty")}</b> · {warranty}
-            </p>
-          )}
-          <div className="cs-detail-prices">
-            <span>
-              {t("Regular price")} <b>{money(product.regular)} €</b>
+      <div className="np-product-detail">
+        <div className="cs-detail-layout">
+          <div className="cs-detail-image">
+            <MissingCatalogNotice
+              product={product}
+              onUploadImage={onImageEdit || undefined}
+            />
+            <ProductGallery
+              product={originalProduct}
+              catalogProduct={catalogPhotos.product}
+              loading={catalogPhotos.loading}
+              onRetry={catalogPhotos.error ? catalogPhotos.retry : undefined}
+            />
+            {onImageEdit && (
+              <Button onClick={onImageEdit}>{t("Change image")}</Button>
+            )}
+          </div>
+          <div className="cs-detail-copy">
+            <span className="np-product-category">
+              {product.categoryPath ||
+                [
+                  ...new Set(
+                    [product.category, product.subcategory].filter(Boolean),
+                  ),
+                ].join(" / ")}
             </span>
-            {Number(product.sale) > 0 && (
-              <>
-                <span>
-                  {t("Sale price")} <strong>{money(product.sale)} €</strong>
-                </span>
-                {validSale(product) ? (
-                  <span className="cs-detail-discount">
-                    {selectedSavingMode === "percentage"
-                      ? t("Discount %")
-                      : t("Save €")}
-                    <b>
+            {onProductChange ? (
+              <div className="cs-detail-edit-fields">
+                <Field label={t("Brand shown in brochure")}>
+                  <input
+                    value={product.brand || ""}
+                    onChange={(event) =>
+                      onProductChange("brand", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field label={t("Product name shown in brochure")}>
+                  <input
+                    value={product.name || ""}
+                    onChange={(event) =>
+                      onProductChange("name", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field label={t("Warranty shown in brochure")}>
+                  <input
+                    value={product.warranty || ""}
+                    onChange={(event) =>
+                      onProductChange("warranty", event.target.value)
+                    }
+                    placeholder="2 vite"
+                  />
+                </Field>
+              </div>
+            ) : (
+              <h3>{product.name}</h3>
+            )}
+            <div className="np-product-meta">
+              {product.brand && <span>{product.brand}</span>}
+              <span>
+                {t("Product code")}: {product.code}
+              </span>
+              {product.sourceMissing && <span>{t("Saved in catalog")}</span>}
+            </div>
+            {warranty && (
+              <p className="cs-detail-warranty">
+                <b>{t("Warranty")}</b> · {warranty}
+              </p>
+            )}
+            <div className="cs-detail-prices">
+              <span>
+                {t("Regular price")}{" "}
+                <b>
+                  {hasRegularPrice(product)
+                    ? `${money(product.regular)} €`
+                    : "—"}
+                </b>
+              </span>
+              {Number(product.sale) > 0 && (
+                <>
+                  <span>
+                    {t("Sale price")} <strong>{money(product.sale)} €</strong>
+                  </span>
+                  {validSale(product) ? (
+                    <span className="cs-detail-discount">
                       {selectedSavingMode === "percentage"
-                        ? `${savedPercent}%`
-                        : `${money(savedAmount)} €`}
+                        ? t("Discount %")
+                        : t("Save €")}
+                      <b>
+                        {selectedSavingMode === "percentage"
+                          ? `${savedPercent}%`
+                          : `${money(savedAmount)} €`}
+                      </b>
+                    </span>
+                  ) : hasRegularPrice(product) &&
+                    Number(product.sale) > Number(product.regular) ? (
+                    <span className="cs-detail-discount higher">
+                      −
+                      {Math.round(
+                        (Number(product.sale) / Number(product.regular) - 1) *
+                          100,
+                      )}
+                      % · {t("Above regular")}{" "}
+                      {money(Number(product.sale) - Number(product.regular))} €
+                      {!product.confirmedAboveRegular &&
+                        ` · ${t("Needs confirmation")}`}
+                    </span>
+                  ) : null}
+                </>
+              )}
+            </div>
+            {website && (
+              <a
+                className="np-product-website"
+                href={website.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  aria-hidden="true"
+                >
+                  <path d="M11 3h6v6M17 3l-8 8M8 4H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4" />
+                </svg>
+                {website.host === "neptun-ks.com"
+                  ? t("View on neptun-ks.com ↗")
+                  : `${t("View on website")} · ${website.host}`}
+              </a>
+            )}
+            {!onProductChange && (
+              <ProductInformation
+                key={product.code}
+                description={product.description}
+                specs={specs}
+              />
+            )}
+            {campaign && onAppearanceChange && (
+              <div className="cs-detail-saving-picker">
+                <strong>{t("Savings badge in brochure")}</strong>
+                <small>
+                  {t(
+                    "Choose how this product's saving appears on the cover and inside pages.",
+                  )}
+                </small>
+                <div role="group" aria-label={t("Savings badge in brochure")}>
+                  <button
+                    type="button"
+                    className={selectedSavingMode === "amount" ? "chosen" : ""}
+                    aria-pressed={selectedSavingMode === "amount"}
+                    disabled={!validSale(product)}
+                    onClick={() => onAppearanceChange("savingMode", "amount")}
+                  >
+                    <span>{t("Save €")}</span>
+                    <b>
+                      {validSale(product) ? `${money(savedAmount)} €` : "—"}
                     </b>
-                  </span>
-                ) : hasRegularPrice(product) &&
-                  Number(product.sale) > Number(product.regular) ? (
-                  <span className="cs-detail-discount higher">
-                    −
-                    {Math.round(
-                      (Number(product.sale) / Number(product.regular) - 1) *
-                        100,
-                    )}
-                    % · {t("Above regular")}{" "}
-                    {money(Number(product.sale) - Number(product.regular))} €
-                    {!product.confirmedAboveRegular &&
-                      ` · ${t("Needs confirmation")}`}
-                  </span>
-                ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      selectedSavingMode === "percentage" ? "chosen" : ""
+                    }
+                    aria-pressed={selectedSavingMode === "percentage"}
+                    disabled={!validSale(product)}
+                    onClick={() =>
+                      onAppearanceChange("savingMode", "percentage")
+                    }
+                  >
+                    <span>{t("Discount %")}</span>
+                    <b>{validSale(product) ? `${savedPercent}%` : "—"}</b>
+                  </button>
+                </div>
+              </div>
+            )}
+            {onProductChange && (
+              <>
+                <h4>{t("Description")}</h4>
+                <textarea
+                  className="cs-detail-description-edit"
+                  rows={4}
+                  value={product.description || ""}
+                  onChange={(event) =>
+                    onProductChange("description", event.target.value)
+                  }
+                  aria-label={t("Description")}
+                />
               </>
             )}
           </div>
-          {campaign && onAppearanceChange && (
-            <div className="cs-detail-saving-picker">
-              <strong>{t("Savings badge in brochure")}</strong>
-              <small>
-                {t(
-                  "Choose how this product's saving appears on the cover and inside pages.",
-                )}
-              </small>
-              <div role="group" aria-label={t("Savings badge in brochure")}>
-                <button
-                  type="button"
-                  className={selectedSavingMode === "amount" ? "chosen" : ""}
-                  aria-pressed={selectedSavingMode === "amount"}
-                  disabled={!validSale(product)}
-                  onClick={() => onAppearanceChange("savingMode", "amount")}
-                >
-                  <span>{t("Save €")}</span>
-                  <b>{validSale(product) ? `${money(savedAmount)} €` : "—"}</b>
-                </button>
-                <button
-                  type="button"
-                  className={
-                    selectedSavingMode === "percentage" ? "chosen" : ""
-                  }
-                  aria-pressed={selectedSavingMode === "percentage"}
-                  disabled={!validSale(product)}
-                  onClick={() => onAppearanceChange("savingMode", "percentage")}
-                >
-                  <span>{t("Discount %")}</span>
-                  <b>{validSale(product) ? `${savedPercent}%` : "—"}</b>
-                </button>
-              </div>
-            </div>
-          )}
-          <h4>{t("Description")}</h4>
-          {onProductChange ? (
-            <textarea
-              className="cs-detail-description-edit"
-              rows={4}
-              value={product.description || ""}
-              onChange={(event) =>
-                onProductChange("description", event.target.value)
-              }
-              aria-label={t("Description")}
-            />
-          ) : (
-            <p>{product.description || t("No description in the catalog.")}</p>
-          )}
-          {product.url && (
-            <a
-              className="cs-external-link"
-              href={product.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t("View on neptun-ks.com ↗")}
-            </a>
-          )}
         </div>
-      </div>
-      {onProductChange && (
-        <div className="cs-spec-edit">
-          <details
-            className="cs-detail-appearance"
-            name="product-extra-settings"
-          >
-            <summary>{t("Position & size")}</summary>
-            <ProductLayoutControls
-              campaign={campaign || {}}
-              product={product}
-              onChange={onProductChange}
-            />
-          </details>
-          <details
-            className="cs-detail-appearance"
-            name="product-extra-settings"
-          >
-            <summary>{t("Product images and feature badges")}</summary>
-            <ProductArtworkControls
-              campaign={campaign}
-              product={product}
-              onChange={onProductChange}
-            />
-          </details>
-          <BundleOfferControls
-            product={product}
-            campaign={campaign}
-            onChange={onProductChange}
-          />
-          <h4>{t("Details shown in brochure")}</h4>
-          <p>
-            {t(
-              "Use white or outlined blocks. Automatic styling follows the detail content.",
-            )}
-          </p>
-          {(Array.isArray(product.brochureDetails)
-            ? savedDetailEntries(product) || []
-            : savedSpecs
-          )
-            .filter(([, value]) => value)
-            .map(([key, value]) => (
-              <label className="cs-detail-fill-choice" key={key}>
-                <span>
-                  {Array.isArray(product.brochureDetails) ? value : key}
-                </span>
-                <select
-                  aria-label={`Block style: ${key}`}
-                  value={
-                    typeof product.detailBlockStyles?.[key] === "string"
-                      ? product.detailBlockStyles[key]
-                      : "auto"
-                  }
-                  onChange={(event) =>
-                    onProductChange("detailBlockStyles", {
-                      ...product.detailBlockStyles,
-                      [key]: event.target.value,
-                    })
-                  }
-                >
-                  <option value="auto">{t("Automatic")}</option>
-                  <option value="filled">{t("White block")}</option>
-                  <option value="outline">{t("Outlined block")}</option>
-                </select>
-              </label>
-            ))}
-          {Array.isArray(product.brochureDetails) ? (
-            <>
-              <p>
-                {t(
-                  "One detail per line, in brochure order. You can also drag the details on the page to reorder them.",
-                )}
-              </p>
-              <textarea
-                rows={Math.min(
-                  10,
-                  Math.max(4, (product.brochureDetails?.length || 0) + 1),
-                )}
-                value={(savedDetailEntries(product) || [])
-                  .map(([, text]) => text)
-                  .join("\n")}
-                onChange={(event) =>
-                  onProductChange(
-                    "brochureDetails",
-                    event.target.value.split(/\r?\n/).map((text, index) => {
-                      const saved = product.brochureDetails?.[index];
-                      return saved && typeof saved === "object"
-                        ? { ...saved, text }
-                        : text;
-                    }),
-                  )
-                }
-                aria-label={t("Brochure details, one per line")}
+        {onProductChange && (
+          <div className="cs-spec-edit">
+            <details
+              className="cs-detail-appearance"
+              name="product-extra-settings"
+            >
+              <summary>{t("Position & size")}</summary>
+              <ProductLayoutControls
+                campaign={campaign || {}}
+                product={product}
+                onChange={onProductChange}
               />
-            </>
-          ) : (
-            <>
-              <p>
-                {t(
-                  "Edit a label or value. Empty values are not shown in the brochure.",
-                )}
-              </p>
-              {savedSpecs.map(([key, value], index) => (
-                <div className="cs-spec-edit-row" key={index}>
-                  <input
-                    aria-label={`${t("Detail label")} ${index + 1}`}
-                    value={key}
-                    onChange={(event) => {
-                      const next = [...savedSpecs];
-                      next[index] = [event.target.value, value];
-                      onProductChange("specs", Object.fromEntries(next));
-                    }}
-                  />
-                  <input
-                    aria-label={`${t("Detail value")} ${index + 1}`}
-                    value={String(value)}
+            </details>
+            <details
+              className="cs-detail-appearance"
+              name="product-extra-settings"
+            >
+              <summary>{t("Product images and feature badges")}</summary>
+              <ProductArtworkControls
+                campaign={campaign}
+                product={product}
+                onChange={onProductChange}
+              />
+            </details>
+            <BundleOfferControls
+              product={product}
+              campaign={campaign}
+              onChange={onProductChange}
+            />
+            <h4>{t("Details shown in brochure")}</h4>
+            <p>
+              {t(
+                "Use white or outlined blocks. Automatic styling follows the detail content.",
+              )}
+            </p>
+            {(Array.isArray(product.brochureDetails)
+              ? savedDetailEntries(product) || []
+              : savedSpecs
+            )
+              .filter(([, value]) => value)
+              .map(([key, value]) => (
+                <label className="cs-detail-fill-choice" key={key}>
+                  <span>
+                    {Array.isArray(product.brochureDetails) ? value : key}
+                  </span>
+                  <SearchableSelect
+                    aria-label={`Block style: ${key}`}
+                    value={
+                      typeof product.detailBlockStyles?.[key] === "string"
+                        ? product.detailBlockStyles[key]
+                        : "auto"
+                    }
                     onChange={(event) =>
-                      onProductChange("specs", {
-                        ...Object.fromEntries(savedSpecs),
+                      onProductChange("detailBlockStyles", {
+                        ...product.detailBlockStyles,
                         [key]: event.target.value,
                       })
                     }
-                  />
-                  <button
-                    type="button"
-                    aria-label={`${t("Remove detail")} ${key}`}
-                    onClick={() => {
-                      const next = Object.fromEntries(savedSpecs);
-                      delete next[key];
-                      onProductChange("specs", next);
-                    }}
                   >
-                    ×
-                  </button>
-                </div>
+                    <option value="auto">{t("Automatic")}</option>
+                    <option value="filled">{t("White block")}</option>
+                    <option value="outline">{t("Outlined block")}</option>
+                  </SearchableSelect>
+                </label>
               ))}
-              <Button
-                onClick={() =>
-                  onProductChange("specs", {
-                    ...Object.fromEntries(savedSpecs),
-                    [`${t("New detail")} ${savedSpecs.length + 1}`]: "",
-                  })
-                }
-              >
-                {t("+ Add detail")}
-              </Button>
-            </>
-          )}
-        </div>
-      )}
-      {campaign && onAppearanceChange && (
-        <details className="cs-detail-appearance" name="product-extra-settings">
-          <summary>{t("Offer card style for this product")}</summary>
-          <p>
-            {t(
-              "Override the campaign look for this product, or keep the campaign default.",
+            {Array.isArray(product.brochureDetails) ? (
+              <>
+                <p>
+                  {t(
+                    "One detail per line, in brochure order. You can also drag the details on the page to reorder them.",
+                  )}
+                </p>
+                <textarea
+                  rows={Math.min(
+                    10,
+                    Math.max(4, (product.brochureDetails?.length || 0) + 1),
+                  )}
+                  value={(savedDetailEntries(product) || [])
+                    .map(([, text]) => text)
+                    .join("\n")}
+                  onChange={(event) =>
+                    onProductChange(
+                      "brochureDetails",
+                      event.target.value.split(/\r?\n/).map((text, index) => {
+                        const saved = product.brochureDetails?.[index];
+                        return saved && typeof saved === "object"
+                          ? { ...saved, text }
+                          : text;
+                      }),
+                    )
+                  }
+                  aria-label={t("Brochure details, one per line")}
+                />
+              </>
+            ) : (
+              <>
+                <p>
+                  {t(
+                    "Edit a label or value. Empty values are not shown in the brochure.",
+                  )}
+                </p>
+                {savedSpecs.map(([key, value], index) => (
+                  <div className="cs-spec-edit-row" key={index}>
+                    <input
+                      aria-label={`${t("Detail label")} ${index + 1}`}
+                      value={key}
+                      onChange={(event) => {
+                        const next = [...savedSpecs];
+                        next[index] = [event.target.value, value];
+                        onProductChange("specs", Object.fromEntries(next));
+                      }}
+                    />
+                    <input
+                      aria-label={`${t("Detail value")} ${index + 1}`}
+                      value={String(value)}
+                      onChange={(event) =>
+                        onProductChange("specs", {
+                          ...Object.fromEntries(savedSpecs),
+                          [key]: event.target.value,
+                        })
+                      }
+                    />
+                    <button
+                      type="button"
+                      aria-label={`${t("Remove detail")} ${key}`}
+                      onClick={() => {
+                        const next = Object.fromEntries(savedSpecs);
+                        delete next[key];
+                        onProductChange("specs", next);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <Button
+                  onClick={() =>
+                    onProductChange("specs", {
+                      ...Object.fromEntries(savedSpecs),
+                      [`${t("New detail")} ${savedSpecs.length + 1}`]: "",
+                    })
+                  }
+                >
+                  {t("+ Add detail")}
+                </Button>
+              </>
             )}
-          </p>
-          <OfferStyleControls
-            inherit
-            scope="product"
-            styleValue={product.offerStyle || ""}
-            savingValue={product.savingMode || ""}
-            inheritedStyle={campaign.offerStyle || "current"}
-            inheritedSaving={savingModeFor(campaign, {
-              ...product,
-              savingMode: "",
-            })}
-            savingInheritLabel="Use category or campaign default"
-            showSaving={false}
-            onStyleChange={(value) => onAppearanceChange("offerStyle", value)}
-            onSavingChange={(value) => onAppearanceChange("savingMode", value)}
-          />
-        </details>
-      )}
-      {!onProductChange && specs.length > 0 && (
-        <div className="cs-spec-table">
-          <h4>{t("Specifications from catalog")}</h4>
-          <div>
-            {specs.map(([key, value]) => (
-              <p key={key}>
-                <span>{key}</span>
-                <b>{String(value)}</b>
-              </p>
-            ))}
           </div>
-        </div>
-      )}
+        )}
+        {campaign && onAppearanceChange && (
+          <details
+            className="cs-detail-appearance"
+            name="product-extra-settings"
+          >
+            <summary>{t("Offer card style for this product")}</summary>
+            <p>
+              {t(
+                "Override the campaign look for this product, or keep the campaign default.",
+              )}
+            </p>
+            <OfferStyleControls
+              inherit
+              scope="product"
+              styleValue={product.offerStyle || ""}
+              savingValue={product.savingMode || ""}
+              inheritedStyle={campaign.offerStyle || "current"}
+              inheritedSaving={savingModeFor(campaign, {
+                ...product,
+                savingMode: "",
+              })}
+              savingInheritLabel="Use category or campaign default"
+              showSaving={false}
+              onStyleChange={(value) => onAppearanceChange("offerStyle", value)}
+              onSavingChange={(value) =>
+                onAppearanceChange("savingMode", value)
+              }
+            />
+          </details>
+        )}
+      </div>
     </Modal>
   );
 }

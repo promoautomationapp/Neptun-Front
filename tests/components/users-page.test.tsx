@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -66,8 +67,8 @@ it("hides support accounts from Neptun admins and invites new staff by default",
   expect(view.getByText("Administrators")).toBeTruthy();
   fireEvent.click(view.getByRole("button", { name: "＋ Invite a user" }));
   expect(
-    (view.getByLabelText("Invitation role") as HTMLSelectElement).value,
-  ).toBe("staff");
+    view.getByRole("combobox", { name: "Invitation role" }).textContent,
+  ).toContain("Staff");
   fireEvent.change(view.getByLabelText("Full name"), {
     target: { value: "New Staff" },
   });
@@ -136,9 +137,7 @@ it("edits a colleague through the backend and uses its confirmed result", async 
   fireEvent.change(view.getByLabelText("Full name"), {
     target: { value: "Updated Staff" },
   });
-  fireEvent.change(view.getByLabelText("User role"), {
-    target: { value: "pm" },
-  });
+  selectSetting(view, "User role", "pm");
   fireEvent.click(view.getByRole("button", { name: "Save user" }));
   await waitFor(() => expect(membersChanged).toHaveBeenCalledTimes(1));
   expect(view.getByText("Updated Staff")).toBeTruthy();
@@ -221,9 +220,7 @@ it("explains that changing a pending role needs a new invitation", async () => {
   );
   const view = render(<UsersPage currentUser={admin} />);
   fireEvent.click(await view.findByRole("button", { name: "Edit" }));
-  fireEvent.change(view.getByLabelText("User role"), {
-    target: { value: "pm" },
-  });
+  selectSetting(view, "User role", "pm");
   fireEvent.click(view.getByRole("button", { name: "Save user" }));
   await view.findByText(/The previous invitation expired; use Resend invite/);
   expect(view.getByRole("button", { name: "Resend invite" })).toBeTruthy();
@@ -249,10 +246,11 @@ it("lets Promo superadmins view protected support accounts and invite every Nept
   const row = (await view.findByText("Platform Support")).closest("tr");
   expect(row?.querySelector("button")).toBeNull();
   fireEvent.click(view.getByRole("button", { name: "＋ Invite a user" }));
-  const choices = Array.from(
-    (view.getByLabelText("Invitation role") as HTMLSelectElement).options,
-  ).map((option) => option.value);
-  expect(choices).toEqual(["staff", "pm", "admin"]);
+  fireEvent.click(view.getByRole("combobox", { name: "Invitation role" }));
+  const choices = view
+    .getAllByRole("option")
+    .map((option) => option.textContent?.replace("✓", ""));
+  expect(choices).toEqual(["Staff", "PM", "Admin"]);
   expect(
     view.getByText(/Existing users do not repeat this process/),
   ).toBeTruthy();

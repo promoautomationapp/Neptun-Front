@@ -1,0 +1,31 @@
+import React from "react";
+import {cleanup, fireEvent, render} from "@testing-library/react";
+import {afterEach, beforeEach, expect, it, vi} from "vitest";
+import {FilterSelect} from "../../src/features/brochure/FilterControls";
+import {setLanguage} from "../../src/features/brochure/i18n";
+beforeEach(() => setLanguage("en"));
+afterEach(() => {cleanup();setLanguage("sq");});
+it("searches a custom dropdown, chooses by keyboard and returns focus", () => {
+ const onChange=vi.fn();
+ const view=render(<FilterSelect label="Brand" value={1} options={[{value:1,label:"SAMSUNG"},{value:2,label:"Café Krups"},{value:3,label:"Hidden",disabled:true}]} onChange={onChange}/>);
+ const trigger=view.getByRole("button",{name:"Brand"});
+ fireEvent.click(trigger);
+ const input=view.getByRole("searchbox",{name:"Search Brand"});
+ fireEvent.change(input,{target:{value:"  CAFEkrUPS "}});
+ expect(view.queryByRole("option",{name:"SAMSUNG"})).toBeNull();
+ fireEvent.keyDown(input,{key:"ArrowDown"});
+ expect(document.activeElement).toBe(view.getByRole("option",{name:"Café Krups"}));
+ fireEvent.click(document.activeElement!);
+ expect(onChange).toHaveBeenCalledWith(2);
+ expect(document.activeElement).toBe(trigger);
+ fireEvent.click(trigger);
+ expect(view.getByRole("option",{name:"SAMSUNG"})).toBeTruthy();
+ fireEvent.keyDown(view.getByRole("searchbox"),{key:"Escape"});
+ expect(view.queryByRole("listbox")).toBeNull();
+});
+it("keeps typing Home/End in search and reports no matches", () => {
+ const view=render(<FilterSelect label="Type" value="a" options={[{value:"a",label:"Summer"}]} onChange={vi.fn()}/>);
+ fireEvent.click(view.getByRole("button"));const input=view.getByRole("searchbox");input.focus();
+ fireEvent.keyDown(input,{key:"Home"});expect(document.activeElement).toBe(input);
+ fireEvent.change(input,{target:{value:"winter"}});expect(view.getByText("No matches found")).toBeTruthy();
+});

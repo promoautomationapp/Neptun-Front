@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import { ICON_ROLES } from "./options";
 import { resolveAsset } from "../../api/client";
@@ -34,7 +35,7 @@ export function BrochureIconControls({
             />
             {role.label}
           </label>
-          <select
+          <SearchableSelect
             aria-label={`${role.label} artwork for this brochure`}
             value={campaign.iconDefaults?.[role.id]?.image || ""}
             onChange={(event) =>
@@ -61,7 +62,7 @@ export function BrochureIconControls({
                 {item.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
           {campaign.iconDefaults?.[role.id]?.image && (
             <img
               style={{ maxWidth: 60, maxHeight: 40, objectFit: "contain" }}

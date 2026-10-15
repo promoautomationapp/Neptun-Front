@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { Field, Toggle, OrderButtons, AssetPicker } from "./components";
 import { moveItem, repairDefaultType } from "./campaign-defaults";
@@ -11,7 +12,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
         creating a brochure. Hiding or deleting a type keeps existing brochures.
       </p>
       <Field label="Default campaign type">
-        <select
+        <SearchableSelect
           value={draft.defaultCampaignTypeId}
           onChange={(event) =>
             update((next) => {
@@ -27,7 +28,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
                 {item.name}
               </option>
             ))}
-        </select>
+        </SearchableSelect>
       </Field>
       {draft.campaignTypes.map((item, index) => (
         <SettingsGroup

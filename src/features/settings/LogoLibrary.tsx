@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { useContext, useId, useState } from "react";
 import { resolveAsset, uploadImage } from "../../api/client";
 import {
@@ -246,7 +247,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
             />
             <div className="ns-grid">
               <Field label={`Logo rule ${index + 1} pages`}>
-                <select
+                <SearchableSelect
                   value={rule.target}
                   onChange={(event) =>
                     update((next) => {
@@ -260,10 +261,10 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   <option value="pages">Inside product pages only</option>
                   <option value="stores">Stores page only</option>
                   <option value="footer">Stores footer only</option>
-                </select>
+                </SearchableSelect>
               </Field>
               <Field label={`Logo rule ${index + 1} background`}>
-                <select
+                <SearchableSelect
                   value={rule.background}
                   onChange={(event) =>
                     update((next) => {
@@ -280,7 +281,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   <option value="dark">Dark backgrounds</option>
                   <option value="light">Light backgrounds</option>
                   <option value="color">A specific color</option>
-                </select>
+                </SearchableSelect>
               </Field>
               {rule.background === "color" && (
                 <Field label={`Logo rule ${index + 1} color`}>
@@ -296,7 +297,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                 </Field>
               )}
               <Field label={`Logo rule ${index + 1} image`}>
-                <select
+                <SearchableSelect
                   value={rule.image}
                   onChange={(event) =>
                     update((next) => {
@@ -312,7 +313,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                       {item.name}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </Field>
             </div>
             <img

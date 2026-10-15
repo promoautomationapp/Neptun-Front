@@ -1,10 +1,12 @@
+import { campaignValidity, useCampaignClock } from "../campaigns/campaignValidity";
+import { SearchableSelect } from "../../components/SearchableSelect";
 import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
 import type {LogoAsset} from "../settings/settings.schema";
 import {emptyCampaignFilters, filterCampaigns, normalizeCampaignFilters, type CampaignFilters} from "../campaigns/campaignFilters";
 import {CampaignActivityStatus} from "../brochure/CampaignActivityStatus";
 import {hasUnsavedCampaignChanges} from "../brochure/campaignSaveStatus";
 import {applyPreparedProductPhoto, createProductImagePreparationQueue, currentProductPhotoTarget, productImagePreparationTargets, retainPreparedProductPhoto, type ProductPhotoTarget} from "../brochure/productImagePreparationQueue";
-import { CatalogNavigator, filterCatalog } from "../products/CatalogNavigator";
+import { CatalogNavigator, defaultCatalogSelection, filterCatalog } from "../products/CatalogNavigator";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
 import { CatalogRefreshControl } from "../products/CatalogRefreshControl";
 import { PageSettingsTabs, PageSettingsGroup as SettingsGroup } from "../brochure/PageSettingsTabs";
@@ -108,14 +110,15 @@ import {
 } from "../brochure/storesDesign";
 import { reorderDisplayedDetails } from "../brochure/detailRows";
 import { savedDetailEntries } from "../brochure/detailFacts";
-import { searchProducts } from "../brochure/productSearch";
+import { searchProducts, searchProductCodes } from "../brochure/productSearch";
 import { SettingsPage } from "../settings/SettingsPage";
 import { UsersPage } from "../users/UsersPage";
 import { InsightsPage } from "../insights/InsightsPage";
 import { ActivityPage } from "../activity/ActivityPage";
 import { PhotoPreparationProgress, type PhotoProgressItem } from "../brochure/PhotoPreparationProgress";
 import { ProfilePage } from "../users/ProfilePage";
-import { canManageUsers, roleLabel } from "../auth/auth.api";
+import { canManageUsers } from "../auth/auth.api";
+import { SidebarAccount } from "./SidebarAccount";
 import { resolveSettings } from "../settings/settings.schema";
 import type { Settings } from "../../domain/models";
 import {
@@ -248,7 +251,7 @@ type BrochureCssStyle = React.CSSProperties & {
   "--brochure-page-aspect": string | number;
 };
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? errorMessage(error) : String(error);
+  return error instanceof Error ? error.message : String(error);
 }
 function reviewStatusLabel(status: string | undefined): string {
   return (
@@ -359,6 +362,7 @@ export function CampaignLibrary({
   onDelete,
   onPrint,
 }: CampaignLibraryProps) {
+  const now = useCampaignClock();
   const emptyFilters = emptyCampaignFilters;
   const [filters, setFilters] = useState<CampaignFilters>(() => {
     try { return normalizeCampaignFilters(JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}")); }
@@ -382,7 +386,7 @@ export function CampaignLibrary({
     type: campaignTypes.includes(filters.type) ? filters.type : "all",
     format: formats.some(format => format.id===filters.format) ? filters.format : "all",
   };
-  const filtered=filterCampaigns(campaigns, effectiveFilters);
+  const filtered=filterCampaigns(campaigns, effectiveFilters, now);
   const filterActive = Object.entries(filters).some(
     ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
   );
@@ -462,6 +466,7 @@ export function CampaignLibrary({
               { value: "in_review", label: t("In review") },
               { value: "changes_requested", label: t("Changes requested") },
               { value: "completed", label: t("Completed") },
+              { value: "expired", label: t("Expired") },
             ]}
           />
           <FilterSelect
@@ -544,13 +549,13 @@ export function CampaignLibrary({
                 <div className="cs-campaign-badges">
                   <span>{t(item.type)}</span>
                   <span
-                    className={`status-${item.status || "in_progress"} ${
+                    className={`status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"} ${
                       (item.status || "in_progress") === "completed"
                         ? "completed"
                         : "progress"
                     }`}
                   >
-                    {t(reviewStatusLabel(item.status))}
+                    {t(campaignValidity(item, now) === "expired" ? "Expired" : reviewStatusLabel(item.status))}
                   </span>
                 </div>
               </button>
@@ -843,7 +848,7 @@ function ProductEditor({
                 placeholder={t("Search code, name or brand")}
               />
             </div>
-            <select
+            <SearchableSelect
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
@@ -851,7 +856,7 @@ function ProductEditor({
               {categories.map((value) => (
                 <option key={value}>{value}</option>
               ))}
-            </select>
+            </SearchableSelect>
             <span>
               {filtered.length} {t("shown")} · {t("Drag the grip to reorder")}
             </span>
@@ -1595,7 +1600,7 @@ function StorePageControls({
       <div className="cs-stores-display-options">
         <label>
           <strong>{t("Store information")}</strong>
-          <select
+          <SearchableSelect
             aria-label={t("Store information")}
             value={included ? "page" : compact ? "footer" : "none"}
             onChange={(event) => {
@@ -1611,7 +1616,7 @@ function StorePageControls({
               {t("Bottom of the last product page")}
             </option>
             <option value="none">{t("No store information")}</option>
-          </select>
+          </SearchableSelect>
         </label>
         <small>
           {compact
@@ -3133,7 +3138,7 @@ export function BrochureEditor({
             </div>
           </div>
           <Field label={t("Destination page")}>
-            <select
+            <SearchableSelect
               value={movePage}
               onChange={(event) => setMovePage(Number(event.target.value))}
             >
@@ -3147,16 +3152,16 @@ export function BrochureEditor({
               {pages.length === 0 && campaign.products.length > 1 && (
                 <option value={0}>{t("First product page")}</option>
               )}
-            </select>
+            </SearchableSelect>
           </Field>
           <Field label={t("Position on page")}>
-            <select
+            <SearchableSelect
               value={movePosition}
               onChange={(event) => setMovePosition(event.target.value)}
             >
               <option value="start">{t("At the beginning")}</option>
               <option value="end">{t("At the end")}</option>
-            </select>
+            </SearchableSelect>
           </Field>
           <p className="cs-move-product-note">
             {t("If a page is full, its last product moves to the next page.")}
@@ -3227,6 +3232,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
   );
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const campaignNow = useCampaignClock();
   const [section, setSectionValue] = useState("campaigns");
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsBusy, setSettingsBusy] = useState(false);
@@ -3283,6 +3289,8 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
   const failedPhotoTargets = useRef(new Map<string, ProductPhotoTarget>());
   const [photoProgress, setPhotoProgress] = useState<Record<string, Record<string, PhotoProgressItem>>>({});
   const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogCodeQuery, setCatalogCodeQuery] = useState("");
+  const catalogCategoryInitialized = useRef(false);
   const [catalogSelection, setCatalogSelection] = useState({ categoryPath: "", brand: "", availability: "all" });
   const [catalogVisible, setCatalogVisible] = useState(60);
   const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
@@ -3701,9 +3709,14 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     () => catalogWithExcelProducts(catalog, campaigns),
     [catalog, campaigns],
   );
+  useEffect(() => {
+    if (!catalogItems.length || catalogCategoryInitialized.current) return;
+    catalogCategoryInitialized.current = true;
+    setCatalogSelection(defaultCatalogSelection(catalogItems));
+  }, [catalogItems]);
   const catalogMatches = useMemo(
-    () => searchProducts(filterCatalog(catalogItems, catalogSelection), catalogQuery),
-    [catalogItems, catalogQuery, catalogSelection],
+    () => searchProducts(searchProductCodes(filterCatalog(catalogItems, catalogSelection), catalogCodeQuery), catalogQuery),
+    [catalogItems, catalogQuery, catalogCodeQuery, catalogSelection],
   );
   const catalogResults = catalogMatches.slice(0, catalogVisible);
   if (!user)
@@ -3851,25 +3864,18 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             </button>
           ))}
         </nav>
-        <div className="cs-sidebar-bottom">
-          <button
-            type="button"
-            onClick={() => {
+        <SidebarAccount user={user} onProfile={() => {
+          if (section === "stores" && !canLeaveSettings()) return;
+          setSection("profile"); setActiveId(null); setMobileMenuOpen(false);
+        }} onSignOut={async () => {
               if (section === "stores" && !canLeaveSettings()) return;
-              logout().finally(() => {
+              await logout();
                 setUser(null);
                 onAuthChange?.(null);
                 setCampaigns([]);
                 setActiveId(null);
                 setSection("campaigns");
-              });
-            }}
-          >
-            {user.email} · {t(roleLabel(user.role))} ·{" "}
-            {t("Sign out")} <span>→</span>
-          </button>
-          <PromoAutomationCredit />
-        </div>
+        }} />
       </aside>
       <main className="cs-content">
         <header className="cs-topbar">
@@ -3935,19 +3941,18 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 </p>
               </div>
             </div>
-            <CatalogNavigator products={catalogItems} selection={catalogSelection} onChange={(value) => { setCatalogSelection(value); setCatalogVisible(60); }} />
-            <div className="cs-search cs-catalog-search">
-              <span>⌕</span>
-              <input
-                type="search"
-                value={catalogQuery}
-                onChange={(event) => {
-                  setCatalogQuery(event.target.value);
-                  setCatalogVisible(60);
-                }}
-                placeholder={t("Search product code, name, brand or category")}
-              />
+            <div className="cs-catalog-searches">
+              <label className="cs-catalog-search-field"><span>{t("Search products")}</span><div className="cs-search cs-catalog-search"><span aria-hidden="true">⌕</span><input type="search" value={catalogQuery} onChange={event => {
+                if (!catalogQuery.trim() && !catalogCodeQuery.trim() && event.target.value.trim()) setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
+                setCatalogQuery(event.target.value); setCatalogVisible(60);
+              }} placeholder={t("Name, brand, model or category")} /></div></label>
+              <label className="cs-catalog-search-field"><span>{t("Product codes only")}</span><div className="cs-search cs-catalog-search"><span aria-hidden="true">#</span><input type="search" value={catalogCodeQuery} onChange={event => {
+                if (!catalogQuery.trim() && !catalogCodeQuery.trim() && event.target.value.trim()) setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
+                setCatalogCodeQuery(event.target.value); setCatalogVisible(60);
+              }} placeholder={t("Enter or paste product codes")} /></div></label>
             </div>
+            <p className="cs-catalog-search-hint">{t("Search ignores case and spaces. Use commas to look up several codes; choose filters to narrow the results.")}</p>
+            <CatalogNavigator products={catalogItems} selection={catalogSelection} onChange={value => { catalogCategoryInitialized.current = true; setCatalogSelection(value); setCatalogVisible(60); }} />
             <p className="cs-catalog-result-count" role="status">
               {catalogResults.length} {t("of")} {catalogMatches.length}{" "}
               {t("products shown")}
@@ -3958,6 +3963,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 <Button
                   onClick={() => {
                     setCatalogQuery("");
+                    setCatalogCodeQuery("");
                     setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
                     setCatalogVisible(60);
                   }}
@@ -4131,13 +4137,13 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 </button>
                 <div className="cs-editor-progress">
                   <span
-                    className={`status-${campaign.status || "in_progress"} ${
+                    className={`status-${campaignValidity(campaign, campaignNow) === "expired" ? "expired" : campaign.status || "in_progress"} ${
                       (campaign.status || "in_progress") === "completed"
                         ? "completed"
                         : "progress"
                     }`}
                   >
-                    {t(reviewStatusLabel(campaign.status))}
+                    {t(campaignValidity(campaign, campaignNow) === "expired" ? "Expired" : reviewStatusLabel(campaign.status))}{campaignValidity(campaign, campaignNow) === "expired" && <span className="cs-expired-workflow"> · {t(reviewStatusLabel(campaign.status))}</span>}
                   </span>
                   <button type="button" onClick={() => openAiReview("manual")}>
                     {t("✦ AI review")}

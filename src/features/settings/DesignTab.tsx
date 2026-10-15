@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { resolveAsset } from "../../api/client";
 import { Field, Toggle } from "./components";
@@ -19,7 +20,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
         be changed in the brochure.
       </p>
       <Field label="Default brochure format">
-        <select
+        <SearchableSelect
           value={b.format}
           onChange={(event) =>
             update((next) => {
@@ -33,7 +34,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
               {item.label}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
       </Field>
       <SettingsGroup title={<> Custom dimensions </>}>
         <p>
@@ -162,7 +163,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
         </button>
       </SettingsGroup>
       <Field label="Default products per page">
-        <select
+        <SearchableSelect
           value={b.layout}
           onChange={(event) =>
             update((next) => {
@@ -178,7 +179,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
           </option>
           <option value="grid9">Nine offers · 3 × 3</option>
           <option value="duo4">Four offers · two columns</option>
-        </select>
+        </SearchableSelect>
       </Field>
       <Toggle
         label="Show interior footer"
@@ -212,7 +213,7 @@ export function DesignTab({
       <h2>{pageArea === "cover" ? "Cover and colors" : "Page colors"}</h2>
       <div hidden={pageArea !== "cover"}>
         <Field label="Default cover style">
-          <select
+          <SearchableSelect
             value={b.coverTemplate}
             onChange={(event) =>
               update((next) => {
@@ -226,7 +227,7 @@ export function DesignTab({
                 {item.label}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </Field>
         <div className="ns-cover-options">
           {COVER_OPTIONS.map((item) => (
@@ -247,7 +248,7 @@ export function DesignTab({
           ))}
         </div>
         <Field label="Default cover product arrangement">
-          <select
+          <SearchableSelect
             value={b.coverProductLayout}
             onChange={(event) =>
               update((next) => {
@@ -259,7 +260,7 @@ export function DesignTab({
             <option value="pair">Pairs</option>
             <option value="hero">One large product above the others</option>
             <option value="row">Row</option>
-          </select>
+          </SearchableSelect>
         </Field>
         <div className="ns-grid">
           {(
@@ -337,7 +338,7 @@ export function DesignTab({
           return (
             <SettingsGroup key={key} title={<> {label} </>}>
               <Field label={`${label} type`}>
-                <select
+                <SearchableSelect
                   value={
                     background.image
                       ? "image"
@@ -373,7 +374,7 @@ export function DesignTab({
                       Selected background image
                     </option>
                   )}
-                </select>
+                </SearchableSelect>
               </Field>
               <div className="ns-swatches">
                 {BACKGROUND_PRESETS.map((preset) => (

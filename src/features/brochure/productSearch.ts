@@ -77,3 +77,14 @@ export function searchProducts(
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map((entry) => entry.product);
 }
+
+/** Code-only lookup deliberately excludes names, descriptions and brands. */
+export function searchProductCodes(products: Product[], query: string | null | undefined) {
+  if (!query?.trim()) return products;
+  const codes = query.split(/[,;\n]+/).map(compact).filter(Boolean);
+  if (!codes.length) return [];
+  return products.map((product, index) => ({ product, index, code: compact(product.code) }))
+    .filter(entry => codes.some(code => entry.code.includes(code)))
+    .sort((a, b) => Number(codes.includes(b.code)) - Number(codes.includes(a.code)) || a.index - b.index)
+    .map(entry => entry.product);
+}

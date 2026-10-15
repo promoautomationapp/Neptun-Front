@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { Field, Toggle } from "./components";
 import type { SettingsTabProps } from "./SettingsEditor";
@@ -60,7 +61,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           including MacBooks.
         </p>
         <Field label="Default page spacing">
-          <select
+          <SearchableSelect
             value={d.grid.mode}
             onChange={(event) =>
               change("grid", {
@@ -71,7 +72,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           >
             <option value="automatic">Current Neptun spacing</option>
             <option value="custom">Custom spacing</option>
-          </select>
+          </SearchableSelect>
         </Field>
         {d.grid.mode === "custom" && (
           <div className="ns-grid">
@@ -104,7 +105,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
       </SettingsGroup>
       <SettingsGroup title={<> Product photos </>}>
         <Field label="Default photo position and size">
-          <select
+          <SearchableSelect
             value={d.photo.mode}
             onChange={(event) =>
               change("photo", {
@@ -115,7 +116,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           >
             <option value="automatic">Automatic fit for each product</option>
             <option value="custom">Custom position and size</option>
-          </select>
+          </SearchableSelect>
         </Field>
         {d.photo.mode === "custom" && (
           <div className="ns-grid">
@@ -149,7 +150,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
       </SettingsGroup>
       <SettingsGroup title={<> Product details </>}>
         <Field label="Default details position">
-          <select
+          <SearchableSelect
             value={d.details.placement}
             onChange={(event) =>
               change("details", {
@@ -164,10 +165,10 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
             </option>
             <option value="left">Left of photo</option>
             <option value="bottom">Below photo</option>
-          </select>
+          </SearchableSelect>
         </Field>
         <Field label="Default detail box fill">
-          <select
+          <SearchableSelect
             value={d.details.fill}
             onChange={(event) =>
               change("details", {
@@ -180,7 +181,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
             <option value="automatic">Current Neptun reference</option>
             <option value="filled">Filled</option>
             <option value="outline">Outline</option>
-          </select>
+          </SearchableSelect>
         </Field>
       </SettingsGroup>
       <SettingsGroup title={<> Product typography </>}>
@@ -188,7 +189,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           label="Default product text font"
           hint="Applies to product names, codes and detail text. Price artwork retains its original typeface."
         >
-          <select
+          <SearchableSelect
             value={d.typography.font}
             onChange={(event) =>
               change("typography", {
@@ -202,7 +203,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
             <option value="SkolaSans">SkolaSans</option>
             <option value="TSTAR">TSTAR</option>
             <option value="Arial">Arial</option>
-          </select>
+          </SearchableSelect>
         </Field>
         <div className="ns-grid">
           {(

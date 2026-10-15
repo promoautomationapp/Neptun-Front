@@ -100,8 +100,14 @@ export function ProductNameDivider({
             : 0;
         const boundaryRight = boundary?.right ?? saleBox?.right ?? rowBox.right;
         const textRects = (element: Element) => {
-          const range = document.createRange(); range.selectNodeContents(element);
-          const lines = typeof range.getClientRects === "function" ? [...range.getClientRects()].filter(line => line.width > 0 && line.height > 0) : [];
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const lines =
+            typeof range.getClientRects === "function"
+              ? [...range.getClientRects()].filter(
+                  (line) => line.width > 0 && line.height > 0,
+                )
+              : [];
           return lines.length ? lines : [element.getBoundingClientRect()];
         };
         const before = textRects(name)[0]!;
@@ -109,22 +115,57 @@ export function ProductNameDivider({
           const style = getComputedStyle(name);
           const canvas = document.createElement("canvas").getContext("2d");
           let descent = 0;
-          if (canvas) { canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`; const metrics = canvas.measureText("Hg"); descent = Math.max(0, metrics.fontBoundingBoxDescent ?? metrics.actualBoundingBoxDescent ?? 0); }
+          if (canvas) {
+            canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            const metrics = canvas.measureText("Hg");
+            descent = Math.max(
+              0,
+              metrics.fontBoundingBoxDescent ??
+                metrics.actualBoundingBoxDescent ??
+                0,
+            );
+          }
           const baseline = before.bottom - descent * scale;
-          const correction = Math.round(((boundaryY - baseline) / scale + nameCorrection) * 10000) / 10000;
+          const correction =
+            Math.round(
+              ((boundaryY - baseline) / scale + nameCorrection) * 10000,
+            ) / 10000;
           const translate = `0 ${correction}px`;
-          if (copy.style.translate !== translate) copy.style.translate = translate;
+          if (copy.style.translate !== translate)
+            copy.style.translate = translate;
           nameCorrection = correction;
         }
-        const height = defaults?.thickness != null ? defaults.thickness * pageWidth / 1080 : boundary?.height || pageWidth / 1080;
+        const height =
+          defaults?.thickness != null
+            ? (defaults.thickness * pageWidth) / 1080
+            : boundary?.height || pageWidth / 1080;
         const lines = textRects(name);
-        const distance = (rect: DOMRect) => Math.max(rect.top - boundaryY, boundaryY - rect.bottom, 0);
+        const distance = (rect: DOMRect) =>
+          Math.max(rect.top - boundaryY, boundaryY - rect.bottom, 0);
         const closest = Math.min(...lines.map(distance));
-        const beside = lines.filter(line => distance(line) <= closest + .1);
-        const protectedRects = [...copy.querySelectorAll("[data-product-name], .brochure-product-code, .brochure-warranty-line, .brochure-brand-mark")].flatMap(textRects).filter(rect => rect.top - gap <= boundaryY + height / 2 && rect.bottom + gap >= boundaryY - height / 2);
-        const left = Math.max(rowBox.left, ...[...beside, ...protectedRects].map(rect => rect.right + gap));
+        const beside = lines.filter((line) => distance(line) <= closest + 0.1);
+        const protectedRects = [
+          ...copy.querySelectorAll(
+            "[data-product-name], .brochure-product-code, .brochure-warranty-line, .brochure-brand-mark",
+          ),
+        ]
+          .flatMap(textRects)
+          .filter(
+            (rect) =>
+              rect.top - gap <= boundaryY + height / 2 &&
+              rect.bottom + gap >= boundaryY - height / 2,
+          );
+        const left = Math.max(
+          rowBox.left,
+          ...[...beside, ...protectedRects].map((rect) => rect.right + gap),
+        );
         const right = Math.min(rowBox.right, boundaryRight);
-        const next = { left: (left - rowBox.left) / scale, top: (boundaryY - height / 2 - rowBox.top) / scale, width: Math.max(0, right - left) / scale, height: height / scale };
+        const next = {
+          left: (left - rowBox.left) / scale,
+          top: (boundaryY - height / 2 - rowBox.top) / scale,
+          width: Math.max(0, right - left) / scale,
+          height: height / scale,
+        };
         setPlacement((current) =>
           JSON.stringify(current) === JSON.stringify(next) ? current : next,
         );
@@ -162,13 +203,32 @@ export function ProductNameDivider({
         ?.removeEventListener("brochure-photo-clearance", queueUpdate);
       copy.style.translate = originalTranslate;
     };
-  }, [rowRef, alignName, defaults?.visible, defaults?.thickness, defaults?.gap]);
+  }, [
+    rowRef,
+    alignName,
+    defaults?.visible,
+    defaults?.thickness,
+    defaults?.gap,
+  ]);
   return (
     <span
       ref={marker}
       className="brochure-product-name-divider"
-      data-active={defaults?.visible !== false && placement && placement.width > 0 ? "true" : undefined}
-      style={defaults?.visible !== false && placement && placement.width > 0 ? { left: placement.left, top: placement.top, width: placement.width, height: placement.height } : { display: "none" }}
+      data-active={
+        defaults?.visible !== false && placement && placement.width > 0
+          ? "true"
+          : undefined
+      }
+      style={
+        defaults?.visible !== false && placement && placement.width > 0
+          ? {
+              left: placement.left,
+              top: placement.top,
+              width: placement.width,
+              height: placement.height,
+            }
+          : { display: "none" }
+      }
       aria-hidden="true"
     />
   );

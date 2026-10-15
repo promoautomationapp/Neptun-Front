@@ -3,6 +3,8 @@ import { getAiUsage, getMediaUsage, getDbUsage } from "./insights.api";
 import type { AiUsage, MediaUsage, DbUsage } from "./insights.api";
 import type { User } from "../auth/auth.api";
 import { getLanguage, t } from "../brochure/i18n";
+import { FilterSelect } from "../brochure/FilterControls";
+import { UsageCharts, insightText } from "./UsageCharts";
 import "../../styles/insights.css";
 
 const operationNames: Record<string, string> = {
@@ -86,6 +88,8 @@ function Metric({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
+  const [aiView, setAiView] = useState("overview");
+  const [mediaPoll, setMediaPoll] = useState(0);
   const [tab, setTab] = useState("ai"),
     [period, setPeriod] = useState("all"),
     [date, setDate] = useState(today),
@@ -110,47 +114,63 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
   useEffect(() => {
     setPage(1);
   }, [period, date, month, from, to, operation, model, group]);
+  const queryKey =
+    tab === "ai"
+      ? new URLSearchParams({
+          group,
+          operation,
+          model,
+          page: String(page),
+          limit: "25",
+          ...(rangeFrom ? { from: rangeFrom } : {}),
+          ...(rangeTo ? { to: rangeTo } : {}),
+        }).toString()
+      : tab === "media"
+        ? String(mediaPoll)
+        : "database";
   useEffect(() => {
-    if (user.role !== "superadmin" || invalid) return;
+    if (user.role !== "superadmin" || (tab === "ai" && invalid)) {
+      setLoading(false);
+      return;
+    }
     const abort = new AbortController();
-    setLoading(true);
+    let poll: ReturnType<typeof setTimeout> | undefined;
+    setLoading(!(tab === "media" && mediaPoll > 0));
     setError("");
-    const params = new URLSearchParams({
-      group,
-      operation,
-      model,
-      page: String(page),
-      limit: "25",
-      ...(rangeFrom ? { from: rangeFrom } : {}),
-      ...(rangeTo ? { to: rangeTo } : {}),
-    });
-    const run =
-      tab === "ai"
-        ? getAiUsage(params, abort.signal).then(setAi)
-        : tab === "media"
-          ? getMediaUsage(abort.signal).then(setMedia)
-          : getDbUsage(abort.signal).then(setDb);
-    run
-      .catch((e) => {
-        if (!abort.signal.aborted)
-          setError(e instanceof Error ? e.message : t("Could not load usage."));
+    const run = async () => {
+      if (tab === "ai") {
+        const next = await getAiUsage(
+          new URLSearchParams(queryKey),
+          abort.signal,
+        );
+        if (!abort.signal.aborted) setAi(next);
+      } else if (tab === "media") {
+        const next = await getMediaUsage(abort.signal);
+        if (abort.signal.aborted) return;
+        setMedia(next);
+        if (next.bucketPending)
+          poll = setTimeout(() => setMediaPoll((value) => value + 1), 2000);
+      } else {
+        const next = await getDbUsage(abort.signal);
+        if (!abort.signal.aborted) setDb(next);
+      }
+    };
+    void run()
+      .catch((cause: unknown) => {
+        if (abort.signal.aborted) return;
+        if (tab === "ai") setAi(null);
+        setError(
+          cause instanceof Error ? cause.message : t("Could not load usage."),
+        );
       })
       .finally(() => {
         if (!abort.signal.aborted) setLoading(false);
       });
-    return () => abort.abort();
-  }, [
-    user.role,
-    tab,
-    rangeFrom,
-    rangeTo,
-    invalid,
-    group,
-    operation,
-    model,
-    page,
-    revision,
-  ]);
+    return () => {
+      abort.abort();
+      clearTimeout(poll);
+    };
+  }, [user.role, tab, queryKey, revision, tab === "ai" && invalid]);
   if (user.role !== "superadmin") return null;
   const pages = Math.max(1, Math.ceil((ai?.total ?? 0) / 25));
   return (
@@ -211,25 +231,18 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
         {tab === "ai" && (
           <>
             <div className="cs-insights-filters">
-              <label>
-                {t("Period")}
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                >
-                  {[
-                    ["all", "All time"],
-                    ["today", "Today"],
-                    ["date", "Specific date"],
-                    ["month", "Month"],
-                    ["range", "Date range"],
-                  ].map(([v, label]) => (
-                    <option key={v} value={v}>
-                      {t(label!)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <FilterSelect
+                label={t("Period")}
+                value={period}
+                onChange={setPeriod}
+                options={[
+                  { value: "all", label: t("All time") },
+                  { value: "today", label: t("Today") },
+                  { value: "date", label: t("Specific date") },
+                  { value: "month", label: t("Month") },
+                  { value: "range", label: t("Date range") },
+                ]}
+              />
               {period === "date" && (
                 <label>
                   {t("Date")}
@@ -270,42 +283,41 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
                   </label>
                 </>
               )}
-              <label>
-                {t("Operation")}
-                <select
-                  value={operation}
-                  onChange={(e) => setOperation(e.target.value)}
-                >
-                  <option value="">{t("All operations")}</option>
-                  {Object.keys(operationNames).map((op) => (
-                    <option value={op} key={op}>
-                      {operationLabel(op)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t("Model")}
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                >
-                  <option value="">{t("All models")}</option>
-                  {ai?.options.models.map((m) => (
-                    <option key={m}>{m}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t("Group by")}
-                <select
-                  value={group}
-                  onChange={(e) => setGroup(e.target.value)}
-                >
-                  <option value="day">{t("Day")}</option>
-                  <option value="month">{t("Month")}</option>
-                </select>
-              </label>
+              <FilterSelect
+                label={t("Operation")}
+                value={operation}
+                onChange={setOperation}
+                options={[
+                  { value: "", label: t("All operations") },
+                  ...[
+                    ...new Set([
+                      ...Object.keys(operationNames),
+                      ...(ai?.options.operations || []),
+                    ]),
+                  ].map((value) => ({ value, label: operationLabel(value) })),
+                ]}
+              />
+              <FilterSelect
+                label={t("Model")}
+                value={model}
+                onChange={setModel}
+                options={[
+                  { value: "", label: t("All models") },
+                  ...(ai?.options.models || []).map((value) => ({
+                    value,
+                    label: value,
+                  })),
+                ]}
+              />
+              <FilterSelect
+                label={t("Group by")}
+                value={group}
+                onChange={setGroup}
+                options={[
+                  { value: "day", label: t("Day") },
+                  { value: "month", label: t("Month") },
+                ]}
+              />
             </div>
             {invalid && (
               <p role="alert">{t("Choose a valid start and end date.")}</p>
@@ -317,6 +329,46 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
             </p>
             {ai && !invalid && (
               <div className={loading ? "cs-insights-stale" : ""}>
+                <div
+                  className="cs-insights-subtabs"
+                  role="tablist"
+                  aria-label={insightText(
+                    "AI usage views",
+                    "Pamjet e përdorimit të AI",
+                  )}
+                >
+                  {(
+                    [
+                      [
+                        "overview",
+                        insightText(
+                          "Overview & charts",
+                          "Përmbledhje dhe grafikë",
+                        ),
+                      ],
+                      [
+                        "operations",
+                        insightText(
+                          "Operations & models",
+                          "Veprimet dhe modelet",
+                        ),
+                      ],
+                      ["records", t("Detailed AI records")],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      id={`ai-view-${id}`}
+                      role="tab"
+                      type="button"
+                      aria-selected={aiView === id}
+                      aria-controls={`ai-view-panel-${id}`}
+                      onClick={() => setAiView(id)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <div className="cs-insights-metrics">
                   <Metric
                     label="Estimated metered spending"
@@ -362,163 +414,243 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
                   <a href={ai.pricingUrl} target="_blank" rel="noreferrer">
                     {t("OpenAI pricing")}
                   </a>{" "}
-                  · {ai.pricingVersion}. {t("Imported history dates reflect when the records were imported.")}
+                  · {ai.pricingVersion}.{" "}
+                  {t(
+                    "Imported history dates reflect when the records were imported.",
+                  )}
                 </p>
-                <h2>{t("By operation and model")}</h2>
-                <div className="cs-insights-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        {[
-                          "Operation",
-                          "Model",
-                          "Records",
-                          "Input tokens",
-                          "Output tokens",
-                          "Estimated USD",
-                          "Unknown cost",
-                        ].map((h) => (
-                          <th key={h}>{t(h)}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ai.operations.map((row) => (
-                        <tr key={row.operation + row.model}>
-                          <td>{operationLabel(row.operation)}</td>
-                          <td>{row.model}</td>
-                          <td>{count(row.requests)}</td>
-                          <td>{count(row.inputTokens)}</td>
-                          <td>{count(row.outputTokens)}</td>
-                          <td>
-                            {row.requests === row.unknownCosts
-                              ? t("Unknown")
-                              : usageCost(row)}
-                          </td>
-                          <td>{row.unknownCosts + row.partialCosts}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <h2>{t("Usage over time")}</h2>
-                <div className="cs-insights-table cs-insights-timeline">
-                  <table>
-                    <thead>
-                      <tr>
-                        {[
-                          "Date",
-                          "Records",
-                          "Input tokens",
-                          "Output tokens",
-                          "Estimated USD",
-                        ].map((h) => (
-                          <th key={h}>{t(h)}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ai.timeline.map((row) => (
-                        <tr key={row.date}>
-                          <td>{row.date}</td>
-                          <td>{count(row.requests)}</td>
-                          <td>{count(row.inputTokens)}</td>
-                          <td>{count(row.outputTokens)}</td>
-                          <td>
-                            {row.requests === row.unknownCosts
-                              ? t("Unknown")
-                              : usageCost(row)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <h2>{t("Detailed AI records")}</h2>
-                <div className="cs-insights-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        {[
-                          "Date",
-                          "Operation",
-                          "Product / context",
-                          "Model",
-                          "User",
-                          "Status",
-                          "Input tokens",
-                          "Output tokens",
-                          "Estimated USD",
-                          "Source",
-                        ].map((h) => (
-                          <th key={h}>{t(h)}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ai.records.map((row) => (
-                        <tr key={row.id}>
-                          <td>
-                            {new Date(row.createdAt).toLocaleString(
-                              getLanguage() === "sq" ? "sq-AL" : "en-GB",
-                              {
-                                timeZone: ai.timeZone,
-                                dateStyle: "short",
-                                timeStyle: "short",
-                              },
-                            )}
-                          </td>
-                          <td>{operationLabel(row.operation)}</td>
-                          <td className="cs-insights-subject">
-                            {row.subject || "—"}
-                          </td>
-                          <td>{row.model}</td>
-                          <td>{row.user || "—"}</td>
-                          <td>{t(row.status)}</td>
-                          <td>
-                            {row.inputTokens === null
-                              ? "—"
-                              : count(row.inputTokens)}
-                          </td>
-                          <td>
-                            {row.outputTokens === null
-                              ? "—"
-                              : count(row.outputTokens)}
-                          </td>
-                          <td>
-                            {usageCost(row)}
-                            <small>{t(row.costBasis)}</small>
-                          </td>
-                          <td title={row.requestId || undefined}>
-                            {t(
-                              row.source === "unmetered"
-                                ? "Unmetered history"
-                                : "Provider usage",
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {!ai.total && <p>{t("No AI usage in this period.")}</p>}
-                <div className="cs-insights-pagination">
-                  <span>
-                    {count(ai.total)} {t("records")} · {page} / {pages}
-                  </span>
-                  <button
-                    disabled={page <= 1 || loading}
-                    onClick={() => setPage((n) => n - 1)}
+                {aiView === "operations" && (
+                  <section
+                    role="tabpanel"
+                    id="ai-view-panel-operations"
+                    aria-labelledby="ai-view-operations"
                   >
-                    {t("Previous")}
-                  </button>
-                  <button
-                    disabled={page >= pages || loading}
-                    onClick={() => setPage((n) => n + 1)}
+                    <UsageCharts
+                      usage={ai}
+                      cost={usageCost}
+                      operationLabel={operationLabel}
+                      operations
+                    />
+                    <h2>{t("By operation and model")}</h2>
+                    <div className="cs-insights-table">
+                      <table aria-label={t("By operation and model")}>
+                        <thead>
+                          <tr>
+                            {[
+                              "Operation",
+                              "Model",
+                              "Records",
+                              "Input tokens",
+                              "Output tokens",
+                              "Estimated USD",
+                              "Unknown cost",
+                              insightText(
+                                "Partial estimates",
+                                "Vlerësime të pjesshme",
+                              ),
+                            ].map((h) => (
+                              <th scope="col" key={h}>
+                                {t(h)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ai.operations.map((row) => (
+                            <tr key={row.operation + row.model}>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="cs-insight-drill"
+                                  title={insightText(
+                                    "View matching records",
+                                    "Shiko regjistrimet përkatëse",
+                                  )}
+                                  onClick={() => {
+                                    setOperation(row.operation);
+                                    setModel(row.model);
+                                    setAiView("records");
+                                  }}
+                                >
+                                  {operationLabel(row.operation)}
+                                </button>
+                              </td>
+                              <td>{row.model}</td>
+                              <td>{count(row.requests)}</td>
+                              <td>{count(row.inputTokens)}</td>
+                              <td>{count(row.outputTokens)}</td>
+                              <td>
+                                {row.requests === row.unknownCosts
+                                  ? t("Unknown")
+                                  : usageCost(row)}
+                              </td>
+                              <td>{count(row.unknownCosts)}</td>
+                              <td>{count(row.partialCosts)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                )}
+                {aiView === "overview" && (
+                  <section
+                    role="tabpanel"
+                    id="ai-view-panel-overview"
+                    aria-labelledby="ai-view-overview"
                   >
-                    {t("Next")}
-                  </button>
-                </div>
+                    <UsageCharts
+                      usage={ai}
+                      cost={usageCost}
+                      operationLabel={operationLabel}
+                    />
+                    <details className="cs-insights-chart-data">
+                      <summary>
+                        {insightText(
+                          "View timeline values",
+                          "Shiko vlerat sipas kohës",
+                        )}
+                      </summary>
+                      <h2>{t("Usage over time")}</h2>
+                      <div className="cs-insights-table cs-insights-timeline">
+                        <table>
+                          <thead>
+                            <tr>
+                              {[
+                                "Date",
+                                "Records",
+                                "Input tokens",
+                                "Output tokens",
+                                "Estimated USD",
+                              ].map((h) => (
+                                <th scope="col" key={h}>
+                                  {t(h)}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ai.timeline.map((row) => (
+                              <tr key={row.date}>
+                                <td>{row.date}</td>
+                                <td>{count(row.requests)}</td>
+                                <td>{count(row.inputTokens)}</td>
+                                <td>{count(row.outputTokens)}</td>
+                                <td>
+                                  {row.requests === row.unknownCosts
+                                    ? t("Unknown")
+                                    : usageCost(row)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  </section>
+                )}
+                {aiView === "records" && (
+                  <section
+                    role="tabpanel"
+                    id="ai-view-panel-records"
+                    aria-labelledby="ai-view-records"
+                  >
+                    <h2>{t("Detailed AI records")}</h2>
+                    <div className="cs-insights-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            {[
+                              "Date",
+                              "Operation",
+                              "Product / context",
+                              "Model",
+                              "User",
+                              "Status",
+                              "Input tokens",
+                              "Output tokens",
+                              "Estimated USD",
+                              "Source",
+                            ].map((h) => (
+                              <th scope="col" key={h}>
+                                {t(h)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ai.records.map((row) => (
+                            <tr key={row.id}>
+                              <td>
+                                {new Date(row.createdAt).toLocaleString(
+                                  getLanguage() === "sq" ? "sq-AL" : "en-GB",
+                                  {
+                                    timeZone: ai.timeZone,
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  },
+                                )}
+                              </td>
+                              <td>{operationLabel(row.operation)}</td>
+                              <td className="cs-insights-subject">
+                                {row.subject || "—"}
+                              </td>
+                              <td>{row.model}</td>
+                              <td>{row.user || "—"}</td>
+                              <td>
+                                <span
+                                  className="cs-insight-status"
+                                  data-status={row.status}
+                                >
+                                  {t(row.status)}
+                                </span>
+                              </td>
+                              <td>
+                                {row.inputTokens === null
+                                  ? "—"
+                                  : count(row.inputTokens)}
+                              </td>
+                              <td>
+                                {row.outputTokens === null
+                                  ? "—"
+                                  : count(row.outputTokens)}
+                              </td>
+                              <td>
+                                {usageCost(row)}
+                                <small>{t(row.costBasis)}</small>
+                              </td>
+                              <td title={row.requestId || undefined}>
+                                {t(
+                                  row.source === "unmetered"
+                                    ? "Unmetered history"
+                                    : "Provider usage",
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {!ai.total && <p>{t("No AI usage in this period.")}</p>}
+                    <div className="cs-insights-pagination">
+                      <span>
+                        {count(ai.total)} {t("records")} · {page} / {pages}
+                      </span>
+                      <button
+                        disabled={page <= 1 || loading}
+                        onClick={() => setPage((n) => n - 1)}
+                      >
+                        {t("Previous")}
+                      </button>
+                      <button
+                        disabled={page >= pages || loading}
+                        onClick={() => setPage((n) => n + 1)}
+                      >
+                        {t("Next")}
+                      </button>
+                    </div>
+                  </section>
+                )}
               </div>
             )}
           </>
@@ -548,6 +680,30 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
                 value={bytes(media.registered.bytes)}
               />
             </div>
+            {media.bucketPending && (
+              <p className="cs-insights-inventory" role="status">
+                {insightText(
+                  "Checking R2 inventory… Registered media statistics are ready below.",
+                  "Po kontrollohet inventari i R2… Statistikat e mediave të regjistruara janë gati më poshtë.",
+                )}
+              </p>
+            )}
+            {media.bucket && (
+              <p className="cs-insights-note">
+                {insightText(
+                  "R2 inventory checked",
+                  "Inventari i R2 u kontrollua",
+                )}
+                :{" "}
+                {new Date(media.bucket.checkedAt).toLocaleString(
+                  getLanguage() === "sq" ? "sq-AL" : "en-GB",
+                  { timeZone: "Europe/Belgrade" },
+                )}
+                {media.bucketStale
+                  ? ` · ${insightText("Saved inventory; refreshing in the background", "Inventar i ruajtur; po përditësohet në sfond")}`
+                  : ""}
+              </p>
+            )}
             {media.bucketError && (
               <p role="alert">
                 {t(

@@ -1,4 +1,8 @@
-import { openSettingsSections } from "../helpers/settings-sections";
+import {
+  openSettingsSections,
+  openSettingsTab,
+  selectSetting,
+} from "../helpers/settings-sections";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -78,27 +82,19 @@ it("persists product design controls as settings and new campaign snapshots", as
   const view = render(
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
-  fireEvent.click(view.getByRole("tab", { name: "Product design" }));
+  openSettingsTab(view, "Product design");
   openSettingsSections(view.container);
   fireEvent.click(view.getByLabelText("Automatically group products by type"));
-  fireEvent.change(view.getByLabelText("Default photo position and size"), {
-    target: { value: "custom" },
-  });
+  selectSetting(view, "Default photo position and size", "custom");
   fireEvent.change(view.getByLabelText("Default photo left (%)"), {
     target: { value: "40" },
   });
   fireEvent.change(view.getByLabelText("Default photo size (%)"), {
     target: { value: "120" },
   });
-  fireEvent.change(view.getByLabelText("Default details position"), {
-    target: { value: "bottom" },
-  });
-  fireEvent.change(view.getByLabelText("Default detail box fill"), {
-    target: { value: "outline" },
-  });
-  fireEvent.change(view.getByLabelText("Default product text font"), {
-    target: { value: "Arial" },
-  });
+  selectSetting(view, "Default details position", "bottom");
+  selectSetting(view, "Default detail box fill", "outline");
+  selectSetting(view, "Default product text font", "Arial");
   fireEvent.change(view.getByLabelText("Product name size (%)"), {
     target: { value: "110" },
   });

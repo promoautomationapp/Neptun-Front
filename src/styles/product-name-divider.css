@@ -1,4 +1,6 @@
-.brochure-product-bottom:has(.brochure-product-name-divider[data-active="true"]) {
+.brochure-product-bottom:has(
+  .brochure-product-name-divider[data-active="true"]
+) {
   position: relative;
   border-bottom: 0 !important;
 }
@@ -15,4 +17,7 @@
   background: var(--product-divider-light-color, #7a96ac);
 }
 
-.brochure-product[data-product-divider-hidden="true"] > .brochure-product-bottom { border-bottom: 0 !important; }
+.brochure-product[data-product-divider-hidden="true"]
+  > .brochure-product-bottom {
+  border-bottom: 0 !important;
+}

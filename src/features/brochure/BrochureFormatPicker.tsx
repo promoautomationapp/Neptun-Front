@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import React from "react";
 import type { CustomBrochureFormat, FormatInput } from "./brochureFormat";
 import {
@@ -23,7 +24,7 @@ export function BrochureFormatPicker({
   return (
     <label className="cs-field cs-brochure-format-picker">
       <span>{t("Brochure size")}</span>
-      <select
+      <SearchableSelect
         aria-label={t("Brochure size")}
         value={current.id}
         onChange={(event) => onChange(event.target.value)}
@@ -33,7 +34,7 @@ export function BrochureFormatPicker({
             {t(format.label)}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <small>
         {t(
           "Applies to every page. Images, prices and details keep their proportions.",

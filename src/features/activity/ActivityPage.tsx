@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import React, { useEffect, useState } from "react";
 import type { User } from "../auth/auth.api";
 import { getLanguage } from "../brochure/i18n";
@@ -276,7 +277,7 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
       <div className="cs-activity-filters">
         <label>
           {text("Period")}
-          <select
+          <SearchableSelect
             value={period}
             onChange={(event) => setPeriod(event.target.value)}
           >
@@ -284,7 +285,7 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
             <option value="today">{text("Today")}</option>
             <option value="date">{text("Specific date")}</option>
             <option value="range">{text("Date range")}</option>
-          </select>
+          </SearchableSelect>
         </label>
         {(period === "date" || period === "range") && (
           <label>
@@ -308,7 +309,7 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
         )}
         <label>
           {text("User")}
-          <select
+          <SearchableSelect
             value={actor}
             onChange={(event) => setActor(event.target.value)}
           >
@@ -318,11 +319,11 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
                 {item.name || item.email}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
         <label>
           {text("Action")}
-          <select
+          <SearchableSelect
             value={action}
             onChange={(event) => setAction(event.target.value)}
           >
@@ -332,18 +333,18 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
                 {activityActionLabel(value)}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
         <label>
           {text("Outcome")}
-          <select
+          <SearchableSelect
             value={outcome}
             onChange={(event) => setOutcome(event.target.value)}
           >
             <option value="">{text("All outcomes")}</option>
             <option value="success">{text("Successful")}</option>
             <option value="failure">{text("Unsuccessful")}</option>
-          </select>
+          </SearchableSelect>
         </label>
         <form
           onSubmit={(event) => {

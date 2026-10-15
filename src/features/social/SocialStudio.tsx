@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
 import type {Settings} from "../../domain/models";
 import type {LogoAsset} from "../settings/settings.schema";
@@ -1968,7 +1969,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
                 {!previewMode && <button type="button" className={post.showGrid ? "selected" : ""} aria-pressed={Boolean(post.showGrid)} onClick={() => update((draft) => { draft.showGrid = !draft.showGrid; })}>{post.showGrid ? "Hide grid" : "Show grid"}</button>}
               </div>
               {!previewMode && <div className="social-layout-controls" aria-label="Post size and grid">
-                <label>Post size<select aria-label="Post size" value={post.preset} onChange={(event) => update((draft) => { draft.preset = event.target.value; })}>{SOCIAL_PRESETS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+                <label>Post size<SearchableSelect aria-label="Post size" value={post.preset} onChange={(event) => update((draft) => { draft.preset = event.target.value; })}>{SOCIAL_PRESETS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</SearchableSelect></label>
                 {post.preset === "custom" && <>
                   <label>Width (px)<input aria-label="Post width in pixels" type="number" min="320" max="8192" value={post.customWidth} onChange={(event) => update((draft) => { draft.customWidth = Number(event.target.value); })} /></label>
                   <label>Height (px)<input aria-label="Post height in pixels" type="number" min="320" max="8192" value={post.customHeight} onChange={(event) => update((draft) => { draft.customHeight = Number(event.target.value); })} /></label>
@@ -2225,11 +2226,11 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
                         />
                       </label>
                       <div className="social-wide cs-detail-fill-list">
-                        {postDetailEntries(item).filter(([, value]) => value != null && String(value).trim()).map(([key, value]) => <label className="cs-detail-fill-choice" key={key}><span>{String(value)}</span><select aria-label={`${t("Block style")}: ${key}`} value={typeof item.detailBlockStyles?.[key] === "string" ? item.detailBlockStyles[key] : "auto"} onChange={(event) => update((draft: SocialPost) => {
+                        {postDetailEntries(item).filter(([, value]) => value != null && String(value).trim()).map(([key, value]) => <label className="cs-detail-fill-choice" key={key}><span>{String(value)}</span><SearchableSelect aria-label={`${t("Block style")}: ${key}`} value={typeof item.detailBlockStyles?.[key] === "string" ? item.detailBlockStyles[key] : "auto"} onChange={(event) => update((draft: SocialPost) => {
                           const product = draft.products.find((entry) => entry.code === item.code);
                           const style = event.target.value;
                           if (product && (style === "auto" || style === "filled" || style === "outline")) product.detailBlockStyles = { ...product.detailBlockStyles, [key]: style };
-                        })}><option value="auto">{t("Automatic")}</option><option value="filled">{t("White block")}</option><option value="outline">{t("Outlined block")}</option></select></label>)}
+                        })}><option value="auto">{t("Automatic")}</option><option value="filled">{t("White block")}</option><option value="outline">{t("Outlined block")}</option></SearchableSelect></label>)}
                       </div>
                     </div>
                     <SocialScreenAnnotationControls product={item} onChange={(field, value) => update((draft: SocialPost) => {

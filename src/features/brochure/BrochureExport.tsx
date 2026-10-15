@@ -1,3 +1,4 @@
+import { SearchableSelect } from "../../components/SearchableSelect";
 import type { Campaign, Product, Settings } from "../../domain/models";
 import { resolveAsset } from "../../api/client";
 import { jsPDF } from "jspdf";
@@ -468,7 +469,7 @@ export function BrochureExport({
           {scope === "one" && (
             <label className="cs-export-page-select">
               <span>{t("Choose page")}</span>
-              <select
+              <SearchableSelect
                 value={pageIndex}
                 disabled={busy}
                 onChange={(event) => setPageIndex(Number(event.target.value))}
@@ -478,7 +479,7 @@ export function BrochureExport({
                     {String(index + 1).padStart(2, "0")} · {label}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
           )}
           <p className="cs-export-note">

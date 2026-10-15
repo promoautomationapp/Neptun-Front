@@ -1,3 +1,4 @@
+import { selectSetting } from "../helpers/settings-sections";
 import { useState } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -116,9 +117,7 @@ it("uploads a private image into the library and selects it as the normalized br
   ]);
   expect(uploadImage).toHaveBeenCalledOnce();
   expect(loadPreparedBrandLogos).not.toHaveBeenCalled();
-  fireEvent.change(view.getByLabelText("SAMSUNG logo"), {
-    target: { value: "" },
-  });
+  selectSetting(view, "SAMSUNG logo", "");
   expect(Object.hasOwn(current().brandLogos, "SAMSUNG")).toBe(false);
   expect(current().logoLibrary).toHaveLength(1);
 });
