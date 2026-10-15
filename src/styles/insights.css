@@ -1,0 +1,191 @@
+.campaign-app .cs-insights {
+  padding: 28px;
+  min-width: 0;
+}
+.campaign-app .cs-insights-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.campaign-app .cs-insights h1 {
+  margin: 5px 0 8px;
+  font-size: 28px;
+}
+.campaign-app .cs-insights h2 {
+  margin: 28px 0 12px;
+  font-size: 18px;
+}
+.campaign-app .cs-insights p {
+  line-height: 1.5;
+}
+.campaign-app .cs-insights button {
+  border: 1px solid #cbd8e5;
+  border-radius: 9px;
+  background: #fff;
+  color: #204969;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.campaign-app .cs-insights button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.campaign-app .cs-insights-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #d9e2ec;
+  margin: 24px 0 20px;
+  padding-bottom: 8px;
+}
+.campaign-app .cs-insights-tabs button[aria-selected="true"] {
+  color: #fff;
+  background: #194b79;
+  border-color: #194b79;
+}
+.campaign-app .cs-insights-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.campaign-app .cs-insights-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 130px;
+}
+.campaign-app .cs-insights-filters input,
+.campaign-app .cs-insights-filters select {
+  height: 40px;
+  border: 1px solid #cbd8e5;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  background: white;
+  color: #21445e;
+  max-width: 240px;
+}
+.campaign-app .cs-insights-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.campaign-app .cs-insight-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #dbe4ee;
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+.campaign-app .cs-insight-metric span {
+  color: #667d91;
+  font-size: 12px;
+}
+.campaign-app .cs-insight-metric strong {
+  font-size: 22px;
+  color: #173e62;
+  overflow-wrap: anywhere;
+}
+.campaign-app .cs-insights-note {
+  font-size: 12px;
+  color: #687f92;
+}
+.campaign-app .cs-insights-notice {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fff6df;
+  color: #785519;
+  font-size: 13px;
+}
+.campaign-app .cs-insights-error {
+  padding: 12px;
+  background: #fff0eb;
+  color: #b43723;
+  border-radius: 8px;
+}
+.campaign-app .cs-insights-loading {
+  font-size: 12px;
+  color: #687f92;
+}
+.campaign-app .cs-insights-table {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  background: white;
+}
+.campaign-app .cs-insights table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.campaign-app .cs-insights th {
+  background: #f1f5fa;
+  color: #486078;
+  text-align: left;
+  font-weight: 600;
+}
+.campaign-app .cs-insights th,
+.campaign-app .cs-insights td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #e8eef4;
+}
+.campaign-app .cs-insights td small {
+  display: block;
+  color: #7a8b9c;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.campaign-app .cs-insights td.cs-insights-subject {
+  white-space: normal;
+  min-width: 150px;
+  max-width: 260px;
+}
+.campaign-app .cs-insights-timeline {
+  max-height: 360px;
+}
+.campaign-app .cs-insights-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+.campaign-app .cs-insights-stale {
+  opacity: 0.55;
+  pointer-events: none;
+}
+@media (max-width: 700px) {
+  .campaign-app .cs-insights {
+    padding: 18px 14px;
+  }
+  .campaign-app .cs-insights-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .campaign-app .cs-insights-filters label {
+    flex: 1;
+    min-width: 140px;
+  }
+  .campaign-app .cs-insights-filters input,
+  .campaign-app .cs-insights-filters select {
+    max-width: 100%;
+    width: 100%;
+  }
+  .campaign-app .cs-insights-tabs button {
+    padding: 10px;
+    font-size: 13px;
+  }
+}

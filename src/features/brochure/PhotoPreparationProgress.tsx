@@ -1,0 +1,116 @@
+import React from "react";
+import type { Campaign } from "../../domain/models";
+import { t } from "./i18n";
+import "../../styles/photo-preparation-progress.css";
+export interface PhotoProgressItem {
+  key: string;
+  code: string;
+  name: string;
+  image?: string;
+  state: "queued" | "preparing" | "ready" | "failed";
+}
+export function PhotoPreparationProgress({
+  items,
+  campaign,
+  onRetry,
+  onEdit,
+}: {
+  items: PhotoProgressItem[];
+  campaign: Campaign;
+  onRetry: () => void;
+  onEdit: (code: string) => void;
+}) {
+  if (!items.length) return null;
+  const ready = items.filter((x) => x.state === "ready").length,
+    failed = items.filter((x) => x.state === "failed"),
+    active = items.filter((x) => x.state === "preparing"),
+    queued = items.filter((x) => x.state === "queued").length;
+  const finished = ready + failed.length,
+    percent = Math.round((finished / items.length) * 100),
+    busy = finished < items.length;
+  const missing = campaign.products
+    .flatMap((p) => (p.bundleProducts?.length ? p.bundleProducts : [p]))
+    .filter((p) => !p.image && !p.localImage && !p.imageUrl).length;
+  return (
+    <section
+      className={`cs-photo-progress ${busy ? "is-active" : ""}`}
+      aria-label={t("Product photo preparation")}
+    >
+      <div className="cs-photo-progress-heading">
+        <span className="cs-photo-progress-icon" aria-hidden="true">
+          {busy ? "◌" : failed.length ? "!" : "✓"}
+        </span>
+        <div>
+          <h3>
+            {t(
+              busy
+                ? "Preparing product photos…"
+                : failed.length
+                  ? "Photo preparation needs attention"
+                  : "Product photos are ready",
+            )}
+          </h3>
+          <p role="status" aria-live="polite">
+            {ready} / {items.length} {t("ready")}
+            {queued > 0 ? ` · ${queued} ${t("waiting")}` : ""}
+            {failed.length ? ` · ${failed.length} ${t("need attention")}` : ""}
+          </p>
+        </div>
+        <strong>{percent}%</strong>
+      </div>
+      <progress
+        aria-label={t("Photo preparation progress")}
+        value={finished}
+        max={items.length}
+      />
+      <p className="cs-photo-progress-note">
+        {t(
+          "Your brochure stays editable. Each finished photo is saved automatically. Prepared images are reused when available.",
+        )}
+      </p>
+      {active.length > 0 && (
+        <div className="cs-photo-progress-current">
+          {active.map((item) => (
+            <div key={item.key}>
+              {item.image && <img src={item.image} alt="" />}
+              <span>
+                <small>{t("Preparing / waiting for AI")}</small>
+                <strong>{item.name}</strong>
+                <small>{item.code}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {(failed.length > 0 || missing > 0) && (
+        <div className="cs-photo-progress-actions">
+          {failed.length > 0 && (
+            <>
+              <span>{t("Some photos need a retry or your own upload.")}</span>
+              <button type="button" disabled={busy} onClick={onRetry}>
+                {t("Retry failed photos")}
+              </button>
+              {failed.slice(0, 3).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => onEdit(item.code)}
+                >
+                  {t("Upload / edit photo")} · {item.name}
+                </button>
+              ))}
+            </>
+          )}
+          {missing > 0 && (
+            <span>
+              {missing}{" "}
+              {t(
+                "products still need a photo. Use Products & prices to upload images or identify the model.",
+              )}
+            </span>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

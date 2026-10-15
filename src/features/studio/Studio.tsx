@@ -107,6 +107,8 @@ import { savedDetailEntries } from "../brochure/detailFacts";
 import { searchProducts } from "../brochure/productSearch";
 import { SettingsPage } from "../settings/SettingsPage";
 import { UsersPage } from "../users/UsersPage";
+import { InsightsPage } from "../insights/InsightsPage";
+import { PhotoPreparationProgress, type PhotoProgressItem } from "../brochure/PhotoPreparationProgress";
 import { ProfilePage } from "../users/ProfilePage";
 import { canManageUsers, roleLabel } from "../auth/auth.api";
 import { resolveSettings } from "../settings/settings.schema";
@@ -282,7 +284,7 @@ function TrashIcon({ size = 18 }) {
     </svg>
   );
 }
-const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎" };
+const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎", insights: "▥" };
 
 function LanguageSwitch({
   language,
@@ -3268,9 +3270,6 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     resolveSettings(null),
   );
   const [catalog, setCatalog] = useState<Product[]>([]);
-  const [catalogMeta, setCatalogMeta] = useState<{ count?: number } | null>(
-    null,
-  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [section, setSectionValue] = useState("campaigns");
   const [settingsDirty, setSettingsDirty] = useState(false);
@@ -3326,8 +3325,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
   const latestCampaigns = useRef(campaigns); latestCampaigns.current = campaigns;
   const productPhotoQueue = useRef(createProductImagePreparationQueue());
   const failedPhotoTargets = useRef(new Map<string, ProductPhotoTarget>());
-  const [preparingProductPhotos, setPreparingProductPhotos] = useState<Record<string, number>>({});
-  const [failedProductPhotos, setFailedProductPhotos] = useState<Record<string, boolean>>({});
+  const [photoProgress, setPhotoProgress] = useState<Record<string, Record<string, PhotoProgressItem>>>({});
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogSelection, setCatalogSelection] = useState({ categoryPath: "", brand: "", availability: "all" });
   const [catalogVisible, setCatalogVisible] = useState(60);
@@ -3366,7 +3364,6 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           : [];
       if (catalogResult.status === "fulfilled") {
         setCatalog(products);
-        setCatalogMeta(catalogResult.value);
       } else {
         console.error(catalogResult.reason);
       }
@@ -3511,26 +3508,36 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     if (campaign) void prepareProductPhotos(campaign);
     setEditorTab("brochure");
   }
-  function trackProductPhotoWork(campaignId: string, change: number) {
-    setPreparingProductPhotos(current => ({...current, [campaignId]: Math.max(0, (current[campaignId] || 0) + change)}));
+  function trackProductPhotoWork(campaignId: string, key: string, state: PhotoProgressItem["state"]) {
+    setPhotoProgress(current => {
+      const item = current[campaignId]?.[key];
+      return item ? {...current, [campaignId]: {...current[campaignId], [key]: {...item, state}}} : current;
+    });
   }
   function prepareProductPhotos(snapshot: Campaign, products = snapshot.products, retryFailed = false) {
-    const targets = productImagePreparationTargets(snapshot, products).filter(target => !productPhotoQueue.current.has(target.key));
+    const targets = productImagePreparationTargets(snapshot, products).filter(target => !productPhotoQueue.current.has(target.key) && (retryFailed || !failedPhotoTargets.current.has(target.key)));
     if (!targets.length) return Promise.resolve([]);
     const retries = new Set(retryFailed ? targets.filter(target => failedPhotoTargets.current.has(target.key)).map(target => target.key) : []);
     for (const target of targets) failedPhotoTargets.current.delete(target.key);
-    setFailedProductPhotos(current => ({...current, [snapshot.id]: [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id)}));
-    trackProductPhotoWork(snapshot.id, targets.length);
+    setPhotoProgress(current => ({...current, [snapshot.id]: {
+      ...(Object.values(current[snapshot.id] || {}).some(item => item.state === "queued" || item.state === "preparing") ? current[snapshot.id] : {}),
+      ...Object.fromEntries(targets.map(target => [target.key, {key: target.key, code: target.offerCode, name: target.request.name, image: target.source, state: "queued" as const}]))
+    }}));
     const jobs = targets.map(target => productPhotoQueue.current.enqueue(target, async (preparedTarget, result) => {
       const changed = updateCampaign(draft => {applyPreparedProductPhoto(draft, preparedTarget, result);}, {id: snapshot.id, group: `product-photos:${snapshot.id}`});
       if (changed?.changed) await changed.saved;
-    }, {retry: retries.has(target.key)}).finally(() => trackProductPhotoWork(snapshot.id, -1)));
+    }, {retry: retries.has(target.key), onStart: () => trackProductPhotoWork(snapshot.id, target.key, "preparing")}).then(outcome => {
+      const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
+      if (!outcome.ok && currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.set(target.key, target);
+      else failedPhotoTargets.current.delete(target.key);
+      trackProductPhotoWork(snapshot.id, target.key, outcome.ok ? "ready" : "failed");
+      return outcome;
+    }));
     return Promise.all(jobs).then(outcomes => {
       const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
       for (const outcome of outcomes) if (!outcome.ok && currentProductPhotoTarget(currentCampaign, outcome.target)) failedPhotoTargets.current.set(outcome.target.key, outcome.target);
       for (const [key, target] of failedPhotoTargets.current) if (target.campaignId === snapshot.id && !currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.delete(key);
       const failed = [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id);
-      setFailedProductPhotos(current => ({...current, [snapshot.id]: failed}));
       if (failed) setToast(t("Some product photos could not be prepared. Try again."));
       return outcomes;
     });
@@ -3891,6 +3898,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
               ["social", "Social posts"],
               ["stores", "Settings"],
               ...(canManageUsers(user) ? [["users", "Team & access"]] : []),
+              ...(user.role === "superadmin" ? [["insights", "Usage & storage"]] : []),
               ["profile", "Profile & security"],
             ] as [string, string][]
           ).map(([id, label]) => (
@@ -3910,19 +3918,6 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           ))}
         </nav>
         <div className="cs-sidebar-bottom">
-          <div className="cs-catalog-status">
-            <span className="cs-status-dot" />
-            <div>
-              <strong>{t("Catalog connected")}</strong>
-              <small>
-                {catalogMeta?.count || catalog.length} {t("products")} ·{" "}
-                {t("Backend database")}
-              </small>
-            </div>
-          </div>
-          <a href="/classic" className="cs-classic-link">
-            {t("Open classic editor ↗")}
-          </a>
           <button
             type="button"
             onClick={() => {
@@ -3956,12 +3951,14 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                     ? "Social posts"
                     : section === "users"
                       ? t("Team & access")
+                      : section === "insights"
+                        ? t("Usage & storage")
                       : section === "profile"
                         ? t("Profile & security")
                         : t("Settings")}
           </div>
           <div className="cs-topbar-right">
-            <CatalogRefreshControl onUpdated={async () => { const products = await loadCatalog(); setCatalog(products); setCatalogMeta({ count: products.length }); }} />
+            <CatalogRefreshControl onUpdated={async () => { setCatalog(await loadCatalog()); }} />
             <span>NEPTUN KOSOVO</span>
             <LanguageSwitch language={language} onChange={changeLanguage} />
             <div className="cs-avatar">N</div>
@@ -4110,6 +4107,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             } else setToast(message);
           }} />
         )}
+        {section === "insights" && user.role === "superadmin" && <InsightsPage user={user} />}
         {section === "stores" && (
           <SettingsPage
             previewProducts={catalog}
@@ -4272,6 +4270,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 language={language}
               />
             </div>
+            <PhotoPreparationProgress items={Object.values(photoProgress[campaign.id] || {})} campaign={campaign} onRetry={() => void prepareProductPhotos(campaign, campaign.products, true)} onEdit={setImageEditCode} />
             {editorTab === "products" ? (
               <ProductEditor
                 campaign={campaign}
@@ -4292,10 +4291,6 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                   setImageEditCode(String(product.code))
                 }
               />
-            ) : (preparingProductPhotos[campaign.id] || 0) > 0 ? (
-              <div className="cs-editor-section" role="status" aria-live="polite"><p>{t("Preparing product photos…")}</p></div>
-            ) : failedProductPhotos[campaign.id] ? (
-              <div className="cs-editor-section" role="status"><p>{t("Some product photos could not be prepared. Try again.")}</p><Button onClick={() => void prepareProductPhotos(campaign, campaign.products, true)}>{t("Try again")}</Button></div>
             ) : (
               <BrochureEditor
                 key={`${campaign.id}-${brochurePreviewVersion}`}

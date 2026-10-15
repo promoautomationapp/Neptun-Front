@@ -84,7 +84,7 @@ export function applyPreparedProductPhoto(campaign: Campaign, target: ProductPho
 export function createProductImagePreparationQueue({prepare = async body => await requestAi("ai-remove-background", body) as PreparedPhotoResult, orientation = imageOrientation, inspect = inspectImage, concurrency = 2}: {prepare?: (body: ReturnType<typeof buildImagePreparationRequest> & {orientation: string}) => Promise<PreparedPhotoResult>; orientation?: (source: string) => Promise<string>; inspect?: (source: string) => Promise<string>; concurrency?: number} = {}) {
   const limit = Number.isFinite(concurrency) ? Math.max(1, Math.min(3, Math.floor(concurrency))) : 2;
   const jobs = new Map<string, Promise<PhotoOutcome>>();
-  const waiting: Array<{target: ProductPhotoTarget; apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void; retry: boolean; resolve: (outcome: PhotoOutcome) => void}> = [];
+  const waiting: Array<{target: ProductPhotoTarget; apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void; retry: boolean; onStart?: () => void; resolve: (outcome: PhotoOutcome) => void}> = [];
   let running = 0;
   function drain() {
     while (running < limit && waiting.length) {
@@ -92,6 +92,7 @@ export function createProductImagePreparationQueue({prepare = async body => awai
       void (async () => {
         let outcome: PhotoOutcome;
         try {
+          job.onStart?.();
           const result = await prepare({...job.target.request, ...(job.retry ? {retry: true} : {}), orientation: await orientation(job.target.source)});
           if (!result.image) throw new Error("Could not prepare this product photo.");
           result.image = await inspect(result.image);
@@ -104,11 +105,11 @@ export function createProductImagePreparationQueue({prepare = async body => awai
   }
   return {
     has: (key: string) => jobs.has(key),
-    enqueue(target: ProductPhotoTarget, apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void, {retry = false}: {retry?: boolean} = {}) {
+    enqueue(target: ProductPhotoTarget, apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void, {retry = false, onStart}: {retry?: boolean; onStart?: () => void} = {}) {
       const existing = jobs.get(target.key); if (existing) return existing;
       let finish!: (outcome: PhotoOutcome) => void;
       const promise = new Promise<PhotoOutcome>(resolve => {finish = resolve;});
-      jobs.set(target.key, promise); waiting.push({target, apply, retry, resolve: finish}); drain(); return promise;
+      jobs.set(target.key, promise); waiting.push({target, apply, retry, onStart, resolve: finish}); drain(); return promise;
     },
   };
 }

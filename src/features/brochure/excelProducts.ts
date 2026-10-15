@@ -42,7 +42,7 @@ export function inferExcelProductColumns(headers: readonly unknown[]) {
       /technical specifications|specifications|specifika|detaj|details/,
     ),
     brandCol: find(/^(?:brand|brands|brendi|marka)$/),
-    categoryCol: find(/^(?:category|category path|kategoria|kategori)$/),
+    categoryCol: find(/^(?:category|category path|main cat|kategoria|kategori)$/),
     warrantyCol: find(/garanci|warranty/),
     imageCol: find(/^(?:image|image url|photo|photo url|foto|fotografia)$/),
     headers,
@@ -96,9 +96,10 @@ export function excelRowProduct(
     if (value) cells[key] = value;
     if (
       value &&
+      !/^#(?:DIV\/0!|VALUE!|REF!|N\/A|NAME\?|NUM!|NULL!)/.test(value) &&
       !excluded.has(index) &&
       !/^Column \d+$/i.test(key) &&
-      !/price|cmim|qmim|çmim|discount|zbritje|kurs|quantity|stock|inventory|subtotal|total|barcode|sku|position|pozicion/i.test(
+      !/price|cmim|qmim|çmim|discount|zbritje|kurs|quantity|stock|inventory|subtotal|total|barcode|sku|position|pozicion|cost|\bgm\b|cogs|turnover|purchased|supplier|goods on|\bqty\b|installment|kest|validity|communication|facebook|instagram|newsletter|billbord|radio|portal|tvc|^index$/i.test(
         normalize(key),
       )
     )

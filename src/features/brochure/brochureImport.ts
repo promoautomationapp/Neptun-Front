@@ -266,6 +266,7 @@ export function analyzeBrochureRows(
   const entries: BrochureEntry[] = [];
   const skipped: BrochureIssue[] = [];
   const warnings: BrochureWarning[] = [];
+  const incompleteProducts: Product[] = [];
   let ignored = 0;
   groupImportRows(rows, columns.setCol ?? -1).forEach((group) => {
     const first = group.sources[0];
@@ -401,8 +402,27 @@ export function analyzeBrochureRows(
     const position = parseBrochurePosition(row?.[columns.positionCol]);
     const code = String(row?.[columns.codeCol] ?? "").trim();
     const sheetName = String(row?.[columns.nameCol] ?? "").trim();
+    let sourceHash = 2166136261;
+    for (const character of JSON.stringify([sheetName || [rowNumber,position?.label,row[columns.detailsCol]],row[columns.brandCol]])) sourceHash = Math.imul(sourceHash ^ character.charCodeAt(0),16777619);
+    const importedCode = code || `EXCEL-${(sourceHash >>> 0).toString(36)}`;
     if (!code && !sheetName && !position) {
       ignored++;
+      return;
+    }
+    const keepIncomplete = (catalogProduct: Product | null = null) => {
+      const product = excelRowProduct(row, importedCode, catalogProduct, columns, rowNumber);
+      if (!product) return;
+      const placeholderName = `Excel row ${rowNumber}`;
+      if (!sheetName && !catalogProduct) {
+        product.name = placeholderName;
+        product.excelSource = { ...product.excelSource!, placeholderName };
+      }
+      incompleteProducts.push({ ...product, source: "import", sale: parsePrice(row[columns.priceCol]) > 0 ? String(parsePrice(row[columns.priceCol])) : "",
+        ...(position ? { brochurePage: position.page, brochureOrder: position.order } : {}),
+      });
+    };
+    if (!code && !sheetName && position) {
+      keepIncomplete();
       return;
     }
     const resolved = resolveExcelOffer(
@@ -432,28 +452,21 @@ export function analyzeBrochureRows(
         : null);
     const importedProduct = resolved.bundle
       ? catalogProduct
-      : code
-        ? excelRowProduct(row, code, catalogProduct || null, columns, rowNumber)
-        : catalogProduct;
+      : excelRowProduct(row, importedCode, catalogProduct || null, columns, rowNumber);
     if (!importedProduct) {
       if (position || code)
         skipped.push({
           row: rowNumber,
           code: code || "—",
           name: sheetName,
-          reason: "Product not found in catalog",
+          reason: "Missing product code and name in Excel",
         });
       else ignored++;
       return;
     }
     const sale = parsePrice(row?.[columns.priceCol]);
     if (!(sale > 0)) {
-      skipped.push({
-        row: rowNumber,
-        code,
-        name: sheetName,
-        reason: "Invalid sale price",
-      });
+      keepIncomplete(catalogProduct || null);
       return;
     }
     const regular =
@@ -553,6 +566,7 @@ export function analyzeBrochureRows(
   }
   return {
     products,
+    incompleteProducts,
     warnings,
     skipped,
     ignored,

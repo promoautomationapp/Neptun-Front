@@ -285,7 +285,7 @@ export interface Product {
   /** Imported offers remain editable even when their code is absent from the catalog. */
   catalogMissing?: boolean;
   missingCatalogCodes?: string[];
-  excelSource?: { row: number; cells: Record<string, string> };
+  excelSource?: { row: number; cells: Record<string, string>; placeholderName?: string };
   imageSearch?: ProductImageSearch;
   bundleCodes?: string[];
   bundleProducts?: Product[];

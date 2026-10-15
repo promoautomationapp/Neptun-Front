@@ -1,0 +1,138 @@
+.campaign-app .cs-photo-progress {
+  margin: 20px 28px;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid #d6e3f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px #1b456008;
+}
+.campaign-app .cs-photo-progress-heading {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  color: #214b72;
+}
+.campaign-app .cs-photo-progress-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.campaign-app .cs-photo-progress h3 {
+  font-size: 16px;
+  margin: 0 0 5px;
+}
+.campaign-app .cs-photo-progress p {
+  font-size: 13px;
+  margin: 0;
+  color: #71849a;
+  line-height: 1.5;
+}
+.campaign-app .cs-photo-progress-heading > strong {
+  font-size: 22px;
+}
+.campaign-app .cs-photo-progress-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  background: #e9f3fc;
+  font-size: 27px;
+  flex-shrink: 0;
+}
+.campaign-app .cs-photo-progress.is-active .cs-photo-progress-icon {
+  animation: cs-photo-spin 2s linear infinite;
+}
+.campaign-app .cs-photo-progress progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin: 16px 0 12px;
+  accent-color: #258bc0;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.campaign-app .cs-photo-progress progress::-webkit-progress-bar {
+  background: #e8eef5;
+}
+.campaign-app .cs-photo-progress progress::-webkit-progress-value {
+  background: #258bc0;
+  transition: width 0.3s;
+}
+.campaign-app .cs-photo-progress-current {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.campaign-app .cs-photo-progress-current > div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 400px;
+  min-width: 0;
+}
+.campaign-app .cs-photo-progress-current img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border: 1px solid #e2eaf3;
+  border-radius: 8px;
+}
+.campaign-app .cs-photo-progress-current span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.campaign-app .cs-photo-progress-current strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.campaign-app .cs-photo-progress small {
+  font-size: 10px;
+  color: #7c8fa2;
+}
+.campaign-app .cs-photo-progress-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  margin-top: 14px;
+}
+.campaign-app .cs-photo-progress-actions button {
+  border: 1px solid #cbdceb;
+  background: #f5f9fc;
+  color: #215375;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.campaign-app .cs-photo-progress-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@keyframes cs-photo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .campaign-app .cs-photo-progress.is-active .cs-photo-progress-icon {
+    animation: none;
+  }
+}
+@media (max-width: 650px) {
+  .campaign-app .cs-photo-progress {
+    margin: 16px 12px;
+    padding: 16px;
+  }
+  .campaign-app .cs-photo-progress-heading > strong {
+    font-size: 18px;
+  }
+  .campaign-app .cs-photo-progress h3 {
+    font-size: 14px;
+  }
+}

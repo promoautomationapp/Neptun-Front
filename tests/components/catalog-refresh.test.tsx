@@ -6,14 +6,76 @@ import {
   render,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CatalogRefreshControl } from "../../src/features/products/CatalogRefreshControl";
 import { apiFetch } from "../../src/api/client";
+import { setLanguage } from "../../src/features/brochure/i18n";
 vi.mock("../../src/api/client", () => ({ apiFetch: vi.fn() }));
+beforeEach(() => {
+  setLanguage("en");
+});
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.resetAllMocks();
+  setLanguage("sq");
+});
+it("only reads status on mount and during idle polling, without reloading for unrelated image revisions", async () => {
+  vi.useFakeTimers();
+  let revision = "one";
+  vi.mocked(apiFetch).mockImplementation(() =>
+    response({
+      status: "completed",
+      lastSuccessfulAt: "2026-10-01T10:00:00Z",
+      revision,
+    }),
+  );
+  const updated = vi.fn();
+  render(<CatalogRefreshControl onUpdated={updated} />);
+  await act(async () => {});
+  revision = "two";
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(180000);
+  });
+  expect(apiFetch).toHaveBeenCalledTimes(4);
+  expect(
+    vi
+      .mocked(apiFetch)
+      .mock.calls.every(([, options]) => options?.method === "GET"),
+  ).toBe(true);
+  expect(updated).not.toHaveBeenCalled();
+});
+it("keeps refresh available while cached photos finish and reloads once without extra status rows", async () => {
+  vi.useFakeTimers();
+  let pending = 3;
+  vi.mocked(apiFetch).mockImplementation(() =>
+    response({
+      status: "completed",
+      lastSuccessfulAt: "2026-10-01T10:00:00Z",
+      imagesPending: pending,
+    }),
+  );
+  const updated = vi.fn();
+  const view = render(<CatalogRefreshControl onUpdated={updated} />);
+  await act(async () => {});
+  expect(
+    view
+      .getByRole("button", { name: /Fetch products again/ })
+      .hasAttribute("disabled"),
+  ).toBe(false);
+  expect(
+    view.queryByText(/Preparing product photos|Working in the background/),
+  ).toBeNull();
+  expect(view.getAllByRole("status")).toHaveLength(1);
+  pending = 0;
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(15000);
+  });
+  expect(updated).toHaveBeenCalledOnce();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60000);
+  });
+  expect(updated).toHaveBeenCalledOnce();
 });
 const response = (value: unknown) =>
   Promise.resolve(

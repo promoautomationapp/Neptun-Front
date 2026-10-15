@@ -66,7 +66,7 @@ export function missingImageTargets(
       : [offer];
     return members
       .filter(
-        (member) => member.catalogMissing && (manual || !imageSource(member)),
+        (member) => member.catalogMissing && member.name !== member.excelSource?.placeholderName && (manual || !imageSource(member)),
       )
       .map((member) => ({
         offerCode: offer.code,

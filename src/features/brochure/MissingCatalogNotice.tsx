@@ -67,9 +67,10 @@ export function MissingCatalogNotice({
   const search = imageSearchState(product);
   if (!missing && hasPhoto && !search) return null;
   const searching = search?.status === "searching";
-  const heading = t(missing ? "Not in catalog" : "Image missing");
+  const incomplete = Boolean(product.excelSource?.placeholderName && product.excelSource.placeholderName === product.name);
+  const heading = t(incomplete ? "Incomplete Excel row" : missing ? "Not in catalog" : "Image missing");
   const status = t(
-    searching
+    incomplete ? "Add the product name or model, then search for its photo. You can upload an image now." : searching
       ? "Searching for the exact product photo…"
       : search?.status === "found"
         ? "Exact product photo found"
@@ -140,7 +141,7 @@ export function MissingCatalogNotice({
       </div>
       {(onFindImage || onUploadImage || onOpenEditor) && (
         <div className="missing-catalog-actions">
-          {onFindImage && (
+          {onFindImage && !incomplete && (
             <button
               type="button"
               disabled={searching && !canResumeSearch}

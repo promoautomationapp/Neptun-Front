@@ -141,6 +141,7 @@ export const confirmedHigherPrice = (item: Partial<Product>) =>
   Number(item.sale) > Number(item.regular) &&
   item.confirmedAboveRegular === true;
 export const validOffer = (item: Partial<Product>) =>
+  item.excelSource?.placeholderName && item.excelSource.placeholderName === item.name ? false :
   validSale(item) || confirmedHigherPrice(item) || hasExcelOfferPrice(item);
 export const DEFAULT_PAYMENT_TEXT = "Paguan deri në 12 këste me 0% interes.";
 export const installmentCount = (campaign: Pick<Campaign, "installments">) =>

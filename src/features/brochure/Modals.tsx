@@ -657,6 +657,7 @@ export function ImportSales({
     setCol: -1,
   });
   const [includeHigher, setIncludeHigher] = useState(false);
+  const [includeIncomplete, setIncludeIncomplete] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const activeSheet = sheets.find((sheet) => sheet.name === sheetName);
@@ -765,8 +766,9 @@ export function ImportSales({
           ),
     [rows, brochureColumns, codeCol, priceCol, catalog, rowOffset],
   );
-  const isBrochureImport = Boolean(brochureAnalysis?.products.length);
+  const isBrochureImport = Boolean(brochureAnalysis?.products.length || brochureAnalysis?.incompleteProducts.length);
   const ready = [
+    ...(isBrochureImport && includeIncomplete ? brochureAnalysis.incompleteProducts : []),
     ...(isBrochureImport
       ? brochureAnalysis.products.filter(
           (product: Product) =>
@@ -1061,6 +1063,14 @@ export function ImportSales({
                 "Products missing from the catalog will be added with the Excel details and prices. We will look for an exact product photo; you can upload your own anytime.",
               )}
             </p>
+          )}
+          {isBrochureImport && brochureAnalysis.incompleteProducts.length > 0 && (
+            <div className="cs-import-missing-info" role="status">
+              <strong>{brochureAnalysis.incompleteProducts.length} {t("incomplete Excel rows")}</strong>
+              <p>{t("These rows are missing a product code/name or a sale price in the file. Keep them as editable drafts with the Excel details. Add the missing name and price, then upload a photo or search for the exact model.")}</p>
+              <label><input type="checkbox" checked={includeIncomplete} onChange={(event) => setIncludeIncomplete(event.target.checked)} /> {t("Keep incomplete rows for editing")}</label>
+              <details><summary>{t("View incomplete rows")}</summary>{brochureAnalysis.incompleteProducts.map((product) => <p key={product.code}>{t("Row")} {product.excelSource?.row} · {product.name === product.excelSource?.placeholderName ? t("Missing product code and name in Excel") : product.name}{!(Number(product.sale) > 0) ? ` · ${t("Missing sale price in Excel")}` : ""}</p>)}</details>
+            </div>
           )}
           {analysis.discounted.length +
             analysis.withoutRegular.length +
