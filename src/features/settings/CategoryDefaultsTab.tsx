@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Field, Toggle } from "./components";
 import { SavingSelect } from "./OffersTab";
@@ -78,8 +79,9 @@ export function CategoryDefaultsTab({
         Each level has its own tab. More specific choices override their parent.
         Product edits always take priority.
       </p>
-      <fieldset>
-        <legend>Automatic savings for small and large offers</legend>
+      <SettingsGroup
+        title={<> Automatic savings for small and large offers </>}
+      >
         <Toggle
           label="Use percentage for small savings and euros for larger savings"
           checked={draft.automaticSavings.enabled}
@@ -123,7 +125,7 @@ export function CategoryDefaultsTab({
             <span>€499 → €399</span>
           </div>
         </div>
-      </fieldset>
+      </SettingsGroup>
       {facetsError && (
         <p role="alert">
           {facetsError} Saved category choices remain available.

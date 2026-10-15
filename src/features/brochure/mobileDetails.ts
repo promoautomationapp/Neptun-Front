@@ -1,5 +1,6 @@
 import type { Campaign, Product } from "../../domain/models";
 import { isAppleProduct, isMobilePhone } from "./productTypes";
+import { productDesignFor } from "../settings/product-design-defaults";
 import { usesBlueReferencePrice } from "./priceDesign";
 import {
   detailPlainText,
@@ -23,6 +24,8 @@ export function defaultProductDetailPlacement(
     product.detailPlacement === "bottom"
   )
     return product.detailPlacement;
+  const choice = productDesignFor(campaign).details.placement;
+  if (choice !== "automatic") return choice;
   const priceProduct: Product = {
     ...product,
     name: product.name ?? "",

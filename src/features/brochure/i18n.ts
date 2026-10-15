@@ -1,4 +1,8 @@
 const translations: Record<string, string> = {
+  "All saved products": "Të gjitha produktet e ruajtura",
+  "Found on Neptun website": "U gjetën në faqen e Neptun",
+  "Kept in catalog · not found on website": "Të ruajtura në katalog · nuk u gjetën në faqe",
+  "Kept in catalog · not found on neptun-ks.com at last sync": "I ruajtur në katalog · nuk u gjet në neptun-ks.com gjatë përditësimit të fundit",
   "Original photos remain in your brochure. You can keep editing or upload a replacement.": "Fotografitë origjinale mbeten në broshurë. Mund të vazhdoni redaktimin ose të ngarkoni një zëvendësim.",
   "Using original photo": "Duke përdorur fotografinë origjinale",
   "Saving photo…": "Duke ruajtur fotografinë…",
@@ -1243,6 +1247,7 @@ const translations: Record<string, string> = {
   Today: "Sot",
   "Previous month": "Muaji i kaluar",
   "Next month": "Muaji tjetër",
+  "All formats": "Të gjitha formatet",
   "Sort by": "Rendit sipas",
   "Recently edited": "Ndryshuar së fundmi",
   "Oldest edited": "Ndryshuar më herët",

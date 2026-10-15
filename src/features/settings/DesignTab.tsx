@@ -1,8 +1,12 @@
+import { SettingsGroup } from "./components";
 import { resolveAsset } from "../../api/client";
 import { Field, Toggle, AssetPicker } from "./components";
 import { COVER_OPTIONS } from "./options";
 import { BACKGROUND_PRESETS } from "../brochure/pageBackground";
-import { BROCHURE_FORMATS } from "../brochure/brochureFormat";
+import {
+  availableBrochureFormats,
+  DEFAULT_BROCHURE_FORMAT,
+} from "../brochure/brochureFormat";
 import type { SettingsTabProps } from "./SettingsEditor";
 import type { BrochureDefaults } from "./settings.schema";
 export function FormatsTab({ draft, update }: SettingsTabProps) {
@@ -24,13 +28,139 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          {BROCHURE_FORMATS.map((item) => (
+          {availableBrochureFormats(draft.customFormats).map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
             </option>
           ))}
         </select>
       </Field>
+      <SettingsGroup title={<> Custom dimensions </>}>
+        <p>
+          Name your own sizes in pixels. Changing a size affects future
+          brochures; existing brochures retain their saved dimensions.
+        </p>
+        <small>Each side: 64–8192 px. Maximum: 40 megapixels.</small>
+        {draft.customFormats.map((item, index) => (
+          <SettingsGroup
+            key={item.id}
+            title={<> {item.name || `Custom size ${index + 1}`} </>}
+          >
+            <div className="ns-grid">
+              <Field label={`Custom size ${index + 1} name`}>
+                <input
+                  maxLength={120}
+                  value={item.name}
+                  onChange={(event) =>
+                    update((next) => {
+                      const target = next.customFormats[index];
+                      if (target) target.name = event.target.value;
+                    })
+                  }
+                />
+              </Field>
+              <Field label={`Custom size ${index + 1} width (px)`}>
+                <input
+                  type="number"
+                  min={64}
+                  max={8192}
+                  step={1}
+                  value={item.width}
+                  onChange={(event) =>
+                    update((next) => {
+                      const target = next.customFormats[index];
+                      if (target) target.width = Number(event.target.value);
+                    })
+                  }
+                />
+              </Field>
+              <Field label={`Custom size ${index + 1} height (px)`}>
+                <input
+                  type="number"
+                  min={64}
+                  max={8192}
+                  step={1}
+                  value={item.height}
+                  onChange={(event) =>
+                    update((next) => {
+                      const target = next.customFormats[index];
+                      if (target) target.height = Number(event.target.value);
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="ns-row-actions">
+              <Toggle
+                label={`Show ${item.name} when choosing brochure size`}
+                checked={item.visible}
+                onChange={(visible) =>
+                  update((next) => {
+                    const target = next.customFormats[index];
+                    if (target) target.visible = visible;
+                    if (!visible && next.brochure.format === item.id)
+                      next.brochure.format = DEFAULT_BROCHURE_FORMAT;
+                  })
+                }
+              />
+              {item.visible && (
+                <button
+                  type="button"
+                  disabled={b.format === item.id}
+                  onClick={() =>
+                    update((next) => {
+                      next.brochure.format = item.id;
+                    })
+                  }
+                >
+                  {b.format === item.id
+                    ? "Default size"
+                    : `Use ${item.name} as default`}
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label={`Delete custom size ${item.name}`}
+                onClick={() =>
+                  update((next) => {
+                    next.customFormats.splice(index, 1);
+                    if (next.brochure.format === item.id)
+                      next.brochure.format = DEFAULT_BROCHURE_FORMAT;
+                  })
+                }
+              >
+                Delete size
+              </button>
+            </div>
+          </SettingsGroup>
+        ))}
+        <button
+          type="button"
+          disabled={draft.customFormats.length >= 100}
+          onClick={() =>
+            update((next) => {
+              let name = "Custom size";
+              let number = 2;
+              while (
+                next.customFormats.some(
+                  (item) =>
+                    item.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+                )
+              )
+                name = `Custom size ${number++}`;
+              next.customFormats.push({
+                id: `custom-${crypto.randomUUID()}`,
+                name,
+                width: 1080,
+                height: 1350,
+                visible: true,
+              });
+            })
+          }
+        >
+          + Add custom dimensions
+        </button>
+      </SettingsGroup>
       <Field label="Default products per page">
         <select
           value={b.layout}
@@ -156,8 +286,7 @@ export function DesignTab({ draft, update }: SettingsTabProps) {
           />
         ))}
       </div>
-      <fieldset>
-        <legend>Cover text colors</legend>
+      <SettingsGroup title={<> Cover text colors </>}>
         <div className="ns-grid">
           {(
             [
@@ -180,7 +309,7 @@ export function DesignTab({ draft, update }: SettingsTabProps) {
             </Field>
           ))}
         </div>
-      </fieldset>
+      </SettingsGroup>
       {(
         ["coverBackground", "productBackground", "storesBackground"] as const
       ).map((key, index) => {
@@ -192,8 +321,7 @@ export function DesignTab({ draft, update }: SettingsTabProps) {
             "Stores page background",
           ][index] ?? key;
         return (
-          <fieldset key={key}>
-            <legend>{label}</legend>
+          <SettingsGroup key={key} title={<> {label} </>}>
             <Field label={`${label} type`}>
               <select
                 value={
@@ -312,7 +440,7 @@ export function DesignTab({ draft, update }: SettingsTabProps) {
               </div>
             )}
             <p>Choose a default photo in the Background images tab.</p>
-          </fieldset>
+          </SettingsGroup>
         );
       })}
     </section>

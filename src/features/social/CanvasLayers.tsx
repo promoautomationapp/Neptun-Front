@@ -15,6 +15,7 @@ export interface CanvasAssetProps {
   minWidth?: number;
   maxWidth?: number;
   editable?: boolean;
+  artwork?: boolean;
   onChange?: (placement: CanvasAssetPlacement) => void;
   onRemove?: () => void;
   onGestureStart?: () => void;
@@ -97,6 +98,7 @@ export function CanvasAsset({
   minWidth = 4,
   maxWidth = 70,
   editable,
+  artwork = false,
   onChange,
   onRemove,
   onGestureStart,
@@ -165,7 +167,7 @@ export function CanvasAsset({
   }
   return (
     <div
-      className={`social-canvas-asset ${editable ? "editable" : ""}`}
+      className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""}`}
       style={style}
       aria-label={name}
       onPointerDown={editable ? (event) => start(event, "move") : undefined}

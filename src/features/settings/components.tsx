@@ -9,6 +9,9 @@ import {
 import type { ReactNode } from "react";
 import { resolveAsset, uploadImage } from "../../api/client";
 import type { LogoAsset } from "./settings.schema";
+export const SettingsPreviewContext = createContext<
+  (page: "cover" | "products" | "stores") => void
+>(() => {});
 export const UploadStateContext = createContext<(busy: boolean) => void>(
   () => {},
 );
@@ -199,5 +202,28 @@ export function AssetPicker({
       </small>
       {error && <p role="alert">{error}</p>}
     </div>
+  );
+}
+
+/** Native disclosure keeps advanced options out of the way and keyboard accessible. */
+export function SettingsGroup({
+  title,
+  children,
+  className = "",
+  defaultOpen = false,
+}: {
+  title: ReactNode;
+  children: ReactNode;
+  className?: string;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details
+      className={`ns-settings-group ${className}`}
+      open={defaultOpen || undefined}
+    >
+      <summary>{title}</summary>
+      <fieldset className="ns-settings-group-body">{children}</fieldset>
+    </details>
   );
 }

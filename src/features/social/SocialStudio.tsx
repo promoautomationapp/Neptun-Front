@@ -13,6 +13,7 @@ import {
   postPriceProduct,
   postImageBackgroundContext,
   reorderByCode,
+  layoutSocialProducts,
   SOCIAL_PRESETS,
   QUALITY_PRESETS,
 } from "./postModel";
@@ -307,9 +308,11 @@ function PostCanvas({
         aspectRatio: `${dims.width} / ${dims.height}`,
         background: cssBackground(post.background),
         maxWidth,
-      }}
+        "--social-grid-columns": post.productGrid?.columns || 10,
+        "--social-grid-rows": post.productGrid?.rows || 10,
+      } as React.CSSProperties}
       onDragOver={onAddArtwork ? (event) => { if ([...event.dataTransfer.types].includes("Files")) event.preventDefault(); } : undefined}
-      onDrop={onAddArtwork ? (event) => { const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("image/")); if (!files.length) return; event.preventDefault(); const rect = event.currentTarget.getBoundingClientRect(); onAddArtwork(files, { x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100 }); } : undefined}
+      onDrop={onAddArtwork ? (event) => { const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("image/")); if (!files.length) return; event.preventDefault(); event.stopPropagation(); const rect = event.currentTarget.getBoundingClientRect(); if (!rect.width || !rect.height) return; onAddArtwork(files, { x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100 }); } : undefined}
     >
       {post.background?.type === "image" && (
         <div className="social-image-shade" />
@@ -330,7 +333,7 @@ function PostCanvas({
       {post.showCustomLogo && post.customLogo && (
         <CanvasAsset name="Campaign badge" editable={Boolean(onUpdateAsset)} onGestureStart={() => setDraggingCanvas(true)} onGestureEnd={() => setDraggingCanvas(false)} position={post.logoCoords?.custom} presetStyle={positionStyle(post.customLogoPosition)} width={15 * (post.customLogoScale || 100) / 100} minWidth={6} maxWidth={30} onChange={(value) => onUpdateAsset?.("custom", value)} source={post.customLogo} />
       )}
-      {(post.artworks || []).map((artwork: Artwork) => <CanvasAsset key={artwork.id} name={artwork.name || "Added image"} source={artwork.image} position={artwork} width={artwork.width} editable={Boolean(onUpdateAsset)} onGestureStart={() => setDraggingCanvas(true)} onGestureEnd={() => setDraggingCanvas(false)} onChange={(value) => onUpdateAsset?.(artwork.id, value)} onRemove={onRemoveArtwork ? () => onRemoveArtwork(artwork.id) : undefined} />)}
+      {(post.artworks || []).map((artwork: Artwork) => <CanvasAsset key={artwork.id} name={artwork.name || "Added image"} artwork source={artwork.image} position={artwork} width={artwork.width} editable={Boolean(onUpdateAsset)} onGestureStart={() => setDraggingCanvas(true)} onGestureEnd={() => setDraggingCanvas(false)} onChange={(value) => onUpdateAsset?.(artwork.id, value)} onRemove={onRemoveArtwork ? () => onRemoveArtwork(artwork.id) : undefined} />)}
       {post.showNeptunLogo && post.logoLayout === "footer" && <div className="social-brand-footer" style={{ "--social-footer-logo-width": `${19 * (post.logoScale || 100) / 100}%`, height: `${3.5 * (post.logoScale || 100) / 100}%` }}>
         {post.neptunLogoUpload ? <img src={post.neptunLogoUpload} alt="NEPTUN" /> : <NeptunWordmark dark={!isLight} />}
         <span />
@@ -371,7 +374,7 @@ function PostCanvas({
               }}
               onPointerCancel={() => { drag.current = null; setDraggingCanvas(false); }}
               onDragOver={onDropImage ? (event) => { if ([...event.dataTransfer.types].includes("Files")) { event.preventDefault(); event.stopPropagation(); } } : undefined}
-              onDrop={onDropImage ? (event) => { const file = [...event.dataTransfer.files].find((item) => item.type.startsWith("image/")); if (file) { event.preventDefault(); event.stopPropagation(); onDropImage(product.code, file); } } : undefined}
+              onDrop={onDropImage ? (event) => { const files = [...event.dataTransfer.files].filter((item) => item.type.startsWith("image/")); if (files.length === 1 && files[0]) { event.preventDefault(); event.stopPropagation(); onDropImage(product.code, files[0]); } } : undefined}
               onDoubleClick={() => onEditProduct?.(product.code)}
               title={onMove ? "Drag to move; double-click to edit" : undefined}
             >
@@ -732,11 +735,12 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
   const [imageCode, setImageCode] = useState<string | null>(null);
   const [screenCode, setScreenCode] = useState<string | null>(null);
   const [imageAdjustCode, setImageAdjustCode] = useState<string | null>(null);
-  const [showGuides, setShowGuides] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [artworkUpload, setArtworkUpload] = useState<{ completed: number; total: number } | null>(null);
+  const artworkUploadRef = useRef(false);
   const [exportNotice, setExportNotice] = useState<{kind: "error" | "working" | "success"; text: string} | null>(null);
   const [exportReady, setExportReady] = useState<{url: string; filename: string} | null>(null);
   const [review, setReview] = useState<ProofreadChange[]>([]);
@@ -753,6 +757,8 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
   const exportUrlRef = useRef<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const currentPostRef = useRef<SocialPost | null>(null);
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
   const dirtyRef = useRef<string | null>(null);
   const post = posts.find((item) => item.id === activeId) ?? null;
   const preparationBackground = useMemo(() => post ? postImageBackgroundContext(post) : null, [post?.background, post?.backgroundPrompt]);
@@ -848,30 +854,57 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
     return () => clearTimeout(saveTimer.current);
   }, [post, dirtyId]);
 
-  function update(mutator: PostMutator) {
-    if (!activeId) return;
-    setPosts((all) =>
-      all.map((item) => {
-        if (item.id !== activeId) return item;
-        const next = structuredClone(item);
-        mutator(next);
-        next.updatedAt = new Date().toISOString();
-        next.revision = (item.revision || 0) + 1;
-        return next;
-      }),
-    );
-    setDirtyId(activeId);
+  function update(mutator: PostMutator, targetId = activeId) {
+    if (!targetId) return;
+    const item = postsRef.current.find((entry) => entry.id === targetId);
+    if (!item) return;
+    const next = structuredClone(item);
+    mutator(next);
+    next.updatedAt = new Date().toISOString();
+    next.revision = (item.revision || 0) + 1;
+    const updated = postsRef.current.map((entry) => entry.id === targetId ? next : entry);
+    postsRef.current = updated;
+    setPosts(updated);
+    if (currentPostRef.current?.id === targetId) setDirtyId(targetId);
+    else {
+      // An upload may finish after the editor was closed or another post opened.
+      // Save to its original post rather than leaving that change outside autosave.
+      void savePost(next).catch((cause: unknown) => setMessage(errorMessage(cause)));
+    }
   }
   async function addArtworks(files: File[], point = { x: 20, y: 15 }) {
-    const images = files.filter((file) => file.type.startsWith("image/") && file.size <= 12 * 1024 * 1024).slice(0, 10);
+    const targetId = activeId;
+    if (!targetId) return;
+    if (artworkUploadRef.current) { setMessage("Images are still uploading. Add the next files when this batch finishes."); return; }
+    const images = files.filter((file) => file.type.startsWith("image/") && file.size <= 12 * 1024 * 1024);
     if (!images.length) { setMessage("Choose image files under 12 MB."); return; }
-    try {
-      const loaded = await Promise.all(images.map(async (file) => ({ id: crypto.randomUUID(), name: file.name, image: await readImage(file) })));
-      update((draft: SocialPost) => {
-        const artworks = draft.artworks ?? (draft.artworks = []);
-        loaded.forEach((artwork, index) => artworks.push({ ...artwork, x: Math.min(95, point.x + index * 3), y: Math.min(95, point.y + index * 3), width: 20 }));
-      });
-    } catch { setMessage("Could not read one of the images."); }
+    artworkUploadRef.current = true;
+    setArtworkUpload({ completed: 0, total: images.length });
+    let failed = files.length - images.length;
+    let completed = 0;
+    let added = 0;
+    // Bounded uploads keep successful images even if a different file fails.
+    for (let start = 0; start < images.length; start += 2) {
+      await Promise.all(images.slice(start, start + 2).map(async (file, offset) => {
+        try {
+          const image = await readImage(file);
+          const artwork = {
+            id: crypto.randomUUID(), name: file.name, image,
+            x: Math.max(3, Math.min(97, point.x + (start + offset) * 3)),
+            y: Math.max(3, Math.min(97, point.y + (start + offset) * 3)), width: 20,
+          };
+          update((draft) => { (draft.artworks ??= []).push(artwork); }, targetId);
+          added++;
+        } catch { failed++; }
+        finally {
+          completed++;
+          setArtworkUpload({ completed, total: images.length });
+        }
+      }));
+    }
+    artworkUploadRef.current = false;
+    setArtworkUpload(null);
+    if (failed) setMessage(`${added} images added. ${failed} files could not be uploaded; the other images are kept.`);
   }
   async function dropProductImage(code: string, file: File) {
     if (!file?.type.startsWith("image/") || file.size > 12 * 1024 * 1024) { setMessage("Choose an image under 12 MB."); return; }
@@ -1271,7 +1304,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                 })
               }
             />
-            <span>Saved for the team</span>
+            <span role="status">{artworkUpload ? `Uploading images ${artworkUpload.completed}/${artworkUpload.total}…` : dirtyId === post.id ? "Saving changes…" : "Saved for the team"}</span>
             <button
               type="button"
               className="social-danger"
@@ -1899,7 +1932,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                 <div className="social-artwork-settings">
                   <strong>Images on this post</strong>
                   <p>Add campaign marks or other images. Drag them on the post to move; drag the corner to resize. You can also drop image files directly onto the canvas.</p>
-                  <label className="social-add">＋ Add images<input type="file" accept="image/*" multiple onChange={(event) => { const files = [...(event.target.files || [])]; event.target.value = ""; addArtworks(files); }} /></label>
+                  <label className="social-add">{artworkUpload ? `Uploading ${artworkUpload.completed}/${artworkUpload.total}…` : "＋ Add images"}<input aria-label="Add images to post" type="file" accept="image/*" multiple disabled={Boolean(artworkUpload)} onChange={(event) => { const files = [...(event.target.files || [])]; event.target.value = ""; void addArtworks(files); }} /></label>
                   {(post.artworks || []).map((artwork) => <div className="social-artwork-row" key={artwork.id}><img src={artwork.image} alt="" /><span>{artwork.name}</span><input type="range" min="4" max="70" value={artwork.width} aria-label={`Size: ${artwork.name}`} onChange={(event) => updateAsset(artwork.id, { x: artwork.x, y: artwork.y, width: Number(event.target.value) })} /><button type="button" aria-label={`Remove ${artwork.name}`} onClick={() => update((draft: SocialPost) => { draft.artworks = (draft.artworks || []).filter((item) => item.id !== artwork.id); })}>×</button></div>)}
                 </div>
               </section>
@@ -1922,8 +1955,18 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
               <div className="social-canvas-toolbar" role="group" aria-label="Post canvas controls">
                 <button type="button" className={!previewMode ? "selected" : ""} onClick={() => setPreviewMode(false)}>Edit</button>
                 <button type="button" className={previewMode ? "selected" : ""} onClick={() => setPreviewMode(true)}>Preview</button>
-                {!previewMode && <button type="button" className={showGuides ? "selected" : ""} aria-pressed={showGuides} onClick={() => setShowGuides((value) => !value)}>{showGuides ? "Hide grid" : "Show grid"}</button>}
+                {!previewMode && <button type="button" className={post.showGrid ? "selected" : ""} aria-pressed={Boolean(post.showGrid)} onClick={() => update((draft) => { draft.showGrid = !draft.showGrid; })}>{post.showGrid ? "Hide grid" : "Show grid"}</button>}
               </div>
+              {!previewMode && <div className="social-layout-controls" aria-label="Post size and grid">
+                <label>Post size<select aria-label="Post size" value={post.preset} onChange={(event) => update((draft) => { draft.preset = event.target.value; })}>{SOCIAL_PRESETS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+                {post.preset === "custom" && <>
+                  <label>Width (px)<input aria-label="Post width in pixels" type="number" min="320" max="8192" value={post.customWidth} onChange={(event) => update((draft) => { draft.customWidth = Number(event.target.value); })} /></label>
+                  <label>Height (px)<input aria-label="Post height in pixels" type="number" min="320" max="8192" value={post.customHeight} onChange={(event) => update((draft) => { draft.customHeight = Number(event.target.value); })} /></label>
+                </>}
+                {([['Rows', 'rows', 1, 6], ['Columns', 'columns', 1, 6], ['Spacing (%)', 'gap', 0, 20]] as const).map(([label, key, min, max]) => <label key={key}>{label}<input aria-label={`Product grid ${label.toLowerCase()}`} type="number" min={min} max={max} value={post.productGrid?.[key] ?? (key === 'gap' ? 4 : key === 'columns' ? Math.min(3, post.products.length || 1) : Math.ceil((post.products.length || 1) / 3))} onChange={(event) => update((draft) => { draft.productGrid = { rows: Math.ceil((draft.products.length || 1) / 3), columns: Math.min(3, draft.products.length || 1), gap: 4, ...draft.productGrid, [key]: Math.max(min, Math.min(max, Number(event.target.value) || min)) }; })} /></label>)}
+                <button type="button" onClick={() => update((draft) => { const grid = { rows: Math.ceil((draft.products.length || 1) / 3), columns: Math.min(3, draft.products.length || 1), gap: 4, ...draft.productGrid }; draft.productGrid = { ...grid, rows: Math.max(grid.rows, Math.ceil(draft.products.length / grid.columns)) }; draft.products = layoutSocialProducts(draft.products, draft.productGrid); })}>Apply product grid</button>
+                <small>Grid layout moves products. Your separate images keep their positions and proportions.</small>
+              </div>}
               <PostCanvas
                 post={post}
                 previewCutouts={previewCutouts}
@@ -1935,7 +1978,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                   ),
                 )}
                 canvasRef={canvasRef}
-                showGuides={!previewMode && showGuides}
+                showGuides={!previewMode && post.showGrid}
                 onMove={previewMode ? undefined : (code, x, y) =>
                   update((draft: SocialPost) => {
                     const item = draft.products.find(
@@ -2104,7 +2147,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                           type="range"
                           min="15"
                           max="85"
-                          value={item.scale}
+                          value={item.scale ?? (post.products.length === 1 ? 70 : post.products.length === 2 ? 44 : 31)}
                           onChange={(event) =>
                             update((draft: SocialPost) => {
                               const product = draft.products.find(

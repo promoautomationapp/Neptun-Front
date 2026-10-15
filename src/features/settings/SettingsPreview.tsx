@@ -55,7 +55,11 @@ export function settingsPreviewCampaign(
       warranty: source?.warranty || "24 muaj",
       ...(categoryPath && source?.specs && Object.keys(source.specs).length
         ? { specs: source.specs }
-        : { brochureDetails: categoryPath ? ["Editable details", "Sample feature"] : ["Google TV", "4K UHD", "Wi-Fi"] }),
+        : {
+            brochureDetails: categoryPath
+              ? ["Editable details", "Sample feature"]
+              : ["Google TV", "4K UHD", "Wi-Fi"],
+          }),
     };
   });
   return {
@@ -79,7 +83,9 @@ export function SettingsPreview({
   tab,
   products = [],
   categoryPath = "",
+  pageRequest,
 }: {
+  pageRequest?: { page: "cover" | "products" | "stores"; revision: number };
   draft: WorkspaceSettings;
   initial: WorkspaceSettings;
   tab: string;
@@ -100,11 +106,19 @@ export function SettingsPreview({
     setPage(
       tab === "stores"
         ? "stores"
-        : ["offers", "formats", "categories", "brands"].includes(tab)
+        : ["offers", "formats", "categories", "brands", "products"].includes(
+              tab,
+            )
           ? "products"
           : "cover",
     );
   }, [tab]);
+  useEffect(() => {
+    if (pageRequest) {
+      setPage(pageRequest.page);
+      setComparison("draft");
+    }
+  }, [pageRequest]);
   useLayoutEffect(() => {
     const element = host.current;
     if (!element) return;

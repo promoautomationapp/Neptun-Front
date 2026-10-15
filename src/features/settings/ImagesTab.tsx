@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { AssetPicker } from "./components";
 import type { SettingsTabProps } from "./SettingsEditor";
 export function ImagesTab({ draft, update }: SettingsTabProps) {
@@ -16,8 +17,7 @@ export function ImagesTab({ draft, update }: SettingsTabProps) {
           ["storesBackground", "Stores-page background image"],
         ] as const
       ).map(([key, label]) => (
-        <fieldset key={key}>
-          <legend>{label}</legend>
+        <SettingsGroup key={key} title={<> {label} </>}>
           <AssetPicker
             label={label}
             emptyLabel="Use the selected color or gradient"
@@ -34,7 +34,7 @@ export function ImagesTab({ draft, update }: SettingsTabProps) {
               })
             }
           />
-        </fieldset>
+        </SettingsGroup>
       ))}
     </section>
   );

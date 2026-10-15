@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { Field, Toggle, OrderButtons } from "./components";
 import { CONTACT_LABELS, STORE_ELEMENTS, FOOTER_ELEMENTS } from "./options";
 import { moveItem } from "./campaign-defaults";
@@ -36,8 +37,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           })
         }
       />
-      <fieldset>
-        <legend>Information shown for every store</legend>
+      <SettingsGroup title={<> Information shown for every store </>}>
         <div className="ns-grid">
           {(["city", "name", "address", "phone", "icon"] as const).map(
             (field) => (
@@ -54,7 +54,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
             ),
           )}
         </div>
-      </fieldset>
+      </SettingsGroup>
       <details>
         <summary>Sections shown on the stores page and compact footer</summary>
         {(
@@ -71,8 +71,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
             },
           ] as const
         ).map((group) => (
-          <fieldset key={group.key}>
-            <legend>{group.label}</legend>
+          <SettingsGroup key={group.key} title={<> {group.label} </>}>
             {group.items.map((item) => (
               <Toggle
                 key={item.id}
@@ -87,17 +86,21 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
                 }
               />
             ))}
-          </fieldset>
+          </SettingsGroup>
         ))}
       </details>
       <h3>Store list</h3>
       {draft.stores.map((store, index) => {
         const label = store.name || store.city || `Store ${index + 1}`;
         return (
-          <fieldset key={store.id || index}>
-            <legend>
-              {index + 1}. {label}
-            </legend>
+          <SettingsGroup
+            key={store.id || index}
+            title={
+              <>
+                {index + 1}. {label}
+              </>
+            }
+          >
             <div className="ns-row-actions">
               <Toggle
                 label={`Show ${label} in new brochures`}
@@ -146,7 +149,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
                 </Field>
               ))}
             </div>
-          </fieldset>
+          </SettingsGroup>
         );
       })}
       <button

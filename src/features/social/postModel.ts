@@ -386,3 +386,22 @@ export function reorderByCode(
   list.splice(end, 0, ...list.splice(start, 1));
   return list;
 }
+
+/** Grid affects product placements only; independent artwork layers stay untouched. */
+export function layoutSocialProducts(
+  products: readonly Product[],
+  grid: { rows: number; columns: number; gap: number },
+): Product[] {
+  const columns = Math.max(1, Math.min(6, Math.round(grid.columns) || 1));
+  const rows = Math.max(1, Math.min(6, Math.round(grid.rows) || 1), Math.ceil(products.length / columns));
+  const gap = Math.max(0, Math.min(20, grid.gap || 0));
+  const cellWidth = 84 / columns;
+  const cellHeight = 54 / rows;
+  return products.map((product, index) => ({
+    ...product,
+    positioned: true,
+    x: 8 + (index % columns + 0.5) * cellWidth,
+    y: 22 + (Math.floor(index / columns) + 0.5) * cellHeight,
+    scale: Math.max(10, Math.min(70, cellWidth - gap, cellHeight * 1.25)),
+  }));
+}

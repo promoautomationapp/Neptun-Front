@@ -58,7 +58,7 @@ describe("shared brochure defaults", () => {
   });
   it("uses identical contracts and original default data on both sides of the API", () => {
     const front = "src/features/settings/";
-    const back = "../neptun-broshura-backend/src/modules/settings/domain/";
+    const back = "../Neptun-Backend/src/modules/settings/domain/";
     for (const file of ["defaults.json", "settings.schema.ts"])
       expect(readFileSync(front + file, "utf8")).toBe(
         readFileSync(back + file, "utf8"),

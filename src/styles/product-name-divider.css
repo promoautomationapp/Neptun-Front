@@ -6,11 +6,13 @@
 .brochure-product-name-divider {
   position: absolute;
   display: block;
-  background: #fff;
+  background: var(--product-divider-color, #fff);
   pointer-events: none;
   z-index: 6;
 }
 
 .brochure-page.light .brochure-product-name-divider {
-  background: #7a96ac;
+  background: var(--product-divider-light-color, #7a96ac);
 }
+
+.brochure-product[data-product-divider-hidden="true"] > .brochure-product-bottom { border-bottom: 0 !important; }

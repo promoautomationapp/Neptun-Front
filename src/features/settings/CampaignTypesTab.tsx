@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { Field, Toggle, OrderButtons } from "./components";
 import { moveItem, repairDefaultType } from "./campaign-defaults";
 import type { SettingsTabProps } from "./SettingsEditor";
@@ -29,10 +30,14 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
         </select>
       </Field>
       {draft.campaignTypes.map((item, index) => (
-        <fieldset key={item.id}>
-          <legend>
-            {index + 1}. {item.name}
-          </legend>
+        <SettingsGroup
+          key={item.id}
+          title={
+            <>
+              {index + 1}. {item.name}
+            </>
+          }
+        >
           <div className="ns-row-actions">
             <Toggle
               label={`Show ${item.name} when creating brochures`}
@@ -107,7 +112,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
               />
             </Field>
           </div>
-        </fieldset>
+        </SettingsGroup>
       ))}
       <button
         type="button"
@@ -115,7 +120,12 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
           update((next) => {
             let name = "New campaign type";
             let count = 2;
-            while (next.campaignTypes.some((item) => item.name === name))
+            while (
+              next.campaignTypes.some(
+                (item) =>
+                  item.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+              )
+            )
               name = `New campaign type ${count++}`;
             next.campaignTypes.push({
               id: crypto.randomUUID(),

@@ -1,6 +1,8 @@
 import type {
   BrochureDefaults,
+  ProductDesignDefaults,
   LogoAsset,
+  LogoRule,
   IconDefault,
   CampaignType,
 } from "../features/settings/settings.schema";
@@ -36,7 +38,11 @@ export interface Settings {
   offerStyle?: string;
   savingMode?: string;
   brochure?: BrochureDefaults;
+  customFormats?: Array<{ id: string; name: string; width: number; height: number; visible: boolean }>;
+  productDesign?: ProductDesignDefaults;
   logoLibrary?: LogoAsset[];
+  logoRules?: LogoRule[];
+  hiddenBuiltinLogos?: string[];
   brandAssets?: Record<string, string>;
   brandLogos?: Record<string, string>;
   iconDefaults?: Record<string, IconDefault>;
@@ -48,6 +54,9 @@ export interface Settings {
 }
 export type CampaignMutator = (draft: Campaign) => void;
 export interface Campaign {
+  logoRules?: LogoRule[];
+  logoRuleDefaults?: {cover: string; pages: string};
+  productDesign?: ProductDesignDefaults;
   campaignAssets?: Record<
     string,
     { image?: string; hidden?: boolean; placement?: Placement }
@@ -110,6 +119,7 @@ export interface Campaign {
 
   version?: number;
   brochureFormat?: string;
+  brochureFormatSnapshot?: { id: string; name: string; width: number; height: number };
   aiReviewedFields?: Record<string, string>;
   aiReviewedTextSnapshot?: string;
   brandAssets?: Record<string, string>;
@@ -206,6 +216,8 @@ export interface CampaignStoresSnapshotStoresItem {
 }
 
 export interface SocialPost {
+  showGrid?: boolean;
+  productGrid?: { rows: number; columns: number; gap: number };
   backgroundPrompt?: string;
   artworks?: Artwork[];
   logoCoords?: Record<string, Placement>;

@@ -932,7 +932,7 @@
 .social-count-1.social-portrait .social-offer-grid { bottom: 24%; }
 .social-count-1.social-portrait.social-with-brand-footer .social-offer-grid { bottom: 24%; }
 .social-details-simple .social-product-copy { font-size: 2cqw; }
-.social-canvas.social-guides::after { content:""; position:absolute; inset:0; z-index:9; pointer-events:none; background: linear-gradient(90deg,transparent calc(50% - 1px),#f35b4ab3 50%,transparent calc(50% + 1px)),linear-gradient(transparent calc(50% - 1px),#f35b4ab3 50%,transparent calc(50% + 1px)),repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),#68b9e44f calc(10% - 1px),#68b9e44f 10%),repeating-linear-gradient(transparent 0,transparent calc(10% - 1px),#68b9e44f calc(10% - 1px),#68b9e44f 10%); border:1px dashed #3ca9dc; }
+.social-canvas.social-guides::after { content:""; position:absolute; inset:0; z-index:9; pointer-events:none; background: linear-gradient(90deg,transparent calc(50% - 1px),#f35b4ab3 50%,transparent calc(50% + 1px)),linear-gradient(transparent calc(50% - 1px),#f35b4ab3 50%,transparent calc(50% + 1px)),repeating-linear-gradient(90deg,transparent 0,transparent calc(100% / var(--social-grid-columns, 10) - 1px),#68b9e44f calc(100% / var(--social-grid-columns, 10) - 1px),#68b9e44f calc(100% / var(--social-grid-columns, 10))),repeating-linear-gradient(transparent 0,transparent calc(100% / var(--social-grid-rows, 10) - 1px),#68b9e44f calc(100% / var(--social-grid-rows, 10) - 1px),#68b9e44f calc(100% / var(--social-grid-rows, 10))); border:1px dashed #3ca9dc; }
 .social-canvas-asset { position:absolute; z-index:5; max-height:20%; touch-action:none; }
 .social-canvas-asset>img { display:block; width:100%; height:auto; max-height:20cqw; object-fit:contain; pointer-events:none; }
 .social-canvas-asset.editable { cursor:grab; }
@@ -1379,3 +1379,13 @@
 .social-count-1 .social-price-stack.price-card { width: 32cqw; }
 .social-count-1 .social-price-stack.price-minimal { width: auto; }
 .social-count-1 .social-price-stack.price-card .social-regular del { font-size: 2.6cqw; }
+
+.social-canvas-asset.social-artwork-asset { max-height: none; }
+.social-canvas-asset.social-artwork-asset > img { max-height: none; }
+.social-layout-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 12px; margin-bottom: 14px; border: 1px solid #d3e3ee; border-radius: 10px; background: white; }
+.social-layout-controls label { display: grid; gap: 5px; color: #3b5d78; font-size: 11px; font-weight: 700; }
+.social-layout-controls select, .social-layout-controls input { border: 1px solid #bed4e4; border-radius: 7px; padding: 8px; color: #173e61; background: white; }
+.social-layout-controls input { width: 86px; }
+.social-layout-controls select { max-width: 210px; }
+.social-layout-controls button { border: 1px solid #b5cfe2; border-radius: 7px; background: #edf6fc; color: #174f7c; font-weight: 700; padding: 9px 11px; cursor: pointer; }
+.social-layout-controls small { width: 100%; color: #6b8296; font-size: 11px; }

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import "../../styles/product-name-divider.css";
+import type { ProductDesignDefaults } from "../settings/settings.schema";
 
 interface DividerPlacement {
   left: number;
@@ -29,13 +30,16 @@ export function materializeProductNameAlignment(
 export function ProductNameDivider({
   rowRef,
   alignName = true,
+  defaults,
 }: {
   rowRef: RefObject<HTMLElement | null>;
   alignName?: boolean;
+  defaults?: ProductDesignDefaults["divider"];
 }) {
   const [placement, setPlacement] = useState<DividerPlacement | null>(null);
   const marker = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
+    if (defaults?.visible === false) return;
     const row =
       rowRef.current ??
       marker.current?.closest<HTMLElement>(".brochure-product-bottom");
@@ -83,7 +87,7 @@ export function ProductNameDivider({
         const pageWidth =
           row.closest(".brochure-page")?.getBoundingClientRect().width ??
           rowBox.width;
-        const gap = (2 * pageWidth) / 1080;
+        const gap = ((defaults?.gap ?? 2) * pageWidth) / 1080;
         const boundary = native?.getBoundingClientRect();
         const saleBox = sale?.getBoundingClientRect();
         const monthBox = month?.getBoundingClientRect();
@@ -112,7 +116,7 @@ export function ProductNameDivider({
           if (copy.style.translate !== translate) copy.style.translate = translate;
           nameCorrection = correction;
         }
-        const height = boundary?.height || pageWidth / 1080;
+        const height = defaults?.thickness != null ? defaults.thickness * pageWidth / 1080 : boundary?.height || pageWidth / 1080;
         const lines = textRects(name);
         const distance = (rect: DOMRect) => Math.max(rect.top - boundaryY, boundaryY - rect.bottom, 0);
         const closest = Math.min(...lines.map(distance));
@@ -158,13 +162,13 @@ export function ProductNameDivider({
         ?.removeEventListener("brochure-photo-clearance", queueUpdate);
       copy.style.translate = originalTranslate;
     };
-  }, [rowRef, alignName]);
+  }, [rowRef, alignName, defaults?.visible, defaults?.thickness, defaults?.gap]);
   return (
     <span
       ref={marker}
       className="brochure-product-name-divider"
-      data-active={placement && placement.width > 0 ? "true" : undefined}
-      style={placement && placement.width > 0 ? { left: placement.left, top: placement.top, width: placement.width, height: placement.height } : { display: "none" }}
+      data-active={defaults?.visible !== false && placement && placement.width > 0 ? "true" : undefined}
+      style={defaults?.visible !== false && placement && placement.width > 0 ? { left: placement.left, top: placement.top, width: placement.width, height: placement.height } : { display: "none" }}
       aria-hidden="true"
     />
   );

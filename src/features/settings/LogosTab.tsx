@@ -1,4 +1,5 @@
-import { resolveAsset } from "../../api/client";
+import { LogoLibrary } from "./LogoLibrary";
+import { SettingsGroup } from "./components";
 import { AssetPicker, Field, Toggle } from "./components";
 import { LOGO_ROLES, ICON_ROLES } from "./options";
 import type { SettingsTabProps } from "./SettingsEditor";
@@ -21,8 +22,8 @@ export function LogosTab({
         Keep the current artwork or choose an uploaded image as the default.
         Product icons appear only when the product has that feature.
       </p>
-      <fieldset>
-        <legend>Cover logo</legend>
+      <LogoLibrary draft={draft} update={update} />
+      <SettingsGroup title={<> Cover logo </>}>
         <Toggle
           label="Show the cover logo by default"
           checked={b.showCoverLogo}
@@ -76,11 +77,10 @@ export function LogosTab({
             <option value="framed">Framed logo</option>
           </select>
         </Field>
-      </fieldset>
+      </SettingsGroup>
       <div className="ns-grid">
         {LOGO_ROLES.map((role) => (
-          <fieldset key={role.id}>
-            <legend>{role.label}</legend>
+          <SettingsGroup key={role.id} title={<> {role.label} </>}>
             <AssetPicker
               label={role.label}
               value={draft.brandAssets[role.id] || ""}
@@ -94,15 +94,14 @@ export function LogosTab({
                 })
               }
             />
-          </fieldset>
+          </SettingsGroup>
         ))}
       </div>
       <ManufacturerLogos draft={draft} update={update} brands={brands} />
       <h3>Product and contact icons</h3>
       <div className="ns-grid">
         {ICON_ROLES.map((role) => (
-          <fieldset key={role.id}>
-            <legend>{role.label}</legend>
+          <SettingsGroup key={role.id} title={<> {role.label} </>}>
             <Toggle
               label={`Show ${role.label} icon by default`}
               checked={draft.iconDefaults[role.id]?.visible !== false}
@@ -131,47 +130,9 @@ export function LogosTab({
                 })
               }
             />
-          </fieldset>
+          </SettingsGroup>
         ))}
       </div>
-      <details>
-        <summary>Uploaded artwork library ({draft.logoLibrary.length})</summary>
-        <p>
-          Removing an item from this list keeps images already used in brochures
-          and selected defaults.
-        </p>
-        {draft.logoLibrary.map((asset) => (
-          <div className="ns-library-row" key={asset.id}>
-            <img src={resolveAsset(asset.url)} alt="" />
-            <Field label={`Name for ${asset.name}`}>
-              <input
-                value={asset.name}
-                onChange={(event) =>
-                  update((next) => {
-                    const item = next.logoLibrary.find(
-                      (row) => row.id === asset.id,
-                    );
-                    if (item) item.name = event.target.value;
-                  })
-                }
-              />
-            </Field>
-            <button
-              type="button"
-              onClick={() =>
-                update((next) => {
-                  next.logoLibrary = next.logoLibrary.filter(
-                    (item) => item.id !== asset.id,
-                  );
-                })
-              }
-              aria-label={`Remove ${asset.name} from library`}
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </details>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import type { Campaign, Settings } from "../../domain/models";
 import { resolveSettings } from "./settings.schema";
+import { brochureFormatSelection } from "../brochure/brochureFormat";
 import type { CampaignType, WorkspaceSettings } from "./settings.schema";
 
 export function visibleCampaignTypes(settings: Settings): CampaignType[] {
@@ -57,9 +58,10 @@ export function campaignDefaults(
   const b = settings.brochure;
   return {
     ...(version !== undefined ? { defaultsVersion: version } : {}),
-    brochureFormat: b.format,
+    ...brochureFormatSelection(b.format, settings.customFormats),
     layout: b.layout,
-    autoProductLayout: true,
+    autoProductLayout: b.automaticProductLayout,
+    productDesign: structuredClone(settings.productDesign),
     coverTemplate: b.coverTemplate,
     coverProductLayout: b.coverProductLayout,
     coverLogoStyle: b.coverLogoStyle,
@@ -112,6 +114,11 @@ export function campaignDefaults(
     automaticSavings: structuredClone(settings.automaticSavings),
     categoryPathSavingModes: structuredClone(settings.categoryPathSavingModes),
     categorySavingModes: structuredClone(settings.categorySavingModes),
+    logoRules: structuredClone(settings.logoRules),
+    logoRuleDefaults: {
+      cover: b.coverLogoSource,
+      pages: settings.brandAssets.neptun || "",
+    },
     brandAssets: structuredClone(settings.brandAssets),
     brandLogos: structuredClone(settings.brandLogos),
     iconDefaults: structuredClone(settings.iconDefaults),

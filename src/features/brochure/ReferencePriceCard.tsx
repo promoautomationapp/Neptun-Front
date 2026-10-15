@@ -29,6 +29,7 @@ export interface ReferencePriceCardProps {
   onEditSavings?: (product: Product) => void;
   showRegular?: boolean;
   showSaving?: boolean;
+  savingStyle?: React.CSSProperties;
   showInstallments?: boolean;
   logo?: string;
 }
@@ -93,6 +94,7 @@ export function ReferencePriceCard({
   onEditSavings,
   showRegular = true,
   showSaving = true,
+  savingStyle,
   showInstallments = true,
   logo = "",
 }: ReferencePriceCardProps) {
@@ -113,6 +115,7 @@ export function ReferencePriceCard({
         <span
           className="reference-saving-tab"
           style={{
+            ...savingStyle,
             left: `${(bound(tab, 0) / source.width) * 100}%`,
             width: `${(width(tab) / source.width) * 100}%`,
             aspectRatio: `${width(tab)} / ${-bound(tab, 1)}`,

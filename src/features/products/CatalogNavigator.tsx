@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Product } from "../../domain/models";
+import { t } from "../brochure/i18n";
 import { categoryNodes, productCategoryPath } from "../settings/categoryHierarchy";
 import "../../styles/catalog-navigator.css";
 export interface CatalogSelection { categoryPath: string; brand: string; availability: string }
@@ -23,7 +24,7 @@ export function CatalogNavigator({products, selection, onChange}: {products:Prod
     <div className="cs-catalog-filter-fields">
       {levels.map(({parent,depth,children})=><label key={parent}><span>{depth===0?"Category":depth===1?"Subcategory":`Level ${depth+1}`}</span><select aria-label={depth===0?"Catalog category":`Catalog category level ${depth+1}`} value={path.slice(0,depth+1).join(" > ")} onChange={event=>onChange({...selection,categoryPath:event.target.value,brand:""})}><option value={parent}>{depth===0?"All categories":"All in this branch"}</option>{children.map(node=><option key={node.path} value={node.path}>{node.label}</option>)}</select></label>)}
       <label><span>Brand</span><select aria-label="Catalog brand" value={selection.brand} onChange={event=>onChange({...selection,brand:event.target.value})}><option value="">All brands</option>{brands.map(brand=><option key={brand} value={brand}>{brand}</option>)}</select></label>
-      <label><span>Website availability</span><select aria-label="Catalog website availability" value={selection.availability} onChange={event=>onChange({...selection,availability:event.target.value})}><option value="all">All saved products</option><option value="listed">Listed on Neptun</option><option value="missing">No longer listed · kept</option></select></label>
+      <label><span>Website availability</span><select aria-label="Catalog website availability" value={selection.availability} onChange={event=>onChange({...selection,availability:event.target.value})}><option value="all">{t("All saved products")}</option><option value="listed">{t("Found on Neptun website")}</option><option value="missing">{t("Kept in catalog · not found on website")}</option></select></label>
     </div>
     {selection.categoryPath && <div className="cs-catalog-crumbs">{path.map((part,index)=><button type="button" key={index} onClick={()=>onChange({...selection,categoryPath:path.slice(0,index+1).join(" > "),brand:""})}>{index>0&&<span aria-hidden="true">› </span>}{part}</button>)}</div>}
   </section>;

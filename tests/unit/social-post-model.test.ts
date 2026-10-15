@@ -4,6 +4,7 @@ import {
   clearPostImagePreparation,
   createPost,
   outputDimensions,
+  layoutSocialProducts,
   postDetailEntries,
   productForPost,
   reorderByCode,
@@ -79,4 +80,29 @@ it("reorders existing product codes without mutating or removing offers", () => 
   expect(products.map((x) => x.code)).toEqual(["a", "b", "c"]);
   expect(reorderByCode(products, null, "b")).toBe(products);
   expect(reorderByCode(products, "a", "a")).toBe(products);
+});
+
+it("lays out product grids without mutating original products or dropping overflow products", () => {
+  const products = Array.from({ length: 6 }, (_, index) => ({
+    code: String(index),
+    name: `Product ${index}`,
+    image: `/prepared-${index}.png`,
+  }));
+  const grid = layoutSocialProducts(products, { rows: 1, columns: 2, gap: 4 });
+  expect(grid).toHaveLength(6);
+  expect(grid.map((product) => product.y)).toEqual([31, 31, 49, 49, 67, 67]);
+  expect(grid.map((product) => product.x)).toEqual([29, 71, 29, 71, 29, 71]);
+  expect(products[0]).not.toHaveProperty("positioned");
+  expect(
+    grid.every((product) => product.positioned && product.scale === 22.5),
+  ).toBe(true);
+  expect(
+    outputDimensions({
+      ...createPost(),
+      preset: "custom",
+      customWidth: 1440,
+      customHeight: 1920,
+      products: grid,
+    }),
+  ).toEqual({ width: 1440, height: 1920 });
 });

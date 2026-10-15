@@ -1,3 +1,4 @@
+import { ProductDesignTab } from "./ProductDesignTab";
 import { CategoryDefaultsTab } from "./CategoryDefaultsTab";
 import { BrandsTab } from "./BrandsTab";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -9,7 +10,7 @@ import { StoresTab } from "./StoresTab";
 import { OffersTab } from "./OffersTab";
 import type { CategoryFacet } from "./OffersTab";
 import { CampaignTypesTab } from "./CampaignTypesTab";
-import { UploadStateContext } from "./components";
+import { UploadStateContext, SettingsPreviewContext } from "./components";
 import "./settings.css";
 import { SettingsPreview } from "./SettingsPreview";
 import { ImagesTab } from "./ImagesTab";
@@ -22,6 +23,7 @@ const tabs = [
   { id: "stores", label: "Stores & contacts" },
   { id: "offers", label: "Prices & savings" },
   { id: "categories", label: "Category defaults" },
+  { id: "products", label: "Product design" },
   { id: "formats", label: "Format & layout" },
   { id: "types", label: "Campaign types" },
 ] as const;
@@ -55,6 +57,18 @@ export function SettingsEditor({
   const [baseline, setBaseline] = useState(() => JSON.stringify(initial));
   const [tab, setTab] = useState<TabId>("design");
   const [previewCategory, setPreviewCategory] = useState("");
+  const [previewRequest, setPreviewRequest] = useState<{
+    page: "cover" | "products" | "stores";
+    revision: number;
+  }>();
+  const previewPage = useCallback(
+    (page: "cover" | "products" | "stores") =>
+      setPreviewRequest((current) => ({
+        page,
+        revision: (current?.revision || 0) + 1,
+      })),
+    [],
+  );
   const [saving, setSaving] = useState(false);
   const [uploads, setUploads] = useState(0);
   const [error, setError] = useState("");
@@ -245,36 +259,40 @@ export function SettingsEditor({
           tabIndex={0}
         >
           <UploadStateContext.Provider value={uploadState}>
-            <fieldset
-              className="ns-tab-content"
-              disabled={saving || uploads > 0}
-            >
-              {tab === "design" && <DesignTab {...props} />}
-              {tab === "images" && <ImagesTab {...props} />}
-              {tab === "logos" && <LogosTab {...props} brands={brands} />}
-              {tab === "brands" && <BrandsTab {...props} brands={brands} />}
-              {tab === "stores" && <StoresTab {...props} />}
-              {tab === "offers" && (
-                <OffersTab
-                  {...props}
-                  facets={facets}
-                  facetsError={facetsError}
-                />
-              )}
-              {tab === "categories" && (
-                <CategoryDefaultsTab
-                  {...props}
-                  facets={facets}
-                  facetsError={facetsError}
-                  onPreviewCategory={setPreviewCategory}
-                />
-              )}
-              {tab === "formats" && <FormatsTab {...props} />}
-              {tab === "types" && <CampaignTypesTab {...props} />}
-            </fieldset>
+            <SettingsPreviewContext.Provider value={previewPage}>
+              <fieldset
+                className="ns-tab-content"
+                disabled={saving || uploads > 0}
+              >
+                {tab === "design" && <DesignTab {...props} />}
+                {tab === "images" && <ImagesTab {...props} />}
+                {tab === "logos" && <LogosTab {...props} brands={brands} />}
+                {tab === "brands" && <BrandsTab {...props} brands={brands} />}
+                {tab === "stores" && <StoresTab {...props} />}
+                {tab === "offers" && (
+                  <OffersTab
+                    {...props}
+                    facets={facets}
+                    facetsError={facetsError}
+                  />
+                )}
+                {tab === "categories" && (
+                  <CategoryDefaultsTab
+                    {...props}
+                    facets={facets}
+                    facetsError={facetsError}
+                    onPreviewCategory={setPreviewCategory}
+                  />
+                )}
+                {tab === "products" && <ProductDesignTab {...props} />}
+                {tab === "formats" && <FormatsTab {...props} />}
+                {tab === "types" && <CampaignTypesTab {...props} />}
+              </fieldset>
+            </SettingsPreviewContext.Provider>
           </UploadStateContext.Provider>
         </div>
         <SettingsPreview
+          pageRequest={previewRequest}
           draft={draft}
           initial={initial}
           tab={tab}

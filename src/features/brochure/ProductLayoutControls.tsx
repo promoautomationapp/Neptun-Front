@@ -8,9 +8,9 @@ import { defaultProductDetailPlacement } from "./mobileDetails";
 import {
   otherScreenInches,
   tvScreenInches,
-  defaultProductImageScale,
 } from "./tvSpecs";
 import { t } from "./i18n";
+import { defaultPhotoPlacement } from "../settings/product-design-defaults";
 import "../../styles/product-layout-controls.css";
 
 export function ProductLayoutControls({
@@ -23,14 +23,7 @@ export function ProductLayoutControls({
   onChange: (field: keyof Product, value: Product[keyof Product]) => void;
 }) {
   const photo = {
-    x:
-      defaultProductDetailPlacement(product, campaign) === "left"
-        ? 63
-        : otherScreenInches(product)
-          ? 46
-          : 50,
-    y: otherScreenInches(product) ? 56 : 50,
-    scale: defaultProductImageScale(product),
+    ...defaultPhotoPlacement(product, campaign, defaultProductDetailPlacement(product, campaign)),
     ...product.brochureImagePlacement,
   };
   const annotationType = tvScreenInches(product)

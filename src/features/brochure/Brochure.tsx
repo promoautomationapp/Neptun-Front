@@ -1,3 +1,6 @@
+import {logoForBackground} from "../settings/logo-rules";
+import { defaultPhotoPlacement, defaultDetailFill, defaultRegionScale, productDesignFor, productGridStyle, productTypographyStyle } from "../settings/product-design-defaults";
+import "../../styles/product-design-defaults.css";
 import type { CampaignAssetChange } from "./CampaignAssetArtwork";
 import { CampaignAssetArtwork } from "./CampaignAssetArtwork";
 import { ProductBrandArtwork } from "./ProductBrandArtwork";
@@ -31,7 +34,6 @@ import {
   hasEditableScreen,
   otherScreenInches,
   tvScreenInches,
-  defaultProductImageScale,
 } from "./tvSpecs";
 import { warrantyDuration } from "./warranty";
 import { productColors } from "./colors";
@@ -244,7 +246,7 @@ export function brochureAssetSource(
   light = storesPageIsLight(campaign),
 ) {
   const asset = BROCHURE_ASSETS.find((item) => item.id === id);
-  return (
+  const fallback = (
     campaign.brandAssets?.[id] ||
     (id === "neptun" && campaign.neptunLogoOption === "framed"
       ? "/api/assets/legacy/assets/neptun-logo-framed.png"
@@ -253,6 +255,7 @@ export function brochureAssetSource(
     asset?.src ||
     ""
   );
+  return id === "neptun" ? logoForBackground(campaign,"pages",pageBackgroundColor(campaign,"stores"),fallback,light) : fallback;
 }
 
 export { coverProducts, splitPages } from "./campaignPages";
@@ -616,7 +619,7 @@ function Price({
   return (
     <div
       className={`brochure-price ${light ? "light" : ""} ${confirmedHigherPrice(product) ? "higher" : ""} ${priceSize} style-${style} ${redCard ? "red-reference-price" : blueCard ? "reference-price-card" : ""}`}
-      style={regionStyle(placement)}
+      style={{ ...regionStyle(placement), ...defaultRegionScale(campaign, "price", placement) }}
       role={onEditPrice ? "button" : undefined}
       tabIndex={onEditPrice ? 0 : undefined}
       onClick={onEditPrice ? () => onEditPrice(product) : undefined}
@@ -655,6 +658,7 @@ function Price({
             showRegular={hasRegularPrice(product)}
             savingMode={savingMode}
             onEditSavings={onEditSavings}
+            savingStyle={defaultRegionScale(campaign, "saving", product.brochureContentPlacement?.saving)}
           />
           {confirmedHigherPrice(product) && (
             <span className="brochure-price-warning reference-price-increase">
@@ -852,7 +856,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
         savingMode={savingMode}
         className="brochure-red-reference-saving"
         onEditSavings={onEditSavings}
-        style={regionStyle(contentPlacement.saving)}
+        style={{ ...regionStyle(contentPlacement.saving), ...defaultRegionScale(campaign, "saving", contentPlacement.saving) }}
       >
         {onLayoutRegion && (
           <LayoutHandles
@@ -867,8 +871,10 @@ function LargeBundleProductCard(props: ProductCardProps) {
     ) : null;
   return (
     <article
+      data-custom-product-font={productDesignFor(campaign).typography.font !== "automatic" ? "true" : undefined}
       className={`brochure-product large-bundle-product style-${style} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
       style={{
+        ...productTypographyStyle(campaign),
         gridColumn: `span ${size.width}`,
         gridRow: `span ${size.height}`,
       }}
@@ -1081,13 +1087,11 @@ function StandardProductCard({
   const blueReference = usesBlueReferencePrice(product, campaign);
   const screenInches = tvScreenInches(product);
   const otherInches = otherScreenInches(product);
-  const defaultImageScale =
-    hero && tvScreenInches(product)
-      ? Math.min(1, defaultProductImageScale(product) * 1.18)
-      : defaultProductImageScale(product);
   const phoneCorner = usesPhoneCornerAnnotation(product);
   const inches = screenInches || otherInches;
   const detailPlacement = defaultProductDetailPlacement(product, campaign);
+  const productDesign = productDesignFor(campaign);
+  const photoBase = defaultPhotoPlacement(product, campaign, detailPlacement, hero);
   // Apple's orange price uses HTML, but its current design still uses the
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
@@ -1120,7 +1124,7 @@ function StandardProductCard({
     () => setSize(cardSize(product, layout || "classic8")),
     [product.brochureCardSize, layout],
   );
-  const fittedImagePlacement = useProductImageFit({ imageRef, wrapRef, source: product.image, ready: imageReady, placement, base: {x: detailPlacement === "left" ? 63 : otherInches ? 46 : 50, y: otherInches ? 56 : 50, scale: defaultImageScale} });
+  const fittedImagePlacement = useProductImageFit({ imageRef, wrapRef, source: product.image, ready: imageReady, placement: placement ? { ...photoBase, ...placement } : productDesign.photo.mode === "custom" ? photoBase : null, base: photoBase });
   function beginImageGesture(
     event:
       | React.PointerEvent<HTMLButtonElement>
@@ -1439,9 +1443,12 @@ function StandardProductCard({
         } else onProductDrop?.(product, event);
       }}
       onDragEnd={onProductDragEnd}
+      data-custom-product-font={productDesign.typography.font !== "automatic" ? "true" : undefined}
+      data-product-divider-hidden={!productDesign.divider.visible ? "true" : undefined}
       data-default-layout={redReference && !Object.values(contentPlacement).some(Boolean) ? "true" : undefined}
       style={{
         position: "relative",
+        ...productTypographyStyle(campaign),
         ...(onResizeCard || product.brochureCardSize
           ? { gridColumn: `span ${size.width}`, gridRow: `span ${size.height}` }
           : {}),
@@ -1591,7 +1598,7 @@ function StandardProductCard({
             savingMode={savingMode}
             className="brochure-red-reference-saving"
             onEditSavings={onEditSavings}
-            style={regionStyle(contentPlacement.saving)}
+            style={{ ...regionStyle(contentPlacement.saving), ...defaultRegionScale(campaign, "saving", contentPlacement.saving) }}
           />
         )}
         {validSale(product) &&
@@ -1600,7 +1607,7 @@ function StandardProductCard({
           (style === "current" || style === "minimal") && (
             <span
               className="brochure-saving"
-              style={regionStyle(contentPlacement.saving)}
+              style={{ ...regionStyle(contentPlacement.saving), ...defaultRegionScale(campaign, "saving", contentPlacement.saving) }}
               aria-label={
                 savingMode === "percentage"
                   ? `Zbritje ${discount(product.regular, product.sale)} për qind`
@@ -1823,6 +1830,7 @@ function StandardProductCard({
         <ProductNameDivider
           rowRef={priceRowRef}
           alignName={!contentPlacement.details}
+          defaults={productDesign.divider}
         />
       </div>
       {(specs.length > 0 || (warranty && warrantyInStrip)) && (
@@ -1836,7 +1844,7 @@ function StandardProductCard({
               key={key}
               product={product}
               detailKey={key}
-              className={`${isMemoryDetail(key, value) ? "detail-memory" : ""} ${referenceStrip && defaultFilledDetail(product, key, value, index) ? "detail-filled" : ""}`}
+              className={`${isMemoryDetail(key, value) ? "detail-memory" : ""} ${defaultDetailFill(campaign, referenceStrip && defaultFilledDetail(product, key, value, index)) ? "detail-filled" : ""}`}
               onChange={changeProduct}
               draggable={Boolean(onReorderDetails)}
               onDragStart={
@@ -2090,11 +2098,11 @@ function LastPageWithStores({
         campaign={campaign}
         settings={settings}
         sources={{
-          neptun:
+          neptun: logoForBackground(campaign,"pages",pageBackgroundColor(campaign,kind,page),
             campaign.brandAssets?.neptun ||
             (campaign.neptunLogoOption === "framed"
               ? "/api/assets/legacy/assets/neptun-logo-framed.png"
-              : "/api/assets/legacy/assets/neptun-cover-logo.png"),
+              : "/api/assets/legacy/assets/neptun-cover-logo.png"),light),
           balfin: brochureAssetSource(campaign, "balfin", true),
           service: brochureAssetSource(campaign, "service", true),
         }}
@@ -2151,6 +2159,7 @@ function CoverPageContent({
     (backgroundImage
       ? pageBackgroundColor(campaign, "cover")
       : pageBackgroundFill(campaign, "cover")) || "#1c4075";
+  const coverLogo = logoForBackground(campaign,"cover",backgroundColor,campaign.coverLogoSource || "");
   const priceLogo = priceLogoSource(campaign);
   const template = COVER_TEMPLATES.some(
     (item) => item.id === campaign.coverTemplate,
@@ -2234,20 +2243,20 @@ function CoverPageContent({
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
-          {campaign.coverLogoSource ? (
-            campaign.coverLogoStyle === "framed" ||
-            campaign.coverLogoSource ===
+          {coverLogo ? (
+            (campaign.coverLogoStyle === "framed" && coverLogo === campaign.coverLogoSource) ||
+            coverLogo ===
               "/api/assets/legacy/assets/neptun-logo-framed.png" ? (
               <div className="brochure-framed-logo">
                 <img
-                  src={campaign.coverLogoSource}
+                  src={coverLogo}
                   alt="NEPTUN"
                   draggable={false}
                 />
               </div>
             ) : (
               <img
-                src={campaign.coverLogoSource}
+                src={coverLogo}
                 alt="NEPTUN"
                 draggable={false}
               />
@@ -2484,7 +2493,7 @@ function ProductPageContent({
       />
       <div
         className="brochure-products"
-        style={{ gridTemplateRows: `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`, ...(page.spacing ? { columnGap: `${page.spacing.horizontal ?? 3.1}cqw`, rowGap: `${page.spacing.vertical ?? 3.2}cqw`, "--brochure-content-gap": `${page.spacing.content ?? 1}cqw` } : {}) }}
+        style={{ gridTemplateRows: `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`, ...productGridStyle(campaign, page.spacing) }}
       >
         {page.products.map((product: Product) => (
           <ProductCard
@@ -2520,7 +2529,7 @@ function ProductPageContent({
       </div>
       {page.showFooter && (
         <div className="brochure-interior-brand-footer">
-          <CampaignAssetArtwork campaign={campaign} assetKey={`product-${page.index}-neptun`} label="NEPTUN footer logo" onChange={onCampaignAssetChange} defaultWidth="12cqw"><NeptunWordmark dark={!light} campaign={campaign} /></CampaignAssetArtwork>
+          <CampaignAssetArtwork campaign={campaign} assetKey={`product-${page.index}-neptun`} label="NEPTUN footer logo" onChange={onCampaignAssetChange} defaultWidth="12cqw"><NeptunWordmark dark={!light} campaign={campaign} backgroundColor={pageBackgroundColor(campaign,"product",page)} /></CampaignAssetArtwork>
           <span className="brochure-interior-footer-line" />
           {page.showFooterPageNumber && <b>{page.index + 2}</b>}
         </div>

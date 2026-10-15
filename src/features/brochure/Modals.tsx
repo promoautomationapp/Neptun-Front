@@ -42,6 +42,7 @@ import { searchProducts } from "./productSearch";
 import { BackgroundPicker } from "./BackgroundPicker";
 import { BrochureGridPicker } from "./BrochureGridPicker";
 import { BrochureFormatPicker } from "./BrochureFormatPicker";
+import { brochureFormatSelection } from "./brochureFormat";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 
 function spreadsheetColumn(index: number): string {
@@ -207,11 +208,12 @@ export function CreateCampaign({
   );
   const [backgroundEdited, setBackgroundEdited] = useState(false);
   const [layout, setLayout] = useState<string>(initialSettings.brochure.layout);
-  const [autoProductLayout, setAutoProductLayout] = useState(true);
+  const [autoProductLayout, setAutoProductLayout] = useState(initialSettings.brochure.automaticProductLayout);
   const [brochureFormat, setBrochureFormat] = useState<string>(
     initialSettings.brochure.format,
   );
-  const [tagline, setTagline] = useState("");
+  const [tagline, setTagline] = useState(initialSettings.brochure.showCoverMessage ? initialType.tagline : "");
+  const [taglineEdited, setTaglineEdited] = useState(false);
   const [showCoverBand, setShowCoverBand] = useState(initialSettings.brochure.showCoverBand);
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | undefined>(undefined);
@@ -249,6 +251,7 @@ export function CreateCampaign({
   }
   function chooseType(value: string) {
     setType(value);
+    if (!taglineEdited) setTagline(initialSettings.brochure.showCoverMessage ? typeOptions.find(item => item.name === value)?.tagline || "" : "");
 
     if (value !== "Other") setName(`${t(value)} ${new Date().getFullYear()}`);
   }
@@ -270,7 +273,7 @@ export function CreateCampaign({
       theme,
       layout,
       autoProductLayout,
-      brochureFormat,
+      ...brochureFormatSelection(brochureFormat, initialSettings.customFormats),
       productBackgroundColor: backgroundGradient ? "" : backgroundColor,
       productBackgroundGradient: backgroundGradient,
       productBackgroundImage: backgroundImage,
@@ -437,6 +440,7 @@ export function CreateCampaign({
           </div>
           <BrochureFormatPicker
             value={brochureFormat}
+            customFormats={initialSettings.customFormats}
             onChange={setBrochureFormat}
           />
 
@@ -479,6 +483,7 @@ export function CreateCampaign({
                 <input
                   value={tagline}
                   onChange={(event) => {
+                    setTaglineEdited(true);
                     setTagline(event.target.value);
                   }}
                   placeholder={t("A short message for the cover")}

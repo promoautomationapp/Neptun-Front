@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { useMemo, useState } from "react";
 import { brandLogoFor, BUILTIN_BRAND_LOGOS } from "../brochure/brandLogos";
 import { AssetPicker, Field, Toggle } from "./components";
@@ -65,8 +66,7 @@ export function ManufacturerLogos({
               const override = draft.brandLogos[brand] || "";
               const hidden = hasOverride && !override;
               return (
-                <fieldset key={brand}>
-                  <legend>{brand}</legend>
+                <SettingsGroup key={brand} title={<> {brand} </>}>
                   <Toggle
                     label={`Hide ${brand} logo`}
                     checked={hidden}
@@ -112,7 +112,7 @@ export function ManufacturerLogos({
                       Restore current {brand} logo
                     </button>
                   )}
-                </fieldset>
+                </SettingsGroup>
               );
             })}
           </div>

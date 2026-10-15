@@ -1,3 +1,4 @@
+import {emptyCampaignFilters, filterCampaigns, normalizeCampaignFilters, type CampaignFilters} from "../campaigns/campaignFilters";
 import {CampaignActivityStatus} from "../brochure/CampaignActivityStatus";
 import {hasUnsavedCampaignChanges} from "../brochure/campaignSaveStatus";
 import {applyPreparedProductPhoto, createProductImagePreparationQueue, currentProductPhotoTarget, productImagePreparationTargets, retainPreparedProductPhoto, type ProductPhotoTarget} from "../brochure/productImagePreparationQueue";
@@ -64,6 +65,7 @@ import { applyTvWallpaper, campaignTelevisions } from "../brochure/tvWallpaper";
 import { BrochureFormatPicker } from "../brochure/BrochureFormatPicker";
 import {
   brochureExportGeometry,
+  brochureFormatSelection,
   resolveBrochureFormat,
 } from "../brochure/brochureFormat";
 import { ProductPriceEditor } from "../brochure/ProductPriceEditor";
@@ -189,6 +191,7 @@ interface StoreControlsProps extends CampaignControlsProps {
 }
 interface CampaignLibraryProps {
   campaigns: Campaign[];
+  settings?: Settings;
   onCreate: () => void;
   onOpen: (id: string) => void;
   onDuplicate: (campaign: Campaign) => void;
@@ -226,15 +229,6 @@ interface BrochureEditorProps extends StoreControlsProps {
   onEditPrice: (product: Product) => void;
   onEditSavings: (product: Product) => void;
   onMakeSocial: (products: Product[]) => void;
-}
-interface CampaignFilters {
-  query: string;
-  status: string;
-  period: string;
-  type: string;
-  from: string;
-  to: string;
-  sort: string;
 }
 interface SocialSeed {
   campaignId: string;
@@ -354,92 +348,39 @@ export function CampaignCoverThumbnail({ campaign }: { campaign: Campaign }) {
   );
 }
 
-function CampaignLibrary({
+export function CampaignLibrary({
   campaigns,
+  settings,
   onCreate,
   onOpen,
   onDuplicate,
   onDelete,
   onPrint,
 }: CampaignLibraryProps) {
-  const emptyFilters = {
-    query: "",
-    status: "all",
-    period: "all",
-    type: "all",
-    from: "",
-    to: "",
-    sort: "updated_desc",
-  };
+  const emptyFilters = emptyCampaignFilters;
   const [filters, setFilters] = useState<CampaignFilters>(() => {
-    try {
-      return {
-        ...emptyFilters,
-        ...JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}"),
-      };
-    } catch {
-      return emptyFilters;
-    }
+    try { return normalizeCampaignFilters(JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}")); }
+    catch { return {...emptyFilters}; }
   });
   useEffect(() => {
-    localStorage.setItem("neptun-campaign-filters", JSON.stringify(filters));
+    try { localStorage.setItem("neptun-campaign-filters", JSON.stringify(filters)); }
+    catch { /* Filtering remains usable when browser storage is unavailable. */ }
   }, [filters]);
   const setFilter = (key: keyof CampaignFilters, value: string) =>
-    setFilters((current) => ({ ...current, [key]: value }));
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const campaignTypes = [
-    ...new Set(
-      campaigns
-        .map((item) => item.type)
-        .filter((value): value is NonNullable<typeof value> => Boolean(value)),
-    ),
-  ].sort();
-  const filtered = campaigns
-    .filter((item) => {
-      const searchable = [
-        item.name,
-        item.type,
-        item.startDate,
-        item.endDate,
-        ...(item.products || []).flatMap((product: Product) => [
-          product.code,
-          product.name,
-          product.brand,
-        ]),
-      ].join(" ");
-      if (
-        filters.query &&
-        !normalize(searchable).includes(normalize(filters.query))
-      )
-        return false;
-      if (
-        filters.status !== "all" &&
-        (item.status || "in_progress") !== filters.status
-      )
-        return false;
-      if (filters.type !== "all" && item.type !== filters.type) return false;
-      const start = item.startDate || item.endDate || "";
-      const end = item.endDate || item.startDate || "";
-      if (filters.from && end < filters.from) return false;
-      if (filters.to && start > filters.to) return false;
-      if (filters.period === "one_day" && start !== end) return false;
-      if (filters.period === "past" && end >= today) return false;
-      if (filters.period === "current" && !(start <= today && end >= today))
-        return false;
-      if (filters.period === "upcoming" && start <= today) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (filters.sort === "updated_asc")
-        return (a.updatedAt || "").localeCompare(b.updatedAt || "");
-      if (filters.sort === "start_desc")
-        return (b.startDate || "").localeCompare(a.startDate || "");
-      if (filters.sort === "start_asc")
-        return (a.startDate || "").localeCompare(b.startDate || "");
-      if (filters.sort === "name") return a.name.localeCompare(b.name);
-      return (b.updatedAt || "").localeCompare(a.updatedAt || "");
-    });
+    setFilters((current) => normalizeCampaignFilters({ ...current, [key]: value }));
+  const campaignTypes = [...new Set([
+    ...resolveSettings(settings).campaignTypes.map(item => item.name),
+    ...campaigns.map(item => item.type).filter((value): value is string => Boolean(value)),
+  ])].sort();
+  const formats = [...new Map(campaigns.map(item => {
+    const format=resolveBrochureFormat(item);
+    return [format.id, format] as const;
+  })).values()];
+  const effectiveFilters = {...filters,
+    type: campaignTypes.includes(filters.type) ? filters.type : "all",
+    format: formats.some(format => format.id===filters.format) ? filters.format : "all",
+  };
+  const filtered=filterCampaigns(campaigns, effectiveFilters);
   const filterActive = Object.entries(filters).some(
     ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
   );
@@ -535,12 +476,18 @@ function CampaignLibrary({
           />
           <FilterSelect
             label={t("Type")}
-            value={filters.type}
+            value={effectiveFilters.type}
             onChange={(value: string) => setFilter("type", value)}
             options={[
               { value: "all", label: t("All types") },
               ...campaignTypes.map((type) => ({ value: type, label: t(type) })),
             ]}
+          />
+          <FilterSelect
+            label={t("Format")}
+            value={effectiveFilters.format}
+            onChange={(value: string) => setFilter("format", value)}
+            options={[{value: "all", label: t("All formats")}, ...formats.map(format => ({value: format.id, label: format.label}))]}
           />
           <FilterDate
             label={t("From date")}
@@ -2773,9 +2720,10 @@ export function BrochureEditor({
             <PageSettingsTabs><SettingsGroup category="layout" title={t("Brochure size")}>
               <BrochureFormatPicker
                 value={campaign}
+                customFormats={settings.customFormats}
                 onChange={(value: string) =>
                   onUpdate((draft: Campaign) => {
-                    draft.brochureFormat = value;
+                    Object.assign(draft, brochureFormatSelection(value, settings.customFormats, draft));
                   })
                 }
               />
@@ -3948,6 +3896,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
         {section === "campaigns" && (
           <CampaignLibrary
             campaigns={campaigns}
+            settings={settings}
             onCreate={() => setModal("create")}
             onOpen={(id: string) => {
               const selectedCampaign = campaigns.find(item => item.id === id);
@@ -4037,7 +3986,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                   <strong>{product.name}</strong>
                   <MissingCatalogNotice product={product} variant="badge" />
                   <small title={product.categoryPath}>{product.categoryPath || product.subcategory}</small>
-                  {product.sourceMissing && <span className="cs-source-missing">No longer listed on neptun-ks.com · kept in catalog</span>}
+                  {product.sourceMissing && <span className="cs-source-missing">{t("Kept in catalog · not found on neptun-ks.com at last sync")}</span>}
                   <b>
                     {hasRegularPrice(product)
                       ? money(Number(product.regular))

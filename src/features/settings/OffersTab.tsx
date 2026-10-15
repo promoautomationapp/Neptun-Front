@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./components";
 import { AssetPicker, Field } from "./components";
 import { OFFER_STYLES } from "../brochure/offerStyles";
 import type { SettingsTabProps } from "./SettingsEditor";
@@ -126,8 +127,7 @@ export function OffersTab({
           }
         />
       </Field>
-      <fieldset>
-        <legend>Price artwork colors</legend>
+      <SettingsGroup title={<> Price artwork colors </>}>
         <div className="ns-grid">
           {(
             [
@@ -150,7 +150,7 @@ export function OffersTab({
             </Field>
           ))}
         </div>
-      </fieldset>
+      </SettingsGroup>
     </section>
   );
 }
