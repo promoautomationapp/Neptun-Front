@@ -41,7 +41,9 @@ export function ScreenImageEditor({
   onClose,
 }: ScreenImageEditorProps) {
   const [lifestyleOpen, setLifestyleOpen] = useState(false);
-  const [fit, setFit] = useState<"contain" | "cover">(product.screenArtwork?.fit || "contain");
+  const [fit, setFit] = useState<"contain" | "cover">(
+    product.screenArtwork?.fit || "contain",
+  );
   const [screen, setScreen] = useState(product.screenArtwork?.image || "");
   const [box, setBox] = useState(
     savedScreenBoxForPhoto(product) || defaultBox(product),
@@ -143,7 +145,15 @@ export function ScreenImageEditor({
       wide
     >
       <div className="cs-screen-editor">
-      {lifestyleOpen && <LifestyleImageEditor context="tv" source={screen} products={[product]} onApply={(image) => setScreen(image)} onClose={() => setLifestyleOpen(false)} />}
+        {lifestyleOpen && (
+          <LifestyleImageEditor
+            context="tv"
+            source={screen}
+            products={[product]}
+            onApply={(image) => setScreen(image)}
+            onClose={() => setLifestyleOpen(false)}
+          />
+        )}
         <p>
           {t(
             television
@@ -197,8 +207,24 @@ export function ScreenImageEditor({
             )}
           </div>
           <div className="cs-screen-editor-controls">
-          <label>{t("Image fit")}<SearchableSelect aria-label={t("Screen image fit")} value={fit} onChange={(event) => setFit(event.target.value as "contain" | "cover")}><option value="contain">{t("Show whole image")}</option><option value="cover">{t("Fill screen")}</option></SearchableSelect></label>
-          {television && <Button onClick={() => setLifestyleOpen(true)}>{t("Create / refine wallpaper with AI")}</Button>}
+            <label>
+              {t("Image fit")}
+              <SearchableSelect
+                aria-label={t("Screen image fit")}
+                value={fit}
+                onChange={(event) =>
+                  setFit(event.target.value as "contain" | "cover")
+                }
+              >
+                <option value="contain">{t("Show whole image")}</option>
+                <option value="cover">{t("Fill screen")}</option>
+              </SearchableSelect>
+            </label>
+            {television && (
+              <Button onClick={() => setLifestyleOpen(true)}>
+                {t("Create / refine wallpaper with AI")}
+              </Button>
+            )}
             <label className="cs-upload-button">
               ↑ {t("Upload screen picture")}
               <input
@@ -278,29 +304,29 @@ export function ScreenImageEditor({
             )}
           </div>
         </div>
-        <div className="cs-modal-actions">
-          <Button onClick={onClose}>{t("Cancel")}</Button>
-          {product.screenArtwork && (
-            <Button
-              onClick={() => {
-                onSave(null, scope);
-                onClose();
-              }}
-            >
-              {t("Use original screen")}
-            </Button>
-          )}
+      </div>
+      <div className="cs-modal-actions">
+        <Button onClick={onClose}>{t("Cancel")}</Button>
+        {product.screenArtwork && (
           <Button
-            tone="primary"
-            disabled={!screen}
             onClick={() => {
-              onSave({ image: screen, box, detectedFor, fit }, scope);
+              onSave(null, scope);
               onClose();
             }}
           >
-            {t(television ? "Apply wallpaper" : "Save screen image")}
+            {t("Use original screen")}
           </Button>
-        </div>
+        )}
+        <Button
+          tone="primary"
+          disabled={!screen}
+          onClick={() => {
+            onSave({ image: screen, box, detectedFor, fit }, scope);
+            onClose();
+          }}
+        >
+          {t(television ? "Apply wallpaper" : "Save screen image")}
+        </Button>
       </div>
     </Modal>
   );

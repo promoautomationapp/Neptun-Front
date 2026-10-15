@@ -416,3 +416,63 @@
   background: #eaf4fb;
   color: #194f7b;
 }
+
+/* Navigation reads as a tab strip; only actions use button surfaces. */
+.campaign-app .cs-insights-tabs,
+.campaign-app .cs-insights-subtabs {
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 22px;
+  padding: 0;
+  border-bottom: 1px solid #d9e2ec;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.campaign-app .cs-insights-tabs > button,
+.campaign-app .cs-insights-subtabs > button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 1px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6c8295;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: none;
+}
+.campaign-app .cs-insights-tabs > button:hover,
+.campaign-app .cs-insights-subtabs > button:hover {
+  color: #194b79;
+  border-bottom-color: #b5c9da;
+}
+.campaign-app .cs-insights-tabs > button[aria-selected="true"] {
+  background: transparent;
+  color: #173e62;
+  border-bottom-color: #f24b34;
+}
+.campaign-app .cs-insights-subtabs {
+  gap: 18px;
+}
+.campaign-app .cs-insights-subtabs > button {
+  min-height: 40px;
+  font-size: 12px;
+  border-bottom-width: 2px;
+}
+.campaign-app .cs-insights-subtabs > button[aria-selected="true"] {
+  background: transparent;
+  color: #194b79;
+  border-bottom-color: #194b79;
+}
+@media (max-width: 700px) {
+  .campaign-app .cs-insights-tabs,
+  .campaign-app .cs-insights-subtabs {
+    gap: 18px;
+  }
+  .campaign-app .cs-insights-tabs > button {
+    padding-inline: 1px;
+    font-size: 12px;
+  }
+}

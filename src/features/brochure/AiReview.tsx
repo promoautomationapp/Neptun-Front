@@ -717,38 +717,40 @@ export function AiReview({
                 )}
               </p>
             )}
-            <div className="cs-ai-footer">
-              <Button onClick={onClose}>{t("Cancel")}</Button>
-              {mode !== "images" && (
-                <Button disabled={!ready} onClick={() => onDecline(proposals)}>
-                  {t(
-                    mode === "complete"
-                      ? "Decline all & complete"
-                      : mode === "brochure"
-                        ? "Decline all & open brochure"
-                        : "Decline all & close",
-                  )}
-                </Button>
-              )}
-              <Button
-                tone="primary"
-                disabled={!ready}
-                onClick={() => onApply(proposals)}
-              >
-                {t(
-                  mode === "images"
-                    ? "Save re-cut images"
-                    : mode === "complete"
-                      ? "Apply selected & complete"
-                      : mode === "brochure"
-                        ? "Apply selected & open brochure"
-                        : "Apply selected changes",
-                )}
-              </Button>
-            </div>
           </>
         )}
       </div>
+      {phase === "review" && (
+        <div className="cs-modal-actions cs-ai-footer">
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          {mode !== "images" && (
+            <Button disabled={!ready} onClick={() => onDecline(proposals)}>
+              {t(
+                mode === "complete"
+                  ? "Decline all & complete"
+                  : mode === "brochure"
+                    ? "Decline all & open brochure"
+                    : "Decline all & close",
+              )}
+            </Button>
+          )}
+          <Button
+            tone="primary"
+            disabled={!ready}
+            onClick={() => onApply(proposals)}
+          >
+            {t(
+              mode === "images"
+                ? "Save re-cut images"
+                : mode === "complete"
+                  ? "Apply selected & complete"
+                  : mode === "brochure"
+                    ? "Apply selected & open brochure"
+                    : "Apply selected changes",
+            )}
+          </Button>
+        </div>
+      )}
     </Modal>
   );
 }

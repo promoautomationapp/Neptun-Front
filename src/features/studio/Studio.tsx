@@ -1,15 +1,43 @@
-import { campaignValidity, useCampaignClock } from "../campaigns/campaignValidity";
+import { NavIcon } from "./NavIcon";
+import { catalogFacets } from "../products/products.api";
+import {
+  campaignValidity,
+  useCampaignClock,
+} from "../campaigns/campaignValidity";
 import { SearchableSelect } from "../../components/SearchableSelect";
-import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
-import type {LogoAsset} from "../settings/settings.schema";
-import {emptyCampaignFilters, filterCampaigns, normalizeCampaignFilters, type CampaignFilters} from "../campaigns/campaignFilters";
-import {CampaignActivityStatus} from "../brochure/CampaignActivityStatus";
-import {hasUnsavedCampaignChanges} from "../brochure/campaignSaveStatus";
-import {applyPreparedProductPhoto, createProductImagePreparationQueue, currentProductPhotoTarget, productImagePreparationTargets, retainPreparedProductPhoto, type ProductPhotoTarget} from "../brochure/productImagePreparationQueue";
-import { CatalogNavigator, defaultCatalogSelection, filterCatalog } from "../products/CatalogNavigator";
+import {
+  ReusableImages,
+  droppedReusableImage,
+  REUSABLE_IMAGE_TYPE,
+} from "../settings/ReusableImages";
+import type { LogoAsset } from "../settings/settings.schema";
+import {
+  emptyCampaignFilters,
+  filterCampaigns,
+  normalizeCampaignFilters,
+  type CampaignFilters,
+} from "../campaigns/campaignFilters";
+import { CampaignActivityStatus } from "../brochure/CampaignActivityStatus";
+import { hasUnsavedCampaignChanges } from "../brochure/campaignSaveStatus";
+import {
+  applyPreparedProductPhoto,
+  createProductImagePreparationQueue,
+  currentProductPhotoTarget,
+  productImagePreparationTargets,
+  retainPreparedProductPhoto,
+  type ProductPhotoTarget,
+} from "../brochure/productImagePreparationQueue";
+import {
+  CatalogNavigator,
+  defaultCatalogSelection,
+  filterCatalog,
+} from "../products/CatalogNavigator";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
 import { CatalogRefreshControl } from "../products/CatalogRefreshControl";
-import { PageSettingsTabs, PageSettingsGroup as SettingsGroup } from "../brochure/PageSettingsTabs";
+import {
+  PageSettingsTabs,
+  PageSettingsGroup as SettingsGroup,
+} from "../brochure/PageSettingsTabs";
 import { CoverImageControls } from "../brochure/CoverImageControls";
 import { loadCatalog } from "../products/catalog-loader";
 import { screenArtworkForPhotoChange } from "../brochure/screenGeometry";
@@ -103,7 +131,10 @@ import {
   materializeProductPages,
   reviewCommentsForLayout,
 } from "../brochure/campaignPages";
-import { applyCoverProductPlacement, repairCoverProductLayout } from "../brochure/coverElements";
+import {
+  applyCoverProductPlacement,
+  repairCoverProductLayout,
+} from "../brochure/coverElements";
 import {
   storeDisplayChanges,
   withoutFooterStorePlacements,
@@ -115,7 +146,10 @@ import { SettingsPage } from "../settings/SettingsPage";
 import { UsersPage } from "../users/UsersPage";
 import { InsightsPage } from "../insights/InsightsPage";
 import { ActivityPage } from "../activity/ActivityPage";
-import { PhotoPreparationProgress, type PhotoProgressItem } from "../brochure/PhotoPreparationProgress";
+import {
+  PhotoPreparationProgress,
+  type PhotoProgressItem,
+} from "../brochure/PhotoPreparationProgress";
 import { ProfilePage } from "../users/ProfilePage";
 import { canManageUsers } from "../auth/auth.api";
 import { SidebarAccount } from "./SidebarAccount";
@@ -167,7 +201,7 @@ import "../../styles/responsive.css";
 import "../../styles/ai-review.css";
 import "../../styles/export.css";
 import "../../styles/review.css";
-import "../../styles/hero.css";
+import "../../styles/campaign-library.css";
 import "../../styles/category-select.css";
 import "../../styles/brochure-workspace.css";
 import "../../styles/cover-layout.css";
@@ -214,7 +248,10 @@ interface ProductEditorProps extends CampaignControlsProps {
   onMakeSocial: (products: Product[]) => void;
 }
 interface BrochureEditorProps extends StoreControlsProps {
-  onPreparePhotos?: (snapshot: Campaign, products?: Product[]) => Promise<unknown>;
+  onPreparePhotos?: (
+    snapshot: Campaign,
+    products?: Product[],
+  ) => Promise<unknown>;
   user: SessionUser;
   members: TeamMember[];
   onReviewAction: (
@@ -284,7 +321,6 @@ function TrashIcon({ size = 18 }) {
     </svg>
   );
 }
-const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎", insights: "▥", activity: "◷" };
 
 function LanguageSwitch({
   language,
@@ -363,98 +399,89 @@ export function CampaignLibrary({
   onPrint,
 }: CampaignLibraryProps) {
   const now = useCampaignClock();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterPanelId = React.useId();
   const emptyFilters = emptyCampaignFilters;
   const [filters, setFilters] = useState<CampaignFilters>(() => {
-    try { return normalizeCampaignFilters(JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}")); }
-    catch { return {...emptyFilters}; }
+    try {
+      return normalizeCampaignFilters(
+        JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}"),
+      );
+    } catch {
+      return { ...emptyFilters };
+    }
   });
   useEffect(() => {
-    try { localStorage.setItem("neptun-campaign-filters", JSON.stringify(filters)); }
-    catch { /* Filtering remains usable when browser storage is unavailable. */ }
+    try {
+      localStorage.setItem("neptun-campaign-filters", JSON.stringify(filters));
+    } catch {
+      /* Filtering remains usable when browser storage is unavailable. */
+    }
   }, [filters]);
   const setFilter = (key: keyof CampaignFilters, value: string) =>
-    setFilters((current) => normalizeCampaignFilters({ ...current, [key]: value }));
-  const campaignTypes = [...new Set([
-    ...resolveSettings(settings).campaignTypes.map(item => item.name),
-    ...campaigns.map(item => item.type).filter((value): value is string => Boolean(value)),
-  ])].sort();
-  const formats = [...new Map(campaigns.map(item => {
-    const format=resolveBrochureFormat(item);
-    return [format.id, format] as const;
-  })).values()];
-  const effectiveFilters = {...filters,
+    setFilters((current) =>
+      normalizeCampaignFilters({ ...current, [key]: value }),
+    );
+  const campaignTypes = [
+    ...new Set([
+      ...resolveSettings(settings).campaignTypes.map((item) => item.name),
+      ...campaigns
+        .map((item) => item.type)
+        .filter((value): value is string => Boolean(value)),
+    ]),
+  ].sort();
+  const formats = [
+    ...new Map(
+      campaigns.map((item) => {
+        const format = resolveBrochureFormat(item);
+        return [format.id, format] as const;
+      }),
+    ).values(),
+  ];
+  const effectiveFilters = {
+    ...filters,
     type: campaignTypes.includes(filters.type) ? filters.type : "all",
-    format: formats.some(format => format.id===filters.format) ? filters.format : "all",
+    format: formats.some((format) => format.id === filters.format)
+      ? filters.format
+      : "all",
   };
-  const filtered=filterCampaigns(campaigns, effectiveFilters, now);
+  const filtered = filterCampaigns(campaigns, effectiveFilters, now);
   const filterActive = Object.entries(filters).some(
     ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
   );
+  const advancedFilterCount = Object.entries(effectiveFilters).filter(
+    ([key, value]) => key !== "query" && value !== emptyFilters[key as keyof CampaignFilters],
+  ).length;
   return (
-    <div className="cs-main-panel">
-      <div className="cs-hero">
-        <div className="cs-hero-copy">
-          <span className="cs-eyebrow">
-            NEPTUN KOSOVO · {t("CAMPAIGN STUDIO")}
-          </span>
-          <h1>
-            {t("Make every offer")}
-            <br />
-            <em>{t("look its best.")}</em>
-          </h1>
-          <p>
-            {t(
-              "Create campaigns, match sale prices to the product catalog and compose brochures inspired by NEPTUN’s visual standards.",
-            )}
-          </p>
-          <Button tone="primary" onClick={onCreate}>
-            {t("＋ New campaign")}
-          </Button>
-        </div>
-        <div className="cs-hero-visual" aria-hidden="true">
-          <div className="cs-hero-sheet">
-            <div className="cs-hero-sheet-products">
-              <div>
-                <img
-                  src="/api/assets/legacy/catalog-images/84064143/01_3156fbb21d.jpg"
-                  alt=""
-                />
-                <span>LG NanoCell</span>
-              </div>
-              <div>
-                <img
-                  src="/api/assets/legacy/catalog-images/84057019/01_744d8a5ac2.jpeg"
-                  alt=""
-                />
-                <span>BEKO</span>
-              </div>
-            </div>
-            <div className="cs-hero-sheet-bottom">
-              <b>NEPTUN</b>
-              <span>Oferta që nuk priten</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="cs-section-head">
+    <div className="cs-main-panel cs-library">
+      <div className="cs-library-heading">
         <div>
-          <span className="cs-eyebrow">{t("YOUR WORKSPACE")}</span>
-          <h2>{t("Campaigns")}</h2>
-          <p>
-            {campaigns.length} {t("saved for the team")}
-          </p>
+          <h1>{t("Campaigns")}</h1>
+          <p>{campaigns.length} {t("saved for the team")}</p>
         </div>
-        <div className="cs-search">
-          <span>⌕</span>
-          <input
-            type="search"
-            value={filters.query}
-            onChange={(event) => setFilter("query", event.target.value)}
-            placeholder={t("Search campaigns, products or codes")}
-          />
-        </div>
+        <Button tone="primary" onClick={onCreate}>
+          <NavIcon name="plus" />{t("New campaign")}
+        </Button>
       </div>
-      <div className="cs-campaign-filters">
+      <section className="cs-campaign-filters" aria-label={t("Campaign filters")}>
+        <div className="cs-library-filter-bar">
+          <label className="cs-search cs-library-search">
+            <NavIcon name="search" />
+            <input
+              type="search"
+              aria-label={t("Search campaigns, products or codes")}
+              value={filters.query}
+              onChange={(event) => setFilter("query", event.target.value)}
+              placeholder={t("Search campaigns, products or codes")}
+            />
+          </label>
+          <button type="button" className="cs-library-filter-toggle" aria-expanded={filtersOpen} aria-controls={filterPanelId} onClick={() => setFiltersOpen(!filtersOpen)}>
+            <NavIcon name="filter" />{t("Filters")}
+            {advancedFilterCount > 0 && <span className="cs-filter-count">{advancedFilterCount}</span>}
+            <NavIcon name="chevron-down" />
+          </button>
+        </div>
+        <div id={filterPanelId} className="cs-library-advanced" hidden={!filtersOpen}>
         <div className="cs-campaign-filter-grid">
           <FilterSelect
             label={t("Status")}
@@ -494,7 +521,13 @@ export function CampaignLibrary({
             label={t("Format")}
             value={effectiveFilters.format}
             onChange={(value: string) => setFilter("format", value)}
-            options={[{value: "all", label: t("All formats")}, ...formats.map(format => ({value: format.id, label: format.label}))]}
+            options={[
+              { value: "all", label: t("All formats") },
+              ...formats.map((format) => ({
+                value: format.id,
+                label: format.label,
+              })),
+            ]}
           />
           <FilterDate
             label={t("From date")}
@@ -523,6 +556,7 @@ export function CampaignLibrary({
             ]}
           />
         </div>
+        </div>
         <div className="cs-campaign-filter-footer">
           <span>
             {t("Showing")} {filtered.length} {t("of")} {campaigns.length}{" "}
@@ -534,11 +568,17 @@ export function CampaignLibrary({
             </button>
           )}
         </div>
-      </div>
+      </section>
       {filtered.length ? (
         <div className="cs-campaign-grid">
           {filtered.map((item) => (
             <article className="cs-campaign-card" key={item.id}>
+              <div className="cs-campaign-badges">
+                <span className="cs-campaign-type">{t(item.type || "Campaign")}</span>
+                <span className={`cs-campaign-status status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}>
+                  {t(campaignValidity(item, now) === "expired" ? "Expired" : reviewStatusLabel(item.status))}
+                </span>
+              </div>
               <button
                 className="cs-campaign-cover"
                 type="button"
@@ -546,18 +586,6 @@ export function CampaignLibrary({
                 onClick={() => onOpen(item.id)}
               >
                 <CampaignCoverThumbnail campaign={item} />
-                <div className="cs-campaign-badges">
-                  <span>{t(item.type)}</span>
-                  <span
-                    className={`status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"} ${
-                      (item.status || "in_progress") === "completed"
-                        ? "completed"
-                        : "progress"
-                    }`}
-                  >
-                    {t(campaignValidity(item, now) === "expired" ? "Expired" : reviewStatusLabel(item.status))}
-                  </span>
-                </div>
               </button>
               <div className="cs-campaign-card-title">
                 <strong>{item.name}</strong>
@@ -567,53 +595,27 @@ export function CampaignLibrary({
                     : `${item.startDate} → ${item.endDate}`}
                 </small>
               </div>
-              <div className="cs-campaign-card-bottom">
-                <span>
-                  {item.products.length} {t("products")} ·{" "}
-                  {t(item.theme === "light" ? "White / gray" : "NEPTUN Blue")}
-                  {(item.reviewComments || []).some(
-                    (comment) => !comment.fixed,
-                  ) &&
-                    ` · ${(item.reviewComments || []).filter((comment) => !comment.fixed).length} ${t("open comments")}`}
-                </span>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => onDuplicate(item)}
-                    title={t("Duplicate campaign")}
-                  >
-                    ⧉
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(item)}
-                    title={t("Delete campaign")}
-                    aria-label={`${t("Delete campaign")}: ${item.name}`}
-                  >
-                    <TrashIcon />
-                  </button>
-                  <button
-                    className="cs-open-arrow"
-                    type="button"
-                    onClick={() => onOpen(item.id)}
-                    title={t("Open campaign")}
-                  >
-                    {t(
-                      (item.status || "in_progress") === "completed"
-                        ? "Open"
-                        : "Continue",
-                    )}{" "}
-                    →
-                  </button>
-                </div>
+              <div className="cs-campaign-card-meta">
+                <span>{item.products.length} {t("products")}</span>
+                <span>{resolveBrochureFormat(item).label}</span>
+                {(item.reviewComments || []).some((comment) => !comment.fixed) && (
+                  <span>{(item.reviewComments || []).filter((comment) => !comment.fixed).length} {t("open comments")}</span>
+                )}
               </div>
-              <button
-                className="cs-campaign-pdf"
-                type="button"
-                onClick={() => onPrint(item.id)}
-              >
-                {t("↓ Download brochure")}
-              </button>
+              <div className="cs-campaign-card-actions">
+                <button type="button" className="cs-card-utility" onClick={() => onDuplicate(item)} aria-label={`${t("Duplicate campaign")}: ${item.name}`}>
+                  <NavIcon name="copy" />{t("Duplicate")}
+                </button>
+                <button type="button" className="cs-card-utility cs-card-delete" onClick={() => onDelete(item)} aria-label={`${t("Delete campaign")}: ${item.name}`}>
+                  <NavIcon name="trash" />{t("Delete")}
+                </button>
+                <button className="cs-card-open" type="button" onClick={() => onOpen(item.id)} aria-label={`${t("Open campaign")}: ${item.name}`}>
+                  {t((item.status || "in_progress") === "completed" ? "Open" : "Continue")}<NavIcon name="arrow-right" />
+                </button>
+                <button className="cs-card-download" type="button" onClick={() => onPrint(item.id)}>
+                  <NavIcon name="download" />{t("Download brochure")}
+                </button>
+              </div>
             </article>
           ))}
         </div>
@@ -1378,11 +1380,13 @@ function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
             type="button"
             key={template.id}
             className={
-              (campaign.coverTemplate || "photo") === template.id
+              (campaign.coverTemplate || "blueRibbon") === template.id
                 ? "chosen"
                 : ""
             }
-            aria-pressed={(campaign.coverTemplate || "photo") === template.id}
+            aria-pressed={
+              (campaign.coverTemplate || "blueRibbon") === template.id
+            }
             onClick={() =>
               onUpdate((draft: Campaign) => {
                 draft.coverTemplate = template.id;
@@ -1964,7 +1968,11 @@ export function BrochureEditor({
         );
       }
     });
-  const changeStore = (index: string | number, field: keyof Store, value: string) =>
+  const changeStore = (
+    index: string | number,
+    field: keyof Store,
+    value: string,
+  ) =>
     onUpdate((draft: Campaign) => {
       draft.storesSnapshot ||= structuredClone(settings);
       const store = draft.storesSnapshot.stores?.[Number(index)];
@@ -2023,7 +2031,17 @@ export function BrochureEditor({
         );
         item.image = image;
         item.skipAiCutout = false;
-        for (const key of ["aiOriginalImage", "aiInchesEmbedded", "aiPreparationRevision", "aiBackgroundSignature", "aiCutoutProvider", "aiReviewedImageSource", "aiReviewedPreparationRevision", "aiReviewedBackgroundSignature"] as const) delete item[key];
+        for (const key of [
+          "aiOriginalImage",
+          "aiInchesEmbedded",
+          "aiPreparationRevision",
+          "aiBackgroundSignature",
+          "aiCutoutProvider",
+          "aiReviewedImageSource",
+          "aiReviewedPreparationRevision",
+          "aiReviewedBackgroundSignature",
+        ] as const)
+          delete item[key];
       };
       replace(snapshot);
       onUpdate(replace);
@@ -2040,8 +2058,22 @@ export function BrochureEditor({
     selected >= 0 && selected < pages.length ? pages[selected] : null;
   const artworkPageKey =
     selected === -1 ? "cover" : page ? `product-${page.index}` : "stores";
-  function addSavedPageArtwork(asset:LogoAsset,point?:{x:number;y:number}|null) {
-    onUpdate(draft=>{draft.pageArtworks ||= {};draft.pageArtworks[artworkPageKey] ||= [];draft.pageArtworks[artworkPageKey]!.push({id:crypto.randomUUID(),name:asset.name,image:asset.url,x:point?.x??5,y:point?.y??12,width:20});});
+  function addSavedPageArtwork(
+    asset: LogoAsset,
+    point?: { x: number; y: number } | null,
+  ) {
+    onUpdate((draft) => {
+      draft.pageArtworks ||= {};
+      draft.pageArtworks[artworkPageKey] ||= [];
+      draft.pageArtworks[artworkPageKey]!.push({
+        id: crypto.randomUUID(),
+        name: asset.name,
+        image: asset.url,
+        x: point?.x ?? 5,
+        y: point?.y ?? 12,
+        width: 20,
+      });
+    });
     onToast(t("Artwork added. Drag it to position it on this page."));
   }
   async function addPageArtwork(
@@ -2091,10 +2123,17 @@ export function BrochureEditor({
       onToast(t("Could not read this image."));
     }
   }
-  const changeCampaignAsset = (key: string, changes: { image?: string; hidden?: boolean; placement?: Placement }) => onUpdate((draft: Campaign) => {
-    draft.campaignAssets ||= {};
-    draft.campaignAssets[key] = { ...(draft.campaignAssets[key] || {}), ...changes };
-  });
+  const changeCampaignAsset = (
+    key: string,
+    changes: { image?: string; hidden?: boolean; placement?: Placement },
+  ) =>
+    onUpdate((draft: Campaign) => {
+      draft.campaignAssets ||= {};
+      draft.campaignAssets[key] = {
+        ...(draft.campaignAssets[key] || {}),
+        ...changes,
+      };
+    });
   function changeArtwork(id: string, placement: Partial<Artwork>) {
     onUpdate((draft: Campaign) => {
       const item = draft.pageArtworks?.[artworkPageKey]?.find(
@@ -2112,8 +2151,10 @@ export function BrochureEditor({
     });
   }
   function dropArtwork(event: React.DragEvent<HTMLElement>) {
-    const asset=droppedReusableImage(event.dataTransfer);
-    const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
+    const asset = droppedReusableImage(event.dataTransfer);
+    const file = [...(event.dataTransfer?.files || [])].find((item) =>
+      item.type.startsWith("image/"),
+    );
     if (!file && !asset) return;
     event.preventDefault();
     const pageNode =
@@ -2133,8 +2174,8 @@ export function BrochureEditor({
           ),
         }
       : null;
-    if(asset)addSavedPageArtwork(asset,point);
-    else if(file)void addPageArtwork(file, point);
+    if (asset) addSavedPageArtwork(asset, point);
+    else if (file) void addPageArtwork(file, point);
   }
   const title =
     selected === -1
@@ -2362,7 +2403,9 @@ export function BrochureEditor({
           <span className="cs-eyebrow">{t("01 / BROCHURE")}</span>
           <h2>{t("Your brochure")}</h2>
           <p>
-            {t("Click items on the brochure to edit them. Open settings for more options.")}
+            {t(
+              "Click items on the brochure to edit them. Open settings for more options.",
+            )}
           </p>
         </div>
         <div className="cs-actions cs-brochure-header-actions">
@@ -2501,23 +2544,98 @@ export function BrochureEditor({
         >
           <div className="cs-preview-top">
             <div className="cs-preview-title">
-              <span className="cs-eyebrow">{t(canEditCanvas ? "EDIT BROCHURE" : "LIVE PREVIEW")}</span>
+              <span className="cs-eyebrow">
+                {t(canEditCanvas ? "EDIT BROCHURE" : "LIVE PREVIEW")}
+              </span>
               <strong>{title}</strong>
             </div>
             <div className="cs-preview-actions">
               <span className="cs-preview-format">{t(pageFormat.label)}</span>
-              {canEditCanvas && <>
-                {selected === -1 && <CoverImageControls campaign={campaign} onUpdate={onUpdate} />}
-                {selected === -1 && <label className="cs-button secondary cs-preview-file">{t("Change cover logo")}<input type="file" accept="image/*" aria-label={t("Change cover logo")} onChange={(event) => { void replaceCoverLogo(event.target.files?.[0]); event.target.value = ""; }} /></label>}
-                <label className="cs-button secondary cs-preview-file">{t(selected === -1 ? "Add campaign logo / image" : "Add image to page")}<input type="file" accept="image/*" aria-label={t("Add image to page")} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addPageArtwork(file); event.target.value = ""; }} /></label>
-                <button type="button" className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`} aria-expanded={showSettings} aria-controls="brochure-page-settings" onClick={() => setShowSettings((value) => !value)}>{t(showSettings ? "Hide settings" : "More settings")}</button>
-              </>}
-              {previewMode && <Button tone="primary" onClick={() => onExport(selected === pages.length && !hasStoresPage ? 0 : selected + 1)}>{t("↓ Download brochure")}</Button>}
-              <button type="button" className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`} onClick={() => { setPreviewMode(commentMode ? false : !previewMode); setCommentMode(false); setShowSettings(false); }}>{t(canEditCanvas ? "Preview only" : "Edit brochure")}</button>
+              {canEditCanvas && (
+                <>
+                  {selected === -1 && (
+                    <CoverImageControls
+                      campaign={campaign}
+                      onUpdate={onUpdate}
+                    />
+                  )}
+                  {selected === -1 && (
+                    <label className="cs-button secondary cs-preview-file">
+                      {t("Change cover logo")}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        aria-label={t("Change cover logo")}
+                        onChange={(event) => {
+                          void replaceCoverLogo(event.target.files?.[0]);
+                          event.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                  <label className="cs-button secondary cs-preview-file">
+                    {t(
+                      selected === -1
+                        ? "Add campaign logo / image"
+                        : "Add image to page",
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      aria-label={t("Add image to page")}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void addPageArtwork(file);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`}
+                    aria-expanded={showSettings}
+                    aria-controls="brochure-page-settings"
+                    onClick={() => setShowSettings((value) => !value)}
+                  >
+                    {t(showSettings ? "Hide settings" : "More settings")}
+                  </button>
+                </>
+              )}
+              {previewMode && (
+                <Button
+                  tone="primary"
+                  onClick={() =>
+                    onExport(
+                      selected === pages.length && !hasStoresPage
+                        ? 0
+                        : selected + 1,
+                    )
+                  }
+                >
+                  {t("↓ Download brochure")}
+                </Button>
+              )}
+              <button
+                type="button"
+                className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`}
+                onClick={() => {
+                  setPreviewMode(commentMode ? false : !previewMode);
+                  setCommentMode(false);
+                  setShowSettings(false);
+                }}
+              >
+                {t(canEditCanvas ? "Preview only" : "Edit brochure")}
+              </button>
             </div>
           </div>
-          {canEditCanvas && <ReusableImages settings={settings} onAdd={addSavedPageArtwork} />}
-          <CampaignActivityStatus campaignId={campaign.id} mode={canEditCanvas ? "edit" : "preview"} pageLabel={title} />
+          {canEditCanvas && (
+            <ReusableImages settings={settings} onAdd={addSavedPageArtwork} />
+          )}
+          <CampaignActivityStatus
+            campaignId={campaign.id}
+            mode={canEditCanvas ? "edit" : "preview"}
+            pageLabel={title}
+          />
           {canEditCanvas && (
             <p className="cs-preview-edit-hint">
               {t(
@@ -2555,7 +2673,12 @@ export function BrochureEditor({
             onDragOver={
               canEditCanvas
                 ? (event) => {
-                    if ([...event.dataTransfer.types].some(type=>type === "Files" || type === REUSABLE_IMAGE_TYPE)) {
+                    if (
+                      [...event.dataTransfer.types].some(
+                        (type) =>
+                          type === "Files" || type === REUSABLE_IMAGE_TYPE,
+                      )
+                    ) {
                       event.preventDefault();
                       event.dataTransfer.dropEffect = "copy";
                     }
@@ -2591,7 +2714,9 @@ export function BrochureEditor({
                   canEditCanvas
                     ? (kind: string, placement: Placement) =>
                         onUpdate((draft: Campaign) => {
-                          if (!applyCoverProductPlacement(draft, kind, placement)) {
+                          if (
+                            !applyCoverProductPlacement(draft, kind, placement)
+                          ) {
                             draft.coverElementPlacements ||= {};
                             draft.coverElementPlacements[kind] = placement;
                             if (kind === "gradient")
@@ -2634,7 +2759,9 @@ export function BrochureEditor({
                       ) => updateProduct(product.code, field, value)
                     : undefined
                 }
-                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onCampaignAssetChange={
+                  canEditCanvas ? changeCampaignAsset : undefined
+                }
                 onArtworkChange={canEditCanvas ? changeArtwork : undefined}
                 onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
                 {...(canEditCanvas ? dragProps : {})}
@@ -2678,7 +2805,9 @@ export function BrochureEditor({
                       ) => updateProduct(product.code, field, value)
                     : undefined
                 }
-                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onCampaignAssetChange={
+                  canEditCanvas ? changeCampaignAsset : undefined
+                }
                 onArtworkChange={canEditCanvas ? changeArtwork : undefined}
                 onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
                 {...(canEditCanvas ? dragProps : {})}
@@ -2703,7 +2832,9 @@ export function BrochureEditor({
                 onContactChange={canEditCanvas ? changeStoreContact : undefined}
                 onPlaceStore={canEditCanvas ? placeStore : undefined}
                 onReorderStore={canEditCanvas ? reorderStore : undefined}
-                onCampaignAssetChange={canEditCanvas ? changeCampaignAsset : undefined}
+                onCampaignAssetChange={
+                  canEditCanvas ? changeCampaignAsset : undefined
+                }
                 onArtworkChange={canEditCanvas ? changeArtwork : undefined}
                 onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
               />
@@ -2729,383 +2860,421 @@ export function BrochureEditor({
           >
             <span className="cs-label">{t("PAGE SETTINGS")}</span>
             <h3>{title}</h3>
-            <PageSettingsTabs><SettingsGroup category="layout" title={t("Brochure size")}>
-              <BrochureFormatPicker
-                value={campaign}
-                customFormats={settings.customFormats}
-                onChange={(value: string) =>
-                  onUpdate((draft: Campaign) => {
-                    Object.assign(draft, brochureFormatSelection(value, settings.customFormats, draft));
-                  })
-                }
-              />
-            </SettingsGroup>
-            {televisions.length > 0 && (
-              <SettingsGroup category="images" title={t("TV wallpaper")}>
-                <p>
-                  {t(
-                    "Choose one picture for a TV or every TV in this brochure.",
-                  )}
-                </p>
-                <Button
-                  onClick={() => {
-                    const television = televisions[0];
-                    if (television) onEditScreen(television);
-                  }}
-                >
-                  {t("Choose TV wallpaper")}
-                </Button>
+            <PageSettingsTabs>
+              <SettingsGroup category="layout" title={t("Brochure size")}>
+                <BrochureFormatPicker
+                  value={campaign}
+                  customFormats={settings.customFormats}
+                  onChange={(value: string) =>
+                    onUpdate((draft: Campaign) => {
+                      Object.assign(
+                        draft,
+                        brochureFormatSelection(
+                          value,
+                          settings.customFormats,
+                          draft,
+                        ),
+                      );
+                    })
+                  }
+                />
               </SettingsGroup>
-            )}
-            <SettingsGroup category="review"
-              title={`${t("Page comments")} · ${reviewCommentsForLayout(campaign).filter((item) => item.pageIndex === selected + 1).length}`}
-            >
-              <ReviewPanel
-                campaign={campaign}
-                user={user}
-                members={members}
-                pageIndex={selected + 1}
-                pageLabel={title}
-                onAction={onReviewAction}
-              />
-            </SettingsGroup>
-            <SettingsGroup category="appearance" title={t("Background")}>
-              <BackgroundPicker
-                compact
-                color={backgroundColor}
-                defaultColor={defaultBackground}
-                onChange={changeBackground}
-                gradient={backgroundGradient}
-                onGradientChange={changeGradient}
-                image={backgroundImage}
-                onImageChange={backgroundKind === "cover" ? undefined : changeBackgroundImage}
-                onReset={pageOverride ? resetBackground : undefined}
-                onAllPages={
-                  backgroundKind === "product"
-                    ? () =>
-                        onUpdate((draft: Campaign) => {
-                          draft.productBackgroundColor =
-                            backgroundColor ||
-                            (backgroundImage ? defaultBackground : "");
-                          draft.productBackgroundGradient = backgroundGradient;
-                          draft.productBackgroundImage = backgroundImage;
-                          for (const config of Object.values(
-                            draft.pages || {},
-                          )) {
-                            delete config.backgroundColor;
-                            delete config.backgroundGradient;
-                            delete config.backgroundImage;
-                          }
-                          draft.aiBackgroundChanged = true;
-                        })
-                    : undefined
-                }
-              />
-              {backgroundKind !== "stores" && campaign.aiBackgroundChanged && (
-                <div className="cs-ai-background-reminder" role="status">
+              {televisions.length > 0 && (
+                <SettingsGroup category="images" title={t("TV wallpaper")}>
                   <p>
                     {t(
-                      "Background changed. Run AI again to match product images and inch labels.",
+                      "Choose one picture for a TV or every TV in this brochure.",
                     )}
                   </p>
-                  <Button onClick={onAiReview}>{t("✦ Run AI again")}</Button>
-                </div>
+                  <Button
+                    onClick={() => {
+                      const television = televisions[0];
+                      if (television) onEditScreen(television);
+                    }}
+                  >
+                    {t("Choose TV wallpaper")}
+                  </Button>
+                </SettingsGroup>
               )}
-            </SettingsGroup>
-            {selected === -1 && (
-              <SettingsGroup category="appearance" title={t("Cover design")}>
-                <CoverDesignControls
+              <SettingsGroup
+                category="review"
+                title={`${t("Page comments")} · ${reviewCommentsForLayout(campaign).filter((item) => item.pageIndex === selected + 1).length}`}
+              >
+                <ReviewPanel
                   campaign={campaign}
+                  user={user}
+                  members={members}
+                  pageIndex={selected + 1}
+                  pageLabel={title}
+                  onAction={onReviewAction}
+                />
+              </SettingsGroup>
+              <SettingsGroup category="appearance" title={t("Background")}>
+                <BackgroundPicker
+                  compact
+                  color={backgroundColor}
+                  defaultColor={defaultBackground}
+                  onChange={changeBackground}
+                  gradient={backgroundGradient}
+                  onGradientChange={changeGradient}
+                  image={backgroundImage}
+                  onImageChange={
+                    backgroundKind === "cover"
+                      ? undefined
+                      : changeBackgroundImage
+                  }
+                  onReset={pageOverride ? resetBackground : undefined}
+                  onAllPages={
+                    backgroundKind === "product"
+                      ? () =>
+                          onUpdate((draft: Campaign) => {
+                            draft.productBackgroundColor =
+                              backgroundColor ||
+                              (backgroundImage ? defaultBackground : "");
+                            draft.productBackgroundGradient =
+                              backgroundGradient;
+                            draft.productBackgroundImage = backgroundImage;
+                            for (const config of Object.values(
+                              draft.pages || {},
+                            )) {
+                              delete config.backgroundColor;
+                              delete config.backgroundGradient;
+                              delete config.backgroundImage;
+                            }
+                            draft.aiBackgroundChanged = true;
+                          })
+                      : undefined
+                  }
+                />
+                {backgroundKind !== "stores" &&
+                  campaign.aiBackgroundChanged && (
+                    <div className="cs-ai-background-reminder" role="status">
+                      <p>
+                        {t(
+                          "Background changed. Run AI again to match product images and inch labels.",
+                        )}
+                      </p>
+                      <Button onClick={onAiReview}>
+                        {t("✦ Run AI again")}
+                      </Button>
+                    </div>
+                  )}
+              </SettingsGroup>
+              {selected === -1 && (
+                <SettingsGroup category="appearance" title={t("Cover design")}>
+                  <CoverDesignControls
+                    campaign={campaign}
+                    onUpdate={onUpdate}
+                    onToast={onToast}
+                  />
+                </SettingsGroup>
+              )}
+              {page && (
+                <SettingsGroup category="layout" title={t("Grid")}>
+                  <BrochureGridPicker
+                    value={page.layout}
+                    onChange={(value) =>
+                      onUpdate((draft: Campaign) => {
+                        applyProductPageLayout(draft, selected, value);
+                      })
+                    }
+                  />
+                  <p className="cs-control-help">
+                    {t(
+                      "Background and grid can be changed later. Run AI again after changing the background.",
+                    )}
+                  </p>
+                </SettingsGroup>
+              )}
+              <SettingsGroup
+                category="images"
+                title={t("Images, text & layers")}
+              >
+                <PageLayersControls
+                  campaign={campaign}
+                  pageKey={artworkPageKey}
                   onUpdate={onUpdate}
                   onToast={onToast}
                 />
               </SettingsGroup>
-            )}
-            {page && (
-              <SettingsGroup category="layout" title={t("Grid")}>
-                <BrochureGridPicker
-                  value={page.layout}
-                  onChange={(value) =>
+              <SettingsGroup
+                category="layout"
+                title={t("Page layout & content")}
+              >
+                {selected === -1 ? (
+                  <>
+                    <CoverTemplatePicker
+                      campaign={campaign}
+                      onUpdate={onUpdate}
+                    />
+                    <Field
+                      label={t("Campaign name")}
+                      hint={t(
+                        "Used in the workspace and as the cover title until you set a different title.",
+                      )}
+                    >
+                      <input
+                        value={campaign.name || ""}
+                        onChange={(event) =>
+                          onUpdate((draft: Campaign) => {
+                            draft.name = event.target.value;
+                          })
+                        }
+                      />
+                    </Field>
+                    <CoverHeadlineEditor
+                      campaign={campaign}
+                      onUpdate={onUpdate}
+                    />
+                    {!pages.length && (
+                      <details className="cs-store-elements-options">
+                        <summary>
+                          {t("Stores at the end of the brochure")}
+                        </summary>
+                        <StorePageControls
+                          campaign={campaign}
+                          settings={settings}
+                          onUpdate={onUpdate}
+                        />
+                      </details>
+                    )}
+                    <Field label={t("Cover message")}>
+                      <textarea
+                        rows={3}
+                        aria-label={t("Cover message")}
+                        value={campaign.tagline}
+                        onChange={(event) =>
+                          onUpdate((draft: Campaign) => {
+                            draft.tagline = event.target.value;
+                          })
+                        }
+                      />
+                    </Field>
+                    <p className="cs-control-help">
+                      {t(
+                        "Artwork, headline, message, and brochure logos can be changed for each campaign.",
+                      )}
+                    </p>
+                  </>
+                ) : page ? (
+                  <>
+                    <div className="cs-spacing-controls">
+                      <strong>{t("Spacing")}</strong>
+                      {(
+                        [
+                          [
+                            "horizontal",
+                            t("Between products · horizontal"),
+                            3.1,
+                          ],
+                          ["vertical", t("Between products · vertical"), 3.2],
+                          ["content", t("Between details and price"), 1],
+                        ] as const
+                      ).map(([key, label, fallback]) => (
+                        <label key={key}>
+                          <span>
+                            {label}
+                            <b>
+                              {Number(page.spacing?.[key] ?? fallback).toFixed(
+                                1,
+                              )}
+                              %
+                            </b>
+                          </span>
+                          <input
+                            type="range"
+                            min={key === "content" ? 0 : 0.5}
+                            max={key === "content" ? 4 : 6}
+                            step="0.1"
+                            value={Number(page.spacing?.[key] ?? fallback)}
+                            onChange={(event) =>
+                              setPage("spacing", {
+                                horizontal: page.spacing?.horizontal ?? 3.1,
+                                vertical: page.spacing?.vertical ?? 3.2,
+                                content: page.spacing?.content ?? 1,
+                                [key]: Number(event.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                      ))}
+                      {page.spacing && (
+                        <button
+                          type="button"
+                          className="cs-spacing-reset"
+                          onClick={() => setPage("spacing", null)}
+                        >
+                          {t("Reset spacing")}
+                        </button>
+                      )}
+                    </div>
+                    <ImageUploadButton
+                      label={t("Optional page artwork")}
+                      value={page.image}
+                      onFile={async (file) =>
+                        setPage("image", await readImage(file))
+                      }
+                      onRemove={() => setPage("image", "")}
+                    />
+                    <label className="cs-store-page-switch">
+                      <input
+                        type="checkbox"
+                        checked={page.showFooter}
+                        onChange={(event) =>
+                          setPage("showFooter", event.target.checked)
+                        }
+                      />
+                      <span>
+                        <strong>{t("NEPTUN footer")}</strong>
+                        <small>
+                          {t(
+                            "Show the NEPTUN wordmark and line on this product page.",
+                          )}
+                        </small>
+                      </span>
+                    </label>
+                    {page.showFooter && (
+                      <label className="cs-store-page-switch">
+                        <input
+                          type="checkbox"
+                          checked={page.showFooterPageNumber}
+                          onChange={(event) =>
+                            setPage(
+                              "showFooterPageNumber",
+                              event.target.checked,
+                            )
+                          }
+                        />
+                        <span>
+                          <strong>{t("Show page number")}</strong>
+                          <small>
+                            {t("Turn off for only the NEPTUN logo and line.")}
+                          </small>
+                        </span>
+                      </label>
+                    )}
+                    {page.index === pages.at(-1)?.index && (
+                      <details className="cs-store-elements-options">
+                        <summary>
+                          {t("Stores at the end of the brochure")}
+                        </summary>
+                        <StorePageControls
+                          campaign={campaign}
+                          settings={settings}
+                          onUpdate={onUpdate}
+                        />
+                      </details>
+                    )}
+                    <button
+                      type="button"
+                      className="cs-page-footer-apply"
+                      onClick={() =>
+                        onUpdate((draft: Campaign) => {
+                          draft.showInteriorFooter = page.showFooter;
+                          draft.showFooterPageNumber =
+                            page.showFooterPageNumber;
+                          draft.pages ||= {};
+                          for (const item of pages)
+                            draft.pages[item.index] = {
+                              ...(draft.pages[item.index] || {}),
+                              showFooter: page.showFooter,
+                              showFooterPageNumber: page.showFooterPageNumber,
+                            };
+                        })
+                      }
+                    >
+                      {t("Apply footer choice to all product pages")}
+                    </button>
+                    <p className="cs-control-help">
+                      {t(
+                        "Drag products on the preview to change their order, or use the move control to choose a page.",
+                      )}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="cs-control-help">
+                      {t("Manage locations from")} <b>{t("Stores & footer")}</b>{" "}
+                      {t("to update future campaigns.")}
+                    </p>
+                    <StorePageControls
+                      campaign={campaign}
+                      settings={settings}
+                      onUpdate={onUpdate}
+                    />
+                    <SocialContactFields
+                      campaign={campaign}
+                      settings={settings}
+                      onUpdate={onUpdate}
+                    />
+                  </>
+                )}
+              </SettingsGroup>
+              <SettingsGroup
+                category="prices"
+                title={t("Offer styles & savings")}
+              >
+                <OfferStyleControls
+                  styleValue={campaign.offerStyle || "current"}
+                  savingValue={campaign.savingMode || "amount"}
+                  onStyleChange={(value: string) =>
                     onUpdate((draft: Campaign) => {
-                      applyProductPageLayout(draft, selected, value);
+                      draft.offerStyle = value;
+                    })
+                  }
+                  onSavingChange={(value: string) =>
+                    onUpdate((draft: Campaign) => {
+                      draft.savingMode = value;
                     })
                   }
                 />
-                <p className="cs-control-help">
-                  {t(
-                    "Background and grid can be changed later. Run AI again after changing the background.",
-                  )}
-                </p>
-              </SettingsGroup>
-            )}
-            <SettingsGroup category="images" title={t("Images, text & layers")}>
-              <PageLayersControls
-                campaign={campaign}
-                pageKey={artworkPageKey}
-                onUpdate={onUpdate}
-                onToast={onToast}
-              />
-            </SettingsGroup>
-            <SettingsGroup category="layout" title={t("Page layout & content")}>
-              {selected === -1 ? (
-                <>
-                  <CoverTemplatePicker
-                    campaign={campaign}
-                    onUpdate={onUpdate}
-                  />
-                  <Field
-                    label={t("Campaign name")}
-                    hint={t(
-                      "Used in the workspace and as the cover title until you set a different title.",
-                    )}
-                  >
-                    <input
-                      value={campaign.name || ""}
-                      onChange={(event) =>
-                        onUpdate((draft: Campaign) => {
-                          draft.name = event.target.value;
-                        })
-                      }
-                    />
-                  </Field>
-                  <CoverHeadlineEditor
-                    campaign={campaign}
-                    onUpdate={onUpdate}
-                  />
-                  {!pages.length && (
-                    <details className="cs-store-elements-options">
-                      <summary>
-                        {t("Stores at the end of the brochure")}
-                      </summary>
-                      <StorePageControls
-                        campaign={campaign}
-                        settings={settings}
-                        onUpdate={onUpdate}
-                      />
-                    </details>
-                  )}
-                  <Field label={t("Cover message")}>
-                    <textarea
-                      rows={3}
-                      aria-label={t("Cover message")}
-                      value={campaign.tagline}
-                      onChange={(event) =>
-                        onUpdate((draft: Campaign) => {
-                          draft.tagline = event.target.value;
-                        })
-                      }
-                    />
-                  </Field>
-                  <p className="cs-control-help">
-                    {t(
-                      "Artwork, headline, message, and brochure logos can be changed for each campaign.",
-                    )}
-                  </p>
-                </>
-              ) : page ? (
-                <>
-                  <div className="cs-spacing-controls">
-                    <strong>{t("Spacing")}</strong>
-                    {(
-                      [
-                        ["horizontal", t("Between products · horizontal"), 3.1],
-                        ["vertical", t("Between products · vertical"), 3.2],
-                        ["content", t("Between details and price"), 1],
-                      ] as const
-                    ).map(([key, label, fallback]) => (
+                <CategorySavingsControls
+                  campaign={campaign}
+                  onUpdate={onUpdate}
+                />
+                <PriceLogoPicker campaign={campaign} onUpdate={onUpdate} />
+                <div className="cs-store-checkboxes">
+                  {(["red", "blue", "blueBand", "saving"] as const).map(
+                    (key) => (
                       <label key={key}>
-                        <span>
-                          {label}
-                          <b>
-                            {Number(page.spacing?.[key] ?? fallback).toFixed(1)}
-                            %
-                          </b>
-                        </span>
+                        <span>{t(`Price artwork color: ${key}`)}</span>
                         <input
-                          type="range"
-                          min={key === "content" ? 0 : 0.5}
-                          max={key === "content" ? 4 : 6}
-                          step="0.1"
-                          value={Number(page.spacing?.[key] ?? fallback)}
+                          type="color"
+                          value={
+                            campaign.pricePalette?.[key] ||
+                            {
+                              red: "#ef4023",
+                              blue: "#243a6a",
+                              blueBand: "#e7eae9",
+                              saving: "#ef4023",
+                            }[key]
+                          }
                           onChange={(event) =>
-                            setPage("spacing", {
-                              horizontal: page.spacing?.horizontal ?? 3.1,
-                              vertical: page.spacing?.vertical ?? 3.2,
-                              content: page.spacing?.content ?? 1,
-                              [key]: Number(event.target.value),
+                            onUpdate((draft: Campaign) => {
+                              draft.pricePalette ??= {
+                                red: "#ef4023",
+                                blue: "#243a6a",
+                                blueBand: "#e7eae9",
+                                saving: "#ef4023",
+                              };
+                              draft.pricePalette[key] = event.target.value;
                             })
                           }
                         />
                       </label>
-                    ))}
-                    {page.spacing && (
-                      <button
-                        type="button"
-                        className="cs-spacing-reset"
-                        onClick={() => setPage("spacing", null)}
-                      >
-                        {t("Reset spacing")}
-                      </button>
-                    )}
-                  </div>
-                  <ImageUploadButton
-                    label={t("Optional page artwork")}
-                    value={page.image}
-                    onFile={async (file) =>
-                      setPage("image", await readImage(file))
-                    }
-                    onRemove={() => setPage("image", "")}
-                  />
-                  <label className="cs-store-page-switch">
-                    <input
-                      type="checkbox"
-                      checked={page.showFooter}
-                      onChange={(event) =>
-                        setPage("showFooter", event.target.checked)
-                      }
-                    />
-                    <span>
-                      <strong>{t("NEPTUN footer")}</strong>
-                      <small>
-                        {t(
-                          "Show the NEPTUN wordmark and line on this product page.",
-                        )}
-                      </small>
-                    </span>
-                  </label>
-                  {page.showFooter && (
-                    <label className="cs-store-page-switch">
-                      <input
-                        type="checkbox"
-                        checked={page.showFooterPageNumber}
-                        onChange={(event) =>
-                          setPage("showFooterPageNumber", event.target.checked)
-                        }
-                      />
-                      <span>
-                        <strong>{t("Show page number")}</strong>
-                        <small>
-                          {t("Turn off for only the NEPTUN logo and line.")}
-                        </small>
-                      </span>
-                    </label>
+                    ),
                   )}
-                  {page.index === pages.at(-1)?.index && (
-                    <details className="cs-store-elements-options">
-                      <summary>
-                        {t("Stores at the end of the brochure")}
-                      </summary>
-                      <StorePageControls
-                        campaign={campaign}
-                        settings={settings}
-                        onUpdate={onUpdate}
-                      />
-                    </details>
-                  )}
-                  <button
-                    type="button"
-                    className="cs-page-footer-apply"
-                    onClick={() =>
-                      onUpdate((draft: Campaign) => {
-                        draft.showInteriorFooter = page.showFooter;
-                        draft.showFooterPageNumber = page.showFooterPageNumber;
-                        draft.pages ||= {};
-                        for (const item of pages)
-                          draft.pages[item.index] = {
-                            ...(draft.pages[item.index] || {}),
-                            showFooter: page.showFooter,
-                            showFooterPageNumber: page.showFooterPageNumber,
-                          };
-                      })
-                    }
-                  >
-                    {t("Apply footer choice to all product pages")}
-                  </button>
-                  <p className="cs-control-help">
-                    {t(
-                      "Drag products on the preview to change their order, or use the move control to choose a page.",
-                    )}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="cs-control-help">
-                    {t("Manage locations from")} <b>{t("Stores & footer")}</b>{" "}
-                    {t("to update future campaigns.")}
-                  </p>
-                  <StorePageControls
-                    campaign={campaign}
-                    settings={settings}
-                    onUpdate={onUpdate}
-                  />
-                  <SocialContactFields
-                    campaign={campaign}
-                    settings={settings}
-                    onUpdate={onUpdate}
-                  />
-                </>
-              )}
-            </SettingsGroup>
-            <SettingsGroup category="prices" title={t("Offer styles & savings")}>
-              <OfferStyleControls
-                styleValue={campaign.offerStyle || "current"}
-                savingValue={campaign.savingMode || "amount"}
-                onStyleChange={(value: string) =>
-                  onUpdate((draft: Campaign) => {
-                    draft.offerStyle = value;
-                  })
-                }
-                onSavingChange={(value: string) =>
-                  onUpdate((draft: Campaign) => {
-                    draft.savingMode = value;
-                  })
-                }
-              />
-              <CategorySavingsControls
-                campaign={campaign}
-                onUpdate={onUpdate}
-              />
-              <PriceLogoPicker campaign={campaign} onUpdate={onUpdate} />
-              <div className="cs-store-checkboxes">
-                {(["red", "blue", "blueBand", "saving"] as const).map((key) => (
-                  <label key={key}>
-                    <span>{t(`Price artwork color: ${key}`)}</span>
-                    <input
-                      type="color"
-                      value={
-                        campaign.pricePalette?.[key] ||
-                        {
-                          red: "#ef4023",
-                          blue: "#243a6a",
-                          blueBand: "#e7eae9",
-                          saving: "#ef4023",
-                        }[key]
-                      }
-                      onChange={(event) =>
-                        onUpdate((draft: Campaign) => {
-                          draft.pricePalette ??= {
-                            red: "#ef4023",
-                            blue: "#243a6a",
-                            blueBand: "#e7eae9",
-                            saving: "#ef4023",
-                          };
-                          draft.pricePalette[key] = event.target.value;
-                        })
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-            </SettingsGroup>
-            <SettingsGroup category="logos" title={t("Logos & artwork")}>
-              <BrandLogoManager campaign={campaign} onUpdate={onUpdate} />
-              <BrochureAssetPicker campaign={campaign} onUpdate={onUpdate} />
-            </SettingsGroup>
-            <SettingsGroup category="prices" title={t("Payment message")}>
-              <PaymentNoteEditor campaign={campaign} onUpdate={onUpdate} />
-            </SettingsGroup>
-          </PageSettingsTabs>
-</aside>
+                </div>
+              </SettingsGroup>
+              <SettingsGroup category="logos" title={t("Logos & artwork")}>
+                <BrandLogoManager campaign={campaign} onUpdate={onUpdate} />
+                <BrochureAssetPicker campaign={campaign} onUpdate={onUpdate} />
+              </SettingsGroup>
+              <SettingsGroup category="prices" title={t("Payment message")}>
+                <PaymentNoteEditor campaign={campaign} onUpdate={onUpdate} />
+              </SettingsGroup>
+            </PageSettingsTabs>
+          </aside>
         )}
       </div>
       <div className="print-stack">
@@ -3188,22 +3357,30 @@ function enrichSavedCampaigns(saved: Campaign[], products: Product[]) {
   const byCode = new Map(
     products.map((product: Product) => [String(product.code), product]),
   );
-  return (saved || []).map((item) => repairCoverProductLayout({
-    ...item,
-    status: item.status || "in_progress",
-    products: (item.products || []).map((product: Product) => ({
-      ...product,
-      warranty:
-        product.warranty || byCode.get(String(product.code))?.warranty || "",
-      specs: {
-        ...(byCode.get(String(product.code))?.specs || {}),
-        ...(product.specs || {}),
-      },
-    })),
-  }));
+  return (saved || []).map((item) =>
+    repairCoverProductLayout({
+      ...item,
+      status: item.status || "in_progress",
+      products: (item.products || []).map((product: Product) => ({
+        ...product,
+        warranty:
+          product.warranty || byCode.get(String(product.code))?.warranty || "",
+        specs: {
+          ...(byCode.get(String(product.code))?.specs || {}),
+          ...(product.specs || {}),
+        },
+      })),
+    }),
+  );
 }
 
-export default function App({ initialUser, onAuthChange }: { initialUser?: SessionUser; onAuthChange?: (user: SessionUser | null, notice?: string) => void } = {}) {
+export default function App({
+  initialUser,
+  onAuthChange,
+}: {
+  initialUser?: SessionUser;
+  onAuthChange?: (user: SessionUser | null, notice?: string) => void;
+} = {}) {
   const [language, setLocale] = useState(getLanguage);
   const [, setBrandLogoRevision] = useState(0);
   useEffect(() => {
@@ -3231,6 +3408,8 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     resolveSettings(null),
   );
   const [catalog, setCatalog] = useState<Product[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogSourcePaths, setCatalogSourcePaths] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const campaignNow = useCampaignClock();
   const [section, setSectionValue] = useState("campaigns");
@@ -3284,21 +3463,34 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
       setToast(errorMessage(error));
     },
   });
-  const latestCampaigns = useRef(campaigns); latestCampaigns.current = campaigns;
+  const latestCampaigns = useRef(campaigns);
+  latestCampaigns.current = campaigns;
   const productPhotoQueue = useRef(createProductImagePreparationQueue());
   const failedPhotoTargets = useRef(new Map<string, ProductPhotoTarget>());
-  const [photoProgress, setPhotoProgress] = useState<Record<string, Record<string, PhotoProgressItem>>>({});
+  const [photoProgress, setPhotoProgress] = useState<
+    Record<string, Record<string, PhotoProgressItem>>
+  >({});
   const [catalogQuery, setCatalogQuery] = useState("");
   const [catalogCodeQuery, setCatalogCodeQuery] = useState("");
   const catalogCategoryInitialized = useRef(false);
-  const [catalogSelection, setCatalogSelection] = useState({ categoryPath: "", brand: "", availability: "all" });
+  const [catalogSelection, setCatalogSelection] = useState({
+    categoryPath: "",
+    brand: "",
+    availability: "all",
+  });
   const [catalogVisible, setCatalogVisible] = useState(60);
   const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
   const [exportId, setExportId] = useState<string | null>(null);
   const [exportPage, setExportPage] = useState(0);
   useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => {if (hasPendingSaves() || hasUnsavedCampaignChanges()) {event.preventDefault(); event.returnValue = "";}};
-    window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
+    const warn = (event: BeforeUnloadEvent) => {
+      if (hasPendingSaves() || hasUnsavedCampaignChanges()) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
   }, []);
   useEffect(() => {
     if (section === "editor") window.scrollTo(0, 0);
@@ -3317,21 +3509,57 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     if (!user) return;
     const controller = new AbortController();
     let productsSnapshot: Product[] = [];
-    void getMembers().then(result => {
-      if (!controller.signal.aborted) setMembers(result);
-    }).catch(error => {if (!controller.signal.aborted) console.error("Could not load team members:", error);});
+    setCatalogLoading(true);
+    void getMembers()
+      .then((result) => {
+        if (!controller.signal.aborted) setMembers(result);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          console.error("Could not load team members:", error);
+      });
     // Saved brochures must not wait behind all pages of the source catalog.
-    void bootstrapWorkspace().then(({campaigns: saved, settings: custom}) => {
-      if (controller.signal.aborted) return;
-      setCampaigns(current => mergeCampaignSnapshots(current, enrichSavedCampaigns(saved, productsSnapshot), activeEditorRef.current.activeId, activeEditorRef.current.section === "editor"));
-      setSettings(resolveSettings(custom));
-    }).catch(error => {if (!controller.signal.aborted) setToast(errorMessage(error));});
-    void loadCatalog(controller.signal).then(products => {
-      if (controller.signal.aborted) return;
-      productsSnapshot = products;
-      setCatalog(products);
-      setCampaigns(current => enrichSavedCampaigns(current, products));
-    }).catch(error => {if (!controller.signal.aborted) console.error("Could not load product catalog:", error);});
+    void bootstrapWorkspace()
+      .then(({ campaigns: saved, settings: custom }) => {
+        if (controller.signal.aborted) return;
+        setCampaigns((current) =>
+          mergeCampaignSnapshots(
+            current,
+            enrichSavedCampaigns(saved, productsSnapshot),
+            activeEditorRef.current.activeId,
+            activeEditorRef.current.section === "editor",
+          ),
+        );
+        setSettings(resolveSettings(custom));
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setToast(errorMessage(error));
+      });
+    void catalogFacets(controller.signal)
+      .then((facets) => {
+        if (!controller.signal.aborted)
+          setCatalogSourcePaths(
+            facets.sourceCategories.map((category) => category.categoryPath),
+          );
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          console.error("Could not load source categories:", error);
+      });
+    void loadCatalog(controller.signal)
+      .then((products) => {
+        if (controller.signal.aborted) return;
+        productsSnapshot = products;
+        setCatalog(products);
+        setCampaigns((current) => enrichSavedCampaigns(current, products));
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          console.error("Could not load product catalog:", error);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCatalogLoading(false);
+      });
     return () => controller.abort();
   }, [user?.email]);
   useEffect(() => {
@@ -3450,37 +3678,127 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     if (campaign) void prepareProductPhotos(campaign);
     setEditorTab("brochure");
   }
-  function trackProductPhotoWork(campaignId: string, key: string, state: PhotoProgressItem["state"]) {
-    setPhotoProgress(current => {
+  function trackProductPhotoWork(
+    campaignId: string,
+    key: string,
+    state: PhotoProgressItem["state"],
+  ) {
+    setPhotoProgress((current) => {
       const item = current[campaignId]?.[key];
-      return item ? {...current, [campaignId]: {...current[campaignId], [key]: {...item, state}}} : current;
+      return item
+        ? {
+            ...current,
+            [campaignId]: { ...current[campaignId], [key]: { ...item, state } },
+          }
+        : current;
     });
   }
-  function prepareProductPhotos(snapshot: Campaign, products = snapshot.products, retryFailed = false) {
-    const targets = productImagePreparationTargets(snapshot, products).filter(target => !productPhotoQueue.current.has(target.key) && (retryFailed || !failedPhotoTargets.current.has(target.key)));
+  function prepareProductPhotos(
+    snapshot: Campaign,
+    products = snapshot.products,
+    retryFailed = false,
+  ) {
+    const targets = productImagePreparationTargets(snapshot, products).filter(
+      (target) =>
+        !productPhotoQueue.current.has(target.key) &&
+        (retryFailed || !failedPhotoTargets.current.has(target.key)),
+    );
     if (!targets.length) return Promise.resolve([]);
-    const retries = new Set(retryFailed ? targets.filter(target => failedPhotoTargets.current.has(target.key)).map(target => target.key) : []);
+    const retries = new Set(
+      retryFailed
+        ? targets
+            .filter((target) => failedPhotoTargets.current.has(target.key))
+            .map((target) => target.key)
+        : [],
+    );
     for (const target of targets) failedPhotoTargets.current.delete(target.key);
-    setPhotoProgress(current => ({...current, [snapshot.id]: {
-      ...(Object.values(current[snapshot.id] || {}).some(item => item.state === "queued" || item.state === "preparing" || item.state === "saving") ? current[snapshot.id] : {}),
-      ...Object.fromEntries(targets.map(target => [target.key, {key: target.key, code: target.offerCode, name: target.request.name, image: target.source, state: "queued" as const}]))
-    }}));
-    const jobs = targets.map(target => productPhotoQueue.current.enqueue(target, async (preparedTarget, result) => {
-      const changed = updateCampaign(draft => {applyPreparedProductPhoto(draft, preparedTarget, result);}, {id: snapshot.id, group: `product-photos:${snapshot.id}`});
-      if (changed?.changed) await changed.saved;
-    }, {retry: retries.has(target.key), onPhase: phase => trackProductPhotoWork(snapshot.id, target.key, phase)}).then(outcome => {
-      const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
-      if (!outcome.ok && currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.set(target.key, target);
-      else failedPhotoTargets.current.delete(target.key);
-      trackProductPhotoWork(snapshot.id, target.key, outcome.ok ? "ready" : outcome.usingOriginal ? "original" : "failed");
-      return outcome;
+    setPhotoProgress((current) => ({
+      ...current,
+      [snapshot.id]: {
+        ...(Object.values(current[snapshot.id] || {}).some(
+          (item) =>
+            item.state === "queued" ||
+            item.state === "preparing" ||
+            item.state === "saving",
+        )
+          ? current[snapshot.id]
+          : {}),
+        ...Object.fromEntries(
+          targets.map((target) => [
+            target.key,
+            {
+              key: target.key,
+              code: target.offerCode,
+              name: target.request.name,
+              image: target.source,
+              state: "queued" as const,
+            },
+          ]),
+        ),
+      },
     }));
-    return Promise.all(jobs).then(outcomes => {
-      const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
-      for (const outcome of outcomes) if (!outcome.ok && currentProductPhotoTarget(currentCampaign, outcome.target)) failedPhotoTargets.current.set(outcome.target.key, outcome.target);
-      for (const [key, target] of failedPhotoTargets.current) if (target.campaignId === snapshot.id && !currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.delete(key);
-      const failed = [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id);
-      if (failed && outcomes.some(outcome => !outcome.ok && !outcome.usingOriginal)) setToast(t("Some product photos could not be prepared. Try again."));
+    const jobs = targets.map((target) =>
+      productPhotoQueue.current
+        .enqueue(
+          target,
+          async (preparedTarget, result) => {
+            const changed = updateCampaign(
+              (draft) => {
+                applyPreparedProductPhoto(draft, preparedTarget, result);
+              },
+              { id: snapshot.id, group: `product-photos:${snapshot.id}` },
+            );
+            if (changed?.changed) await changed.saved;
+          },
+          {
+            retry: retries.has(target.key),
+            onPhase: (phase) =>
+              trackProductPhotoWork(snapshot.id, target.key, phase),
+          },
+        )
+        .then((outcome) => {
+          const currentCampaign = latestCampaigns.current.find(
+            (item) => item.id === snapshot.id,
+          );
+          if (!outcome.ok && currentProductPhotoTarget(currentCampaign, target))
+            failedPhotoTargets.current.set(target.key, target);
+          else failedPhotoTargets.current.delete(target.key);
+          trackProductPhotoWork(
+            snapshot.id,
+            target.key,
+            outcome.ok
+              ? "ready"
+              : outcome.usingOriginal
+                ? "original"
+                : "failed",
+          );
+          return outcome;
+        }),
+    );
+    return Promise.all(jobs).then((outcomes) => {
+      const currentCampaign = latestCampaigns.current.find(
+        (item) => item.id === snapshot.id,
+      );
+      for (const outcome of outcomes)
+        if (
+          !outcome.ok &&
+          currentProductPhotoTarget(currentCampaign, outcome.target)
+        )
+          failedPhotoTargets.current.set(outcome.target.key, outcome.target);
+      for (const [key, target] of failedPhotoTargets.current)
+        if (
+          target.campaignId === snapshot.id &&
+          !currentProductPhotoTarget(currentCampaign, target)
+        )
+          failedPhotoTargets.current.delete(key);
+      const failed = [...failedPhotoTargets.current.values()].some(
+        (target) => target.campaignId === snapshot.id,
+      );
+      if (
+        failed &&
+        outcomes.some((outcome) => !outcome.ok && !outcome.usingOriginal)
+      )
+        setToast(t("Some product photos could not be prepared. Try again."));
       return outcomes;
     });
   }
@@ -3536,15 +3854,24 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     );
   }
   function createCampaign(item: Campaign) {
-    if (item.products.some((product) => Number.isInteger(product.brochurePage))) materializeProductPages(item);
-    const searches = missingImageTargets(item.products).filter((target) => startMissingImageSearch(item, target));
+    if (item.products.some((product) => Number.isInteger(product.brochurePage)))
+      materializeProductPages(item);
+    const searches = missingImageTargets(item.products).filter((target) =>
+      startMissingImageSearch(item, target),
+    );
     setCampaigns((current) => [item, ...current]);
     saveCampaign(item).catch((error: unknown) => setToast(errorMessage(error)));
     setActiveId(item.id);
     setSection("editor");
     setEditorTab("brochure");
     setModal(null);
-    setToast(t(item.products.length ? "Campaign created. Your brochure is ready to edit." : "Campaign created. Add products when you are ready."));
+    setToast(
+      t(
+        item.products.length
+          ? "Campaign created. Your brochure is ready to edit."
+          : "Campaign created. Add products when you are ready.",
+      ),
+    );
     void prepareProductPhotos(item);
     if (searches.length) searchImportedImages(searches, item.id);
   }
@@ -3567,7 +3894,8 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
           },
         );
-        if (changed && !(result instanceof Error) && result.found) void prepareProductPhotos(changed.campaign);
+        if (changed && !(result instanceof Error) && result.found)
+          void prepareProductPhotos(changed.campaign);
       },
       retry,
     ).finally(() => {
@@ -3622,7 +3950,10 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     const updated = updateCampaign((draft: Campaign) => {
       const byCode = new Map(draft.products.map((p) => [p.code, p]));
       products.forEach((product: Product) =>
-        byCode.set(product.code, { ...byCode.get(product.code), ...retainPreparedProductPhoto(byCode.get(product.code), product) }),
+        byCode.set(product.code, {
+          ...byCode.get(product.code),
+          ...retainPreparedProductPhoto(byCode.get(product.code), product),
+        }),
       );
       if (importOptions?.brochureImport) {
         const imported = new Set(
@@ -3668,7 +3999,10 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           started.push(target);
       }
     });
-    if (updated) { void prepareProductPhotos(updated.campaign); searchImportedImages(started, updated.campaign.id); }
+    if (updated) {
+      void prepareProductPhotos(updated.campaign);
+      searchImportedImages(started, updated.campaign.id);
+    }
     setModal(null);
     setEditorTab("brochure");
     setBrochurePreviewVersion((version) => version + 1);
@@ -3710,12 +4044,25 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     [catalog, campaigns],
   );
   useEffect(() => {
-    if (!catalogItems.length || catalogCategoryInitialized.current) return;
+    if (
+      (!catalogItems.length && !catalogSourcePaths.length) ||
+      catalogCategoryInitialized.current
+    )
+      return;
     catalogCategoryInitialized.current = true;
-    setCatalogSelection(defaultCatalogSelection(catalogItems));
-  }, [catalogItems]);
+    setCatalogSelection(
+      defaultCatalogSelection(catalogItems, catalogSourcePaths),
+    );
+  }, [catalogItems, catalogSourcePaths]);
   const catalogMatches = useMemo(
-    () => searchProducts(searchProductCodes(filterCatalog(catalogItems, catalogSelection), catalogCodeQuery), catalogQuery),
+    () =>
+      searchProducts(
+        searchProductCodes(
+          filterCatalog(catalogItems, catalogSelection),
+          catalogCodeQuery,
+        ),
+        catalogQuery,
+      ),
     [catalogItems, catalogQuery, catalogCodeQuery, catalogSelection],
   );
   const catalogResults = catalogMatches.slice(0, catalogVisible);
@@ -3832,9 +4179,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           aria-controls="studio-navigation"
           onClick={() => setMobileMenuOpen((open) => !open)}
         >
-          <span />
-          <span />
-          <span />
+          <NavIcon name={mobileMenuOpen ? "close" : "menu"} />
         </button>
         <nav className="cs-sidebar-nav" id="studio-navigation">
           <span>{t("WORKSPACE")}</span>
@@ -3844,9 +4189,15 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
               ["catalog", "Product catalog"],
               ["social", "Social posts"],
               ["stores", "Settings"],
-              ...(canManageUsers(user) ? [["users", "Team & access"], ["activity", "Activity log"]] : []),
-              ...(user.role === "superadmin" ? [["insights", "Usage & storage"]] : []),
-              ["profile", "Profile & security"],
+              ...(canManageUsers(user)
+                ? [
+                    ["users", "Team & access"],
+                    ["activity", "Activity log"],
+                  ]
+                : []),
+              ...(user.role === "superadmin"
+                ? [["insights", "Usage & storage"]]
+                : []),
             ] as [string, string][]
           ).map(([id, label]) => (
             <button
@@ -3859,23 +4210,29 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 setMobileMenuOpen(false);
               }}
             >
-              <i>{icons[id]}</i>
+              <NavIcon name={id} />
               {t(label)}
             </button>
           ))}
         </nav>
-        <SidebarAccount user={user} onProfile={() => {
-          if (section === "stores" && !canLeaveSettings()) return;
-          setSection("profile"); setActiveId(null); setMobileMenuOpen(false);
-        }} onSignOut={async () => {
-              if (section === "stores" && !canLeaveSettings()) return;
-              await logout();
-                setUser(null);
-                onAuthChange?.(null);
-                setCampaigns([]);
-                setActiveId(null);
-                setSection("campaigns");
-        }} />
+        <SidebarAccount
+          user={user}
+          onProfile={() => {
+            if (section === "stores" && !canLeaveSettings()) return;
+            setSection("profile");
+            setActiveId(null);
+            setMobileMenuOpen(false);
+          }}
+          onSignOut={async () => {
+            if (section === "stores" && !canLeaveSettings()) return;
+            await logout();
+            setUser(null);
+            onAuthChange?.(null);
+            setCampaigns([]);
+            setActiveId(null);
+            setSection("campaigns");
+          }}
+        />
       </aside>
       <main className="cs-content">
         <header className="cs-topbar">
@@ -3893,14 +4250,27 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                       ? t("Team & access")
                       : section === "activity"
                         ? t("Activity log")
-                      : section === "insights"
-                        ? t("Usage & storage")
-                      : section === "profile"
-                        ? t("Profile & security")
-                        : t("Settings")}
+                        : section === "insights"
+                          ? t("Usage & storage")
+                          : section === "profile"
+                            ? t("Profile & security")
+                            : t("Settings")}
           </div>
           <div className="cs-topbar-right">
-            <CatalogRefreshControl onUpdated={async () => { setCatalog(await loadCatalog()); }} />
+            <CatalogRefreshControl
+              onUpdated={async () => {
+                const [products, facets] = await Promise.all([
+                  loadCatalog(),
+                  catalogFacets(),
+                ]);
+                setCatalog(products);
+                setCatalogSourcePaths(
+                  facets.sourceCategories.map(
+                    (category) => category.categoryPath,
+                  ),
+                );
+              }}
+            />
             <span>NEPTUN KOSOVO</span>
             <LanguageSwitch language={language} onChange={changeLanguage} />
             <div className="cs-avatar">N</div>
@@ -3912,7 +4282,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             settings={settings}
             onCreate={() => setModal("create")}
             onOpen={(id: string) => {
-              const selectedCampaign = campaigns.find(item => item.id === id);
+              const selectedCampaign = campaigns.find((item) => item.id === id);
               if (selectedCampaign) void prepareProductPhotos(selectedCampaign);
               setActiveId(id);
               setEditorTab("brochure");
@@ -3942,29 +4312,93 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
               </div>
             </div>
             <div className="cs-catalog-searches">
-              <label className="cs-catalog-search-field"><span>{t("Search products")}</span><div className="cs-search cs-catalog-search"><span aria-hidden="true">⌕</span><input type="search" value={catalogQuery} onChange={event => {
-                if (!catalogQuery.trim() && !catalogCodeQuery.trim() && event.target.value.trim()) setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
-                setCatalogQuery(event.target.value); setCatalogVisible(60);
-              }} placeholder={t("Name, brand, model or category")} /></div></label>
-              <label className="cs-catalog-search-field"><span>{t("Product codes only")}</span><div className="cs-search cs-catalog-search"><span aria-hidden="true">#</span><input type="search" value={catalogCodeQuery} onChange={event => {
-                if (!catalogQuery.trim() && !catalogCodeQuery.trim() && event.target.value.trim()) setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
-                setCatalogCodeQuery(event.target.value); setCatalogVisible(60);
-              }} placeholder={t("Enter or paste product codes")} /></div></label>
+              <label className="cs-catalog-search-field">
+                <span>{t("Search products")}</span>
+                <div className="cs-search cs-catalog-search">
+                  <span aria-hidden="true">⌕</span>
+                  <input
+                    type="search"
+                    value={catalogQuery}
+                    onChange={(event) => {
+                      if (
+                        !catalogQuery.trim() &&
+                        !catalogCodeQuery.trim() &&
+                        event.target.value.trim()
+                      )
+                        setCatalogSelection({
+                          categoryPath: "",
+                          brand: "",
+                          availability: "all",
+                        });
+                      setCatalogQuery(event.target.value);
+                      setCatalogVisible(60);
+                    }}
+                    placeholder={t("Name, brand, model or category")}
+                  />
+                </div>
+              </label>
+              <label className="cs-catalog-search-field">
+                <span>{t("Product codes only")}</span>
+                <div className="cs-search cs-catalog-search">
+                  <span aria-hidden="true">#</span>
+                  <input
+                    type="search"
+                    value={catalogCodeQuery}
+                    onChange={(event) => {
+                      if (
+                        !catalogQuery.trim() &&
+                        !catalogCodeQuery.trim() &&
+                        event.target.value.trim()
+                      )
+                        setCatalogSelection({
+                          categoryPath: "",
+                          brand: "",
+                          availability: "all",
+                        });
+                      setCatalogCodeQuery(event.target.value);
+                      setCatalogVisible(60);
+                    }}
+                    placeholder={t("Enter or paste product codes")}
+                  />
+                </div>
+              </label>
             </div>
-            <p className="cs-catalog-search-hint">{t("Search ignores case and spaces. Use commas to look up several codes; choose filters to narrow the results.")}</p>
-            <CatalogNavigator products={catalogItems} selection={catalogSelection} onChange={value => { catalogCategoryInitialized.current = true; setCatalogSelection(value); setCatalogVisible(60); }} />
+            <p className="cs-catalog-search-hint">
+              {t(
+                "Search ignores case and spaces. Use commas to look up several codes; choose filters to narrow the results.",
+              )}
+            </p>
+            <CatalogNavigator
+              products={catalogItems}
+              sourcePaths={catalogSourcePaths}
+              selection={catalogSelection}
+              onChange={(value) => {
+                catalogCategoryInitialized.current = true;
+                setCatalogSelection(value);
+                setCatalogVisible(60);
+              }}
+            />
+            {catalogLoading && (
+              <p role="status" className="cs-catalog-loading">
+                {t("Loading the complete product catalog…")}
+              </p>
+            )}
             <p className="cs-catalog-result-count" role="status">
               {catalogResults.length} {t("of")} {catalogMatches.length}{" "}
               {t("products shown")}
             </p>
-            {!catalogMatches.length && (
+            {!catalogLoading && !catalogMatches.length && (
               <div className="cs-empty-mini">
                 {t("No matching products. Try another code or filter.")}{" "}
                 <Button
                   onClick={() => {
                     setCatalogQuery("");
                     setCatalogCodeQuery("");
-                    setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
+                    setCatalogSelection({
+                      categoryPath: "",
+                      brand: "",
+                      availability: "all",
+                    });
                     setCatalogVisible(60);
                   }}
                 >
@@ -3998,8 +4432,16 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                   </span>
                   <strong>{product.name}</strong>
                   <MissingCatalogNotice product={product} variant="badge" />
-                  <small title={product.categoryPath}>{product.categoryPath || product.subcategory}</small>
-                  {product.sourceMissing && <span className="cs-source-missing">{t("Kept in catalog · not found on neptun-ks.com at last sync")}</span>}
+                  <small title={product.categoryPath}>
+                    {product.categoryPath || product.subcategory}
+                  </small>
+                  {product.sourceMissing && (
+                    <span className="cs-source-missing">
+                      {t(
+                        "Kept in catalog · not found on neptun-ks.com at last sync",
+                      )}
+                    </span>
+                  )}
                   <b>
                     {hasRegularPrice(product)
                       ? money(Number(product.regular))
@@ -4036,23 +4478,35 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
           </React.Suspense>
         )}
         {section === "users" && canManageUsers(user) && (
-          <UsersPage currentUser={user} onMembersChanged={() => {
-            void getMembers().then(setMembers).catch((error) => setToast(errorMessage(error)));
-          }} />
+          <UsersPage
+            currentUser={user}
+            onMembersChanged={() => {
+              void getMembers()
+                .then(setMembers)
+                .catch((error) => setToast(errorMessage(error)));
+            }}
+          />
         )}
         {section === "profile" && (
-          <ProfilePage user={user} onPasswordChanged={(message, signInRequired) => {
-            if (signInRequired) {
-              setUser(null);
-              onAuthChange?.(null, message);
-              setCampaigns([]);
-              setActiveId(null);
-              setSection("campaigns");
-            } else setToast(message);
-          }} />
+          <ProfilePage
+            user={user}
+            onPasswordChanged={(message, signInRequired) => {
+              if (signInRequired) {
+                setUser(null);
+                onAuthChange?.(null, message);
+                setCampaigns([]);
+                setActiveId(null);
+                setSection("campaigns");
+              } else setToast(message);
+            }}
+          />
         )}
-        {section === "activity" && canManageUsers(user) && <ActivityPage user={user} />}
-        {section === "insights" && user.role === "superadmin" && <InsightsPage user={user} />}
+        {section === "activity" && canManageUsers(user) && (
+          <ActivityPage user={user} />
+        )}
+        {section === "insights" && user.role === "superadmin" && (
+          <InsightsPage user={user} />
+        )}
         {section === "stores" && (
           <SettingsPage
             previewProducts={catalog}
@@ -4143,7 +4597,17 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                         : "progress"
                     }`}
                   >
-                    {t(campaignValidity(campaign, campaignNow) === "expired" ? "Expired" : reviewStatusLabel(campaign.status))}{campaignValidity(campaign, campaignNow) === "expired" && <span className="cs-expired-workflow"> · {t(reviewStatusLabel(campaign.status))}</span>}
+                    {t(
+                      campaignValidity(campaign, campaignNow) === "expired"
+                        ? "Expired"
+                        : reviewStatusLabel(campaign.status),
+                    )}
+                    {campaignValidity(campaign, campaignNow) === "expired" && (
+                      <span className="cs-expired-workflow">
+                        {" "}
+                        · {t(reviewStatusLabel(campaign.status))}
+                      </span>
+                    )}
                   </span>
                   <button type="button" onClick={() => openAiReview("manual")}>
                     {t("✦ AI review")}
@@ -4173,22 +4637,24 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                         </button>
                       </>
                     )}
-                  {(user.role === "pm" || canManageUsers(user)) && campaign.status === "in_review" && (
-                    <button
-                      type="button"
-                      onClick={() => runReviewAction("complete")}
-                    >
-                      {t("Mark complete")}
-                    </button>
-                  )}
-                  {(user.role === "staff" || canManageUsers(user)) && campaign.status === "completed" && (
-                    <button
-                      type="button"
-                      onClick={() => runReviewAction("reopen")}
-                    >
-                      {t("Continue editing")}
-                    </button>
-                  )}
+                  {(user.role === "pm" || canManageUsers(user)) &&
+                    campaign.status === "in_review" && (
+                      <button
+                        type="button"
+                        onClick={() => runReviewAction("complete")}
+                      >
+                        {t("Mark complete")}
+                      </button>
+                    )}
+                  {(user.role === "staff" || canManageUsers(user)) &&
+                    campaign.status === "completed" && (
+                      <button
+                        type="button"
+                        onClick={() => runReviewAction("reopen")}
+                      >
+                        {t("Continue editing")}
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
@@ -4215,7 +4681,14 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 language={language}
               />
             </div>
-            <PhotoPreparationProgress items={Object.values(photoProgress[campaign.id] || {})} campaign={campaign} onRetry={() => void prepareProductPhotos(campaign, campaign.products, true)} onEdit={setImageEditCode} />
+            <PhotoPreparationProgress
+              items={Object.values(photoProgress[campaign.id] || {})}
+              campaign={campaign}
+              onRetry={() =>
+                void prepareProductPhotos(campaign, campaign.products, true)
+              }
+              onEdit={setImageEditCode}
+            />
             {editorTab === "products" ? (
               <ProductEditor
                 campaign={campaign}
@@ -4429,7 +4902,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                 ) || detail.product
               : detail.product
           }
-          campaign={detail.editable ? campaign ?? undefined : undefined}
+          campaign={detail.editable ? (campaign ?? undefined) : undefined}
           onAppearanceChange={
             detail.editable
               ? (

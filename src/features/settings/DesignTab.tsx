@@ -214,7 +214,7 @@ export function DesignTab({
       <div hidden={pageArea !== "cover"}>
         <Field label="Default cover style">
           <SearchableSelect
-            value={b.coverTemplate}
+            value={b.coverTemplate === "photo" ? "blueRibbon" : b.coverTemplate}
             onChange={(event) =>
               update((next) => {
                 next.brochure.coverTemplate = event.target

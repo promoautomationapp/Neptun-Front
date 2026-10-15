@@ -1,3 +1,4 @@
+import { COVER_OPTIONS } from "../settings/options";
 import { logoForBackground } from "../settings/logo-rules";
 import {
   defaultPhotoPlacement,
@@ -172,28 +173,11 @@ export const paymentTextFor = (
   campaign.paymentText.trim() !== DEFAULT_PAYMENT_TEXT
     ? campaign.paymentText.trim()
     : `Paguan deri në ${installmentCount(campaign)} këste me 0% interes.`;
-export const COVER_TEMPLATES = [
-  {
-    id: "photo",
-    label: "Photo cover",
-    preview: "/api/assets/legacy/assets/default-cover-hero.png",
-  },
-  {
-    id: "blueRibbon",
-    label: "Blue UUU cover",
-    preview: "/api/assets/legacy/assets/cover-template-uuu.png",
-  },
-  {
-    id: "blueClean",
-    label: "Clean blue cover",
-    preview: "/api/assets/legacy/assets/cover-template-blue.png",
-  },
-  {
-    id: "redBlue",
-    label: "Red / blue cover",
-    preview: "/api/assets/legacy/assets/cover-template-red-blue.png",
-  },
-];
+/** Selectable styles contain only logo-free artwork. Legacy photo remains render-only. */
+export const COVER_TEMPLATES = COVER_OPTIONS.map(({ image, ...option }) => ({
+  ...option,
+  preview: image,
+}));
 export const PRICE_LOGOS = [
   {
     id: "wordmark",
@@ -2313,11 +2297,12 @@ function CoverPageContent({
     campaign.coverLogoSource || "",
   );
   const priceLogo = priceLogoSource(campaign);
-  const template = COVER_TEMPLATES.some(
-    (item) => item.id === campaign.coverTemplate,
-  )
-    ? campaign.coverTemplate
-    : "blueRibbon";
+  const template =
+    campaign.coverTemplate === "photo"
+      ? "photo"
+      : COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
+        ? campaign.coverTemplate
+        : "blueRibbon";
   const coverArt =
     campaign.coverImage ||
     (template === "photo"

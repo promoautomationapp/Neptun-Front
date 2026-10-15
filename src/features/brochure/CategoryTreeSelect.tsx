@@ -1,20 +1,30 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Product } from "../../domain/models";
 import { t } from "./i18n";
 import { normalizeSearch, matchesSearch } from "./searchText";
+import {
+  categoryNodes,
+  categorySegments,
+  productCategoryPath,
+} from "../settings/categoryHierarchy";
 
 export interface CategoryTreeSelectProps {
   catalog: readonly Product[];
   category: string;
   subcategory: string;
   onChange: (category: string, subcategory: string) => void;
-}
-
-interface CategoryGroup {
-  name: string;
-  count: number;
-  children: Map<string, number>;
+  categoryPath?: string;
+  onPathChange?: (path: string) => void;
+  sourcePaths?: readonly string[];
+  label?: string;
 }
 
 export function CategoryTreeSelect({
@@ -22,59 +32,83 @@ export function CategoryTreeSelect({
   category,
   subcategory,
   onChange,
+  categoryPath,
+  onPathChange,
+  sourcePaths,
+  label = t("Category & subcategory"),
 }: CategoryTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const root = useRef<HTMLDivElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState<React.CSSProperties>({});
   const trigger = useRef<HTMLButtonElement>(null);
   const search = useRef<HTMLInputElement>(null);
   const options = useRef<HTMLDivElement>(null);
-  const groups = useMemo(() => {
-    const byCategory = new Map<string, CategoryGroup>();
+  const { nodes, counts } = useMemo(() => {
+    const facets = catalog.map((product) => ({
+      category: product.category || "",
+      subcategory: product.subcategory || "",
+      categoryPath: product.categoryPath,
+    }));
+    const counts = new Map<string, number>();
     for (const product of catalog) {
-      if (!product.category) continue;
-      let group = byCategory.get(product.category);
-      if (!group) {
-        group = { name: product.category, count: 0, children: new Map() };
-        byCategory.set(product.category, group);
-      }
-      group.count += 1;
-      if (product.subcategory)
-        group.children.set(
-          product.subcategory,
-          (group.children.get(product.subcategory) || 0) + 1,
-        );
+      const parts = categorySegments(productCategoryPath(product));
+      parts.forEach((_part, depth) => {
+        const path = parts.slice(0, depth + 1).join(" > ");
+        counts.set(path, (counts.get(path) || 0) + 1);
+      });
     }
-    return [...byCategory.values()]
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((group) => ({
-        name: group.name,
-        count: group.count,
-        children: [...group.children].sort(([a], [b]) => a.localeCompare(b)),
-      }));
-  }, [catalog]);
+    return {
+      nodes: categoryNodes(
+        sourcePaths?.length ? [] : facets,
+        sourcePaths ? [...sourcePaths] : [],
+      ),
+      counts,
+    };
+  }, [catalog, sourcePaths]);
+  const selectedPath =
+    categoryPath !== undefined
+      ? categoryPath
+      : subcategory
+        ? nodes.find(
+            (node) =>
+              categorySegments(node.path)[0] === category &&
+              node.label === subcategory,
+          )?.path || [category, subcategory].filter(Boolean).join(" > ")
+        : category;
+  const selectedParts = categorySegments(selectedPath);
+  const translatedPath = (path: string) =>
+    categorySegments(path).map(t).join(" > ");
   const term = normalizeSearch(query);
-  const visible = groups
-    .map((group) => {
-      const parentMatch = matchesSearch(`${group.name} ${t(group.name)}`, term);
-      const children =
-        term && !parentMatch
-          ? group.children.filter(([name]) =>
-              matchesSearch(`${name} ${t(name)}`, term),
-            )
-          : group.children;
-      return parentMatch || children.length ? { ...group, children } : null;
-    })
-    .filter((group) => group !== null);
+  const matched = nodes.filter((node) =>
+    matchesSearch(`${node.path} ${translatedPath(node.path)}`, term),
+  );
+  const visible = nodes.filter(
+    (node) =>
+      !term ||
+      matched.some(
+        (match) =>
+          match.path === node.path || match.path.startsWith(`${node.path} > `),
+      ),
+  );
+  const groups = visible
+    .filter((node) => !node.parent)
+    .map((parent) => ({
+      parent,
+      children: visible.filter((node) =>
+        node.path.startsWith(`${parent.path} > `),
+      ),
+    }));
 
   useEffect(() => {
     if (!open) return;
     search.current?.focus();
     const dismiss = (event: PointerEvent) => {
       if (
-        !root.current?.contains(
-          event.target instanceof Node ? event.target : null,
-        )
+        event.target instanceof Node &&
+        !root.current?.contains(event.target) &&
+        !popover.current?.contains(event.target)
       )
         setOpen(false);
     };
@@ -92,15 +126,61 @@ export function CategoryTreeSelect({
     };
   }, [open]);
 
-  function choose(nextCategory: string, nextSubcategory: string) {
-    onChange(nextCategory, nextSubcategory);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = Math.min(Math.max(rect.width, 420), window.innerWidth - 24);
+      const below = window.innerHeight - rect.bottom - 16,
+        above = rect.top - 16;
+      const flip = below < 260 && above > below;
+      setPlacement({
+        position: "fixed",
+        width,
+        left: Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)),
+        ...(flip
+          ? { bottom: window.innerHeight - rect.top + 5 }
+          : { top: rect.bottom + 5 }),
+        maxHeight: Math.min(480, Math.max(160, flip ? above : below)),
+      });
+    };
+    place();
+    window.addEventListener("resize", place);
+    document.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      document.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+  function choose(path: string) {
+    const parts = categorySegments(path);
+    onChange(parts[0] || "", parts.length > 1 ? parts.at(-1) || "" : "");
+    onPathChange?.(path);
     setOpen(false);
     setQuery("");
     trigger.current?.focus();
   }
-  function keyNavigation(
-    event: ReactKeyboardEvent<HTMLDivElement | HTMLInputElement>,
-  ) {
+  function keyNavigation(event: ReactKeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      trigger.current?.focus();
+      return;
+    }
+    if (event.target === search.current && event.key === "Enter") {
+      event.preventDefault();
+      const candidate =
+        matched.find((node) => matchesSearch(node.label, term)) || matched[0];
+      if (candidate) choose(candidate.path);
+      return;
+    }
+    if (
+      (event.key === "Home" || event.key === "End") &&
+      event.target === search.current
+    )
+      return;
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     const buttons = [...(options.current?.querySelectorAll("button") || [])];
     if (!buttons.length) return;
@@ -121,13 +201,22 @@ export function CategoryTreeSelect({
 
   return (
     <div className={`cs-category-select ${open ? "is-open" : ""}`} ref={root}>
-      <span className="cs-filter-label">{t("Category & subcategory")}</span>
+      <span className="cs-filter-label">{label}</span>
       <button
         className="cs-category-trigger"
         type="button"
         ref={trigger}
         aria-haspopup="dialog"
+        aria-label={label}
+        title={translatedPath(selectedPath) || t("All categories")}
         aria-expanded={open}
+        onKeyDown={(event) => {
+          if (open) keyNavigation(event);
+          else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            setOpen(true);
+          }
+        }}
         onClick={() => {
           setQuery("");
           setOpen((value) => !value);
@@ -135,88 +224,102 @@ export function CategoryTreeSelect({
       >
         <span className="cs-category-trigger-text">
           <strong>
-            {subcategory
-              ? t(subcategory)
-              : category
-                ? t(category)
-                : t("All categories")}
+            {selectedParts.length
+              ? t(selectedParts.at(-1)!)
+              : t("All categories")}
           </strong>
-          {subcategory && <small>{t(category)}</small>}
+          {selectedParts.length > 1 && (
+            <small>{selectedParts.slice(0, -1).map(t).join(" > ")}</small>
+          )}
         </span>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <path d="m5 7 5 5 5-5" />
         </svg>
       </button>
-      {open && (
-        <div
-          className="cs-category-popover"
-          role="dialog"
-          aria-label={t("Category & subcategory")}
-        >
-          <div className="cs-category-search">
-            <span aria-hidden="true">⌕</span>
-            <input
-              ref={search}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={keyNavigation}
-              placeholder={t("Search categories or subcategories…")}
-              aria-label={t("Search categories or subcategories…")}
-            />
-          </div>
+      {open &&
+        createPortal(
           <div
-            className="cs-category-options"
-            ref={options}
-            onKeyDown={keyNavigation}
+            ref={popover}
+            style={placement}
+            className="cs-category-popover cs-category-portal"
+            role="dialog"
+            aria-label={label}
           >
-            {!term && (
-              <button
-                className="cs-category-all"
-                type="button"
-                aria-pressed={!category}
-                onClick={() => choose("", "")}
-              >
-                {t("All categories")}
-                <span>{catalog.length}</span>
-              </button>
-            )}
-            {visible.map((group) => (
-              <div className="cs-category-group" key={group.name}>
+            <div className="cs-category-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                ref={search}
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={keyNavigation}
+                placeholder={t("Search categories or subcategories…")}
+                aria-label={t("Search categories or subcategories…")}
+              />
+            </div>
+            <div
+              className="cs-category-options"
+              ref={options}
+              onKeyDown={keyNavigation}
+            >
+              {!term && (
                 <button
+                  className="cs-category-all"
                   type="button"
-                  className="cs-category-parent"
-                  aria-pressed={category === group.name && !subcategory}
-                  onClick={() => choose(group.name, "")}
+                  aria-pressed={!selectedPath}
+                  onClick={() => choose("")}
                 >
-                  <span>
-                    <strong>{t(group.name)}</strong>
-                    <small>{t("All products in this category")}</small>
-                  </span>
-                  <b>{group.count}</b>
+                  {t("All categories")}
+                  <span>{catalog.length}</span>
                 </button>
-                {group.children.map(([name, count]) => (
+              )}
+              {groups.map(({ parent, children }) => (
+                <div className="cs-category-group" key={parent.path}>
                   <button
                     type="button"
-                    className="cs-category-child"
-                    key={`${group.name}/${name}`}
-                    aria-pressed={
-                      category === group.name && subcategory === name
-                    }
-                    onClick={() => choose(group.name, name)}
+                    className="cs-category-parent"
+                    aria-pressed={selectedPath === parent.path}
+                    aria-label={`${translatedPath(parent.path)} · ${counts.get(parent.path) || 0} ${t("products")}`}
+                    onClick={() => choose(parent.path)}
                   >
-                    <span>{t(name)}</span>
-                    <b>{count}</b>
+                    <span>
+                      <strong>{t(parent.label)}</strong>
+                      <small>{t("All products in this category")}</small>
+                    </span>
+                    <b>{counts.get(parent.path) || 0}</b>
                   </button>
-                ))}
-              </div>
-            ))}
-            {!visible.length && (
-              <p className="cs-category-empty">{t("No matching categories")}</p>
-            )}
-          </div>
-        </div>
-      )}
+                  {children.map((node) => (
+                    <button
+                      type="button"
+                      className="cs-category-child"
+                      key={node.path}
+                      style={{ paddingLeft: 11 + node.depth * 14 }}
+                      aria-label={`${translatedPath(node.path)} · ${counts.get(node.path) || 0} ${t("products")}`}
+                      aria-pressed={selectedPath === node.path}
+                      onClick={() => choose(node.path)}
+                    >
+                      <span>
+                        <span>{t(node.label)}</span>
+                        {term && (
+                          <small>
+                            {categorySegments(node.parent).map(t).join(" > ")}
+                          </small>
+                        )}
+                      </span>
+                      <b>{counts.get(node.path) || 0}</b>
+                    </button>
+                  ))}
+                </div>
+              ))}
+              {!visible.length && (
+                <p className="cs-category-empty">
+                  {t("No matching categories")}
+                </p>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

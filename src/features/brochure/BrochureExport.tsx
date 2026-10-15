@@ -500,16 +500,16 @@ export function BrochureExport({
               {progress || t("Preparing export…")}
             </div>
           )}
-          <div className="cs-export-actions">
-            <Button disabled={busy} onClick={onClose}>
-              {t("Cancel")}
-            </Button>
-            <Button tone="primary" disabled={busy} onClick={download}>
-              {busy
-                ? t("Preparing export…")
-                : `↓ ${t("Download")} ${format.toUpperCase()}${scope === "all" && format !== "pdf" ? " ZIP" : ""}`}
-            </Button>
-          </div>
+        </div>
+        <div className="cs-export-actions">
+          <Button disabled={busy} onClick={onClose}>
+            {t("Cancel")}
+          </Button>
+          <Button tone="primary" disabled={busy} onClick={download}>
+            {busy
+              ? t("Preparing export…")
+              : `↓ ${t("Download")} ${format.toUpperCase()}${scope === "all" && format !== "pdf" ? " ZIP" : ""}`}
+          </Button>
         </div>
       </Modal>
       {renderIndexes.length > 0 && (

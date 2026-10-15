@@ -37,5 +37,8 @@
 .cs-category-parent strong { font-size: 12px; }
 .cs-category-parent small { color: #8296a7; font-size: 10px; }
 .cs-category-child { padding: 7px 11px 7px 23px; font-size: 11px; }
+.cs-category-child > span { min-width: 0; display: grid; gap: 3px; }
+.cs-category-child small { color: #8296a7; font-size: 9px; line-height: 1.4; overflow-wrap: anywhere; }
+.cs-category-trigger-text small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cs-category-empty { margin: 12px; color: #7b8fa1; font-size: 12px; }
 @media (max-width: 680px) { .cs-manual-filter-row { grid-template-columns: 1fr; } }

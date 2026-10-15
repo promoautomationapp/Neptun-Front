@@ -1,20 +1,126 @@
-.cs-catalog-navigator { padding:18px; border:1px solid #dce7ef; border-radius:16px; background:#f8fbfd; margin:16px 0; }
-.cs-catalog-filter-head { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
-.cs-catalog-filter-head strong { color:#214463; font-size:14px; }
-.cs-catalog-filter-head small { color:#7c91a3; font-size:11px; }
-.cs-catalog-filter-head button { margin-left:auto; color:#237bb1; border:0; background:transparent; cursor:pointer; font-size:11px; font-weight:700; }
-.cs-catalog-filter-fields { display:flex; flex-wrap:wrap; gap:12px; }
-.cs-catalog-filter-fields label { flex:1 1 160px; min-width:140px; display:grid; gap:6px; }
-.cs-catalog-filter-fields label>span { font-size:11px; font-weight:750; color:#6a849b; }
-.cs-catalog-filter-fields select { width:100%; background:white; border:1px solid #d5e2ed; color:#234661; padding:10px; border-radius:9px; font-size:12px; min-height:38px; }
-.cs-catalog-crumbs { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
-.cs-catalog-crumbs button { border:0; background:#eaf2f9; border-radius:6px; padding:5px 8px; color:#365d7e; font-size:10px; cursor:pointer; }
-.cs-catalog-filter-fields .cs-catalog-field { flex: 1 1 190px; min-width: 160px; }
-.cs-catalog-field .cs-filter-control { width: 100%; }
-.cs-catalog-field .cs-filter-label { display: block; margin-bottom: 7px; }
-.cs-catalog-field .cs-filter-trigger { min-height: 44px; }
-.cs-catalog-searches { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 16px; }
-.cs-catalog-search-field { display: grid; gap: 7px; color: #31516c; font-size: 12px; font-weight: 750; }
-.cs-catalog-searches .cs-catalog-search { width: 100%; margin: 0; }
-.cs-catalog-search-hint { margin: 10px 0 18px; font-size: 12px; color: #6c8296; }
-@media(max-width: 650px) { .cs-catalog-searches { grid-template-columns: 1fr; } }
+.cs-catalog-navigator {
+  padding: 18px;
+  border: 1px solid #dce7ef;
+  border-radius: 16px;
+  background: #f8fbfd;
+  margin: 16px 0;
+}
+.cs-catalog-filter-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cs-catalog-filter-head strong {
+  color: #214463;
+  font-size: 14px;
+}
+.cs-catalog-filter-head small {
+  color: #7c91a3;
+  font-size: 11px;
+}
+.cs-catalog-filter-head button {
+  margin-left: auto;
+  color: #237bb1;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+.cs-catalog-filter-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.cs-catalog-filter-fields label {
+  flex: 1 1 160px;
+  min-width: 140px;
+  display: grid;
+  gap: 6px;
+}
+.cs-catalog-filter-fields label > span {
+  font-size: 11px;
+  font-weight: 750;
+  color: #6a849b;
+}
+.cs-catalog-filter-fields select {
+  width: 100%;
+  background: white;
+  border: 1px solid #d5e2ed;
+  color: #234661;
+  padding: 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  min-height: 38px;
+}
+.cs-catalog-crumbs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.cs-catalog-crumbs button {
+  border: 0;
+  background: #eaf2f9;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: #365d7e;
+  font-size: 10px;
+  cursor: pointer;
+}
+.cs-catalog-filter-fields .cs-catalog-field {
+  flex: 1 1 190px;
+  min-width: 160px;
+}
+.cs-catalog-field .cs-filter-control {
+  width: 100%;
+}
+.cs-catalog-field .cs-filter-label {
+  display: block;
+  margin-bottom: 7px;
+}
+.cs-catalog-field .cs-filter-trigger {
+  min-height: 44px;
+}
+.cs-catalog-searches {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: 16px;
+}
+.cs-catalog-search-field {
+  display: grid;
+  gap: 7px;
+  color: #31516c;
+  font-size: 12px;
+  font-weight: 750;
+}
+.cs-catalog-searches .cs-catalog-search {
+  width: 100%;
+  margin: 0;
+}
+.cs-catalog-search-hint {
+  margin: 10px 0 18px;
+  font-size: 12px;
+  color: #6c8296;
+}
+@media (max-width: 650px) {
+  .cs-catalog-searches {
+    grid-template-columns: 1fr;
+  }
+}
+/* The category tree opens above content; adding depth never moves the filter bar. */
+.cs-catalog-filter-fields { display: grid; grid-template-columns: minmax(240px, 1.6fr) minmax(160px, 1fr) minmax(200px, 1.2fr); align-items: start; }
+.cs-catalog-field { min-width: 0 !important; }
+.cs-catalog-field .cs-category-select { width: 100%; }
+.cs-catalog-field .cs-category-trigger, .cs-catalog-field .cs-filter-trigger { height: 48px; }
+.cs-catalog-field .cs-category-trigger-text { min-width: 0; }
+.cs-catalog-field .cs-category-trigger-text strong, .cs-catalog-field .cs-category-trigger-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.cs-catalog-field .cs-category-trigger-text small { max-width: 100%; font-size: 10px; }
+.cs-catalog-crumbs { min-height: 25px; margin-top: 10px; }
+.cs-category-portal { z-index: 12001; display: flex; flex-direction: column; overflow: hidden; }
+.cs-category-portal .cs-category-search { flex: none; }
+.cs-category-portal .cs-category-options { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
+@media(max-width: 950px) { .cs-catalog-filter-fields { grid-template-columns: 1fr 1fr; } .cs-catalog-category-field { grid-column: 1 / -1; } }
+@media(max-width: 540px) { .cs-catalog-filter-fields { grid-template-columns: minmax(0, 1fr); } }

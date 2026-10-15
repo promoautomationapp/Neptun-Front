@@ -12,10 +12,10 @@ import { hasRegularPrice } from "./missingCatalog";
 import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { FilterDate, FilterSelect } from "./FilterControls";
 import { CategoryTreeSelect } from "./CategoryTreeSelect";
+import { productCategoryPath } from "../settings/categoryHierarchy";
 import type { ImportTable, ImportSheet } from "./importAnalysis";
 import type { ImportRow } from "./importRowGroups";
 import type { BrochureImportColumns } from "./brochureImport";
-import type { ProductEditingProps } from "./Brochure";
 import { analyzeImportRows, selectImportTable } from "./importAnalysis";
 import { analyzeBrochureRows, inferBrochureColumns } from "./brochureImport";
 import { discount, money, validSale } from "./Brochure";
@@ -137,9 +137,19 @@ export function Modal({
   wide?: boolean;
 }) {
   const backdrop = React.useRef<HTMLDivElement>(null);
+  const content = React.Children.toArray(children);
+  const last = content.at(-1);
+  const footer =
+    React.isValidElement<{ className?: string }>(last) &&
+    /(?:^|\s)cs-(?:modal|export)-actions(?:\s|$)/.test(
+      last.props.className || "",
+    )
+      ? content.pop()
+      : null;
   useEffect(() => {
-    const onKey = (event: { key: string }) => {
+    const onKey = (event: KeyboardEvent) => {
       if (
+        !event.defaultPrevented &&
         event.key === "Escape" &&
         [...document.querySelectorAll(".cs-modal-backdrop")].at(-1) ===
           backdrop.current
@@ -177,7 +187,8 @@ export function Modal({
             ×
           </button>
         </div>
-        {children}
+        <div className="cs-modal-body">{content}</div>
+        {footer && <div className="cs-modal-footer">{footer}</div>}
       </section>
     </div>
   );
@@ -215,7 +226,6 @@ export function CreateCampaign({
   const [backgroundImage, setBackgroundImage] = useState(
     initialSettings.brochure.productBackground.image,
   );
-  const [backgroundEdited, setBackgroundEdited] = useState(false);
   const [layout, setLayout] = useState<string>(initialSettings.brochure.layout);
   const [autoProductLayout, setAutoProductLayout] = useState(
     initialSettings.brochure.automaticProductLayout,
@@ -249,18 +259,15 @@ export function CreateCampaign({
     ? "light"
     : "blue";
   function chooseBackgroundColor(value: string) {
-    setBackgroundEdited(true);
     setBackgroundColor(value);
     setBackgroundGradient(null);
     setBackgroundImage("");
   }
   function chooseBackgroundGradient(value: Gradient | null) {
-    setBackgroundEdited(true);
     setBackgroundGradient(value);
     setBackgroundImage("");
   }
   function chooseBackgroundImage(value: string) {
-    setBackgroundEdited(true);
     setBackgroundImage(value);
     setBackgroundGradient(null);
   }
@@ -1403,6 +1410,7 @@ export function ManualPicker({
   const [detailSearch, setDetailSearch] = useState("");
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
+  const [categoryPath, setCategoryPath] = useState("");
   const [brand, setBrand] = useState("");
   const [selected, setSelected] = useState<Record<string, Product>>({});
   const [visibleCount, setVisibleCount] = useState(60);
@@ -1415,14 +1423,15 @@ export function ManualPicker({
           catalog
             .filter(
               (p: Product) =>
-                (!category || p.category === category) &&
-                (!subcategory || p.subcategory === subcategory),
+                !categoryPath ||
+                productCategoryPath(p) === categoryPath ||
+                productCategoryPath(p).startsWith(`${categoryPath} > `),
             )
             .map((p) => p.brand)
             .filter((value): value is string => Boolean(value)),
         ),
       ].sort(),
-    [catalog, category, subcategory],
+    [catalog, categoryPath],
   );
   const matches = useMemo(
     () =>
@@ -1433,13 +1442,14 @@ export function ManualPicker({
               normalize(p.code)
                 .replace(/\s/g, "")
                 .includes(normalize(delayedCode).replace(/\s/g, ""))) &&
-            (!category || p.category === category) &&
-            (!subcategory || p.subcategory === subcategory) &&
+            (!categoryPath ||
+              productCategoryPath(p) === categoryPath ||
+              productCategoryPath(p).startsWith(`${categoryPath} > `)) &&
             (!brand || p.brand === brand),
         ),
         delayedDetails,
       ),
-    [catalog, delayedCode, delayedDetails, category, subcategory, brand],
+    [catalog, delayedCode, delayedDetails, categoryPath, brand],
   );
   const visibleMatches = matches.slice(0, visibleCount);
   const existingCodes = useMemo(
@@ -1501,6 +1511,8 @@ export function ManualPicker({
               catalog={catalog}
               category={category}
               subcategory={subcategory}
+              categoryPath={categoryPath}
+              onPathChange={setCategoryPath}
               onChange={(
                 nextCategory: React.SetStateAction<string>,
                 nextSubcategory: React.SetStateAction<string>,

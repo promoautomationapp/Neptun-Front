@@ -56,8 +56,15 @@ function useDismiss(
 }
 
 export function FilterSelect<Value extends string | number>({
-  label, value, options, onChange, disabled = false, id, hideLabel = false,
-  "aria-labelledby": labelledby, "aria-describedby": describedby,
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+  id,
+  hideLabel = false,
+  "aria-labelledby": labelledby,
+  "aria-describedby": describedby,
 }: FilterSelectProps<Value>) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,22 +73,40 @@ export function FilterSelect<Value extends string | number>({
   const trigger = useRef<HTMLButtonElement>(null);
   const popover = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLDivElement>(null);
-  const selected = options.find(option => option.value === value) || options[0];
-  const visible = options.filter(option => matchesSearch(option.label, query));
-  function close() { setOpen(false); }
+  const selected =
+    options.find((option) => option.value === value) || options[0];
+  const visible = options.filter((option) =>
+    matchesSearch(option.label, query),
+  );
+  function close() {
+    setOpen(false);
+  }
   useEffect(() => {
     if (!open) return;
     const dismiss = (event: PointerEvent) => {
-      if (event.target instanceof Node && !root.current?.contains(event.target) && !popover.current?.contains(event.target)) close();
+      if (
+        event.target instanceof Node &&
+        !root.current?.contains(event.target) &&
+        !popover.current?.contains(event.target)
+      )
+        close();
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { close(); trigger.current?.focus(); }
+      if (event.key === "Escape") {
+        close();
+        trigger.current?.focus();
+      }
     };
     document.addEventListener("pointerdown", dismiss);
     document.addEventListener("keydown", escape);
-    return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape); };
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", escape);
+    };
   }, [open]);
-  useEffect(() => { if (disabled) close(); }, [disabled]);
+  useEffect(() => {
+    if (disabled) close();
+  }, [disabled]);
   useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
@@ -91,39 +116,147 @@ export function FilterSelect<Value extends string | number>({
       const below = window.innerHeight - rect.bottom - 12;
       const above = rect.top - 12;
       const upward = below < 240 && above > below;
-      setPlacement({ position: "fixed", left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), top: upward ? undefined : rect.bottom + 5, bottom: upward ? window.innerHeight - rect.top + 5 : undefined, width, maxHeight: Math.max(120, Math.min(340, upward ? above : below)) });
+      setPlacement({
+        position: "fixed",
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+        top: upward ? undefined : rect.bottom + 5,
+        bottom: upward ? window.innerHeight - rect.top + 5 : undefined,
+        width,
+        maxHeight: Math.max(120, Math.min(340, upward ? above : below)),
+      });
     };
-    place(); window.addEventListener("resize", place); document.addEventListener("scroll", place, true);
-    return () => { window.removeEventListener("resize", place); document.removeEventListener("scroll", place, true); };
+    place();
+    window.addEventListener("resize", place);
+    document.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      document.removeEventListener("scroll", place, true);
+    };
   }, [open]);
   function onKeys(event: React.KeyboardEvent<HTMLElement>) {
-    const input = event.target instanceof HTMLInputElement;
-    if (event.key === "Tab") { close(); return; }
-    if (!open && ["ArrowDown", "ArrowUp"].includes(event.key)) {
-      event.preventDefault(); setQuery(""); setOpen(true); return;
+    if (open && event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+      trigger.current?.focus();
+      return;
     }
-    const buttons = [...(list.current?.querySelectorAll<HTMLButtonElement>("[role='option']:not(:disabled)") || [])];
-    if (input && event.key === "Enter") { event.preventDefault(); buttons[0]?.click(); return; }
-    if (!["ArrowDown", "ArrowUp", ...(!input ? ["Home", "End"] : [])].includes(event.key)) return;
+    const input = event.target instanceof HTMLInputElement;
+    if (event.key === "Tab") {
+      close();
+      return;
+    }
+    if (!open && ["ArrowDown", "ArrowUp"].includes(event.key)) {
+      event.preventDefault();
+      setQuery("");
+      setOpen(true);
+      return;
+    }
+    const buttons = [
+      ...(list.current?.querySelectorAll<HTMLButtonElement>(
+        "[role='option']:not(:disabled)",
+      ) || []),
+    ];
+    if (input && event.key === "Enter") {
+      event.preventDefault();
+      buttons[0]?.click();
+      return;
+    }
+    if (
+      !["ArrowDown", "ArrowUp", ...(!input ? ["Home", "End"] : [])].includes(
+        event.key,
+      )
+    )
+      return;
     event.preventDefault();
-    const index = buttons.findIndex(button => button === document.activeElement);
-    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : index < 0 ? (event.key === "ArrowDown" ? 0 : buttons.length - 1) : event.key === "ArrowDown" ? (index + 1) % buttons.length : (index - 1 + buttons.length) % buttons.length;
+    const index = buttons.findIndex(
+      (button) => button === document.activeElement,
+    );
+    const next =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? buttons.length - 1
+          : index < 0
+            ? event.key === "ArrowDown"
+              ? 0
+              : buttons.length - 1
+            : event.key === "ArrowDown"
+              ? (index + 1) % buttons.length
+              : (index - 1 + buttons.length) % buttons.length;
     buttons[next]?.focus();
   }
-  return <div className={`cs-filter-control ${open ? "is-open" : ""}`} ref={root}>
-    {!hideLabel && <span className="cs-filter-label">{label}</span>}
-    <button ref={trigger} id={id} type="button" className="cs-filter-trigger" aria-label={labelledby ? undefined : label} aria-labelledby={labelledby} aria-describedby={describedby} aria-haspopup="listbox" aria-expanded={open} disabled={disabled}
-      onClick={() => { setQuery(""); setOpen(current => !current); }} onKeyDown={onKeys}>
-      <span>{selected?.label}</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg>
-    </button>
-    {open && !disabled && createPortal(<div className="cs-filter-options cs-searchable-options" ref={popover} style={placement} onKeyDown={onKeys}>
-      <div className="cs-filter-option-search"><input autoFocus type="search" value={query} onChange={event => setQuery(event.target.value)} aria-label={`${t("Search")} ${label}`} placeholder={t("Search options…")} /></div>
-      <div role="listbox" aria-label={label} ref={list}>
-        {visible.map(option => <button key={option.value} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} onClick={() => { onChange(option.value); close(); trigger.current?.focus(); }}><span>{option.label}</span>{option.value === value && <span aria-hidden="true">✓</span>}</button>)}
-        {!visible.length && <p className="cs-filter-no-results">{t("No matches found")}</p>}
-      </div>
-    </div>, document.body)}
-  </div>;
+  return (
+    <div className={`cs-filter-control ${open ? "is-open" : ""}`} ref={root}>
+      {!hideLabel && <span className="cs-filter-label">{label}</span>}
+      <button
+        ref={trigger}
+        id={id}
+        type="button"
+        className="cs-filter-trigger"
+        aria-label={labelledby ? undefined : label}
+        aria-labelledby={labelledby}
+        aria-describedby={describedby}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => {
+          setQuery("");
+          setOpen((current) => !current);
+        }}
+        onKeyDown={onKeys}
+      >
+        <span>{selected?.label}</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="m5 7 5 5 5-5" />
+        </svg>
+      </button>
+      {open &&
+        !disabled &&
+        createPortal(
+          <div
+            className="cs-filter-options cs-searchable-options"
+            ref={popover}
+            style={placement}
+            onKeyDown={onKeys}
+          >
+            <div className="cs-filter-option-search">
+              <input
+                autoFocus
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                aria-label={`${t("Search")} ${label}`}
+                placeholder={t("Search options…")}
+              />
+            </div>
+            <div role="listbox" aria-label={label} ref={list}>
+              {visible.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={option.value === value}
+                  disabled={option.disabled}
+                  onClick={() => {
+                    onChange(option.value);
+                    close();
+                    trigger.current?.focus();
+                  }}
+                >
+                  <span>{option.label}</span>
+                  {option.value === value && <span aria-hidden="true">✓</span>}
+                </button>
+              ))}
+              {!visible.length && (
+                <p className="cs-filter-no-results">{t("No matches found")}</p>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
 }
 
 function parseDate(value: string | undefined): Date | null {

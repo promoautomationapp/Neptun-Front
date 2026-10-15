@@ -590,7 +590,7 @@
   top: 0;
   left: 0;
   width: 794px;
-  transform: scale(var(--mini-cover-scale, .4));
+  transform: scale(var(--mini-cover-scale, 0.4));
   transform-origin: top left;
 }
 .cs-campaign-card-title {
@@ -956,7 +956,11 @@
   color: #194d77;
   box-shadow: 0 3px 12px #194d7710;
   text-align: left;
-  transition: border-color .15s, background .15s, box-shadow .15s, transform .15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
 }
 .cs-social-shortcut:hover {
   border-color: #8dbbd9;
@@ -1076,9 +1080,38 @@
 }
 
 /* Search stays visible while long option lists scroll, including in dialogs. */
-.cs-searchable-options { z-index: 12000; overscroll-behavior: contain; }
-.cs-filter-option-search { position: sticky; top: -5px; z-index: 1; padding: 6px 2px 9px; background: #fff; }
-.cs-filter-option-search input { width: 100%; min-height: 38px; box-sizing: border-box; border: 1px solid #d4e2ec; border-radius: 8px; padding: 8px 10px; color: #24435e; font: inherit; font-size: 13px; }
-.cs-filter-no-results { margin: 10px; color: #6b8195; font-size: 13px; }
-.cs-filter-trigger:disabled { cursor: not-allowed; opacity: .55; }
-.cs-filter-options button:disabled { opacity: .5; cursor: not-allowed; }
+.cs-searchable-options {
+  z-index: 12000;
+  overscroll-behavior: contain;
+}
+.cs-filter-option-search {
+  position: sticky;
+  top: -5px;
+  z-index: 1;
+  padding: 6px 2px 9px;
+  background: #fff;
+}
+.cs-filter-option-search input {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+  border: 1px solid #d4e2ec;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #24435e;
+  font: inherit;
+  font-size: 13px;
+}
+.cs-filter-no-results {
+  margin: 10px;
+  color: #6b8195;
+  font-size: 13px;
+}
+.cs-filter-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.cs-filter-options button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

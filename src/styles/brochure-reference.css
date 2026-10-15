@@ -682,7 +682,7 @@
   height: 49.4%;
 }
 .brochure-cover.cover-template-redBlue {
-  background: #0869b5 url("/api/assets/legacy/assets/cover-template-red-blue.png") center / cover
+  background: #0869b5 url("/cover-backgrounds/red-blue.svg") center / cover
     no-repeat;
 }
 .brochure-cover.cover-template-redBlue .cover-photo,

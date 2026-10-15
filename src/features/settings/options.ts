@@ -1,20 +1,19 @@
 const asset = (name: string) => `/api/assets/legacy/assets/${name}`;
 export const COVER_OPTIONS = [
-  { id: "photo", label: "Photo cover", image: asset("default-cover-hero.png") },
   {
     id: "blueRibbon",
     label: "Blue UUU cover",
-    image: asset("cover-template-uuu.png"),
+    image: "/cover-backgrounds/blue-ribbon.svg",
   },
   {
     id: "blueClean",
     label: "Clean blue cover",
-    image: asset("cover-template-blue.png"),
+    image: "/cover-backgrounds/blue-clean.svg",
   },
   {
     id: "redBlue",
     label: "Red / blue cover",
-    image: asset("cover-template-red-blue.png"),
+    image: "/cover-backgrounds/red-blue.svg",
   },
 ] as const;
 export const LOGO_ROLES = [

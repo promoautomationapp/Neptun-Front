@@ -1,0 +1,292 @@
+/* Compact library chrome keeps the saved work in view. */
+.cs-library .cs-library-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.cs-library-heading h1 {
+  margin: 0;
+  font-size: clamp(26px, 2.8vw, 36px);
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+.cs-library-heading p {
+  margin: 6px 0 0;
+  color: #71869b;
+  font-size: 12px;
+}
+.cs-library-heading .cs-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: none;
+  min-height: 42px;
+}
+.cs-library .cs-campaign-filters {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+}
+.cs-library-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cs-library .cs-library-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+}
+.cs-library-search svg {
+  color: #7894ab;
+  flex: none;
+}
+.cs-library-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  font-size: 12px;
+}
+.cs-library-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  border: 1px solid #cedeea;
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #f8fbfe;
+  color: #24577e;
+  font-weight: 750;
+  font-size: 12px;
+  cursor: pointer;
+  flex: none;
+}
+.cs-library-filter-toggle[aria-expanded="true"] {
+  background: #e8f3fb;
+  border-color: #99c4e3;
+}
+.cs-library-filter-toggle svg:last-child {
+  width: 15px;
+  transition: transform 0.15s;
+}
+.cs-library-filter-toggle[aria-expanded="true"] svg:last-child {
+  transform: rotate(180deg);
+}
+.cs-filter-count {
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  background: #1d557e;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 10px;
+}
+.cs-library-advanced:not([hidden]) {
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1px solid #e7eef5;
+}
+.cs-library .cs-campaign-filter-footer {
+  margin-top: 9px;
+  min-height: 24px;
+}
+.cs-library .cs-campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+  gap: 20px;
+}
+.cs-library .cs-campaign-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dce6ef;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 3px 14px #123d6507;
+}
+.cs-library .cs-campaign-badges {
+  position: static;
+  padding: 12px 14px 0;
+  gap: 7px;
+}
+.cs-library .cs-campaign-badges > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 750;
+  font-size: 11px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.cs-library .cs-campaign-badges .cs-campaign-type {
+  background: #eaf2fa;
+  color: #244e74;
+}
+.cs-library .cs-campaign-status {
+  background: #fff2db;
+  color: #895614;
+}
+.cs-library .cs-campaign-status.status-completed {
+  background: #e3f4eb;
+  color: #216649;
+}
+.cs-library .cs-campaign-status.status-in_review {
+  background: #e7f1ff;
+  color: #2a5c90;
+}
+.cs-library .cs-campaign-status.status-changes_requested {
+  background: #ffede4;
+  color: #a24722;
+}
+.cs-library .cs-campaign-status.status-expired {
+  background: #eef0f4;
+  color: #5c6877;
+}
+.cs-library .cs-campaign-cover {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  background: #fff;
+  border: 0;
+}
+.cs-library .cs-campaign-mini-cover {
+  width: min(100%, calc(230px * var(--brochure-page-aspect, 1080 / 1350)));
+  margin: 0 auto;
+  box-shadow: 0 3px 12px #163d651a;
+}
+.cs-library .cs-campaign-card-title {
+  border: 0;
+  padding: 10px 16px 5px;
+  gap: 5px;
+}
+.cs-library .cs-campaign-card-title strong {
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.cs-library .cs-campaign-card-title small {
+  font-size: 11px;
+}
+.cs-campaign-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  padding: 5px 16px 14px;
+  color: #687f95;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.cs-campaign-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid #e6edf4;
+}
+.cs-campaign-card-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  min-width: 0;
+  border: 1px solid #d5e2ec;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+  color: #45627b;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.cs-campaign-card-actions button svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.cs-campaign-card-actions .cs-card-delete {
+  color: #ac4635;
+}
+.cs-campaign-card-actions .cs-card-open {
+  grid-column: 1/-1;
+  background: #194d7c;
+  border-color: #194d7c;
+  color: #fff;
+  min-height: 40px;
+  font-size: 12px;
+  justify-content: space-between;
+  padding-inline: 13px;
+}
+.cs-campaign-card-actions .cs-card-download {
+  grid-column: 1/-1;
+  border-color: transparent;
+  color: #266c9c;
+  min-height: 32px;
+  padding: 5px 8px;
+}
+.cs-campaign-card-actions button:hover {
+  background: #eff6fc;
+  border-color: #b5cfe3;
+}
+.cs-campaign-card-actions .cs-card-open:hover {
+  background: #103d66;
+  border-color: #103d66;
+}
+.cs-campaign-card-actions .cs-card-delete:hover {
+  background: #fff3ef;
+  border-color: #edc3b9;
+}
+@media (max-width: 620px) {
+  .cs-library .cs-library-heading {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .cs-library-heading h1 {
+    font-size: 27px;
+  }
+  .cs-library-heading .cs-button {
+    padding: 10px;
+    font-size: 11px;
+    min-height: 40px;
+  }
+  .cs-library-filter-bar {
+    gap: 8px;
+  }
+  .cs-library .cs-campaign-filters {
+    padding: 10px;
+  }
+  .cs-library-filter-toggle {
+    padding: 8px;
+    gap: 5px;
+  }
+  .cs-library-filter-toggle svg:last-child {
+    display: none;
+  }
+  .cs-library .cs-library-search {
+    padding: 8px;
+  }
+  .cs-library .cs-library-search input {
+    font-size: 11px;
+  }
+  .cs-library .cs-campaign-filter-footer {
+    font-size: 10px;
+  }
+}

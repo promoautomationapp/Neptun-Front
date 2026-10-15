@@ -253,8 +253,15 @@ export function ProductImageEditor({
         <div className="cs-image-editor-grid">
           <div>
             <strong>{t("Available product photos")}</strong>
-            {catalogPhotos.loading && <p role="status">{t("Loading product photos…")}</p>}
-            {catalogPhotos.error && <p role="alert">{t("Could not load product photos.")} <Button onClick={catalogPhotos.retry}>{t("Retry")}</Button></p>}
+            {catalogPhotos.loading && (
+              <p role="status">{t("Loading product photos…")}</p>
+            )}
+            {catalogPhotos.error && (
+              <p role="alert">
+                {t("Could not load product photos.")}{" "}
+                <Button onClick={catalogPhotos.retry}>{t("Retry")}</Button>
+              </p>
+            )}
             <div className="cs-image-choices">
               {choices.map((choice, index) => (
                 <button
@@ -344,27 +351,42 @@ export function ProductImageEditor({
                 {t("AI is removing the background…")}
               </div>
             )}
-            <div className="cs-image-editor-actions">
-              {product.image && product.showImage !== false && <Button disabled={busy} onClick={() => { onSave({ image: product.image!, aiOriginalImage: product.aiOriginalImage || "", skipAiCutout: Boolean(product.skipAiCutout), showImage: false }); onClose(); }}>{t("Remove image")}</Button>}
-              <Button onClick={prepare} disabled={!source || busy}>
-                {busy
-                  ? t("Preparing image…")
-                  : savedPrepared && prepared === savedPrepared && cutout
-                    ? t("Re-cut with AI")
-                    : prepared
-                      ? t("Prepare again")
-                      : t("Prepare image")}
-              </Button>
-              <Button
-                tone="primary"
-                disabled={!(prepared || (!cutout && source)) || busy}
-                onClick={apply}
-              >
-                {t("Use this image")}
-              </Button>
-            </div>
           </div>
         </div>
+      </div>
+      <div className="cs-modal-actions cs-image-editor-actions">
+        {product.image && product.showImage !== false && (
+          <Button
+            disabled={busy}
+            onClick={() => {
+              onSave({
+                image: product.image!,
+                aiOriginalImage: product.aiOriginalImage || "",
+                skipAiCutout: Boolean(product.skipAiCutout),
+                showImage: false,
+              });
+              onClose();
+            }}
+          >
+            {t("Remove image")}
+          </Button>
+        )}
+        <Button onClick={prepare} disabled={!source || busy}>
+          {busy
+            ? t("Preparing image…")
+            : savedPrepared && prepared === savedPrepared && cutout
+              ? t("Re-cut with AI")
+              : prepared
+                ? t("Prepare again")
+                : t("Prepare image")}
+        </Button>
+        <Button
+          tone="primary"
+          disabled={!(prepared || (!cutout && source)) || busy}
+          onClick={apply}
+        >
+          {t("Use this image")}
+        </Button>
       </div>
     </Modal>
   );

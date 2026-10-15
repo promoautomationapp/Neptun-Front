@@ -7,6 +7,8 @@ import { CoverPage, ProductPage, StoresPage } from "../brochure/Brochure";
 import { resolveBrochureFormat } from "../brochure/brochureFormat";
 import { splitPages } from "../brochure/campaignPages";
 import { productCategoryPath } from "./categoryHierarchy";
+import { Modal } from "../brochure/Modals";
+import type { CSSProperties, ReactNode } from "react";
 
 const illustrativePhoto = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="310" viewBox="0 0 480 310"><rect x="30" y="25" width="420" height="245" rx="12" fill="#17283e"/><rect x="42" y="37" width="396" height="219" rx="5" fill="#55afd0"/><path d="M42 210L180 80L295 200L370 95L438 185V256H42Z" fill="#2174a4"/><path d="M170 280H310L330 297H150Z" fill="#394957"/></svg>')}`;
 
@@ -94,8 +96,7 @@ export function SettingsPreview({
 }) {
   const [comparison, setComparison] = useState("draft");
   const [page, setPage] = useState("cover");
-  const host = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(300);
+  const [enlarged, setEnlarged] = useState(false);
   const [lastValid, setLastValid] = useState(initial);
   const parsed = workspaceSettingsSchema.safeParse(draft);
   useEffect(() => {
@@ -119,18 +120,6 @@ export function SettingsPreview({
       setComparison("draft");
     }
   }, [pageRequest]);
-  useLayoutEffect(() => {
-    const element = host.current;
-    if (!element) return;
-    const measure = () => setWidth(element.clientWidth || 300);
-    measure();
-    const observer =
-      typeof ResizeObserver === "function"
-        ? new ResizeObserver(measure)
-        : undefined;
-    observer?.observe(element);
-    return () => observer?.disconnect();
-  }, []);
   const settings =
     comparison === "saved" ? initial : parsed.success ? draft : lastValid;
   const campaign = settingsPreviewCampaign(settings, products, categoryPath);
@@ -195,22 +184,93 @@ export function SettingsPreview({
           </button>
         ))}
       </div>
-      <div
-        ref={host}
-        className="ns-preview-page"
-        style={{ aspectRatio: format.aspectRatio }}
-      >
-        <div
-          className="ns-preview-canvas"
-          style={{ width: 760, transform: `scale(${width / 760})` }}
-        >
+      <div className="ns-preview-paper-slot">
+        <PreviewPaper ratio={format.ratio} aspectRatio={format.aspectRatio}>
           {content}
-        </div>
+        </PreviewPaper>
       </div>
-      <p className="ns-preview-note">
-        Sample products and prices illustrate the design. Saving defaults
-        applies to new campaigns; existing brochures keep their settings.
-      </p>
+      <button
+        className="ns-preview-enlarge"
+        type="button"
+        onClick={() => setEnlarged(true)}
+      >
+        Enlarge preview ↗
+      </button>
+      <details className="ns-preview-note">
+        <summary>Preview information</summary>
+        <p className="ns-preview-note">
+          Sample products and prices illustrate the design. Saving defaults
+          applies to new campaigns; existing brochures keep their settings.
+        </p>
+      </details>
+      {enlarged && (
+        <Modal
+          wide
+          title="Brochure preview"
+          kicker={comparison === "saved" ? "Saved defaults" : "Your changes"}
+          onClose={() => setEnlarged(false)}
+        >
+          <div className="ns-enlarged-preview">
+            <PreviewPaper ratio={format.ratio} aspectRatio={format.aspectRatio}>
+              {content}
+            </PreviewPaper>
+          </div>
+        </Modal>
+      )}
     </aside>
+  );
+}
+
+function PreviewPaper({
+  children,
+  ratio,
+  aspectRatio,
+}: {
+  children: ReactNode;
+  ratio: number;
+  aspectRatio: string;
+}) {
+  const host = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(300);
+  useLayoutEffect(() => {
+    const element = host.current;
+    if (!element) return;
+    const measure = () =>
+      setWidth(
+        Math.max(
+          1,
+          element.getBoundingClientRect().width || element.clientWidth || 300,
+        ),
+      );
+    measure();
+    const observer =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(measure)
+        : undefined;
+    observer?.observe(element);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={host}
+      className="ns-preview-page"
+      style={{ aspectRatio, "--ns-preview-ratio": ratio } as CSSProperties}
+    >
+      <div
+        className="ns-preview-canvas"
+        style={{
+          width: 760,
+          height: 760 / ratio,
+          transform: `scale(${width / 760})`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }

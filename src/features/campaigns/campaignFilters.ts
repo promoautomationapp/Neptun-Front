@@ -124,7 +124,9 @@ export function filterCampaigns(
       if (!terms.every((term) => searchable.includes(term))) return false;
       if (
         filters.status !== "all" &&
-        (filters.status === "expired" ? campaignValidity(item, now) !== "expired" : (item.status || "in_progress") !== filters.status)
+        (filters.status === "expired"
+          ? campaignValidity(item, now) !== "expired"
+          : (item.status || "in_progress") !== filters.status)
       )
         return false;
       if (filters.type !== "all" && item.type !== filters.type) return false;

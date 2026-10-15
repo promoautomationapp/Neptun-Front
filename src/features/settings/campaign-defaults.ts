@@ -83,7 +83,8 @@ export function campaignDefaults(
     layout: b.layout,
     autoProductLayout: b.automaticProductLayout,
     productDesign: structuredClone(settings.productDesign),
-    coverTemplate: b.coverTemplate,
+    // Retain old photo covers when loading saved work, but never create a new one.
+    coverTemplate: b.coverTemplate === "photo" ? "blueRibbon" : b.coverTemplate,
     coverProductLayout: b.coverProductLayout,
     coverLogoStyle: b.coverLogoStyle,
     coverLogoSource: b.coverLogoSource,

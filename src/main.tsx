@@ -5,6 +5,7 @@ import './styles/brochure-reference.css';
 import './styles/responsive.css';
 import './styles/artwork-typography.css';
 import './styles/offer-default-sizing.css';
+import './styles/viewport-layout.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Application root is missing.');
 createRoot(root).render(<App />);

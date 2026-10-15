@@ -1,6 +1,10 @@
 .cs-activity {
   color: #193c5a;
   min-width: 0;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(18px, 2.5vw, 34px);
 }
 .cs-activity-heading {
   display: flex;
@@ -178,6 +182,9 @@
   margin-top: 15px !important;
 }
 @media (max-width: 650px) {
+  .cs-activity {
+    padding: 18px 12px;
+  }
   .cs-activity-heading {
     flex-direction: column;
   }

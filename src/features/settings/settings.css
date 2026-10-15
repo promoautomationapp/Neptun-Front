@@ -63,10 +63,17 @@
   box-shadow: 0 8px 24px #16374e25;
 }
 .ns-preview-canvas {
+  /* Keep page-level cqw typography tied to the full paper, then scale once. */
+  container-type: inline-size;
   position: absolute;
   top: 0;
   left: 0;
   transform-origin: top left;
+}
+.ns-preview-canvas > .brochure-output-page {
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
 @media (max-width: 1080px) {
   .ns-settings-workspace {

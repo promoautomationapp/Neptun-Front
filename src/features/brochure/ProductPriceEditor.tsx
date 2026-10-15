@@ -15,7 +15,12 @@ export function ProductPriceEditor({
   product: Product;
   campaign: Campaign;
   focusSavings?: boolean;
-  onSave: (changes: Pick<Product, "regular" | "sale" | "savingMode" | "confirmedAboveRegular">) => void;
+  onSave: (
+    changes: Pick<
+      Product,
+      "regular" | "sale" | "savingMode" | "confirmedAboveRegular"
+    >,
+  ) => void;
   onClose: () => void;
 }) {
   const [regular, setRegular] = useState(String(product.regular ?? ""));
@@ -132,24 +137,24 @@ export function ProductPriceEditor({
             {t("Enter valid regular and offer prices.")}
           </p>
         )}
-        <div className="cs-modal-actions">
-          <Button onClick={onClose}>{t("Cancel")}</Button>
-          <Button
-            tone="primary"
-            disabled={!valid || (higher && !confirmedHigher)}
-            onClick={() => {
-              onSave({
-                regular: hasRegular ? regularAmount : null,
-                sale: saleAmount,
-                savingMode,
-                confirmedAboveRegular: higher && confirmedHigher,
-              });
-              onClose();
-            }}
-          >
-            {t("Save price")}
-          </Button>
-        </div>
+      </div>
+      <div className="cs-modal-actions">
+        <Button onClick={onClose}>{t("Cancel")}</Button>
+        <Button
+          tone="primary"
+          disabled={!valid || (higher && !confirmedHigher)}
+          onClick={() => {
+            onSave({
+              regular: hasRegular ? regularAmount : null,
+              sale: saleAmount,
+              savingMode,
+              confirmedAboveRegular: higher && confirmedHigher,
+            });
+            onClose();
+          }}
+        >
+          {t("Save price")}
+        </Button>
       </div>
     </Modal>
   );
