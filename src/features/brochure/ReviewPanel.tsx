@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { Campaign } from "../../domain/models";
 import { t } from "./i18n";
 import { reviewCommentsForLayout } from "./campaignPages";
@@ -33,8 +33,9 @@ export function ReviewPanel({
   pageIndex,
   pageLabel,
   onAction,
+  focusedCommentId,
 }: ReviewPanelProps) {
-  const [text, setText] = useState("");
+  const root = useRef<HTMLElement>(null);
   const [busy, setBusy] = useState(false);
   const status = campaign.status || "in_progress";
   const comments = reviewCommentsForLayout(campaign).filter(
@@ -45,20 +46,22 @@ export function ReviewPanel({
   ).length;
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
   const canComment = user?.role === "staff" || user?.role === "pm" || isAdmin;
-  async function addComment(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!text.trim() || busy) return;
-    setBusy(true);
-    const saved = await onAction("comment", {
-      pageIndex,
-      pageLabel,
-      text: text.trim(),
-    });
-    if (saved) setText("");
-    setBusy(false);
-  }
+  useEffect(() => {
+    if (!focusedCommentId) return;
+    const article = [
+      ...(root.current?.querySelectorAll<HTMLElement>(
+        "[data-review-comment-id]",
+      ) || []),
+    ].find((item) => item.dataset.reviewCommentId === focusedCommentId);
+    article?.scrollIntoView?.({ block: "nearest" });
+  }, [focusedCommentId, pageIndex, comments.length]);
+
   return (
-    <section className="cs-review-panel" aria-label={t("Page review comments")}>
+    <section
+      ref={root}
+      className="cs-review-panel"
+      aria-label={t("Page review comments")}
+    >
       <div className="cs-review-panel-head">
         <div>
           <span className="cs-label">{t("PAGE REVIEW")}</span>
@@ -71,7 +74,12 @@ export function ReviewPanel({
       {comments.length ? (
         <div className="cs-review-comments">
           {comments.map((item) => (
-            <article key={item.id} className={item.fixed ? "fixed" : "open"}>
+            <article
+              key={item.id}
+              data-review-comment-id={item.id}
+              data-focused={item.id === focusedCommentId || undefined}
+              className={item.fixed ? "fixed" : "open"}
+            >
               <div className="cs-review-comment-meta">
                 <strong>{item.authorEmail}</strong>
                 <time dateTime={item.createdAt}>
@@ -79,13 +87,27 @@ export function ReviewPanel({
                 </time>
               </div>
               <p>{item.text}</p>
-              {item.mention && (
-                <small className="cs-pin-mention">@{item.mention}</small>
-              )}
+              {(item.mentions?.length
+                ? item.mentions
+                : item.mention
+                  ? [item.mention]
+                  : []
+              ).map((email) => (
+                <small key={email} className="cs-pin-mention">
+                  @{email}
+                </small>
+              ))}
               {(item.replies || []).map((reply) => (
                 <div className="cs-review-reply" key={reply.id}>
                   <strong>{reply.authorEmail}</strong>
-                  {reply.mention && <small> @{reply.mention}</small>}
+                  {(reply.mentions?.length
+                    ? reply.mentions
+                    : reply.mention
+                      ? [reply.mention]
+                      : []
+                  ).map((email) => (
+                    <small key={email}> @{email}</small>
+                  ))}
                   <p>{reply.text}</p>
                 </div>
               ))}
@@ -113,13 +135,14 @@ export function ReviewPanel({
                   members={members}
                   user={user}
                   busy={busy}
-                  onSave={async (reply, mention) => {
+                  onSave={async (reply, mention, mentions = []) => {
                     setBusy(true);
                     try {
                       return await onAction("reply", {
                         commentId: item.id,
                         text: reply,
                         mention,
+                        ...(mentions.length ? { mentions } : {}),
                       });
                     } finally {
                       setBusy(false);
@@ -134,32 +157,39 @@ export function ReviewPanel({
         <p className="cs-review-empty">{t("No comments on this page yet.")}</p>
       )}
       {canComment && (
-        <form onSubmit={addComment}>
-          <label htmlFor="cs-review-text">
-            {t("Add a comment for this page")}
-          </label>
-          <textarea
-            id="cs-review-text"
-            value={text}
-            maxLength={2000}
-            rows={3}
-            onChange={(event) => setText(event.target.value)}
-            placeholder={t("Describe what should be changed on this page…")}
-          />
-          <button type="submit" disabled={busy || !text.trim()}>
-            {busy ? t("Saving…") : t("Add comment")}
-          </button>
-        </form>
+        <CommentForm
+          key={pageIndex}
+          label={t("Add a comment for this page")}
+          buttonLabel="Add comment"
+          members={members}
+          user={user}
+          busy={busy}
+          onSave={async (text, mention, mentions = []) => {
+            setBusy(true);
+            try {
+              return await onAction("comment", {
+                pageIndex,
+                pageLabel,
+                text,
+                ...(mention ? { mention } : {}),
+                ...(mentions.length ? { mentions } : {}),
+              });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
       )}
-      {(user?.role === "staff" || isAdmin) && status === "changes_requested" && (
-        <p className="cs-review-help">
-          {openCount
-            ? `${openCount} ${t("comments still need fixing.")}`
-            : t(
-                "All comments are fixed. Submit for review again or complete the brochure.",
-              )}
-        </p>
-      )}
+      {(user?.role === "staff" || isAdmin) &&
+        status === "changes_requested" && (
+          <p className="cs-review-help">
+            {openCount
+              ? `${openCount} ${t("comments still need fixing.")}`
+              : t(
+                  "All comments are fixed. Submit for review again or complete the brochure.",
+                )}
+          </p>
+        )}
     </section>
   );
 }

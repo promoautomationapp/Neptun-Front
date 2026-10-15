@@ -183,6 +183,7 @@ export interface CampaignReviewCommentsItem {
   position?: { x: number; y: number } | null;
   replies?: ReviewReply[];
   mention?: string | null;
+  mentions?: string[];
 
   authorEmail?: string;
   createdAt?: string;
@@ -484,4 +485,5 @@ export interface ReviewReply {
   authorEmail: string;
   createdAt: string;
   mention?: string | null;
+  mentions?: string[];
 }

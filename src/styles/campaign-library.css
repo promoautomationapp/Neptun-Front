@@ -327,3 +327,10 @@
   color: #246448;
   border-color: #badbc8;
 }
+
+.cs-library-skeleton > div {
+  min-height: 430px;
+  border-radius: 15px;
+  border: 1px solid #e1e9f0;
+  background: linear-gradient(#e9eff5 0 60%, #fff 60%);
+}

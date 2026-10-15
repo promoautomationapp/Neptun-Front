@@ -1,4 +1,10 @@
 const translations: Record<string, string> = {
+  "This brochure is disabled.": "Kjo broshurë është e çaktivizuar.",
+  "No matching teammates": "Nuk u gjet asnjë anëtar i ekipit",
+  "Remove mention": "Hiq përmendjen",
+  "Type @ to mention a teammate": "Shkruani @ për të përmendur një anëtar të ekipit",
+  "Could not save the comment. Your draft is kept.": "Komenti nuk u ruajt. Teksti juaj mbetet këtu.",
+  "Loading campaigns…": "Po ngarkohen fushatat…",
   "Disable campaign": "Çaktivizo fushatën",
   Disable: "Çaktivizo",
   Enable: "Aktivizo",

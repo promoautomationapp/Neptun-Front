@@ -9,6 +9,11 @@ import "../../styles/activity.css";
 const messages: Record<string, string> = {
   "Activity log": "Historiku i veprimeve",
   "Workspace activity": "Veprimet në hapësirën e punës",
+  "Notification created": "U krijua njoftimi",
+  "Notification read": "U lexua njoftimi",
+  "Mention email sent": "U dërgua emaili i përmendjes",
+  "Mention email failed": "Dërgimi i emailit të përmendjes dështoi",
+  Notification: "Njoftimi",
   "See who changed the workspace, when it happened, and the request outcome.":
     "Shihni kush bëri ndryshime, kur u kryen dhe rezultatin e kërkesës.",
   "Refresh activity": "Përditëso historikun",
@@ -115,6 +120,10 @@ const messages: Record<string, string> = {
 const text = (value: string) =>
   getLanguage() === "sq" ? (messages[value] ?? value) : value;
 const actionNames: Record<string, string> = {
+  "notification.created": "Notification created",
+  "notification.read": "Notification read",
+  "notification.email-sent": "Mention email sent",
+  "notification.email-failed": "Mention email failed",
   "campaign.save": "Campaign saved",
   "campaign.delete": "Campaign disabled",
   "campaign.disable": "Campaign disabled",
@@ -168,6 +177,7 @@ const actionNames: Record<string, string> = {
   "ai.request": "AI requested",
 };
 const targetNames: Record<string, string> = {
+  notification: "Notification",
   campaign: "Campaign",
   post: "Social post",
   settings: "Settings",

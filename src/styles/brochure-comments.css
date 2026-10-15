@@ -1,9 +1,231 @@
-.cs-preview-paper{position:relative}
-.cs-page-preview.comment-view .cs-preview-paper{cursor:crosshair}
-.cs-comment-layer{position:absolute;inset:0;z-index:60;cursor:crosshair}
-.cs-comment-pin{position:absolute;z-index:1;display:grid;place-items:center;transform:translate(-50%,-50%);width:32px;height:32px;border:3px solid #fff;border-radius:50%;background:#f04831;color:#fff;box-shadow:0 2px 9px #092a4599;font-size:12px;font-weight:900;cursor:pointer}
-.cs-comment-pin.resolved{background:#328e76}.cs-comment-pin.active{outline:3px solid #85c8ec;outline-offset:2px}.cs-comment-pin.draft{pointer-events:none;background:#246da5}
-.cs-comment-popover{position:absolute;z-index:2;width:min(340px,calc(100vw - 80px));max-height:min(480px,80vh);display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #cddce8;border-radius:13px;background:#fff;box-shadow:0 12px 35px #0926444d;color:#183d5c;cursor:auto}
-.cs-comment-popover header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px solid #e2eaf1}.cs-comment-popover header strong{font-size:13px}.cs-comment-popover header button{border:0;background:transparent;color:#63819a;font-size:24px;line-height:1;cursor:pointer}
-.cs-pin-thread{display:grid;gap:7px;overflow:auto;min-height:0;max-height:205px}.cs-pin-message{padding:9px;border-radius:8px;background:#f3f8fc}.cs-pin-message>div{display:flex;justify-content:space-between;gap:5px;flex-wrap:wrap;font-size:10px}.cs-pin-message strong{overflow-wrap:anywhere}.cs-pin-message time{color:#7892a5}.cs-pin-message p{margin:5px 0 0;font-size:12px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}.cs-pin-mention{display:inline-block;margin-top:5px;padding:2px 5px;border-radius:5px;background:#deedf8;color:#205e89;font-size:10px;overflow-wrap:anywhere}
-.cs-pin-form{display:grid;gap:9px}.cs-pin-form label{display:grid;gap:4px;color:#47637b;font-size:11px;font-weight:800}.cs-pin-form textarea,.cs-pin-form select{width:100%;min-width:0;border:1px solid #cddde9;border-radius:7px;padding:8px;background:#fff;color:#1e405f;font:inherit;font-size:12px}.cs-pin-form textarea{resize:vertical}.cs-pin-form button,.cs-pin-resolve{border:0;border-radius:7px;padding:8px 11px;background:#1c6295;color:#fff;font-size:11px;font-weight:800;cursor:pointer}.cs-pin-form button{justify-self:end}.cs-pin-resolve{align-self:start;background:#e4f5ee;color:#1c7159}.cs-pin-form button:disabled,.cs-pin-resolve:disabled{opacity:.5;cursor:default}
+.cs-preview-paper {
+  position: relative;
+}
+.cs-page-preview.comment-view .cs-preview-paper {
+  cursor: crosshair;
+}
+.cs-comment-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  cursor: crosshair;
+}
+.cs-comment-pin {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #f04831;
+  color: #fff;
+  box-shadow: 0 2px 9px #092a4599;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.cs-comment-pin.resolved {
+  background: #328e76;
+}
+.cs-comment-pin.active {
+  outline: 3px solid #85c8ec;
+  outline-offset: 2px;
+}
+.cs-comment-pin.draft {
+  pointer-events: none;
+  background: #246da5;
+}
+.cs-comment-popover {
+  position: absolute;
+  z-index: 2;
+  width: min(340px, calc(100vw - 80px));
+  max-height: min(480px, 80vh);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #cddce8;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 12px 35px #0926444d;
+  color: #183d5c;
+  cursor: auto;
+}
+.cs-comment-popover header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2eaf1;
+}
+.cs-comment-popover header strong {
+  font-size: 13px;
+}
+.cs-comment-popover header button {
+  border: 0;
+  background: transparent;
+  color: #63819a;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cs-pin-thread {
+  display: grid;
+  gap: 7px;
+  overflow: auto;
+  min-height: 0;
+  max-height: 205px;
+}
+.cs-pin-message {
+  padding: 9px;
+  border-radius: 8px;
+  background: #f3f8fc;
+}
+.cs-pin-message > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+.cs-pin-message strong {
+  overflow-wrap: anywhere;
+}
+.cs-pin-message time {
+  color: #7892a5;
+}
+.cs-pin-message p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cs-pin-mention {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #deedf8;
+  color: #205e89;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.cs-pin-form {
+  display: grid;
+  gap: 9px;
+}
+.cs-pin-form label {
+  display: grid;
+  gap: 4px;
+  color: #47637b;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cs-pin-form textarea,
+.cs-pin-form select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #cddde9;
+  border-radius: 7px;
+  padding: 8px;
+  background: #fff;
+  color: #1e405f;
+  font: inherit;
+  font-size: 12px;
+}
+.cs-pin-form textarea {
+  resize: vertical;
+}
+.cs-pin-form button,
+.cs-pin-resolve {
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 11px;
+  background: #1c6295;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.cs-pin-form button {
+  justify-self: end;
+}
+.cs-pin-resolve {
+  align-self: start;
+  background: #e4f5ee;
+  color: #1c7159;
+}
+.cs-pin-form button:disabled,
+.cs-pin-resolve:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cs-brochure-view-modes {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  padding: 4px;
+  margin: 0 0 16px;
+  border: 1px solid #dce6ef;
+  border-radius: 10px;
+  background: #edf2f7;
+  overflow-x: auto;
+}
+.cs-brochure-view-modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 13px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #647e94;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.cs-brochure-view-modes button[aria-pressed="true"] {
+  color: #214e75;
+  background: #fff;
+  box-shadow: 0 1px 4px #254a6818;
+}
+.cs-brochure-view-modes button > span {
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #dfeaf4;
+  color: #345f82;
+  font-size: 10px;
+}
+.cs-page-controls.cs-review-sidebar {
+  padding: 0;
+}
+.cs-review-sidebar .cs-review-panel {
+  border: 0;
+  border-radius: 12px;
+  margin: 0;
+}
+@media (max-width: 620px) {
+  .cs-brochure-view-modes {
+    width: 100%;
+  }
+  .cs-brochure-view-modes button {
+    flex: 1;
+    padding: 9px 8px;
+    font-size: 10px;
+    gap: 5px;
+  }
+}

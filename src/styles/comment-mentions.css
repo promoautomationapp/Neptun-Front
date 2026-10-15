@@ -1,0 +1,130 @@
+.cs-mention-input {
+  position: relative;
+  min-width: 0;
+}
+.cs-mention-input textarea {
+  display: block;
+  width: 100%;
+}
+.cs-mention-hint {
+  display: block;
+  margin-top: 5px;
+  color: #8196a8;
+  font-size: 10px;
+  font-weight: 400;
+}
+.cs-mention-options {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  max-height: 210px;
+  overflow: auto;
+  border: 1px solid #cbdce9;
+  border-radius: 9px;
+  padding: 5px;
+  background: #fff;
+  box-shadow: 0 8px 24px #173d5a2b;
+}
+.cs-pin-form .cs-mention-options > button,
+.cs-review-panel .cs-mention-options > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  justify-self: stretch;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px;
+  background: transparent;
+  text-align: left;
+  color: #234963;
+  font-size: 11px;
+}
+.cs-mention-options > button:hover,
+.cs-mention-options > button[aria-selected="true"] {
+  background: #edf6fc !important;
+}
+.cs-mention-options strong,
+.cs-mention-options small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.cs-mention-options small {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #8296a8;
+  font-weight: 400;
+}
+.cs-mention-options em {
+  font-size: 9px;
+  color: #617d95;
+  font-style: normal;
+  white-space: nowrap;
+}
+.cs-mention-options > p {
+  padding: 8px;
+  margin: 0;
+  font-size: 11px;
+  color: #71889b;
+}
+.cs-selected-mention {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 6px;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: #e9f4fc;
+  color: #225a84;
+  font-size: 10px;
+}
+.cs-selected-mention > span {
+  overflow-wrap: anywhere;
+}
+.cs-pin-form .cs-selected-mention > button {
+  padding: 0 3px;
+  border: 0;
+  background: transparent;
+  color: #225a84;
+  font-size: 16px;
+}
+.cs-pin-form-error {
+  margin: 0;
+  color: #b54e3c;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.cs-review-comments article[data-focused="true"] {
+  outline: 2px solid #76badf;
+  outline-offset: 3px;
+}
+.cs-selected-mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cs-selected-mention {
+  margin-top: 4px;
+}
+.cs-mention-options {
+  z-index: 1200;
+}
+.cs-mention-options > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px;
+  background: transparent;
+  text-align: left;
+  color: #234963;
+  font-size: 11px;
+}

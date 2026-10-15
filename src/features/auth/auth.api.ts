@@ -1,3 +1,4 @@
+import { workspaceAccessSchema } from "./workspaceAccess";
 import { z } from "zod";
 import { request } from "../../api/client";
 
@@ -10,6 +11,7 @@ export const userSchema = z.object({
   permissions: z.enum(["admin", "editor", "reviewer"]),
   mustChangePassword: z.boolean(),
   isSupport: z.boolean().default(false),
+  access: workspaceAccessSchema.optional(),
   reviewRole: z.enum(["staff", "pm"]).optional(),
 });
 export type User = z.infer<typeof userSchema>;

@@ -9,6 +9,8 @@ import {
 import type { EditableRole, ManagedUser } from "../../api/users";
 import { canManageUsers, roleLabel } from "../auth/auth.api";
 import type { User } from "../auth/auth.api";
+import { defaultWorkspaceAccess, effectiveWorkspaceAccess, type WorkspaceAccess } from "../auth/workspaceAccess";
+import { WorkspaceAccessEditor, workspaceAccessError } from "./WorkspaceAccessEditor";
 import "../../styles/account-management.css";
 
 const errorOf = (reason: unknown) =>
@@ -62,9 +64,11 @@ export function UsersPage({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<EditableRole>("staff");
+  const [inviteAccess, setInviteAccess] = useState<WorkspaceAccess>(defaultWorkspaceAccess);
   const [editing, setEditing] = useState<ManagedUser | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState<EditableRole>("staff");
+  const [editAccess, setEditAccess] = useState<WorkspaceAccess>(defaultWorkspaceAccess);
   const [busy, setBusy] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -225,6 +229,7 @@ export function UsersPage({
             className="na-form na-user-form"
             onSubmit={(event) => {
               event.preventDefault();
+              if (workspaceAccessError(inviteAccess)) return;
               void perform(
                 "invite",
                 () =>
@@ -232,6 +237,7 @@ export function UsersPage({
                     email: inviteEmail.trim(),
                     name: inviteName.trim(),
                     role: inviteRole,
+                    access: inviteRole === "admin" ? defaultWorkspaceAccess() : inviteAccess,
                   }),
                 "Invitation queued for email delivery. They become active after verifying their email.",
                 () => {
@@ -239,6 +245,7 @@ export function UsersPage({
                   setInviteEmail("");
                   setInviteName("");
                   setInviteRole("staff");
+                  setInviteAccess(defaultWorkspaceAccess());
                 },
               );
             }}
@@ -272,9 +279,11 @@ export function UsersPage({
                 aria-label="Invitation role"
                 value={inviteRole}
                 disabled={!!busy}
-                onChange={(event) =>
-                  setInviteRole(event.target.value as EditableRole)
-                }
+                onChange={(event) => {
+                  const nextRole = event.target.value as EditableRole;
+                  setInviteRole(nextRole);
+                  if (nextRole === "admin") setInviteAccess(defaultWorkspaceAccess());
+                }}
               >
                 {roles.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -286,6 +295,7 @@ export function UsersPage({
                 {roles.find((item) => item.value === inviteRole)?.description}
               </small>
             </label>
+            <WorkspaceAccessEditor role={inviteRole} value={inviteAccess} onChange={setInviteAccess} disabled={!!busy} />
             <div className="na-form-actions">
               <button
                 className="cs-button"
@@ -298,7 +308,7 @@ export function UsersPage({
               <button
                 className="cs-button primary"
                 type="submit"
-                disabled={!!busy || !emailConfigured}
+                disabled={!!busy || !emailConfigured || !!workspaceAccessError(inviteAccess)}
               >
                 {busy === "invite" ? "Sending invitation…" : "Send invitation"}
               </button>
@@ -315,11 +325,13 @@ export function UsersPage({
             onSubmit={(event) => {
               event.preventDefault();
               if (!editing) return;
+              if (workspaceAccessError(editAccess)) return;
               void perform(
                 editing.id,
                 () =>
                   updateUser(editing.id, {
                     name: editName.trim(),
+                    access: editRole === "admin" ? defaultWorkspaceAccess() : editAccess,
                     ...(editing.id !== currentUser.id
                       ? { role: editRole }
                       : {}),
@@ -347,9 +359,11 @@ export function UsersPage({
                 aria-label="User role"
                 value={editRole}
                 disabled={!!busy || editing.id === currentUser.id}
-                onChange={(event) =>
-                  setEditRole(event.target.value as EditableRole)
-                }
+                onChange={(event) => {
+                  const nextRole = event.target.value as EditableRole;
+                  setEditRole(nextRole);
+                  if (nextRole === "admin") setEditAccess(defaultWorkspaceAccess());
+                }}
               >
                 {roles.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -363,11 +377,12 @@ export function UsersPage({
                   : roles.find((item) => item.value === editRole)?.description}
               </small>
             </label>
+            <WorkspaceAccessEditor key={editing.id} role={editRole} value={editAccess} onChange={setEditAccess} disabled={!!busy} />
             <div className="na-form-actions">
               <button
                 className="cs-button"
                 type="button"
-                disabled={!!busy}
+                disabled={!!busy || !!workspaceAccessError(editAccess)}
                 onClick={() => setEditing(null)}
               >
                 Cancel
@@ -466,7 +481,7 @@ export function UsersPage({
                         <small>Support account · here to help your team</small>
                       )}
                     </td>
-                    <td>{roleLabel(user.role)}</td>
+                    <td>{roleLabel(user.role)}{user.access?.mode === "custom" && user.role !== "admin" && user.role !== "superadmin" && <small className="na-user-access-badge">Custom access</small>}</td>
                     <td>
                       <span className={"na-status " + user.status}>
                         {user.status === "invited"
@@ -489,6 +504,7 @@ export function UsersPage({
                               setEditing(user);
                               setEditName(user.name);
                               setEditRole(user.role as EditableRole);
+                              setEditAccess(effectiveWorkspaceAccess(user));
                               setInviting(false);
                             }}
                           >

@@ -14,6 +14,9 @@ export const getMembers = async () =>
       z.object({
         members: z.array(
           z.object({
+            id: z.string().optional(),
+            name: z.string().optional(),
+            username: z.string().optional(),
             email: z.string(),
             role: z.enum(["pm", "staff", "admin", "superadmin"]),
           }),
@@ -103,13 +106,17 @@ export function saveCampaign(campaign: Campaign): Promise<Campaign> {
 }
 export async function removeCampaign(id: string, version?: number) {
   await pendingSaves.get(id)?.promise;
-  const currentVersion = Math.max(acknowledgedVersions.get(id) ?? 0, version ?? 0);
+  const currentVersion = Math.max(
+    acknowledgedVersions.get(id) ?? 0,
+    version ?? 0,
+  );
   const result = await request(
     `/api/team/campaigns/${encodeURIComponent(id)}${currentVersion ? `?version=${currentVersion}` : ""}`,
     z.object({ deleted: z.boolean() }),
     { method: "DELETE" },
   );
-  if (!result.deleted) throw new Error("Could not disable the campaign. Refresh and try again.");
+  if (!result.deleted)
+    throw new Error("Could not disable the campaign. Refresh and try again.");
   return result;
 }
 export async function restoreCampaign(campaign: Campaign): Promise<Campaign> {

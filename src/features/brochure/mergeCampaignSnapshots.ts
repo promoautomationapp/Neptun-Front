@@ -20,7 +20,18 @@ export function mergeCampaignSnapshots(
   const localTime = Date.parse(active.updatedAt || "") || 0;
   const savedTime = Date.parse(saved.updatedAt || "") || 0;
   return hasUnsavedCampaign(activeId) || localTime > savedTime
-    ? remote.map((item) => (item.id === activeId ? active : item))
+    ? remote.map((item) =>
+        item.id === activeId
+          ? {
+              ...active,
+              // Reviews belong to the server; refreshing a thread must not
+              // discard design edits or acknowledge unseen remote edits.
+              status: saved.status,
+              reviewComments: saved.reviewComments,
+              reviewHistory: saved.reviewHistory,
+            }
+          : item,
+      )
     : remote;
 }
 

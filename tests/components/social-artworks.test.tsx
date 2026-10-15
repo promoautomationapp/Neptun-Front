@@ -329,9 +329,9 @@ it("saves the latest edits before disabling an existing post", async () => {
   fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
     target: { value: "Latest saved name" },
   });
-  fireEvent.click(view.getByRole("button", { name: "Disable", exact: true }));
+  fireEvent.click(view.getByRole("button", { name: "Disable" }));
   fireEvent.click(
-    view.getByRole("button", { name: "Disable post", exact: true }),
+    view.getByRole("button", { name: "Disable post" }),
   );
   await view.findByText("Post disabled.");
   expect(savePost).toHaveBeenCalledWith(
@@ -351,9 +351,9 @@ it("saves a new draft before disabling it rather than dropping an unsaved post",
   fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
     target: { value: "New draft to keep" },
   });
-  fireEvent.click(view.getByRole("button", { name: "Disable", exact: true }));
+  fireEvent.click(view.getByRole("button", { name: "Disable" }));
   fireEvent.click(
-    view.getByRole("button", { name: "Disable post", exact: true }),
+    view.getByRole("button", { name: "Disable post" }),
   );
   await view.findByText("Post disabled.");
   expect(stored.some((item) => item.name === "New draft to keep")).toBe(true);

@@ -1,4 +1,3 @@
-import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -121,16 +120,22 @@ it("preserves a rejected comment draft and clears only after a successful save",
   );
   expect(view.queryByRole("option", { name: /staff@example.com/ })).toBeNull();
   const text = view.getByRole("textbox", { name: "Your comment" });
-  const mention = view.getByRole("combobox", { name: "Mention a teammate" });
-  fireEvent.change(text, { target: { value: "  Move this label  " } });
-  selectSetting(view, "Mention a teammate", manager.email);
+  fireEvent.change(text, { target: { value: "  Move this label @MANAGER" } });
+  fireEvent.click(view.getByRole("option", { name: /manager@example.com/ }));
   fireEvent.click(view.getByRole("button", { name: "Post comment" }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-  expect(save).toHaveBeenLastCalledWith("Move this label", manager.email);
-  expect(text).toHaveProperty("value", "  Move this label  ");
+  expect(save).toHaveBeenLastCalledWith(
+    "Move this label @manager@example.com",
+    manager.email,
+    [manager.email],
+  );
+  expect(text).toHaveProperty(
+    "value",
+    "  Move this label @manager@example.com ",
+  );
   fireEvent.click(view.getByRole("button", { name: "Post comment" }));
   await waitFor(() => expect(text).toHaveProperty("value", ""));
-  expect(mention.textContent).toContain("No mention");
+  expect(view.queryByRole("button", { name: "Remove mention" })).toBeNull();
 });
 
 it("keeps comment page anchors, thread replies and resolution actions intact", async () => {

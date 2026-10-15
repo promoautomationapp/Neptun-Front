@@ -26,6 +26,8 @@ export interface CategoryTreeSelectProps {
   onPathChange?: (path: string) => void;
   sourcePaths?: readonly string[];
   label?: string;
+  placeholder?: string;
+  includeAll?: boolean;
 }
 
 export function CategoryTreeSelect({
@@ -37,6 +39,8 @@ export function CategoryTreeSelect({
   onPathChange,
   sourcePaths,
   label = t("Category & subcategory"),
+  placeholder = t("All categories"),
+  includeAll = true,
 }: CategoryTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -272,7 +276,7 @@ export function CategoryTreeSelect({
         ref={trigger}
         aria-haspopup="dialog"
         aria-label={label}
-        title={translatedPath(selectedPath) || t("All categories")}
+        title={translatedPath(selectedPath) || placeholder}
         aria-expanded={open}
         onKeyDown={(event) => {
           if (open) keyNavigation(event);
@@ -290,7 +294,7 @@ export function CategoryTreeSelect({
           <strong>
             {selectedParts.length
               ? t(selectedParts.at(-1)!)
-              : t("All categories")}
+              : placeholder}
           </strong>
           {selectedParts.length > 1 && (
             <small>{selectedParts.slice(0, -1).map(t).join(" > ")}</small>
@@ -329,7 +333,7 @@ export function CategoryTreeSelect({
               ref={options}
               onKeyDown={keyNavigation}
             >
-              {!term && (
+              {!term && includeAll && (
                 <button
                   className="cs-category-all"
                   type="button"

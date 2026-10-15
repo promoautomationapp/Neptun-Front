@@ -1,3 +1,5 @@
+import { NotificationBell } from "../notifications/NotificationBell";
+import type { WorkspaceNotification } from "../notifications/notifications.api";
 import { StudioPageBoundary } from "./StudioPageBoundary";
 import { NavIcon } from "./NavIcon";
 import { catalogFacets } from "../products/products.api";
@@ -119,7 +121,10 @@ import {
 } from "../brochure/imageReview";
 import { BrandLogoManager } from "../brochure/BrandLogoManager";
 import { loadPreparedBrandLogos } from "../brochure/brandLogos";
-import { mergeCampaignSnapshots, confirmMissingCampaign } from "../brochure/mergeCampaignSnapshots";
+import {
+  mergeCampaignSnapshots,
+  confirmMissingCampaign,
+} from "../brochure/mergeCampaignSnapshots";
 import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
 import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
 import {
@@ -241,6 +246,7 @@ interface CampaignLibraryProps {
   onDelete: (campaign: Campaign) => void;
   onPrint: (id: string) => void;
   canManageDisabled?: boolean;
+  loading?: boolean;
   restoringId?: string | null;
   onRestore?: (campaign: Campaign) => void;
 }
@@ -255,6 +261,12 @@ interface ProductEditorProps extends CampaignControlsProps {
   onMakeSocial: (products: Product[]) => void;
 }
 interface BrochureEditorProps extends StoreControlsProps {
+  notificationTarget?: {
+    id: string;
+    campaignId: string;
+    pageIndex: number;
+    commentId?: string | null;
+  } | null;
   onPreparePhotos?: (
     snapshot: Campaign,
     products?: Product[],
@@ -311,23 +323,6 @@ const SocialStudio = React.lazy(() =>
     default: module.SocialStudio,
   })),
 );
-function TrashIcon({ size = 18 }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" />
-    </svg>
-  );
-}
 
 function LanguageSwitch({
   language,
@@ -405,6 +400,7 @@ export function CampaignLibrary({
   onDelete,
   onPrint,
   canManageDisabled = false,
+  loading = false,
   restoringId,
   onRestore,
 }: CampaignLibraryProps) {
@@ -473,7 +469,9 @@ export function CampaignLibrary({
         <div>
           <h1>{t("Campaigns")}</h1>
           <p>
-            {visibleCampaigns.length} {t("saved for the team")}
+            {loading
+              ? t("Loading campaigns…")
+              : `${visibleCampaigns.length} ${t("saved for the team")}`}
           </p>
         </div>
         <Button tone="primary" onClick={onCreate}>
@@ -619,7 +617,17 @@ export function CampaignLibrary({
           )}
         </div>
       </section>
-      {filtered.length ? (
+      {loading ? (
+        <div
+          className="cs-campaign-grid cs-library-skeleton"
+          role="status"
+          aria-label={t("Loading campaigns…")}
+        >
+          <div />
+          <div />
+          <div />
+        </div>
+      ) : filtered.length ? (
         <div className="cs-campaign-grid">
           {filtered.map((item) => (
             <article className="cs-campaign-card" key={item.id}>
@@ -1996,6 +2004,7 @@ export function BrochureEditor({
   onEditSavings,
   onMakeSocial,
   onPreparePhotos,
+  notificationTarget,
 }: BrochureEditorProps) {
   const pages = splitPages(campaign);
   const pageFormat = resolveBrochureFormat(campaign);
@@ -2014,6 +2023,16 @@ export function BrochureEditor({
   const [commentMode, setCommentMode] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const canEditCanvas = !previewMode && !commentMode;
+  useEffect(() => {
+    if (notificationTarget?.campaignId !== campaign.id) return;
+    setSelected(
+      Math.max(-1, Math.min(hasStoresPage ? pages.length : Math.max(-1, pages.length - 1), notificationTarget.pageIndex - 1)),
+    );
+    setCommentMode(true);
+    setPreviewMode(false);
+    setShowSettings(false);
+  }, [notificationTarget?.id, campaign.id]);
+
   const importWarnings = (campaign.brochureImportWarnings || []).map(
     (warning) =>
       typeof warning === "string"
@@ -2563,15 +2582,6 @@ export function BrochureEditor({
               >
                 ＋ {t("Create social post")}
               </Button>
-              <Button
-                onClick={() => {
-                  setCommentMode((value) => !value);
-                  setPreviewMode(false);
-                  setShowSettings(false);
-                }}
-              >
-                {t(commentMode ? "Edit brochure" : "Comments")}
-              </Button>
               {canEditCanvas && (
                 <Button onClick={() => setShowGuides((value) => !value)}>
                   {showGuides ? t("Hide guides") : t("Show guides")}
@@ -2606,7 +2616,55 @@ export function BrochureEditor({
         </div>
       </div>
       <div
-        className={`cs-brochure-workspace ${showSettings ? "" : "settings-hidden"}`}
+        className="cs-brochure-view-modes"
+        role="group"
+        aria-label={t("Brochure view")}
+      >
+        <button
+          type="button"
+          aria-pressed={canEditCanvas}
+          onClick={() => {
+            setPreviewMode(false);
+            setCommentMode(false);
+            setShowSettings(false);
+          }}
+        >
+          <NavIcon name="edit" size={17} />
+          {t("Edit brochure")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={previewMode}
+          onClick={() => {
+            setPreviewMode(true);
+            setCommentMode(false);
+            setShowSettings(false);
+          }}
+        >
+          <NavIcon name="eye" size={17} />
+          {t("Preview only")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={commentMode}
+          onClick={() => {
+            setCommentMode(true);
+            setPreviewMode(false);
+            setShowSettings(false);
+          }}
+        >
+          <NavIcon name="social" size={17} />
+          {t("Comments")}
+          <span>
+            {
+              (campaign.reviewComments || []).filter((item) => !item.fixed)
+                .length
+            }
+          </span>
+        </button>
+      </div>
+      <div
+        className={`cs-brochure-workspace ${showSettings || commentMode ? "" : "settings-hidden"}`}
       >
         <aside className="cs-pages-sidebar">
           <span className="cs-label">
@@ -2740,17 +2798,6 @@ export function BrochureEditor({
                   {t("↓ Download brochure")}
                 </Button>
               )}
-              <button
-                type="button"
-                className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`}
-                onClick={() => {
-                  setPreviewMode(commentMode ? false : !previewMode);
-                  setCommentMode(false);
-                  setShowSettings(false);
-                }}
-              >
-                {t(canEditCanvas ? "Preview only" : "Edit brochure")}
-              </button>
             </div>
           </div>
           {canEditCanvas && (
@@ -2966,17 +3013,31 @@ export function BrochureEditor({
             )}
             {commentMode && (
               <BrochureComments
-                key={`${campaign.id}-${selected}`}
+                key={`${campaign.id}-${selected}-${notificationTarget?.id || "manual"}`}
                 campaign={campaign}
                 pageIndex={selected + 1}
                 pageLabel={title}
                 user={user}
                 members={members}
                 onAction={onReviewAction}
+                focusedCommentId={notificationTarget?.commentId}
               />
             )}
           </div>
         </div>
+        {commentMode && (
+          <aside className="cs-page-controls cs-review-sidebar">
+            <ReviewPanel key={notificationTarget?.id}
+              campaign={campaign}
+              user={user}
+              members={members}
+              pageIndex={selected + 1}
+              pageLabel={title}
+              onAction={onReviewAction}
+              focusedCommentId={notificationTarget?.commentId}
+            />
+          </aside>
+        )}
         {showSettings && (
           <aside
             className="cs-page-controls"
@@ -3536,8 +3597,35 @@ export default function App({
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogSourcePaths, setCatalogSourcePaths] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [notificationTarget, setNotificationTarget] =
+    useState<BrochureEditorProps["notificationTarget"]>(null);
+  const notificationRequest = useRef<AbortController | null>(null);
+  const emailLinkHandled = useRef(false);
+
   const campaignNow = useCampaignClock();
   const [section, setSectionValue] = useState("campaigns");
+  useEffect(
+    () => () => notificationRequest.current?.abort(),
+    [section, activeId],
+  );
+  useEffect(() => {
+    if (!user || emailLinkHandled.current) return;
+    emailLinkHandled.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("campaign");
+    if (!id || id.length > 150) return;
+    const rawPage = Number(params.get("page") || 0);
+    void openReviewNotification({
+      id: `email:${id}:${params.get("comment") || ""}`,
+      campaignId: id,
+      pageIndex:
+        Number.isInteger(rawPage) && rawPage >= 0 && rawPage <= 200
+          ? rawPage
+          : 0,
+      commentId: params.get("comment"),
+    });
+  }, [user?.id]);
+
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsBusy, setSettingsBusy] = useState(false);
   function canLeaveSettings() {
@@ -3557,6 +3645,7 @@ export default function App({
   const [editorTab, setEditorTab] = useState("brochure");
   const [brochurePreviewVersion, setBrochurePreviewVersion] = useState(0);
   const [modal, setModal] = useState<string | null>(null);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -3670,6 +3759,9 @@ export default function App({
       })
       .catch((error) => {
         if (!controller.signal.aborted) setToast(errorMessage(error));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCampaignsLoading(false);
       });
     void catalogFacets(controller.signal)
       .then((facets) => {
@@ -3705,40 +3797,71 @@ export default function App({
     let refreshing = false;
     const refresh = async () => {
       const focused = document.activeElement;
-      if (disposed || refreshing || focused?.matches?.("input, textarea, [contenteditable=true]") || hasPendingSaves()) return;
+      if (
+        disposed ||
+        refreshing ||
+        focused?.matches?.("input, textarea, [contenteditable=true]") ||
+        hasPendingSaves()
+      )
+        return;
       refreshing = true;
       const navigation = activeEditorRef.current;
       try {
         const latest = await getCampaigns(controller.signal);
         if (disposed || hasPendingSaves()) return;
-        const active = navigation.section === "editor" ? latestCampaigns.current.find(item => item.id === navigation.activeId) : undefined;
+        const active =
+          navigation.section === "editor"
+            ? latestCampaigns.current.find(
+                (item) => item.id === navigation.activeId,
+              )
+            : undefined;
         const result = await confirmMissingCampaign(
           latest,
           active,
-          Boolean(active && (active.version || hasAcknowledgedCampaign(active.id))),
-          id => getCampaign(id, controller.signal),
+          Boolean(
+            active && (active.version || hasAcknowledgedCampaign(active.id)),
+          ),
+          (id) => getCampaign(id, controller.signal),
         );
-        if (disposed || hasPendingSaves() || navigation.activeId !== activeEditorRef.current.activeId || navigation.section !== activeEditorRef.current.section) return;
-        const unavailable = navigation.section === "editor" && Boolean(result.confirmedMissingId || result.remote.find(item => item.id === navigation.activeId)?.disabledAt);
-        setCampaigns(current => mergeCampaignSnapshots(
-          current,
-          enrichSavedCampaigns(result.remote, catalog),
-          navigation.activeId,
-          navigation.section === "editor",
-          result.confirmedMissingId === navigation.activeId,
-        ));
+        if (
+          disposed ||
+          hasPendingSaves() ||
+          navigation.activeId !== activeEditorRef.current.activeId ||
+          navigation.section !== activeEditorRef.current.section
+        )
+          return;
+        const unavailable =
+          navigation.section === "editor" &&
+          Boolean(
+            result.confirmedMissingId ||
+            result.remote.find((item) => item.id === navigation.activeId)
+              ?.disabledAt,
+          );
+        setCampaigns((current) =>
+          mergeCampaignSnapshots(
+            current,
+            enrichSavedCampaigns(result.remote, catalog),
+            navigation.activeId,
+            navigation.section === "editor",
+            result.confirmedMissingId === navigation.activeId,
+          ),
+        );
         if (unavailable) {
           setActiveId(null);
           setSectionValue("campaigns");
-          setModal(value => value === "create" ? value : null);
-          setDetail(value => value?.editable ? null : value);
+          setModal((value) => (value === "create" ? value : null));
+          setDetail((value) => (value?.editable ? null : value));
           setImageEditCode(null);
           setScreenEditCode(null);
           setPriceEdit(null);
           setAiTask(null);
-          setExportId(id => id === navigation.activeId ? null : id);
+          setExportId((id) => (id === navigation.activeId ? null : id));
           setPendingPrintId(null);
-          setToast(language === "sq" ? "Kjo fushatë nuk është më e disponueshme." : "This campaign is no longer available.");
+          setToast(
+            language === "sq"
+              ? "Kjo fushatë nuk është më e disponueshme."
+              : "This campaign is no longer available.",
+          );
         }
       } catch (error) {
         if (!disposed) console.error(error);
@@ -3811,6 +3934,52 @@ export default function App({
       document.title = previousTitle;
     };
   }, [pendingPrintId, campaign?.id, campaign?.name, section, editorTab]);
+  async function openReviewNotification(
+    target: Pick<
+      WorkspaceNotification,
+      "id" | "campaignId" | "pageIndex" | "commentId"
+    >,
+  ) {
+    if (section === "stores" && !canLeaveSettings()) return;
+    notificationRequest.current?.abort();
+    const request = new AbortController();
+    notificationRequest.current = request;
+    try {
+      const fresh = await getCampaign(target.campaignId, request.signal);
+      if (request.signal.aborted) return;
+      if (fresh.disabledAt) {
+        setToast(t("This brochure is disabled."));
+        return;
+      }
+      const thread = reviewCommentsForLayout(fresh).find(
+        (item) => item.id === target.commentId,
+      );
+      setCampaigns((current) =>
+        mergeCampaignSnapshots(
+          current,
+          current.some((item) => item.id === fresh.id)
+            ? current.map((item) => (item.id === fresh.id ? fresh : item))
+            : [fresh, ...current],
+          activeId,
+          section === "editor",
+        ),
+      );
+      setNotificationTarget({
+        id: `${target.id}:${crypto.randomUUID()}`,
+        campaignId: fresh.id,
+        pageIndex: thread?.pageIndex ?? target.pageIndex ?? 0,
+        commentId: target.commentId,
+      });
+      setActiveId(fresh.id);
+      setEditorTab("brochure");
+      setModal(null);
+      setSettingsDirty(false);
+      setSectionValue("editor");
+      setMobileMenuOpen(false);
+    } catch (error) {
+      if (!request.signal.aborted) setToast(errorMessage(error));
+    }
+  }
   async function runReviewAction(
     action: string,
     details: Record<string, JsonValue | undefined> = {},
@@ -3823,6 +3992,7 @@ export default function App({
         ),
       );
       const updated = await reviewCampaign(activeId, action, serializedDetails);
+      window.dispatchEvent(new Event("neptun:notifications-updated"));
       setCampaigns((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
       );
@@ -4457,6 +4627,7 @@ export default function App({
               }}
             />
             <span>NEPTUN KOSOVO</span>
+            <NotificationBell onOpen={openReviewNotification} />
             <LanguageSwitch language={language} onChange={changeLanguage} />
             <div className="cs-avatar">N</div>
           </div>
@@ -4476,6 +4647,7 @@ export default function App({
             onDuplicate={duplicateCampaign}
             onDelete={setDeleteTarget}
             canManageDisabled={user.role === "superadmin"}
+            loading={campaignsLoading}
             restoringId={restoringId}
             onRestore={enableCampaign}
             onPrint={(id: string) => {
@@ -4917,6 +5089,7 @@ export default function App({
                 user={user}
                 members={members}
                 onReviewAction={runReviewAction}
+                notificationTarget={notificationTarget}
                 onUpdate={updateCampaign}
                 onPreparePhotos={prepareProductPhotos}
                 onToast={setToast}

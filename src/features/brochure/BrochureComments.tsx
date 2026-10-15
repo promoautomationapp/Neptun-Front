@@ -1,5 +1,4 @@
-import { SearchableSelect } from "../../components/SearchableSelect";
-import React, { useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import type {
   Campaign,
   CampaignReviewCommentsItem,
@@ -7,10 +6,18 @@ import type {
 } from "../../domain/models";
 import type { User } from "../auth/auth.api";
 import { t } from "./i18n";
-import { roleLabel } from "../auth/auth.api";
+import { MentionTextarea, mentionableMembers } from "./MentionInput";
 import { reviewCommentsForLayout } from "./campaignPages";
 
-export type ReviewParticipant = Pick<User, "email" | "role">;
+export type ReviewParticipant = Pick<User, "email" | "role"> & {
+  id?: string;
+  name?: string;
+  username?: string;
+  status?: string;
+  isSupport?: boolean;
+  active?: boolean;
+  disabled?: boolean;
+};
 export type ReviewPosition = NonNullable<
   CampaignReviewCommentsItem["position"]
 >;
@@ -24,11 +31,17 @@ export type ReviewActionArguments =
         position?: ReviewPosition | null;
         text: string;
         mention?: string;
+        mentions?: string[];
       },
     ]
   | [
       action: "reply",
-      details: { commentId?: string; text: string; mention: string },
+      details: {
+        commentId?: string;
+        text: string;
+        mention: string;
+        mentions?: string[];
+      },
     ]
   | [action: "fix", details: { commentId?: string }];
 
@@ -41,7 +54,11 @@ export interface CommentFormProps {
   members: readonly ReviewParticipant[];
   user: ReviewParticipant | null | undefined;
   busy: boolean;
-  onSave: (text: string, mention: string) => boolean | Promise<boolean>;
+  onSave: (
+    text: string,
+    mention: string,
+    mentions?: string[],
+  ) => boolean | Promise<boolean>;
   buttonLabel?: string;
   autoFocus?: boolean;
 }
@@ -53,6 +70,7 @@ export interface BrochureCommentsProps {
   user: ReviewParticipant | null | undefined;
   members: readonly ReviewParticipant[];
   onAction: ReviewActionHandler;
+  focusedCommentId?: string | null;
 }
 
 type PositionedComment = CampaignReviewCommentsItem & {
@@ -69,48 +87,59 @@ export function CommentForm({
   autoFocus = false,
 }: CommentFormProps) {
   const [text, setText] = useState("");
-  const [mention, setMention] = useState("");
+  const [mentions, setMentions] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
+  const locked = useRef(false);
+  const id = useId();
   return (
     <form
       className="cs-pin-form"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (!text.trim() || busy) return;
-        if (await onSave(text.trim(), mention)) {
-          setText("");
-          setMention("");
+        if (!text.trim() || busy || locked.current) return;
+        locked.current = true;
+        setSaving(true);
+        setError(false);
+        try {
+          const eligible = mentionableMembers(members, user);
+          const recipients = mentions
+            .filter((email) =>
+              eligible.some((member) => member.email === email),
+            )
+            .slice(0, 20);
+          if (await onSave(text.trim(), recipients[0] || "", recipients)) {
+            setText("");
+            setMentions([]);
+          } else setError(true);
+        } catch {
+          setError(true);
+        } finally {
+          locked.current = false;
+          setSaving(false);
         }
       }}
     >
-      <label>
-        {label}
-        <textarea
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          rows={3}
-          maxLength={2000}
-          autoFocus={autoFocus}
-        />
-      </label>
-      <label>
-        {t("Mention a teammate")}
-        <SearchableSelect
-          value={mention}
-          onChange={(event) => setMention(event.target.value)}
-        >
-          <option value="">{t("No mention")}</option>
-          {members
-            .filter((member) => member.email !== user?.email)
-            .map((member) => (
-              <option key={member.email} value={member.email}>
-                @{member.email} ·{" "}
-                {t(roleLabel(member.role))}
-              </option>
-            ))}
-        </SearchableSelect>
-      </label>
-      <button type="submit" disabled={busy || !text.trim()}>
-        {busy ? t("Saving…") : t(buttonLabel)}
+      <label htmlFor={id}>{label}</label>
+      <MentionTextarea
+        id={id}
+        value={text}
+        onTextChange={setText}
+        mentions={mentions}
+        onMentionsChange={setMentions}
+        members={members}
+        user={user}
+        rows={3}
+        maxLength={2000}
+        autoFocus={autoFocus}
+      />
+      {error && (
+        <p className="cs-pin-form-error" role="alert">
+          {t("Could not save the comment. Your draft is kept.")}
+        </p>
+      )}
+      <button type="submit" disabled={busy || saving || !text.trim()}>
+        {busy || saving ? t("Saving…") : t(buttonLabel)}
       </button>
     </form>
   );
@@ -129,9 +158,16 @@ function ThreadMessage({
           {new Date(message.createdAt ?? Number.NaN).toLocaleString()}
         </time>
       </div>
-      {message.mention && (
-        <span className="cs-pin-mention">@{message.mention}</span>
-      )}
+      {(message.mentions?.length
+        ? message.mentions
+        : message.mention
+          ? [message.mention]
+          : []
+      ).map((email) => (
+        <span key={email} className="cs-pin-mention">
+          @{email}
+        </span>
+      ))}
       <p>{message.text}</p>
     </div>
   );
@@ -144,6 +180,7 @@ export function BrochureComments({
   user,
   members,
   onAction,
+  focusedCommentId,
 }: BrochureCommentsProps) {
   const [pending, setPending] = useState<ReviewPosition | null>(null);
   const [activeId, setActiveId] = useState<string | undefined | null>(null);
@@ -152,6 +189,15 @@ export function BrochureComments({
     (item): item is PositionedComment =>
       item.pageIndex === pageIndex && Boolean(item.position),
   );
+  const focusExists = Boolean(
+    focusedCommentId && comments.some((item) => item.id === focusedCommentId),
+  );
+  useEffect(() => {
+    if (focusExists) {
+      setActiveId(focusedCommentId);
+      setPending(null);
+    }
+  }, [focusedCommentId, focusExists, pageIndex]);
   const active = comments.find((item) => item.id === activeId);
   const point = active?.position || pending;
   const close = () => {
@@ -253,33 +299,43 @@ export function BrochureComments({
               ))}
             </div>
           )}
-          {active && (user?.role === "staff" || user?.role === "admin" || user?.role === "superadmin") && !active.fixed && (
-            <button
-              className="cs-pin-resolve"
-              type="button"
-              disabled={busy}
-              onClick={() => save("fix", { commentId: active.id })}
-            >
-              ✓ {t("Mark resolved")}
-            </button>
-          )}
+          {active &&
+            (user?.role === "staff" ||
+              user?.role === "admin" ||
+              user?.role === "superadmin") &&
+            !active.fixed && (
+              <button
+                className="cs-pin-resolve"
+                type="button"
+                disabled={busy}
+                onClick={() => save("fix", { commentId: active.id })}
+              >
+                ✓ {t("Mark resolved")}
+              </button>
+            )}
           <CommentForm
             key={active?.id || "new"}
             label={active ? t("Write a reply") : t("Your comment")}
             buttonLabel={active ? "Post reply" : "Post comment"}
-            autoFocus
+            autoFocus={!active}
             members={members}
             user={user}
             busy={busy}
-            onSave={async (text, mention) => {
+            onSave={async (text, mention, mentions = []) => {
               const okay = active
-                ? await save("reply", { commentId: active.id, text, mention })
+                ? await save("reply", {
+                    commentId: active.id,
+                    text,
+                    mention,
+                    ...(mentions.length ? { mentions } : {}),
+                  })
                 : await save("comment", {
                     pageIndex,
                     pageLabel,
                     position: pending,
                     text,
                     mention,
+                    ...(mentions.length ? { mentions } : {}),
                   });
               if (okay && !active) close();
               return okay;

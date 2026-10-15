@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { request } from "./client";
+import { workspaceAccessSchema, type WorkspaceAccess } from "../features/auth/workspaceAccess";
 
 export const managedUserSchema = z.object({
   id: z.string(),
@@ -12,6 +13,7 @@ export const managedUserSchema = z.object({
   invitedAt: z.string().nullable().optional(),
   lastLoginAt: z.string().nullable().optional(),
   createdAt: z.string().nullable().optional(),
+  access: workspaceAccessSchema.optional(),
 });
 export type ManagedUser = z.infer<typeof managedUserSchema>;
 export type EditableRole = "staff" | "pm" | "admin";
@@ -29,6 +31,7 @@ export const inviteUser = (input: {
   email: string;
   name: string;
   role: EditableRole;
+  access?: WorkspaceAccess | null;
 }) =>
   request("/api/team/users/invite", userResult, {
     method: "POST",
@@ -36,7 +39,12 @@ export const inviteUser = (input: {
   });
 export const updateUser = (
   id: string,
-  input: { name?: string; role?: EditableRole; status?: "active" | "disabled" },
+  input: {
+    name?: string;
+    role?: EditableRole;
+    status?: "active" | "disabled";
+    access?: WorkspaceAccess | null;
+  },
 ) =>
   request(`/api/team/users/${encodeURIComponent(id)}`, userResult, {
     method: "PATCH",
