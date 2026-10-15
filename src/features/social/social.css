@@ -1389,3 +1389,13 @@
 .social-layout-controls select { max-width: 210px; }
 .social-layout-controls button { border: 1px solid #b5cfe2; border-radius: 7px; background: #edf6fc; color: #174f7c; font-weight: 700; padding: 9px 11px; cursor: pointer; }
 .social-layout-controls small { width: 100%; color: #6b8296; font-size: 11px; }
+
+.social-library-toolbar { gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.social-library-toolbar h2 { margin:0; }
+.social-library-toolbar .studio-select { margin-left:auto; min-width:180px; }
+.social-disabled-card { display:grid; gap:8px; min-width:0; padding:12px; border:1px solid #dce5ee; border-radius:16px; background:#fff; color:#254b6d; }
+.social-disabled-badge { justify-self:start; padding:4px 8px; border-radius:6px; background:#eef1f5; color:#667587; font-size:11px; }
+.social-disabled-card .social-card-preview { opacity:.65; }
+.social-post-cards .social-restore { display:flex; align-items:center; justify-content:center; gap:7px; min-height:38px; font-size:12px; background:#edf8f2; color:#246448; border-color:#badbc8; border-radius:8px; }
+.social-danger { display:inline-flex; align-items:center; gap:6px; }
+.social-confirm-icon svg { margin:auto; }

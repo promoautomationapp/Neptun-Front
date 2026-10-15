@@ -200,3 +200,16 @@
     gap: 8px;
   }
 }
+
+.cs-activity-scope {
+  display: inline-flex;
+  padding: 4px 8px;
+  margin-bottom: 9px;
+  border-radius: 5px;
+  background: #e8f1fa;
+  color: #315e82;
+  font-weight: 700;
+}
+.cs-activity-organization {
+  color: #4a7699;
+}

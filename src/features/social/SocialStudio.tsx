@@ -1,3 +1,4 @@
+import { NavIcon } from "../studio/NavIcon";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
 import type {Settings} from "../../domain/models";
@@ -5,7 +6,7 @@ import type {LogoAsset} from "../settings/settings.schema";
 import type { Artwork, Campaign, Placement, Product, SocialPost } from "../../domain/models";
 import { requestAi, type ProofreadChange } from "../ai/ai.api";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { getPosts, savePost, removePost } from "./socialStorage";
+import { getPosts, savePost, removePost, restorePost } from "./socialStorage";
 import {
   createPost,
   clearPostImagePreparation,
@@ -135,6 +136,7 @@ interface PostCanvasProps {
 }
 interface SocialStudioProps {
   settings?: Settings;
+  canManageDisabled?: boolean;
   catalog: Product[];
   campaigns: Campaign[];
   seed?: {campaignId: string; products: Product[]} | null;
@@ -729,12 +731,13 @@ function buildReviewItems(post: SocialPost) {
   return { items, apply };
 }
 
-export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }: SocialStudioProps) {
+export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, canManageDisabled = false }: SocialStudioProps) {
   const [, setBrandLogoRevision] = useState(0);
   useEffect(() => {
     loadPreparedBrandLogos().then(() => setBrandLogoRevision((value) => value + 1));
   }, []);
   const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [postVisibility, setPostVisibility] = useState("active");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [picker, setPicker] = useState(false);
@@ -767,7 +770,8 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
   const postsRef = useRef(posts);
   postsRef.current = posts;
   const dirtyRef = useRef<string | null>(null);
-  const post = posts.find((item) => item.id === activeId) ?? null;
+  const post = posts.find((item) => item.id === activeId && !item.disabledAt) ?? null;
+  const visiblePosts = posts.filter((item) => canManageDisabled ? postVisibility === "all" || (postVisibility === "disabled" ? Boolean(item.disabledAt) : !item.disabledAt) : !item.disabledAt);
   const preparationBackground = useMemo(() => post ? postImageBackgroundContext(post) : null, [post?.background, post?.backgroundPrompt]);
   useEffect(() => {
     setExportNotice(null);
@@ -821,7 +825,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
     getPosts()
       .then((saved) => {
         if (alive) {
-          setPosts(saved);
+          setPosts(canManageDisabled ? saved : saved.filter((item) => !item.disabledAt));
           setLoaded(true);
         }
       })
@@ -963,18 +967,35 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
   async function deleteActive() {
     if (!post) return;
     clearTimeout(saveTimer.current);
-    setDirtyId(null);
     setBusy("delete");
     try {
-      await removePost(post.id);
-      setPosts((all) => all.filter((item) => item.id !== post.id));
+      if (dirtyRef.current === post.id) {
+        const saved = await savePost(post);
+        setPosts((all) => all.map((item) => item.id === saved.id ? saved : item));
+      }
+      dirtyRef.current = null;
+      setDirtyId(null);
+      await removePost(post.id, post.version);
+      const disabled = canManageDisabled ? (await getPosts()).find((item) => item.id === post.id) : undefined;
+      setPosts((all) => disabled ? all.map((item) => item.id === disabled.id ? disabled : item) : all.filter((item) => item.id !== post.id));
       setActiveId(null);
       setConfirmDelete(false);
+      setMessage(t("Post disabled."));
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
       setBusy("");
     }
+  }
+  async function enablePost(item: SocialPost) {
+    if (!canManageDisabled || busy) return;
+    setBusy(`restore:${item.id}`);
+    try {
+      const restored = await restorePost(item);
+      setPosts((all) => all.map((value) => value.id === restored.id ? restored : value));
+      setMessage(t("Post enabled."));
+    } catch (error) { setMessage(errorMessage(error)); }
+    finally { setBusy(""); }
   }
   async function aiBackground() {
     if (!post) return;
@@ -1259,16 +1280,24 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
         <div className="social-library">
           <div className="social-library-toolbar">
             <h2>Saved posts</h2>
-            <span>{posts.length} posts</span>
+            <span>{visiblePosts.length} posts</span>
+            {canManageDisabled && <StudioSelect label={t("Post visibility")} value={postVisibility} onChange={setPostVisibility} options={[{value:"active",label:t("Active posts")},{value:"disabled",label:t("Disabled posts")},{value:"all",label:t("All posts")}]} />}
           </div>
-          {!posts.length && (
+          {!visiblePosts.length && (
             <div className="social-library-empty">
-              No posts yet. Create one from the catalog or open a brochure and
-              choose “Make social post”.
+              {postVisibility === "disabled" ? t("No disabled posts.") : "No posts yet. Create one from the catalog or open a brochure and choose “Make social post”."}
             </div>
           )}
           <div className="social-post-cards">
-            {posts.map((item) => (
+            {visiblePosts.map((item) => item.disabledAt ? (
+              <article className="social-disabled-card" key={item.id}>
+                <span className="social-disabled-badge">{t("Disabled")}</span>
+                <div className="social-card-preview" style={{background:cssBackground(item.background)}}><img src={imageSource(item.products?.[0]?.image)} alt="" /></div>
+                <strong>{item.name}</strong>
+                <small>{t("Only superadmins can see this disabled post.")}</small>
+                <button className="social-restore" type="button" disabled={Boolean(busy)} onClick={() => enablePost(item)}><NavIcon name="refresh" size={17} />{t(busy === `restore:${item.id}` ? "Enabling…" : "Enable post")}</button>
+              </article>
+            ) : (
               <button
                 type="button"
                 key={item.id}
@@ -1321,7 +1350,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
               onClick={() => setConfirmDelete(true)}
               disabled={Boolean(busy)}
             >
-              Delete
+              <NavIcon name="archive" size={17} />{t("Disable")}
             </button>
           </div>
           <div className="social-editor-grid">
@@ -2261,13 +2290,12 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
             className="social-confirm-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Delete social post"
+            aria-label={t("Disable social post")}
           >
-            <div className="social-confirm-icon">🗑</div>
-            <h2>Move this post to the trash?</h2>
+            <div className="social-confirm-icon"><NavIcon name="archive" size={28} /></div>
+            <h2>{t("Disable this post?")}</h2>
             <p>
-              <strong>{post.name}</strong> will be removed for both staff and
-              PM.
+              <strong>{post.name}</strong><br />{t("The post is kept and can only be viewed and enabled by a superadmin.")}
             </p>
             <div>
               <button
@@ -2283,7 +2311,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }:
                 onClick={deleteActive}
                 disabled={Boolean(busy)}
               >
-                {busy === "delete" ? "Deleting…" : "Delete post"}
+                {t(busy === "delete" ? "Disabling…" : "Disable post")}
               </button>
             </div>
           </section>

@@ -3,8 +3,12 @@ import { request } from "../../api/client";
 import { postSchema } from "../../domain/schemas";
 import type { SocialPost } from "../../domain/models";
 export const getPosts = async (): Promise<SocialPost[]> =>
-  (await request("/api/team/posts", z.object({ posts: z.array(postSchema) })))
-    .posts;
+  (
+    await request(
+      "/api/team/posts?includeDisabled=true",
+      z.object({ posts: z.array(postSchema) }),
+    )
+  ).posts;
 const pending = new Map<
   string,
   { latest: SocialPost | null; promise: Promise<SocialPost> }
@@ -39,11 +43,28 @@ export function savePost(post: SocialPost): Promise<SocialPost> {
   })().finally(() => pending.delete(post.id));
   return state.promise;
 }
-export async function removePost(id: string): Promise<{ deleted: boolean }> {
+export async function removePost(
+  id: string,
+  version?: number,
+): Promise<{ deleted: boolean }> {
   await pending.get(id)?.promise;
-  return request(
-    `/api/team/posts/${encodeURIComponent(id)}`,
+  const currentVersion = Math.max(versions.get(id) ?? 0, version ?? 0);
+  const result = await request(
+    `/api/team/posts/${encodeURIComponent(id)}${currentVersion ? `?version=${currentVersion}` : ""}`,
     z.object({ deleted: z.boolean() }),
     { method: "DELETE" },
   );
+  if (!result.deleted)
+    throw new Error("Could not disable the post. Refresh and try again.");
+  return result;
+}
+
+export async function restorePost(post: SocialPost): Promise<SocialPost> {
+  const result = await request(
+    `/api/team/posts/${encodeURIComponent(post.id)}/restore`,
+    z.object({ post: postSchema }),
+    { method: "POST", body: post.version ? { version: post.version } : {} },
+  );
+  if (result.post.version) versions.set(post.id, result.post.version);
+  return result.post;
 }

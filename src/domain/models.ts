@@ -54,6 +54,8 @@ export interface Settings {
 }
 export type CampaignMutator = (draft: Campaign) => void;
 export interface Campaign {
+  disabledAt?: string | null;
+  disabledBy?: string | null;
   campaignLogo?: string;
   logoRules?: LogoRule[];
   logoRuleDefaults?: {cover: string; pages: string};
@@ -217,6 +219,8 @@ export interface CampaignStoresSnapshotStoresItem {
 }
 
 export interface SocialPost {
+  disabledAt?: string | null;
+  disabledBy?: string | null;
   showGrid?: boolean;
   productGrid?: { rows: number; columns: number; gap: number };
   backgroundPrompt?: string;

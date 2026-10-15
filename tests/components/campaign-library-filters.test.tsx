@@ -141,7 +141,7 @@ it("keeps the search inside compact filters and separates readable card actions"
     }),
   );
   fireEvent.click(
-    within(card).getByRole("button", { name: "Delete campaign: Autumn sale" }),
+    within(card).getByRole("button", { name: "Disable campaign: Autumn sale" }),
   );
   fireEvent.click(
     within(card).getByRole("button", { name: "Open campaign: Autumn sale" }),
@@ -153,4 +153,52 @@ it("keeps the search inside compact filters and separates readable card actions"
   expect(onDelete).toHaveBeenCalledWith(campaigns[0]);
   expect(onOpen).toHaveBeenCalledWith("1");
   expect(onPrint).toHaveBeenCalledWith("1");
+});
+
+it("keeps disabled brochures private and only offers restore to superadmins", () => {
+  const disabled = {
+    ...campaigns[0]!,
+    id: "disabled",
+    name: "Hidden brochure",
+    disabledAt: "2026-10-15T10:00:00Z",
+    version: 3,
+  };
+  const onRestore = vi.fn();
+  localStorage.setItem(
+    "neptun-campaign-filters",
+    JSON.stringify({ visibility: "disabled" }),
+  );
+  const view = render(
+    <CampaignLibrary
+      {...props}
+      campaigns={[...campaigns, disabled]}
+      onRestore={onRestore}
+    />,
+  );
+  expect(view.queryByText("Hidden brochure")).toBeNull();
+  expect(view.queryByRole("button", { name: /Restore campaign/ })).toBeNull();
+  view.rerender(
+    <CampaignLibrary
+      {...props}
+      campaigns={[...campaigns, disabled]}
+      canManageDisabled
+      onRestore={onRestore}
+    />,
+  );
+  expect(
+    view.getByText("Hidden brochure", {
+      selector: ".cs-campaign-card-title strong",
+    }),
+  ).toBeTruthy();
+  expect(
+    view.queryByRole("button", { name: "Open campaign: Hidden brochure" }),
+  ).toBeNull();
+  expect(
+    view.queryByRole("button", { name: "Duplicate campaign: Hidden brochure" }),
+  ).toBeNull();
+  expect(view.queryByRole("button", { name: "Download brochure" })).toBeNull();
+  fireEvent.click(
+    view.getByRole("button", { name: "Restore campaign: Hidden brochure" }),
+  );
+  expect(onRestore).toHaveBeenCalledWith(disabled);
 });

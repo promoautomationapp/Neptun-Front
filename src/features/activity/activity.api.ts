@@ -3,6 +3,7 @@ import { request } from "../../api/client";
 
 export const activitySchema = z.object({
   timeZone: z.string(),
+  scope: z.enum(["organization", "all-organizations"]).default("organization"),
   total: z.number(),
   page: z.number(),
   limit: z.number(),
@@ -13,6 +14,7 @@ export const activitySchema = z.object({
   records: z.array(
     z.object({
       id: z.string(),
+      organization: z.object({ id: z.string(), name: z.string() }).optional(),
       actor: z.object({
         id: z.string().nullable(),
         name: z.string(),

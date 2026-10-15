@@ -67,7 +67,12 @@ const messages: Record<string, string> = {
   Account: "Llogaria",
   Workspace: "Hapësira e punës",
   "Campaign saved": "U ruajt fushata",
-  "Campaign deleted": "U fshi fushata",
+  "Campaign disabled": "U çaktivizua fushata",
+  "Campaign enabled": "U aktivizua fushata",
+  "Social post disabled": "U çaktivizua postimi",
+  "Social post enabled": "U aktivizua postimi",
+  "All workspaces": "Të gjitha hapësirat e punës",
+  Organization: "Organizata",
   "Campaign reviewed": "U rishikua fushata",
   "Comment added": "U shtua koment",
   "Reply added": "U shtua përgjigje",
@@ -111,7 +116,9 @@ const text = (value: string) =>
   getLanguage() === "sq" ? (messages[value] ?? value) : value;
 const actionNames: Record<string, string> = {
   "campaign.save": "Campaign saved",
-  "campaign.delete": "Campaign deleted",
+  "campaign.delete": "Campaign disabled",
+  "campaign.disable": "Campaign disabled",
+  "campaign.restore": "Campaign enabled",
   "campaign.review": "Campaign reviewed",
   "campaign.comment": "Comment added",
   "campaign.reply": "Reply added",
@@ -120,7 +127,9 @@ const actionNames: Record<string, string> = {
   "campaign.complete": "Campaign completed",
   "campaign.reopen": "Campaign reopened",
   "post.save": "Social post saved",
-  "post.delete": "Social post deleted",
+  "post.delete": "Social post disabled",
+  "post.disable": "Social post disabled",
+  "post.restore": "Social post enabled",
   "settings.save": "Settings saved",
   "catalog.refresh": "Catalog refresh requested",
   "products.load": "Products loaded",
@@ -260,6 +269,12 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
       <header className="cs-activity-heading">
         <div>
           <h1>{text("Workspace activity")}</h1>
+          {user.role === "superadmin" &&
+            data?.scope === "all-organizations" && (
+              <small className="cs-activity-scope">
+                {text("All workspaces")}
+              </small>
+            )}
           <p>
             {text(
               "See who changed the workspace, when it happened, and the request outcome.",
@@ -418,6 +433,11 @@ export function ActivityPage({ user }: { user: Pick<User, "role"> }) {
                         {row.actor.name || row.actor.email || text("Account")}
                       </strong>
                       {row.actor.name && <small>{row.actor.email}</small>}
+                      {user.role === "superadmin" && row.organization && (
+                        <small className="cs-activity-organization">
+                          {text("Organization")}: {row.organization.name}
+                        </small>
+                      )}
                     </td>
                     <td>
                       {activityActionLabel(row.action)}

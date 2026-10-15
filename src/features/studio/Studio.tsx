@@ -119,7 +119,7 @@ import {
 } from "../brochure/imageReview";
 import { BrandLogoManager } from "../brochure/BrandLogoManager";
 import { loadPreparedBrandLogos } from "../brochure/brandLogos";
-import { mergeCampaignSnapshots } from "../brochure/mergeCampaignSnapshots";
+import { mergeCampaignSnapshots, confirmMissingCampaign } from "../brochure/mergeCampaignSnapshots";
 import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
 import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
 import {
@@ -159,12 +159,15 @@ import type { Settings } from "../../domain/models";
 import {
   bootstrapWorkspace,
   getCampaigns,
+  getCampaign,
+  hasAcknowledgedCampaign,
   getMembers,
   getSession,
   hasPendingSaves,
   login,
   logout,
   removeCampaign,
+  restoreCampaign,
   reviewCampaign,
   saveCampaign,
 } from "../brochure/teamStorage";
@@ -237,6 +240,9 @@ interface CampaignLibraryProps {
   onDuplicate: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
   onPrint: (id: string) => void;
+  canManageDisabled?: boolean;
+  restoringId?: string | null;
+  onRestore?: (campaign: Campaign) => void;
 }
 interface ProductEditorProps extends CampaignControlsProps {
   onImport: () => void;
@@ -398,6 +404,9 @@ export function CampaignLibrary({
   onDuplicate,
   onDelete,
   onPrint,
+  canManageDisabled = false,
+  restoringId,
+  onRestore,
 }: CampaignLibraryProps) {
   const now = useCampaignClock();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -423,17 +432,20 @@ export function CampaignLibrary({
     setFilters((current) =>
       normalizeCampaignFilters({ ...current, [key]: value }),
     );
+  const visibleCampaigns = canManageDisabled
+    ? campaigns
+    : campaigns.filter((item) => !item.disabledAt);
   const campaignTypes = [
     ...new Set([
       ...resolveSettings(settings).campaignTypes.map((item) => item.name),
-      ...campaigns
+      ...visibleCampaigns
         .map((item) => item.type)
         .filter((value): value is string => Boolean(value)),
     ]),
   ].sort();
   const formats = [
     ...new Map(
-      campaigns.map((item) => {
+      visibleCampaigns.map((item) => {
         const format = resolveBrochureFormat(item);
         return [format.id, format] as const;
       }),
@@ -441,12 +453,13 @@ export function CampaignLibrary({
   ];
   const effectiveFilters = {
     ...filters,
+    visibility: canManageDisabled ? filters.visibility : "active",
     type: campaignTypes.includes(filters.type) ? filters.type : "all",
     format: formats.some((format) => format.id === filters.format)
       ? filters.format
       : "all",
   };
-  const filtered = filterCampaigns(campaigns, effectiveFilters, now);
+  const filtered = filterCampaigns(visibleCampaigns, effectiveFilters, now);
   const filterActive = Object.entries(filters).some(
     ([key, value]) => value !== emptyFilters[key as keyof CampaignFilters],
   );
@@ -460,7 +473,7 @@ export function CampaignLibrary({
         <div>
           <h1>{t("Campaigns")}</h1>
           <p>
-            {campaigns.length} {t("saved for the team")}
+            {visibleCampaigns.length} {t("saved for the team")}
           </p>
         </div>
         <Button tone="primary" onClick={onCreate}>
@@ -504,6 +517,19 @@ export function CampaignLibrary({
           hidden={!filtersOpen}
         >
           <div className="cs-campaign-filter-grid">
+            {canManageDisabled && (
+              <FilterSelect
+                label={t("Brochure visibility")}
+                value={effectiveFilters.visibility}
+                onChange={(value: string) => setFilter("visibility", value)}
+                options={[
+                  { value: "active", label: t("Active brochures") },
+                  { value: "disabled", label: t("Disabled brochures") },
+                  { value: "all", label: t("All brochures") },
+                ]}
+              />
+            )}
+
             <FilterSelect
               label={t("Status")}
               value={filters.status}
@@ -583,7 +609,7 @@ export function CampaignLibrary({
         </div>
         <div className="cs-campaign-filter-footer" hidden={!filterActive}>
           <span>
-            {t("Showing")} {filtered.length} {t("of")} {campaigns.length}{" "}
+            {t("Showing")} {filtered.length} {t("of")} {visibleCampaigns.length}{" "}
             {t("campaigns")}
           </span>
           {filterActive && (
@@ -602,12 +628,14 @@ export function CampaignLibrary({
                   {t(item.type || "Campaign")}
                 </span>
                 <span
-                  className={`cs-campaign-status status-${campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}
+                  className={`cs-campaign-status status-${item.disabledAt ? "disabled" : campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}
                 >
                   {t(
-                    campaignValidity(item, now) === "expired"
-                      ? "Expired"
-                      : reviewStatusLabel(item.status),
+                    item.disabledAt
+                      ? "Disabled"
+                      : campaignValidity(item, now) === "expired"
+                        ? "Expired"
+                        : reviewStatusLabel(item.status),
                   )}
                 </span>
               </div>
@@ -615,7 +643,10 @@ export function CampaignLibrary({
                 className="cs-campaign-cover"
                 type="button"
                 aria-label={`${item.name} · ${item.startDate === item.endDate ? item.startDate : `${item.startDate} – ${item.endDate}`}`}
-                onClick={() => onOpen(item.id)}
+                onClick={() => {
+                  if (!item.disabledAt) onOpen(item.id);
+                }}
+                disabled={Boolean(item.disabledAt)}
               >
                 <CampaignCoverThumbnail campaign={item} />
               </button>
@@ -646,47 +677,69 @@ export function CampaignLibrary({
                 )}
               </div>
               <div className="cs-campaign-card-actions">
-                <button
-                  type="button"
-                  className="cs-card-utility"
-                  onClick={() => onDuplicate(item)}
-                  aria-label={`${t("Duplicate campaign")}: ${item.name}`}
-                >
-                  <NavIcon name="copy" />
-                  {t("Duplicate")}
-                </button>
-                <button
-                  type="button"
-                  className="cs-card-utility cs-card-delete"
-                  onClick={() => onDelete(item)}
-                  aria-label={`${t("Delete campaign")}: ${item.name}`}
-                >
-                  <NavIcon name="trash" />
-                  {t("Delete")}
-                </button>
-                <button
-                  className="cs-card-open"
-                  type="button"
-                  onClick={() => onOpen(item.id)}
-                  aria-label={`${t("Open campaign")}: ${item.name}`}
-                >
-                  {t(
-                    (item.status || "in_progress") === "completed"
-                      ? "Open"
-                      : "Continue",
-                  )}
-                  <NavIcon name="arrow-right" />
-                </button>
-                <button
-                  className="cs-card-download"
-                  type="button"
-                  aria-label={t("Download brochure")}
-                  title={t("Download brochure")}
-                  onClick={() => onPrint(item.id)}
-                >
-                  <NavIcon name="download" />
-                  {t("Brochure")}
-                </button>
+                {item.disabledAt ? (
+                  <>
+                    <p className="cs-disabled-note">
+                      {t("Only superadmins can view disabled brochures.")}
+                    </p>
+                    {canManageDisabled && onRestore && (
+                      <button
+                        className="cs-card-enable"
+                        type="button"
+                        disabled={restoringId === item.id}
+                        onClick={() => onRestore(item)}
+                        aria-label={`${t("Restore campaign")}: ${item.name}`}
+                      >
+                        <NavIcon name="refresh" />
+                        {t(restoringId === item.id ? "Enabling…" : "Enable")}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="cs-card-utility"
+                      onClick={() => onDuplicate(item)}
+                      aria-label={`${t("Duplicate campaign")}: ${item.name}`}
+                    >
+                      <NavIcon name="copy" />
+                      {t("Duplicate")}
+                    </button>
+                    <button
+                      type="button"
+                      className="cs-card-utility cs-card-delete"
+                      onClick={() => onDelete(item)}
+                      aria-label={`${t("Disable campaign")}: ${item.name}`}
+                    >
+                      <NavIcon name="archive" />
+                      {t("Disable")}
+                    </button>
+                    <button
+                      className="cs-card-open"
+                      type="button"
+                      onClick={() => onOpen(item.id)}
+                      aria-label={`${t("Open campaign")}: ${item.name}`}
+                    >
+                      {t(
+                        (item.status || "in_progress") === "completed"
+                          ? "Open"
+                          : "Continue",
+                      )}
+                      <NavIcon name="arrow-right" />
+                    </button>
+                    <button
+                      className="cs-card-download"
+                      type="button"
+                      aria-label={t("Download brochure")}
+                      title={t("Download brochure")}
+                      onClick={() => onPrint(item.id)}
+                    >
+                      <NavIcon name="download" />
+                      {t("Brochure")}
+                    </button>
+                  </>
+                )}
               </div>
             </article>
           ))}
@@ -695,21 +748,21 @@ export function CampaignLibrary({
         <div className="cs-empty">
           <b>✳</b>
           <h3>
-            {campaigns.length
+            {visibleCampaigns.length
               ? t("No campaigns match these filters")
               : "Your first campaign starts here"}
           </h3>
           <p>
-            {campaigns.length
+            {visibleCampaigns.length
               ? t("Adjust the search or clear filters to see saved campaigns.")
               : "Create a campaign to organize your offers and design a brochure."}
           </p>
-          {campaigns.length > 0 && filterActive && (
+          {visibleCampaigns.length > 0 && filterActive && (
             <Button onClick={() => setFilters(emptyFilters)}>
               {t("Clear filters")}
             </Button>
           )}
-          {!campaigns.length && (
+          {!visibleCampaigns.length && (
             <Button tone="primary" onClick={onCreate}>
               {t("Create campaign →")}
             </Button>
@@ -3504,6 +3557,7 @@ export default function App({
   const [editorTab, setEditorTab] = useState("brochure");
   const [brochurePreviewVersion, setBrochurePreviewVersion] = useState(0);
   const [modal, setModal] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [newBusy, setNewBusy] = useState(false);
@@ -3583,7 +3637,9 @@ export default function App({
       .finally(() => {
         if (active) setAuthReady(true);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
   useEffect(() => {
     if (!user) return;
@@ -3644,31 +3700,57 @@ export default function App({
   }, [user?.email]);
   useEffect(() => {
     if (!user) return;
+    const controller = new AbortController();
+    let disposed = false;
+    let refreshing = false;
     const refresh = async () => {
-      const active = document.activeElement;
-      if (
-        active?.matches?.("input, textarea, [contenteditable=true]") ||
-        hasPendingSaves()
-      )
-        return;
+      const focused = document.activeElement;
+      if (disposed || refreshing || focused?.matches?.("input, textarea, [contenteditable=true]") || hasPendingSaves()) return;
+      refreshing = true;
+      const navigation = activeEditorRef.current;
       try {
-        const latest = await getCampaigns();
-        if (hasPendingSaves()) return;
-        setCampaigns((current) =>
-          mergeCampaignSnapshots(
-            current,
-            enrichSavedCampaigns(latest, catalog),
-            activeId,
-            section === "editor",
-          ),
+        const latest = await getCampaigns(controller.signal);
+        if (disposed || hasPendingSaves()) return;
+        const active = navigation.section === "editor" ? latestCampaigns.current.find(item => item.id === navigation.activeId) : undefined;
+        const result = await confirmMissingCampaign(
+          latest,
+          active,
+          Boolean(active && (active.version || hasAcknowledgedCampaign(active.id))),
+          id => getCampaign(id, controller.signal),
         );
+        if (disposed || hasPendingSaves() || navigation.activeId !== activeEditorRef.current.activeId || navigation.section !== activeEditorRef.current.section) return;
+        const unavailable = navigation.section === "editor" && Boolean(result.confirmedMissingId || result.remote.find(item => item.id === navigation.activeId)?.disabledAt);
+        setCampaigns(current => mergeCampaignSnapshots(
+          current,
+          enrichSavedCampaigns(result.remote, catalog),
+          navigation.activeId,
+          navigation.section === "editor",
+          result.confirmedMissingId === navigation.activeId,
+        ));
+        if (unavailable) {
+          setActiveId(null);
+          setSectionValue("campaigns");
+          setModal(value => value === "create" ? value : null);
+          setDetail(value => value?.editable ? null : value);
+          setImageEditCode(null);
+          setScreenEditCode(null);
+          setPriceEdit(null);
+          setAiTask(null);
+          setExportId(id => id === navigation.activeId ? null : id);
+          setPendingPrintId(null);
+          setToast(language === "sq" ? "Kjo fushatë nuk është më e disponueshme." : "This campaign is no longer available.");
+        }
       } catch (error) {
-        console.error(error);
+        if (!disposed) console.error(error);
+      } finally {
+        refreshing = false;
       }
     };
     const timer = setInterval(refresh, 15_000);
     window.addEventListener("focus", refresh);
     return () => {
+      disposed = true;
+      controller.abort();
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
@@ -3678,7 +3760,9 @@ export default function App({
     const timer = setTimeout(() => setToast(""), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
-  const campaign = campaigns.find((item) => item.id === activeId);
+  const campaign = campaigns.find(
+    (item) => item.id === activeId && !item.disabledAt,
+  );
   const imageEditProduct = campaign?.products.find(
     (product) => product.code === imageEditCode,
   );
@@ -4091,6 +4175,7 @@ export default function App({
     );
   }
   function duplicateCampaign(item: Campaign) {
+    if (item.disabledAt) return;
     const copy = structuredClone(item);
     copy.id = crypto.randomUUID();
     copy.status = "in_progress";
@@ -4106,17 +4191,38 @@ export default function App({
     if (!deleteTarget || deleteBusy) return;
     setDeleteBusy(true);
     try {
-      await removeCampaign(deleteTarget.id);
+      await removeCampaign(deleteTarget.id, deleteTarget.version);
+      const disabled =
+        user?.role === "superadmin"
+          ? (await getCampaigns()).find((item) => item.id === deleteTarget.id)
+          : undefined;
       setCampaigns((current) =>
-        current.filter((item) => item.id !== deleteTarget.id),
+        disabled
+          ? current.map((item) => (item.id === disabled.id ? disabled : item))
+          : current.filter((item) => item.id !== deleteTarget.id),
       );
       if (activeId === deleteTarget.id) setActiveId(null);
       setDeleteTarget(null);
-      setToast(t("Campaign deleted."));
+      setToast(t("Campaign disabled."));
     } catch (error) {
       setToast(errorMessage(error));
     } finally {
       setDeleteBusy(false);
+    }
+  }
+  async function enableCampaign(item: Campaign) {
+    if (user?.role !== "superadmin" || restoringId) return;
+    setRestoringId(item.id);
+    try {
+      const restored = await restoreCampaign(item);
+      setCampaigns((current) =>
+        current.map((value) => (value.id === restored.id ? restored : value)),
+      );
+      setToast(t("Campaign enabled."));
+    } catch (error) {
+      setToast(errorMessage(error));
+    } finally {
+      setRestoringId(null);
     }
   }
   const catalogItems = useMemo(
@@ -4369,6 +4475,9 @@ export default function App({
             }}
             onDuplicate={duplicateCampaign}
             onDelete={setDeleteTarget}
+            canManageDisabled={user.role === "superadmin"}
+            restoringId={restoringId}
+            onRestore={enableCampaign}
             onPrint={(id: string) => {
               setExportPage(0);
               setActiveId(id);
@@ -4551,14 +4660,17 @@ export default function App({
             <React.Suspense
               fallback={
                 <div className="cs-main-panel cs-page-loading" role="status">
-                  {language === "sq" ? "Duke ngarkuar postimet sociale…" : "Loading social posts…"}
+                  {language === "sq"
+                    ? "Duke ngarkuar postimet sociale…"
+                    : "Loading social posts…"}
                 </div>
               }
             >
               <SocialStudio
                 settings={settings}
                 catalog={catalog}
-                campaigns={campaigns}
+                campaigns={campaigns.filter((item) => !item.disabledAt)}
+                canManageDisabled={user.role === "superadmin"}
                 seed={socialSeed}
                 onSeedUsed={() => setSocialSeed(null)}
               />
@@ -4854,20 +4966,20 @@ export default function App({
       </main>
       {deleteTarget && (
         <Modal
-          title={t("Delete campaign")}
-          kicker={t("CONFIRM DELETION")}
+          title={t("Disable campaign")}
+          kicker={t("DISABLE CAMPAIGN")}
           onClose={() => {
             if (!deleteBusy) setDeleteTarget(null);
           }}
         >
           <div className="cs-delete-dialog">
             <div className="cs-delete-icon">
-              <TrashIcon size={25} />
+              <NavIcon name="archive" size={25} />
             </div>
             <strong>{deleteTarget.name}</strong>
             <p>
               {t(
-                "This will remove the campaign and all its page comments for both accounts. This cannot be undone.",
+                "The brochure and its comments will be kept. Only superadmins can see and restore it while it is disabled.",
               )}
             </p>
             <div className="cs-delete-actions">
@@ -4883,8 +4995,8 @@ export default function App({
                 disabled={deleteBusy}
                 onClick={confirmDeleteCampaign}
               >
-                <TrashIcon size={16} />
-                {deleteBusy ? t("Deleting…") : t("Delete campaign")}
+                <NavIcon name="archive" size={16} />
+                {deleteBusy ? t("Disabling…") : t("Disable campaign")}
               </button>
             </div>
           </div>

@@ -33,6 +33,7 @@ it("opens the full authenticated studio and loads its catalog through the backen
         nextOffset: null,
       },
       "/api/brand-logos": {},
+      "/api/products/facets": {categories:[],brands:[],paths:[],sourceCategories:[]},
     };
     return new Response(JSON.stringify(responses[url.pathname] ?? {}), {
       headers: { "Content-Type": "application/json" },
@@ -103,6 +104,7 @@ it("shows saved campaigns before the complete source catalog finishes loading", 
         },
         "/api/team/settings": { settings: null, version: 0, updatedAt: null },
         "/api/brand-logos": {},
+      "/api/products/facets": {categories:[],brands:[],paths:[],sourceCategories:[]},
       };
       return new Response(JSON.stringify(data[path] ?? {}));
     }),

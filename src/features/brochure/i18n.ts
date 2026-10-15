@@ -1,4 +1,38 @@
 const translations: Record<string, string> = {
+  "Disable campaign": "Çaktivizo fushatën",
+  Disable: "Çaktivizo",
+  Enable: "Aktivizo",
+  "Disabling…": "Duke çaktivizuar…",
+  "Enabling…": "Duke aktivizuar…",
+  Disabled: "E çaktivizuar",
+  "Brochure visibility": "Shfaq broshurat",
+  "Active brochures": "Broshurat aktive",
+  "Disabled brochures": "Broshurat e çaktivizuara",
+  "All brochures": "Të gjitha broshurat",
+  "Restore campaign": "Aktivizo sërish fushatën",
+  "Campaign disabled.": "Fushata u çaktivizua.",
+  "Campaign enabled.": "Fushata u aktivizua.",
+  "DISABLE CAMPAIGN": "ÇAKTIVIZO FUSHATËN",
+  "The brochure and its comments will be kept. Only superadmins can see and restore it while it is disabled.":
+    "Broshura dhe komentet e saj ruhen. Vetëm superadminët mund ta shohin dhe ta aktivizojnë sërish kur është e çaktivizuar.",
+  "Only superadmins can view disabled brochures.":
+    "Vetëm superadminët mund t'i shohin broshurat e çaktivizuara.",
+  "Post visibility": "Shfaq postimet",
+  "Active posts": "Postimet aktive",
+  "Disabled posts": "Postimet e çaktivizuara",
+  "All posts": "Të gjitha postimet",
+  "Enable post": "Aktivizo postimin",
+  "Disable post": "Çaktivizo postimin",
+  "Disable social post": "Çaktivizo postimin në rrjete sociale",
+  "Disable this post?": "Ta çaktivizojmë këtë postim?",
+  "The post is kept and can only be viewed and enabled by a superadmin.":
+    "Postimi ruhet dhe mund të shihet e të aktivizohet vetëm nga një superadmin.",
+  "No disabled posts.": "Nuk ka postime të çaktivizuara.",
+  "Only superadmins can see this disabled post.":
+    "Vetëm superadminët mund ta shohin këtë postim të çaktivizuar.",
+  "Post enabled.": "Postimi u aktivizua.",
+  "Post disabled.": "Postimi u çaktivizua.",
+
   "Show subcategories": "Shfaq nënkategoritë",
   Brochure: "Broshura",
   "Campaign filters": "Filtrat e fushatave",

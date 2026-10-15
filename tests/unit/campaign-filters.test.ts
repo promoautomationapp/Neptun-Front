@@ -139,3 +139,24 @@ describe("brochure library filters", () => {
     expect(campaigns.map((item) => item.id)).toEqual(original);
   });
 });
+
+it("hides disabled brochures by default and keeps their original content when filtering the archive", () => {
+  const disabled = { ...campaigns[0]!, disabledAt: "2026-10-15T10:00:00Z" };
+  const list = [disabled, ...campaigns.slice(1)];
+  expect(
+    filterCampaigns(list, emptyCampaignFilters, now).some(
+      (item) => item.id === disabled.id,
+    ),
+  ).toBe(false);
+  expect(
+    filterCampaigns(
+      list,
+      { ...emptyCampaignFilters, visibility: "disabled" },
+      now,
+    ),
+  ).toEqual([disabled]);
+  expect(
+    filterCampaigns(list, { ...emptyCampaignFilters, visibility: "all" }, now),
+  ).toHaveLength(campaigns.length);
+  expect(disabled.disabledAt).toBe("2026-10-15T10:00:00Z");
+});

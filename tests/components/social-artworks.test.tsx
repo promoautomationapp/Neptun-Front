@@ -1,3 +1,4 @@
+import { setLanguage } from "../../src/features/brochure/i18n";
 import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import {
@@ -16,6 +17,7 @@ import { createPost } from "../../src/features/social/postModel";
 import {
   getPosts,
   removePost,
+  restorePost,
   savePost,
 } from "../../src/features/social/socialStorage";
 import { readImage } from "../../src/features/brochure/utils";
@@ -27,6 +29,7 @@ vi.mock("../../src/features/social/socialStorage", () => ({
   getPosts: vi.fn(),
   savePost: vi.fn(),
   removePost: vi.fn(),
+  restorePost: vi.fn(),
 }));
 vi.mock("../../src/features/ai/ai.api", () => ({ requestAi: vi.fn() }));
 vi.mock("../../src/features/brochure/utils", async (original) => ({
@@ -269,5 +272,93 @@ it("saves edit-mode dimensions, guide visibility and product grid while preservi
       .closest(".social-canvas")
       ?.classList.contains("social-guides"),
   ).toBe(false);
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("hides disabled posts from workspace users and lets only superadmins enable them", async () => {
+  setLanguage("en");
+  stored = [
+    {
+      ...fixture(),
+      name: "Disabled social sample",
+      disabledAt: "2026-10-15T10:00:00Z",
+      version: 4,
+    },
+  ];
+  const ordinary = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await ordinary.findByText(/No posts yet/);
+  expect(ordinary.queryByText("Disabled social sample")).toBeNull();
+  expect(
+    ordinary.queryByRole("button", { name: /Post visibility/ }),
+  ).toBeNull();
+  ordinary.unmount();
+  vi.mocked(restorePost).mockImplementation(async (item) => {
+    stored = [{ ...item, disabledAt: null, disabledBy: null, version: 5 }];
+    return stored[0]!;
+  });
+  const admin = render(
+    <SocialStudio catalog={[]} campaigns={[]} canManageDisabled />,
+  );
+  await admin.findByRole("button", { name: "Post visibility: Active posts" });
+  fireEvent.click(
+    admin.getByRole("button", { name: "Post visibility: Active posts" }),
+  );
+  fireEvent.click(admin.getByRole("option", { name: "Disabled posts" }));
+  expect(admin.getByText("Disabled social sample")).toBeTruthy();
+  expect(
+    admin.queryByRole("button", { name: /Disabled social sample/ }),
+  ).toBeNull();
+  fireEvent.click(admin.getByRole("button", { name: "Enable post" }));
+  await admin.findByText("Post enabled.");
+  expect(restorePost).toHaveBeenCalledOnce();
+  expect(savePost).not.toHaveBeenCalled();
+  expect(requestAi).not.toHaveBeenCalled();
+  fireEvent.click(
+    admin.getByRole("button", { name: "Post visibility: Disabled posts" }),
+  );
+  fireEvent.click(admin.getByRole("option", { name: "Active posts" }));
+  expect(
+    admin.getByRole("button", { name: /Disabled social sample/ }),
+  ).toBeTruthy();
+});
+
+it("saves the latest edits before disabling an existing post", async () => {
+  setLanguage("en");
+  const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await open(view);
+  fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
+    target: { value: "Latest saved name" },
+  });
+  fireEvent.click(view.getByRole("button", { name: "Disable", exact: true }));
+  fireEvent.click(
+    view.getByRole("button", { name: "Disable post", exact: true }),
+  );
+  await view.findByText("Post disabled.");
+  expect(savePost).toHaveBeenCalledWith(
+    expect.objectContaining({ name: "Latest saved name" }),
+  );
+  expect(vi.mocked(savePost).mock.invocationCallOrder[0]).toBeLessThan(
+    vi.mocked(removePost).mock.invocationCallOrder[0]!,
+  );
+  expect(view.queryByRole("textbox", { name: "Post name" })).toBeNull();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+it("saves a new draft before disabling it rather than dropping an unsaved post", async () => {
+  setLanguage("en");
+  const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await view.findByRole("button", { name: /Social QA/ });
+  fireEvent.click(view.getByRole("button", { name: "＋ New post" }));
+  fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
+    target: { value: "New draft to keep" },
+  });
+  fireEvent.click(view.getByRole("button", { name: "Disable", exact: true }));
+  fireEvent.click(
+    view.getByRole("button", { name: "Disable post", exact: true }),
+  );
+  await view.findByText("Post disabled.");
+  expect(stored.some((item) => item.name === "New draft to keep")).toBe(true);
+  expect(vi.mocked(savePost).mock.invocationCallOrder[0]).toBeLessThan(
+    vi.mocked(removePost).mock.invocationCallOrder[0]!,
+  );
   expect(requestAi).not.toHaveBeenCalled();
 });

@@ -150,3 +150,31 @@ it("uses Albanian for the superadmin activity page and does not invent missing h
   expect(view.getByText("E panjohur")).toBeTruthy();
   expect(view.getByText("Historiku i llogarisë")).toBeTruthy();
 });
+
+it("labels superadmin cross-workspace events and disable/restore actions", async () => {
+  setLanguage("en");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            ...activity,
+            scope: "all-organizations",
+            total: 1,
+            records: [
+              {
+                ...activity.records[0],
+                action: "post.restore",
+                organization: { id: "org-two", name: "Other workspace" },
+              },
+            ],
+          }),
+        ),
+    ),
+  );
+  const view = render(<ActivityPage user={{ role: "superadmin" }} />);
+  await view.findByText("Social post enabled", { selector: "td" });
+  expect(view.getByText("All workspaces")).toBeTruthy();
+  expect(view.getByText("Organization: Other workspace")).toBeTruthy();
+});

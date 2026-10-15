@@ -58,6 +58,12 @@ const artwork: Record<string, ReactNode> = {
       <path d="M12.5 4V2.5h-10v10H4" />
     </>
   ),
+  archive: (
+    <>
+      <rect x="3" y="3" width="14" height="4" rx="1" />
+      <path d="M4.5 7v10h11V7M7.5 10h5" />
+    </>
+  ),
   trash: <path d="M3.5 5h13M7 5V2.5h6V5M5 5l.75 12.5h8.5L15 5M8 8v6M12 8v6" />,
   "arrow-right": <path d="M3.5 10h13M11.5 5l5 5-5 5" />,
   download: <path d="M10 2.5v10m-4-4 4 4 4-4M3 13.5v4h14v-4" />,

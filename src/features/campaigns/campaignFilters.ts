@@ -4,6 +4,7 @@ import { normalize } from "../brochure/utils";
 import { resolveBrochureFormat } from "../brochure/brochureFormat";
 export interface CampaignFilters {
   query: string;
+  visibility: string;
   status: string;
   period: string;
   type: string;
@@ -14,6 +15,7 @@ export interface CampaignFilters {
 }
 export const emptyCampaignFilters: CampaignFilters = {
   query: "",
+  visibility: "active",
   status: "all",
   period: "all",
   type: "all",
@@ -64,6 +66,7 @@ export function normalizeCampaignFilters(value: unknown): CampaignFilters {
   if (from && to && from > to) [from, to] = [to, from];
   return {
     query: text("query", "", 500),
+    visibility: choice("visibility", ["active", "disabled", "all"], "active"),
     status: choice("status", statuses, "all"),
     period: choice("period", periods, "all"),
     type: text("type", "all", 200),
@@ -112,6 +115,8 @@ export function filterCampaigns(
   const terms = normalize(filters.query).split(/\s+/).filter(Boolean);
   return campaigns
     .filter((item) => {
+      if (filters.visibility === "active" && item.disabledAt) return false;
+      if (filters.visibility === "disabled" && !item.disabledAt) return false;
       const searchable = normalize(
         [
           item.name,

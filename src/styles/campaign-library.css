@@ -306,3 +306,24 @@
   min-height: 40px;
   padding: 8px;
 }
+.cs-library .cs-campaign-status.status-disabled {
+  background: #edf0f4;
+  color: #667584;
+}
+.cs-library .cs-campaign-cover:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.cs-campaign-card-actions .cs-disabled-note {
+  grid-column: 1/-1;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #76899b;
+}
+.cs-campaign-card-actions .cs-card-enable {
+  grid-column: 1/-1;
+  background: #edf8f2;
+  color: #246448;
+  border-color: #badbc8;
+}
