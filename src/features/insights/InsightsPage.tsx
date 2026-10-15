@@ -362,7 +362,7 @@ export function InsightsPage({ user }: { user: Pick<User, "role"> }) {
                   <a href={ai.pricingUrl} target="_blank" rel="noreferrer">
                     {t("OpenAI pricing")}
                   </a>{" "}
-                  · {ai.pricingVersion}
+                  · {ai.pricingVersion}. {t("Imported history dates reflect when the records were imported.")}
                 </p>
                 <h2>{t("By operation and model")}</h2>
                 <div className="cs-insights-table">

@@ -15,41 +15,83 @@ export class ApiError extends Error {
 export async function request<T>(
   path: string,
   schema: z.ZodType<T>,
-  options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
+  options: {
+    method?: string;
+    body?: unknown;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {},
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    method: options.method ?? "GET",
-    credentials: "include",
-    signal: options.signal,
-    headers:
-      options.body !== undefined
-        ? { "Content-Type": "application/json" }
-        : undefined,
-    body:
-      options.body !== undefined
-        ? JSON.stringify(
-            /\/api\/(?:team\/(?:campaigns|posts|settings)|ai(?:-|\/jobs))/.test(
-              path,
-            )
-              ? mapAssetUrls(options.body, false)
-              : options.body,
-          )
-        : undefined,
+  const controller = new AbortController();
+  const abort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) abort();
+  else options.signal?.addEventListener("abort", abort, { once: true });
+  const timer = setTimeout(
+    () =>
+      controller.abort(
+        new ApiError(
+          "The connection is taking too long. Your existing work is kept.",
+          408,
+          "REQUEST_TIMEOUT",
+        ),
+      ),
+    options.timeoutMs ?? 60_000,
+  );
+  let stopWaiting: () => void = () => undefined;
+  const interrupted = new Promise<never>((_resolve, reject) => {
+    const onAbort = () =>
+      reject(
+        controller.signal.reason ?? new DOMException("Aborted", "AbortError"),
+      );
+    stopWaiting = () => controller.signal.removeEventListener("abort", onAbort);
+    if (controller.signal.aborted) onAbort();
+    else controller.signal.addEventListener("abort", onAbort, { once: true });
   });
-  const result: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    const error = z
-      .object({ error: z.string().optional(), code: z.string().optional() })
-      .safeParse(result);
-    throw new ApiError(
-      error.success
-        ? (error.data.error ?? `Request failed (${response.status})`)
-        : `Request failed (${response.status})`,
-      response.status,
-      error.success ? error.data.code : undefined,
-    );
+  const run = async () => {
+    controller.signal.throwIfAborted();
+    const response = await fetch(`${API_URL}${path}`, {
+      method: options.method ?? "GET",
+      credentials: "include",
+      signal: controller.signal,
+      headers:
+        options.body !== undefined
+          ? { "Content-Type": "application/json" }
+          : undefined,
+      body:
+        options.body !== undefined
+          ? JSON.stringify(
+              /\/api\/(?:team\/(?:campaigns|posts|settings)|ai(?:-|\/jobs))/.test(
+                path,
+              )
+                ? mapAssetUrls(options.body, false)
+                : options.body,
+            )
+          : undefined,
+    });
+    const result: unknown = await response.json().catch(() => null);
+    if (!response.ok) {
+      const error = z
+        .object({ error: z.string().optional(), code: z.string().optional() })
+        .safeParse(result);
+      throw new ApiError(
+        error.success
+          ? (error.data.error ?? `Request failed (${response.status})`)
+          : `Request failed (${response.status})`,
+        response.status,
+        error.success ? error.data.code : undefined,
+      );
+    }
+    return mapAssetUrls(schema.parse(result), true);
+  };
+  try {
+    // Includes response-body reads; an opened connection is not a completed request.
+    // Writes are never replayed here because the server may already have saved them.
+    return await Promise.race([run(), interrupted]);
+  } finally {
+    clearTimeout(timer);
+    stopWaiting();
+    options.signal?.removeEventListener("abort", abort);
   }
-  return mapAssetUrls(schema.parse(result), true);
 }
 export function resolveAsset(path: string): string {
   if (

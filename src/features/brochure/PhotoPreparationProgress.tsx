@@ -7,7 +7,7 @@ export interface PhotoProgressItem {
   code: string;
   name: string;
   image?: string;
-  state: "queued" | "preparing" | "ready" | "failed";
+  state: "queued" | "preparing" | "saving" | "ready" | "original" | "failed";
 }
 export function PhotoPreparationProgress({
   items,
@@ -22,10 +22,13 @@ export function PhotoPreparationProgress({
 }) {
   if (!items.length) return null;
   const ready = items.filter((x) => x.state === "ready").length,
+    originals = items.filter((x) => x.state === "original"),
     failed = items.filter((x) => x.state === "failed"),
-    active = items.filter((x) => x.state === "preparing"),
+    active = items.filter(
+      (x) => x.state === "preparing" || x.state === "saving",
+    ),
     queued = items.filter((x) => x.state === "queued").length;
-  const finished = ready + failed.length,
+  const finished = ready + originals.length + failed.length,
     percent = Math.round((finished / items.length) * 100),
     busy = finished < items.length;
   const missing = campaign.products
@@ -52,6 +55,9 @@ export function PhotoPreparationProgress({
           </h3>
           <p role="status" aria-live="polite">
             {ready} / {items.length} {t("ready")}
+            {originals.length > 0
+              ? ` · ${originals.length} ${t("Using original photo")}`
+              : ""}
             {queued > 0 ? ` · ${queued} ${t("waiting")}` : ""}
             {failed.length ? ` · ${failed.length} ${t("need attention")}` : ""}
           </p>
@@ -74,7 +80,13 @@ export function PhotoPreparationProgress({
             <div key={item.key}>
               {item.image && <img src={item.image} alt="" />}
               <span>
-                <small>{t("Preparing / waiting for AI")}</small>
+                <small>
+                  {t(
+                    item.state === "saving"
+                      ? "Saving photo…"
+                      : "Preparing / waiting for AI",
+                  )}
+                </small>
                 <strong>{item.name}</strong>
                 <small>{item.code}</small>
               </span>
@@ -82,8 +94,26 @@ export function PhotoPreparationProgress({
           ))}
         </div>
       )}
-      {(failed.length > 0 || missing > 0) && (
+      {(failed.length > 0 || missing > 0 || originals.length > 0) && (
         <div className="cs-photo-progress-actions">
+          {originals.length > 0 && (
+            <>
+              <span>
+                {t(
+                  "Original photos remain in your brochure. You can keep editing or upload a replacement.",
+                )}
+              </span>
+              {originals.slice(0, 3).map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => onEdit(item.code)}
+                >
+                  {t("Upload / edit photo")} · {item.name}
+                </button>
+              ))}
+            </>
+          )}
           {failed.length > 0 && (
             <>
               <span>{t("Some photos need a retry or your own upload.")}</span>

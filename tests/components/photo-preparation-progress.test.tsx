@@ -62,3 +62,50 @@ it("shows real completed, waiting and failed work while keeping upload and retry
   expect(retry).toHaveBeenCalledOnce();
   expect(view.getByText("Photo preparation needs attention")).toBeTruthy();
 });
+
+it("finishes with an original photo when preparation is unavailable, without inviting another paid retry", () => {
+  setLanguage("en");
+  const edit = vi.fn();
+  const view = render(
+    <PhotoPreparationProgress
+      items={[
+        { key: "prepared", code: "one", name: "TV", state: "ready" },
+        { key: "fallback", code: "two", name: "Tablet", state: "original" },
+      ]}
+      campaign={
+        {
+          products: [
+            { code: "one", name: "TV", image: "/prepared.png" },
+            { code: "two", name: "Tablet", image: "/original.png" },
+          ],
+        } as Campaign
+      }
+      onRetry={vi.fn()}
+      onEdit={edit}
+    />,
+  );
+  expect(view.getByText("100%")).toBeTruthy();
+  expect(view.getByText(/1 \/ 2 ready · 1 Using original photo/)).toBeTruthy();
+  expect(view.getByText("Product photos are ready")).toBeTruthy();
+  expect(
+    view.queryByRole("button", { name: "Retry failed photos" }),
+  ).toBeNull();
+  fireEvent.click(
+    view.getByRole("button", { name: "Upload / edit photo · Tablet" }),
+  );
+  expect(edit).toHaveBeenCalledWith("two");
+});
+
+it("shows saving separately from AI preparation", () => {
+  setLanguage("en");
+  const view = render(
+    <PhotoPreparationProgress
+      items={[{ key: "saved", code: "one", name: "TV", state: "saving" }]}
+      campaign={{ products: [] } as unknown as Campaign}
+      onRetry={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+  expect(view.getByText("Saving photo…")).toBeTruthy();
+  expect(view.queryByText("Preparing / waiting for AI")).toBeNull();
+});

@@ -135,3 +135,58 @@ it("preserves mixed structured/string lists and snapshots generated facts only w
     detailBlockStyles: {},
   });
 });
+
+it("selects the reference appliance facts while retaining imported lists and individual edits", async () => {
+  const { brochureDefaultDetailEntries } =
+    await import("../../src/features/brochure/detailRows");
+  const specs = {
+    Kapaciteti: "7 Kg",
+    "Shpejtësia e rrotullimeve": "1200 rpm",
+    "Numri i programeve": "14",
+    "Klasa energjisë": "A",
+    "Lloji i motorrit": "ProSmart Inverter",
+    Teknologji: "EnergySpin",
+    Permasat: "84.5x60x49.6 cm",
+  };
+  const entries = Object.entries(specs);
+  const product = { subcategory: "Rrobalarëse", specs };
+  expect(
+    brochureDefaultDetailEntries(product, entries).map(([key]) => key),
+  ).toEqual([
+    "Kapaciteti",
+    "Shpejtësia e rrotullimeve",
+    "Numri i programeve",
+    "Lloji i motorrit",
+  ]);
+  expect(product.specs).toEqual(specs);
+  expect(
+    brochureDefaultDetailEntries({ ...product, brochureDetails: [] }, entries),
+  ).toBe(entries);
+  expect(
+    brochureDefaultDetailEntries(
+      { ...product, autoSpecsDisabled: true },
+      entries,
+    ),
+  ).toBe(entries);
+  expect(
+    brochureDefaultDetailEntries(
+      { ...product, detailBlockPlacements: { Permasat: { width: 30 } } },
+      entries,
+    ).at(-1)?.[0],
+  ).toBe("Permasat");
+  expect(
+    brochureDefaultDetailEntries({ subcategory: "ENËLARËSE" }, [
+      ["Kapaciteti", "14 Sete"],
+      ["Nr. Programe", "6"],
+      ["Teknologji", "HygieneShield"],
+      ["Shpenzimet e energjisë", "237 kWh /vit"],
+      ["Përmasat", "85x60cm"],
+      ["Niveli i zhurmës", "47dB"],
+    ]).map(([key]) => key),
+  ).toEqual([
+    "Kapaciteti",
+    "Nr. Programe",
+    "Shpenzimet e energjisë",
+    "Niveli i zhurmës",
+  ]);
+});

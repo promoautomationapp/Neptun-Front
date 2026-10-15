@@ -1,5 +1,7 @@
 # Brochure fixes in the new projects
 
+Historical 8 October report. The editor is now integrated and the complete typecheck/build passes. See [the current implementation check](IMPLEMENTATION_CHECK.md) for the 15 October status.
+
 Updated 8 October 2026. Changes are in the sibling frontend and backend. The original `../neptun-campaign-studio` remains read-only. No paid AI, cutout generation or production deployment was performed.
 
 ## Importing offers and sets

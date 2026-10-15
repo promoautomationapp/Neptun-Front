@@ -1,4 +1,9 @@
 const translations: Record<string, string> = {
+  "Original photos remain in your brochure. You can keep editing or upload a replacement.": "Fotografitë origjinale mbeten në broshurë. Mund të vazhdoni redaktimin ose të ngarkoni një zëvendësim.",
+  "Using original photo": "Duke përdorur fotografinë origjinale",
+  "Saving photo…": "Duke ruajtur fotografinë…",
+  "Activity log": "Historiku i veprimeve",
+  "Imported history dates reflect when the records were imported.": "Datat e historikut të importuar tregojnë kohën kur u importuan regjistrimet.",
   "Product / context": "Produkti / konteksti",
   "Date": "Data",
   "Products": "Produktet",

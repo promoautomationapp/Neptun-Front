@@ -5,6 +5,80 @@ import {
   type DetailEntry,
 } from "./detailFacts";
 
+const normalize = (value: unknown) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+// Appliance offers use the same concise fact selection as the brochure design.
+// Source catalog specs remain intact. Imported lists, manually edited specs and
+// independently edited blocks always remain authoritative.
+export function brochureDefaultDetailEntries(
+  product: Partial<Product>,
+  entries: DetailEntry[],
+): DetailEntry[] {
+  if (Array.isArray(product.brochureDetails) || product.autoSpecsDisabled)
+    return entries;
+  const category = normalize(
+    `${product.subcategory || ""} ${product.name || ""}`,
+  );
+  const washer = /rrobalarese|washing\s*machine|\bwasher\b/.test(category);
+  const dishwasher = /enelarese|dishwasher/.test(category);
+  if (!washer && !dishwasher) return entries;
+  const available = entries.filter(
+    ([key, value]) => value && !/garanc|warrant|ngjyr|colou?r/i.test(key),
+  );
+  const priorities = washer
+    ? [
+        /kapac|capacity/,
+        /rrotull|spin\s*speed|^rpm$/,
+        /program/,
+        /motor|inverter/,
+      ]
+    : [
+        /kapac|capacity|sete|place\s*setting/,
+        /program/,
+        /energ/,
+        /zhurm|noise|sound/,
+      ];
+  const selected = new Set<string>();
+  for (const priority of priorities) {
+    const entry = available.find(([key, value]) =>
+      priority.test(normalize(`${key} ${value}`)),
+    );
+    if (entry) selected.add(entry[0]);
+  }
+  // A sparse catalog should still display useful available facts. Never invent
+  // a missing capacity, program count, technology or warranty.
+  for (const [key] of available) {
+    if (selected.size >= 4) break;
+    selected.add(key);
+  }
+  for (const [key] of available) {
+    if (
+      Object.hasOwn(product.detailBlockPlacements || {}, key) ||
+      Object.hasOwn(product.detailBlockStyles || {}, key)
+    )
+      selected.add(key);
+  }
+  const result: DetailEntry[] = [];
+  for (const priority of priorities) {
+    const entry = available.find(
+      ([key, value]) =>
+        selected.has(key) &&
+        priority.test(normalize(`${key} ${value}`)) &&
+        !result.some(([savedKey]) => savedKey === key),
+    );
+    if (entry) result.push(entry);
+  }
+  for (const entry of available) {
+    if (selected.has(entry[0]) && !result.some(([key]) => key === entry[0]))
+      result.push(entry);
+  }
+  return result;
+}
+
 export interface DetailRowsChanges {
   brochureDetails: NonNullable<Product["brochureDetails"]>;
   detailBlockPlacements: NonNullable<Product["detailBlockPlacements"]>;
@@ -81,13 +155,30 @@ export function reorderDisplayedDetails(
   return displayedRowsChanges(product, reordered);
 }
 
-export function brochureVisibleDetailEntries(entries: readonly DetailEntry[], {columns = 2, warrantyInStrip = false}: {columns?: number; warrantyInStrip?: boolean} = {}): DetailEntry[] {
+export function brochureVisibleDetailEntries(
+  entries: readonly DetailEntry[],
+  {
+    columns = 2,
+    warrantyInStrip = false,
+  }: { columns?: number; warrantyInStrip?: boolean } = {},
+): DetailEntry[] {
   const blocks = columns >= 3 ? 3 : 5;
   return entries.slice(0, Math.max(1, blocks - Number(warrantyInStrip)));
 }
 
-export function editDisplayedDetail(product: Partial<Product>, rows: readonly DetailEntry[], index: number, text: string): DetailRowsChanges {
+export function editDisplayedDetail(
+  product: Partial<Product>,
+  rows: readonly DetailEntry[],
+  index: number,
+  text: string,
+): DetailRowsChanges {
   const manual = Array.isArray(product.brochureDetails);
-  const values: DetailEntry[] = rows.map(([key, value], position) => [key, position === index ? text : manual ? value : `${key}: ${value}`]);
-  return displayedRowsChanges({...product, brochureDetails: product.brochureDetails || []}, values);
+  const values: DetailEntry[] = rows.map(([key, value], position) => [
+    key,
+    position === index ? text : manual ? value : `${key}: ${value}`,
+  ]);
+  return displayedRowsChanges(
+    { ...product, brochureDetails: product.brochureDetails || [] },
+    values,
+  );
 }

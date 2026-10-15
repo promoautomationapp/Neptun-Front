@@ -43,7 +43,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("shows support superadmins without edit actions and invites new staff by default", async () => {
+it("hides support accounts from Neptun admins and invites new staff by default", async () => {
   const api = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     if (init?.method === "POST")
       return response({
@@ -59,10 +59,11 @@ it("shows support superadmins without edit actions and invites new staff by defa
   });
   vi.stubGlobal("fetch", api);
   const view = render(<UsersPage currentUser={admin} />);
-  await view.findByText("Platform Support");
-  const supportRow = view.getByText("Platform Support").closest("tr");
-  expect(supportRow?.querySelector("button")).toBeNull();
-  expect(view.getAllByText("Support superadmin").length).toBeGreaterThan(0);
+  await view.findByText("Team Staff");
+  expect(view.queryByText("Platform Support")).toBeNull();
+  expect(view.queryByText("support@example.test")).toBeNull();
+  expect(view.queryByText(/Support superadmin/)).toBeNull();
+  expect(view.getByText("Administrators")).toBeTruthy();
   fireEvent.click(view.getByRole("button", { name: "＋ Invite a user" }));
   expect(
     (view.getByLabelText("Invitation role") as HTMLSelectElement).value,
@@ -104,7 +105,10 @@ it("keeps invite actions unavailable when email delivery is not configured", asy
     vi.fn(async () => response({ users: [staff], emailConfigured: false })),
   );
   const view = render(<UsersPage currentUser={admin} />);
-  await view.findByText(/Email delivery needs/);
+  await view.findByText(/New invitations are unavailable/);
+  expect(
+    view.getByText(/they do not need another email verification/),
+  ).toBeTruthy();
   expect(
     (
       view.getByRole("button", {
@@ -223,4 +227,33 @@ it("explains that changing a pending role needs a new invitation", async () => {
   fireEvent.click(view.getByRole("button", { name: "Save user" }));
   await view.findByText(/The previous invitation expired; use Resend invite/);
   expect(view.getByRole("button", { name: "Resend invite" })).toBeTruthy();
+});
+
+it("lets Promo superadmins view protected support accounts and invite every Neptun role", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      response({ users: [staff, support], emailConfigured: true }),
+    ),
+  );
+  const view = render(
+    <UsersPage
+      currentUser={{
+        ...admin,
+        id: "support",
+        role: "superadmin",
+        isSupport: true,
+      }}
+    />,
+  );
+  const row = (await view.findByText("Platform Support")).closest("tr");
+  expect(row?.querySelector("button")).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "＋ Invite a user" }));
+  const choices = Array.from(
+    (view.getByLabelText("Invitation role") as HTMLSelectElement).options,
+  ).map((option) => option.value);
+  expect(choices).toEqual(["staff", "pm", "admin"]);
+  expect(
+    view.getByText(/Existing users do not repeat this process/),
+  ).toBeTruthy();
 });

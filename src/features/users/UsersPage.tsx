@@ -73,7 +73,13 @@ export function UsersPage({
     void listUsers(controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return;
-        setUsers(result.users);
+        setUsers(
+          currentUser.role === "superadmin"
+            ? result.users
+            : result.users.filter(
+                (user) => !user.isSupport && user.role !== "superadmin",
+              ),
+        );
         setEmailConfigured(result.emailConfigured);
         setLoaded(true);
       })
@@ -141,8 +147,8 @@ export function UsersPage({
           <span className="cs-eyebrow">TEAM & ACCESS</span>
           <h1>Manage your team</h1>
           <p>
-            Invite colleagues and manage access to the Neptun brochure
-            workspace.
+            Invite Neptun admins, staff, and PMs to the brochure workspace.
+            Existing accounts keep their current password access.
           </p>
         </div>
         <button
@@ -172,14 +178,27 @@ export function UsersPage({
           <span>Pending invitations</span>
         </div>
         <div>
-          <strong>{users.filter((user) => user.isSupport).length}</strong>
-          <span>Support superadmins</span>
+          <strong>
+            {
+              users.filter((user) =>
+                currentUser.role === "superadmin"
+                  ? user.isSupport
+                  : user.role === "admin",
+              ).length
+            }
+          </strong>
+          <span>
+            {currentUser.role === "superadmin"
+              ? "Support superadmins"
+              : "Administrators"}
+          </span>
         </div>
       </div>
       {!emailConfigured && loaded && (
         <p className="na-alert warning" role="status">
-          Email delivery needs to be configured before invitations can be sent.
-          Existing users can still be managed here.
+          New invitations are unavailable until email delivery is connected.
+          Existing accounts can still sign in with their current passwords; they
+          do not need another email verification.
         </p>
       )}
       {error && (
@@ -196,8 +215,10 @@ export function UsersPage({
         <div className="na-edit-card">
           <h2>Invite a colleague</h2>
           <p>
-            They will receive a secure link to choose a password and verify
-            their email. No password is shared by an admin.
+            Choose their role and enter a working email address. They receive an
+            invitation, choose their own password, then verify the code sent to
+            that address to activate access. Existing users do not repeat this
+            process.
           </p>
           <form
             className="na-form na-user-form"
@@ -384,7 +405,9 @@ export function UsersPage({
                   {item.label}
                 </option>
               ))}
-              <option value="superadmin">Support superadmin</option>
+              {currentUser.role === "superadmin" && (
+                <option value="superadmin">Support superadmin</option>
+              )}
             </select>
           </label>
           <label>
@@ -550,10 +573,12 @@ export function UsersPage({
           </div>
         )}
       </div>
-      <p className="na-support-note">
-        Support superadmins are visible to Neptun admins and help manage the
-        platform. Their accounts cannot be changed from this workspace.
-      </p>
+      {currentUser.role === "superadmin" && (
+        <p className="na-support-note">
+          Support accounts are visible only to Promo Automation superadmins and
+          are managed separately from the Neptun team.
+        </p>
+      )}
     </section>
   );
 }

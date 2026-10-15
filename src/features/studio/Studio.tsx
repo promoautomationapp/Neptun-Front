@@ -108,6 +108,7 @@ import { searchProducts } from "../brochure/productSearch";
 import { SettingsPage } from "../settings/SettingsPage";
 import { UsersPage } from "../users/UsersPage";
 import { InsightsPage } from "../insights/InsightsPage";
+import { ActivityPage } from "../activity/ActivityPage";
 import { PhotoPreparationProgress, type PhotoProgressItem } from "../brochure/PhotoPreparationProgress";
 import { ProfilePage } from "../users/ProfilePage";
 import { canManageUsers, roleLabel } from "../auth/auth.api";
@@ -284,7 +285,7 @@ function TrashIcon({ size = 18 }) {
     </svg>
   );
 }
-const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎", insights: "▥" };
+const icons: Record<string, string> = { campaigns: "▦", catalog: "▤", social: "▧", stores: "⌖", users: "♙", profile: "◎", insights: "▥", activity: "◷" };
 
 function LanguageSwitch({
   language,
@@ -3351,46 +3352,24 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
   }, []);
   useEffect(() => {
     if (!user) return;
-    getMembers()
-      .then(setMembers)
-      .catch((error) => console.error("Could not load team members:", error));
-    Promise.allSettled([
-      bootstrapWorkspace(),
-      loadCatalog().then((products) => ({ products, count: products.length })),
-    ]).then(([workspaceResult, catalogResult]) => {
-      const products =
-        catalogResult.status === "fulfilled"
-          ? catalogResult.value.products || []
-          : [];
-      if (catalogResult.status === "fulfilled") {
-        setCatalog(products);
-      } else {
-        console.error(catalogResult.reason);
-      }
-      if (workspaceResult.status === "fulfilled") {
-        const { campaigns: saved, settings: custom } = workspaceResult.value;
-        setCampaigns((current) =>
-          mergeCampaignSnapshots(
-            current,
-            enrichSavedCampaigns(saved, products),
-            activeEditorRef.current.activeId,
-            activeEditorRef.current.section === "editor",
-          ),
-        );
-        setSettings(resolveSettings(custom));
-      } else {
-        console.error(workspaceResult.reason);
-      }
-      if (
-        workspaceResult.status === "rejected" ||
-        catalogResult.status === "rejected"
-      )
-        setToast(
-          workspaceResult.status === "rejected"
-            ? workspaceResult.reason.message
-            : t("Could not load local data. Please refresh."),
-        );
-    });
+    const controller = new AbortController();
+    let productsSnapshot: Product[] = [];
+    void getMembers().then(result => {
+      if (!controller.signal.aborted) setMembers(result);
+    }).catch(error => {if (!controller.signal.aborted) console.error("Could not load team members:", error);});
+    // Saved brochures must not wait behind all pages of the source catalog.
+    void bootstrapWorkspace().then(({campaigns: saved, settings: custom}) => {
+      if (controller.signal.aborted) return;
+      setCampaigns(current => mergeCampaignSnapshots(current, enrichSavedCampaigns(saved, productsSnapshot), activeEditorRef.current.activeId, activeEditorRef.current.section === "editor"));
+      setSettings(resolveSettings(custom));
+    }).catch(error => {if (!controller.signal.aborted) setToast(errorMessage(error));});
+    void loadCatalog(controller.signal).then(products => {
+      if (controller.signal.aborted) return;
+      productsSnapshot = products;
+      setCatalog(products);
+      setCampaigns(current => enrichSavedCampaigns(current, products));
+    }).catch(error => {if (!controller.signal.aborted) console.error("Could not load product catalog:", error);});
+    return () => controller.abort();
   }, [user?.email]);
   useEffect(() => {
     if (!user) return;
@@ -3520,17 +3499,17 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
     const retries = new Set(retryFailed ? targets.filter(target => failedPhotoTargets.current.has(target.key)).map(target => target.key) : []);
     for (const target of targets) failedPhotoTargets.current.delete(target.key);
     setPhotoProgress(current => ({...current, [snapshot.id]: {
-      ...(Object.values(current[snapshot.id] || {}).some(item => item.state === "queued" || item.state === "preparing") ? current[snapshot.id] : {}),
+      ...(Object.values(current[snapshot.id] || {}).some(item => item.state === "queued" || item.state === "preparing" || item.state === "saving") ? current[snapshot.id] : {}),
       ...Object.fromEntries(targets.map(target => [target.key, {key: target.key, code: target.offerCode, name: target.request.name, image: target.source, state: "queued" as const}]))
     }}));
     const jobs = targets.map(target => productPhotoQueue.current.enqueue(target, async (preparedTarget, result) => {
       const changed = updateCampaign(draft => {applyPreparedProductPhoto(draft, preparedTarget, result);}, {id: snapshot.id, group: `product-photos:${snapshot.id}`});
       if (changed?.changed) await changed.saved;
-    }, {retry: retries.has(target.key), onStart: () => trackProductPhotoWork(snapshot.id, target.key, "preparing")}).then(outcome => {
+    }, {retry: retries.has(target.key), onPhase: phase => trackProductPhotoWork(snapshot.id, target.key, phase)}).then(outcome => {
       const currentCampaign = latestCampaigns.current.find(item => item.id === snapshot.id);
       if (!outcome.ok && currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.set(target.key, target);
       else failedPhotoTargets.current.delete(target.key);
-      trackProductPhotoWork(snapshot.id, target.key, outcome.ok ? "ready" : "failed");
+      trackProductPhotoWork(snapshot.id, target.key, outcome.ok ? "ready" : outcome.usingOriginal ? "original" : "failed");
       return outcome;
     }));
     return Promise.all(jobs).then(outcomes => {
@@ -3538,7 +3517,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
       for (const outcome of outcomes) if (!outcome.ok && currentProductPhotoTarget(currentCampaign, outcome.target)) failedPhotoTargets.current.set(outcome.target.key, outcome.target);
       for (const [key, target] of failedPhotoTargets.current) if (target.campaignId === snapshot.id && !currentProductPhotoTarget(currentCampaign, target)) failedPhotoTargets.current.delete(key);
       const failed = [...failedPhotoTargets.current.values()].some(target => target.campaignId === snapshot.id);
-      if (failed) setToast(t("Some product photos could not be prepared. Try again."));
+      if (failed && outcomes.some(outcome => !outcome.ok && !outcome.usingOriginal)) setToast(t("Some product photos could not be prepared. Try again."));
       return outcomes;
     });
   }
@@ -3897,7 +3876,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
               ["catalog", "Product catalog"],
               ["social", "Social posts"],
               ["stores", "Settings"],
-              ...(canManageUsers(user) ? [["users", "Team & access"]] : []),
+              ...(canManageUsers(user) ? [["users", "Team & access"], ["activity", "Activity log"]] : []),
               ...(user.role === "superadmin" ? [["insights", "Usage & storage"]] : []),
               ["profile", "Profile & security"],
             ] as [string, string][]
@@ -3951,6 +3930,8 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
                     ? "Social posts"
                     : section === "users"
                       ? t("Team & access")
+                      : section === "activity"
+                        ? t("Activity log")
                       : section === "insights"
                         ? t("Usage & storage")
                       : section === "profile"
@@ -4107,6 +4088,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             } else setToast(message);
           }} />
         )}
+        {section === "activity" && canManageUsers(user) && <ActivityPage user={user} />}
         {section === "insights" && user.role === "superadmin" && <InsightsPage user={user} />}
         {section === "stores" && (
           <SettingsPage

@@ -90,7 +90,7 @@ import {
   isMobilePhone,
   mobileDetailEntries,
 } from "./mobileDetails";
-import { deleteDisplayedDetail, brochureVisibleDetailEntries, editDisplayedDetail } from "./detailRows";
+import { deleteDisplayedDetail, brochureVisibleDetailEntries, brochureDefaultDetailEntries, editDisplayedDetail } from "./detailRows";
 import { useProductImageFit } from "./useProductImageFit";
 import {
   conditionerDetailEntries,
@@ -1092,7 +1092,8 @@ function StandardProductCard({
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
   const warrantyInStrip = referenceStrip && detailPlacement !== "left";
-  const specs = detailPlacement === "left" ? allSpecs : brochureVisibleDetailEntries(allSpecs, {columns: layoutGrid(layout || "grid6portrait").columns, warrantyInStrip: Boolean(warranty && warrantyInStrip)});
+  const preferredSpecs = importedSpecs ? allSpecs : brochureDefaultDetailEntries(product, allSpecs);
+  const specs = detailPlacement === "left" ? allSpecs : brochureVisibleDetailEntries(preferredSpecs, {columns: layoutGrid(layout || "grid6portrait").columns, warrantyInStrip: Boolean(warranty && warrantyInStrip)});
   const changeProduct = onProductChange
     ? (
         field: keyof Product | Partial<Product>,

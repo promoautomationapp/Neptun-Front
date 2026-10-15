@@ -6,7 +6,9 @@ export function AccountFrame({ children }: { children: ReactNode }) {
   return (
     <div className="na-account-screen">
       <div className="na-account-brand">
-        <img src="/branding/neptun-logo.png" alt="NEPTUN" />
+        <span className="na-account-wordmark">
+          <img src="/branding/neptun-logo.png" alt="NEPTUN" />
+        </span>
         <span>Brochure workspace</span>
       </div>
       <main className="na-account-card">{children}</main>

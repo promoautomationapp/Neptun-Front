@@ -1,4 +1,4 @@
-import {expect, it} from "vitest";
+import {expect, it, vi} from "vitest";
 import type {Campaign, Product} from "../../src/domain/models";
 import {productImageFit} from "../../src/features/brochure/productImageFit";
 import {occupiedProductRows} from "../../src/features/brochure/brochureLayout";
@@ -56,4 +56,29 @@ it("deduplicates background work and limits simultaneous preparation across impo
   for (const release of releases) release();
   expect((await Promise.all(jobs)).every(result => result.ok)).toBe(true);
   expect(calls).toBe(3); expect(maximum).toBe(2);
+});
+
+it("keeps original photos available after uncertain work and continues with the next products", async () => {
+  let calls = 0;
+  const phases: string[] = [];
+  const apply = vi.fn();
+  const queue = createProductImagePreparationQueue({concurrency: 1, orientation: async () => {throw new Error("Source download unavailable");}, inspect: async source => source, prepare: async body => {
+    expect(body.orientation).toBe("square");
+    if (++calls === 1) throw new Error("Provider response uncertain");
+    return {image: "/prepared.png"};
+  }});
+  const targets = productImagePreparationTargets({...campaign, products: [product, {...product, code: "next"}]});
+  const outcomes = await Promise.all(targets.map(target => queue.enqueue(target, apply, {onPhase: phase => phases.push(phase)})));
+  expect(outcomes[0]).toMatchObject({ok: false, usingOriginal: true});
+  expect(outcomes[1]).toMatchObject({ok: true});
+  expect(apply).toHaveBeenCalledOnce();
+  expect(phases).toEqual(["preparing", "preparing", "saving"]);
+  expect(product.image).toBe("/original.png");
+});
+
+it("distinguishes a save error from failure to prepare an image", async () => {
+  const queue = createProductImagePreparationQueue({orientation: async () => "square", inspect: async source => source, prepare: async () => ({image: "/prepared.png"})});
+  const target = productImagePreparationTargets(campaign)[0]!;
+  const outcome = await queue.enqueue(target, () => {throw new Error("Could not save");});
+  expect(outcome).toMatchObject({ok: false, usingOriginal: false});
 });

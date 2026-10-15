@@ -25,6 +25,26 @@
   max-height: 74px;
   object-fit: contain;
 }
+.na-account-wordmark {
+  display: block;
+  position: relative;
+  width: min(210px, 70vw);
+  line-height: 0;
+}
+.na-account-wordmark img {
+  display: block;
+  width: 100%;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(38%) saturate(1657%) hue-rotate(175deg) brightness(89%) contrast(93%);
+}
+.na-account-wordmark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16%;
+  background: #ee4028;
+}
 .na-account-card {
   width: min(100%, 520px);
   padding: 36px;

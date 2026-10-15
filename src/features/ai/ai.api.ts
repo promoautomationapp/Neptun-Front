@@ -83,6 +83,92 @@ const jobSchema = z.object({
   result: jsonObject.nullable(),
   error: z.string().nullable(),
 });
+const REQUEST_TIMEOUT_MS = 45_000;
+const JOB_WAIT_TIMEOUT_MS = 20 * 60_000;
+const MAX_POLL_FAILURES = 3;
+// Retain jobs when only the browser's wait failed. Clicking Retry reattaches to
+// the durable job with GET instead of requesting another billable generation.
+const unfinishedJobs = new Map<string, string>();
+
+function jobKey(path: AiPath, body: unknown) {
+  const params =
+    body && typeof body === "object" && !Array.isArray(body)
+      ? Object.fromEntries(
+          Object.entries(body).filter(
+            ([key]) =>
+              key !== "retry" &&
+              !(path === "ai-remove-background" && key === "orientation"),
+          ),
+        )
+      : body;
+  return JSON.stringify([path, params]);
+}
+
+function boundedAiRequest<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  options: { method?: string; body?: unknown; signal?: AbortSignal },
+) {
+  return new Promise<T>((resolve, reject) => {
+    if (options.signal?.aborted) {
+      reject(
+        options.signal.reason ?? new DOMException("Aborted", "AbortError"),
+      );
+      return;
+    }
+    const controller = new AbortController();
+    let settled = false;
+    const finish = (error: unknown, value?: T) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      options.signal?.removeEventListener("abort", abort);
+      if (error) reject(error);
+      else resolve(value as T);
+    };
+    const abort = () => {
+      const error =
+        options.signal?.reason ?? new DOMException("Aborted", "AbortError");
+      controller.abort(error);
+      finish(error);
+    };
+    const timer = setTimeout(() => {
+      const error = new ApiError(
+        options.method === "POST"
+          ? "The preparation request could not be confirmed. It may still finish in the background."
+          : "The preparation status could not be reached in time.",
+        408,
+        options.method === "POST"
+          ? "AI_REQUEST_UNCONFIRMED"
+          : "AI_POLL_TIMEOUT",
+      );
+      controller.abort(error);
+      finish(error);
+    }, REQUEST_TIMEOUT_MS);
+    options.signal?.addEventListener("abort", abort, { once: true });
+    void request(path, schema, { ...options, signal: controller.signal }).then(
+      (value) => finish(null, value),
+      (error) => finish(error),
+    );
+  });
+}
+
+function pendingJobError() {
+  return new ApiError(
+    "Preparation has not finished yet or its status is temporarily unavailable. You can keep editing and check the existing job again later.",
+    408,
+    "AI_JOB_PENDING",
+  );
+}
+
+function temporaryPollFailure(error: unknown) {
+  return (
+    error instanceof TypeError ||
+    (error instanceof ApiError &&
+      (error.status === 408 || error.status === 429 || error.status >= 500))
+  );
+}
+
 function waitForPoll(signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const finish = () => {
@@ -104,28 +190,57 @@ export async function requestAi<P extends AiPath>(
   body: unknown,
   signal?: AbortSignal,
 ): Promise<z.infer<(typeof schemas)[P]>> {
-  const ticket = await request(`/api/${path}`, ticketSchema, {
-    method: "POST",
-    body,
-    signal,
-  });
   const parse = (value: unknown) =>
     schemas[path].parse(value) as z.infer<(typeof schemas)[P]>;
-  if (ticket.status === "succeeded" && ticket.result)
-    return parse(ticket.result);
-  if (!ticket.jobId)
-    throw new ApiError("The AI job could not be started.", 502);
-  for (;;) {
-    await waitForPoll(signal);
-    const job = await request(`/api/ai/jobs/${ticket.jobId}`, jobSchema, {
+  const key = jobKey(path, body);
+  let jobId = unfinishedJobs.get(key);
+  if (!jobId) {
+    const ticket = await boundedAiRequest(`/api/${path}`, ticketSchema, {
+      method: "POST",
+      body,
       signal,
     });
-    if (job.status === "succeeded" && job.result) return parse(job.result);
-    if (["failed", "cancelled", "uncertain"].includes(job.status))
+    if (ticket.status === "succeeded" && ticket.result)
+      return parse(ticket.result);
+    if (!ticket.jobId)
+      throw new ApiError("The AI job could not be started.", 502);
+    jobId = ticket.jobId;
+    unfinishedJobs.set(key, jobId);
+  }
+  const startedAt = Date.now();
+  let pollFailures = 0;
+  for (;;) {
+    if (Date.now() - startedAt >= JOB_WAIT_TIMEOUT_MS) throw pendingJobError();
+    await waitForPoll(signal);
+    let job: z.infer<typeof jobSchema>;
+    try {
+      job = await boundedAiRequest(`/api/ai/jobs/${jobId}`, jobSchema, {
+        signal,
+      });
+      pollFailures = 0;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      // A session/organization change must not leave another user's old ticket
+      // attached to future commands. Authorization is still enforced server-side.
+      if (error instanceof ApiError && [401, 403, 404].includes(error.status))
+        unfinishedJobs.delete(key);
+      if (!temporaryPollFailure(error)) throw error;
+      if (++pollFailures >= MAX_POLL_FAILURES) throw pendingJobError();
+      continue;
+    }
+    if (job.status === "succeeded" && job.result) {
+      const result = parse(job.result);
+      unfinishedJobs.delete(key);
+      return result;
+    }
+    if (["failed", "cancelled", "uncertain"].includes(job.status)) {
+      unfinishedJobs.delete(key);
       throw new ApiError(
         job.error ?? "AI preparation failed.",
         502,
         job.status === "uncertain" ? "AI_RESULT_UNCERTAIN" : "AI_JOB_FAILED",
       );
+    }
+    if (!["queued", "running"].includes(job.status)) throw pendingJobError();
   }
 }

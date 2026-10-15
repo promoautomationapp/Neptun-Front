@@ -16,7 +16,9 @@ export interface ProductPhotoTarget {
   key: string;
 }
 export type PreparedPhotoResult = Record<string, JsonValue> & { image: string };
-export interface PhotoOutcome { ok: boolean; target: ProductPhotoTarget; error?: unknown; }
+export interface PhotoOutcome { ok: boolean; target: ProductPhotoTarget; error?: unknown; usingOriginal?: boolean; }
+export type PhotoPreparationPhase = "preparing" | "saving";
+interface QueueOptions {retry?: boolean; onStart?: () => void; onPhase?: (phase: PhotoPreparationPhase) => void;}
 
 export function retainPreparedProductPhoto(previous: Product | undefined, incoming: Product): Product {
   let next = incoming;
@@ -84,32 +86,41 @@ export function applyPreparedProductPhoto(campaign: Campaign, target: ProductPho
 export function createProductImagePreparationQueue({prepare = async body => await requestAi("ai-remove-background", body) as PreparedPhotoResult, orientation = imageOrientation, inspect = inspectImage, concurrency = 2}: {prepare?: (body: ReturnType<typeof buildImagePreparationRequest> & {orientation: string}) => Promise<PreparedPhotoResult>; orientation?: (source: string) => Promise<string>; inspect?: (source: string) => Promise<string>; concurrency?: number} = {}) {
   const limit = Number.isFinite(concurrency) ? Math.max(1, Math.min(3, Math.floor(concurrency))) : 2;
   const jobs = new Map<string, Promise<PhotoOutcome>>();
-  const waiting: Array<{target: ProductPhotoTarget; apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void; retry: boolean; onStart?: () => void; resolve: (outcome: PhotoOutcome) => void}> = [];
+  const waiting: Array<{target: ProductPhotoTarget; apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void; retry: boolean; onStart?: () => void; onPhase?: (phase: PhotoPreparationPhase) => void; resolve: (outcome: PhotoOutcome) => void}> = [];
   let running = 0;
   function drain() {
     while (running < limit && waiting.length) {
       const job = waiting.shift()!; running++;
       void (async () => {
         let outcome: PhotoOutcome;
+        let prepared = false;
         try {
           job.onStart?.();
-          const result = await prepare({...job.target.request, ...(job.retry ? {retry: true} : {}), orientation: await orientation(job.target.source)});
+          job.onPhase?.("preparing");
+          // Orientation only guides composition. An unavailable catalog image
+          // must not prevent the durable backend job from being checked/run.
+          let layout: string;
+          try { layout = await orientation(job.target.source); }
+          catch { layout = "square"; }
+          const result = await prepare({...job.target.request, ...(job.retry ? {retry: true} : {}), orientation: layout});
           if (!result.image) throw new Error("Could not prepare this product photo.");
           result.image = await inspect(result.image);
+          prepared = true;
+          job.onPhase?.("saving");
           await job.apply(job.target, result);
           outcome = {ok: true, target: job.target};
-        } catch (error) { outcome = {ok: false, target: job.target, error}; }
+        } catch (error) { outcome = {ok: false, target: job.target, error, usingOriginal: !prepared && Boolean(job.target.expectedImage || job.target.source)}; }
         jobs.delete(job.target.key); running--; job.resolve(outcome); drain();
       })();
     }
   }
   return {
     has: (key: string) => jobs.has(key),
-    enqueue(target: ProductPhotoTarget, apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void, {retry = false, onStart}: {retry?: boolean; onStart?: () => void} = {}) {
+    enqueue(target: ProductPhotoTarget, apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void, {retry = false, onStart, onPhase}: QueueOptions = {}) {
       const existing = jobs.get(target.key); if (existing) return existing;
       let finish!: (outcome: PhotoOutcome) => void;
       const promise = new Promise<PhotoOutcome>(resolve => {finish = resolve;});
-      jobs.set(target.key, promise); waiting.push({target, apply, retry, onStart, resolve: finish}); drain(); return promise;
+      jobs.set(target.key, promise); waiting.push({target, apply, retry, onStart, onPhase, resolve: finish}); drain(); return promise;
     },
   };
 }
