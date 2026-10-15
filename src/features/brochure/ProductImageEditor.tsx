@@ -1,4 +1,5 @@
 import { requestAi } from "../ai/ai.api";
+import { imageOrientation } from "../ai/image-inspection";
 import type { Product } from "../../domain/models";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -17,22 +18,6 @@ import {
   IMAGE_PREPARATION_REVISION,
   needsImagePreparation,
 } from "./imageReview";
-
-function orientationOf(source: string) {
-  return new Promise<"landscape" | "portrait" | "square">((resolve) => {
-    const image = new Image();
-    image.onload = () =>
-      resolve(
-        image.naturalWidth > image.naturalHeight * 1.2
-          ? "landscape"
-          : image.naturalHeight > image.naturalWidth * 1.2
-            ? "portrait"
-            : "square",
-      );
-    image.onerror = () => resolve("square");
-    image.src = source;
-  });
-}
 
 export function ProductImageEditor({
   product,
@@ -188,7 +173,7 @@ export function ProductImageEditor({
         buildImagePreparationRequest(product, {
           image: source,
           backgroundContext,
-          orientation: await orientationOf(source),
+          orientation: await imageOrientation(source),
           retry: Boolean(prepared),
         }),
       );

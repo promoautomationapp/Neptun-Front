@@ -97,11 +97,9 @@ export function createProductImagePreparationQueue({prepare = async body => awai
         try {
           job.onStart?.();
           job.onPhase?.("preparing");
-          // Orientation only guides composition. An unavailable catalog image
-          // must not prevent the durable backend job from being checked/run.
-          let layout: string;
-          try { layout = await orientation(job.target.source); }
-          catch { layout = "square"; }
+          // Do not guess a different output size when the source is unavailable:
+          // that would miss an existing paid result's cache identity.
+          const layout = await orientation(job.target.source);
           const result = await prepare({...job.target.request, ...(job.retry ? {retry: true} : {}), orientation: layout});
           if (!result.image) throw new Error("Could not prepare this product photo.");
           result.image = await inspect(result.image);

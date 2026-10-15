@@ -248,3 +248,53 @@ it("aborts an in-flight status check without discarding its resumable job", asyn
     api.mock.calls.filter((call) => call[2]?.method === "POST"),
   ).toHaveLength(1);
 });
+
+it("reuses an unconfirmed regeneration command ID and original output size on manual retry", async () => {
+  vi.useFakeTimers();
+  const api = vi.mocked(request);
+  api.mockImplementationOnce(() => new Promise(() => {}));
+  const first = requestAi("ai-remove-background", {
+    image: "/unconfirmed-regeneration",
+    orientation: "portrait",
+    retry: true,
+  });
+  const rejected = expect(first).rejects.toMatchObject({
+    code: "AI_REQUEST_UNCONFIRMED",
+  });
+  await vi.advanceTimersByTimeAsync(45_000);
+  await rejected;
+  api
+    .mockResolvedValueOnce({
+      status: "queued",
+      jobId: "00000000-0000-4000-8000-000000000009",
+    })
+    .mockResolvedValueOnce({
+      status: "succeeded",
+      result: { image: "/api/assets/safe-retry" },
+      error: null,
+    });
+  const retry = requestAi("ai-remove-background", {
+    image: "/unconfirmed-regeneration",
+    orientation: "square",
+    retry: true,
+  });
+  await vi.advanceTimersByTimeAsync(1200);
+  expect(await retry).toEqual({ image: "/api/assets/safe-retry" });
+  const posts = api.mock.calls.filter((call) => call[2]?.method === "POST");
+  const originalBody = posts[0]?.[2]?.body as Record<string, unknown>;
+  expect(originalBody.commandId).toMatch(/^[a-f0-9-]{36}$/);
+  expect(posts[1]?.[2]?.body).toEqual(originalBody);
+  expect(originalBody.orientation).toBe("portrait");
+  api.mockResolvedValueOnce({
+    status: "succeeded",
+    result: { image: "/api/assets/new-version" },
+  });
+  await requestAi("ai-remove-background", {
+    image: "/unconfirmed-regeneration",
+    orientation: "portrait",
+    retry: true,
+  });
+  expect(
+    (api.mock.calls.at(-1)?.[2]?.body as Record<string, unknown>).commandId,
+  ).not.toBe(originalBody.commandId);
+});

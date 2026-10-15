@@ -62,7 +62,7 @@ it("keeps original photos available after uncertain work and continues with the 
   let calls = 0;
   const phases: string[] = [];
   const apply = vi.fn();
-  const queue = createProductImagePreparationQueue({concurrency: 1, orientation: async () => {throw new Error("Source download unavailable");}, inspect: async source => source, prepare: async body => {
+  const queue = createProductImagePreparationQueue({concurrency: 1, orientation: async () => "square", inspect: async source => source, prepare: async body => {
     expect(body.orientation).toBe("square");
     if (++calls === 1) throw new Error("Provider response uncertain");
     return {image: "/prepared.png"};

@@ -88,7 +88,8 @@ const JOB_WAIT_TIMEOUT_MS = 20 * 60_000;
 const MAX_POLL_FAILURES = 3;
 // Retain jobs when only the browser's wait failed. Clicking Retry reattaches to
 // the durable job with GET instead of requesting another billable generation.
-const unfinishedJobs = new Map<string, string>();
+type UnfinishedCommand = { commandId: string; body: unknown; jobId?: string };
+const unfinishedJobs = new Map<string, UnfinishedCommand>();
 
 function jobKey(path: AiPath, body: unknown) {
   const params =
@@ -193,20 +194,43 @@ export async function requestAi<P extends AiPath>(
   const parse = (value: unknown) =>
     schemas[path].parse(value) as z.infer<(typeof schemas)[P]>;
   const key = jobKey(path, body);
-  let jobId = unfinishedJobs.get(key);
-  if (!jobId) {
-    const ticket = await boundedAiRequest(`/api/${path}`, ticketSchema, {
-      method: "POST",
-      body,
-      signal,
-    });
-    if (ticket.status === "succeeded" && ticket.result)
+  let command = unfinishedJobs.get(key);
+  if (!command) {
+    command = { commandId: crypto.randomUUID(), body };
+    // Keep the command before submitting: its response may be lost after the
+    // server accepts it. The same command ID makes an explicit retry safe too.
+    unfinishedJobs.set(key, command);
+  }
+  if (!command.jobId) {
+    let ticket: z.infer<typeof ticketSchema>;
+    try {
+      ticket = await boundedAiRequest(`/api/${path}`, ticketSchema, {
+        method: "POST",
+        body: {
+          ...(command.body as Record<string, unknown>),
+          commandId: command.commandId,
+        },
+        signal,
+      });
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status >= 400 &&
+        error.status < 500 &&
+        ![408, 429].includes(error.status)
+      )
+        unfinishedJobs.delete(key);
+      throw error;
+    }
+    if (ticket.status === "succeeded" && ticket.result) {
+      unfinishedJobs.delete(key);
       return parse(ticket.result);
+    }
     if (!ticket.jobId)
       throw new ApiError("The AI job could not be started.", 502);
-    jobId = ticket.jobId;
-    unfinishedJobs.set(key, jobId);
+    command.jobId = ticket.jobId;
   }
+  const jobId = command.jobId;
   const startedAt = Date.now();
   let pollFailures = 0;
   for (;;) {

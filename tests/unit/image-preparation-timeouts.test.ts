@@ -44,10 +44,13 @@ it("falls back when a catalog image never loads, allowing all queued products to
   );
   expect(prepare).not.toHaveBeenCalled();
   await vi.advanceTimersByTimeAsync(90_000);
-  expect((await Promise.all(jobs)).every((outcome) => outcome.ok)).toBe(true);
-  expect(prepare).toHaveBeenCalledTimes(12);
-  expect(apply).toHaveBeenCalledTimes(12);
-  expect(prepare.mock.calls[0]?.[0]).toMatchObject({ orientation: "square" });
+  expect(
+    (await Promise.all(jobs)).every(
+      (outcome) => !outcome.ok && outcome.usingOriginal,
+    ),
+  ).toBe(true);
+  expect(prepare).not.toHaveBeenCalled();
+  expect(apply).not.toHaveBeenCalled();
 });
 
 it("saves validated backend AI assets without waiting for another browser image download", async () => {
@@ -79,8 +82,9 @@ it("cleans up timed-out orientation handlers so a late image response cannot alt
     }),
   );
   const result = imageOrientation("/offline-image.png");
+  const rejected = expect(result).rejects.toBeInstanceOf(Error);
   await vi.advanceTimersByTimeAsync(15_000);
-  expect(await result).toBe("square");
+  await rejected;
   expect(image.onload).toBeNull();
   expect(image.onerror).toBeNull();
   expect(image.src).toBe("");

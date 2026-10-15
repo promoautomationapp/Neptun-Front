@@ -1,5 +1,11 @@
 import React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { Product, ProductImageSearch } from "../../src/domain/models";
 import {
@@ -44,6 +50,44 @@ const search = (status: ProductImageSearch["status"]): ProductImageSearch => ({
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+it("settles a stalled source photo without starting AI and restores editor controls", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal(
+    "Image",
+    class {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      crossOrigin = "";
+      src = "";
+    },
+  );
+  const product: Product = {
+    code: "IMAGE-TIMEOUT",
+    name: "Catalog product with stalled photo",
+    image: "/unreachable-source.png",
+  };
+  const view = render(
+    <ProductImageEditor
+      product={product}
+      catalogProduct={product}
+      onSave={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Prepare image" }));
+  expect(requestAi).not.toHaveBeenCalled();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(15_000);
+  });
+  expect(requestAi).not.toHaveBeenCalled();
+  expect(
+    (view.getByRole("button", { name: "Prepare image" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(false);
 });
 
 it("lists actual missing item codes without synthetic bundle or Set codes", () => {
@@ -325,7 +369,9 @@ it("does not replace the user's uploaded selection when an older search finishes
   expect(
     view.getByRole("img", { name: missing.name }).getAttribute("src"),
   ).toBe("data:image/png;base64,own-photo");
-  fireEvent.click(view.getByRole("checkbox", {name: /Remove background with AI/}));
+  fireEvent.click(
+    view.getByRole("checkbox", { name: /Remove background with AI/ }),
+  );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   expect(save).toHaveBeenCalledWith(
     expect.objectContaining({ image: "data:image/png;base64,own-photo" }),

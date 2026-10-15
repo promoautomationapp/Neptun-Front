@@ -81,7 +81,7 @@ it("shows Neptun admins readable activity, filters by date/user/action/outcome/s
   );
   vi.stubGlobal("fetch", fetch);
   const view = render(<ActivityPage user={{ role: "admin" }} />);
-  await view.findByText("Campaign saved");
+  await view.findByText("Campaign saved", { selector: "td" });
   expect(view.getByText("192.0.2.1")).toBeTruthy();
   expect(view.getByText("Unknown")).toBeTruthy();
   expect(view.getByText("Password changed")).toBeTruthy();
@@ -104,7 +104,7 @@ it("shows Neptun admins readable activity, filters by date/user/action/outcome/s
     target: { value: "black friday" },
   });
   fireEvent.submit(
-    view.getByRole("button", { name: "Search", exact: true }).closest("form")!,
+    view.getByRole("button", { name: "Search" }).closest("form")!,
   );
   await waitFor(() =>
     expect(
@@ -151,7 +151,7 @@ it("uses Albanian for the superadmin activity page and does not invent missing h
     vi.fn(async () => new Response(JSON.stringify(activity))),
   );
   const view = render(<ActivityPage user={{ role: "superadmin" }} />);
-  await view.findByText("U ruajt fushata");
+  await view.findByText("U ruajt fushata", { selector: "td" });
   expect(view.getByText("E panjohur")).toBeTruthy();
   expect(view.getByText("Historiku i llogarisë")).toBeTruthy();
 });

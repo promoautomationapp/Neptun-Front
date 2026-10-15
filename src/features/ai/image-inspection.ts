@@ -72,17 +72,18 @@ export function inspectImage(source: string) {
 }
 
 export function imageOrientation(source: string) {
-  return new Promise<"landscape" | "portrait" | "square">((resolve) => {
+  return new Promise<"landscape" | "portrait" | "square">((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "use-credentials";
-    const finish = (orientation: "landscape" | "portrait" | "square") => {
+    const finish = (orientation?: "landscape" | "portrait" | "square") => {
       clearTimeout(timer);
       image.onload = null;
       image.onerror = null;
-      resolve(orientation);
+      if (orientation) resolve(orientation);
+      else reject(new Error(t("Could not open the edited image.")));
     };
     const timer = setTimeout(() => {
-      finish("square");
+      finish();
       image.src = "";
     }, IMAGE_LOAD_TIMEOUT_MS);
     image.onload = () =>
@@ -93,7 +94,7 @@ export function imageOrientation(source: string) {
             ? "portrait"
             : "square",
       );
-    image.onerror = () => finish("square");
+    image.onerror = () => finish();
     image.src = source;
   });
 }

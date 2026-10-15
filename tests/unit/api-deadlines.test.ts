@@ -24,7 +24,7 @@ it("releases a stalled write without repeating a possibly saved mutation", async
   await vi.advanceTimersByTimeAsync(50);
   await rejected;
   expect(fetch).toHaveBeenCalledTimes(1);
-  expect(fetch.mock.calls[0]?.[1]?.signal.aborted).toBe(true);
+  expect(fetch.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
 });
 
 it("also bounds a response whose headers arrived but JSON body never finishes", async () => {

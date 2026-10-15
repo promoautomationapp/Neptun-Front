@@ -12,4 +12,11 @@
   "vars": {
     "API_ORIGIN": "https://neptun-backend.onrender.com",
   },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true,
+    },
+  },
 }
