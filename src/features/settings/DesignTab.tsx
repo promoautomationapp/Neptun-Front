@@ -1,6 +1,6 @@
 import { SettingsGroup } from "./components";
 import { resolveAsset } from "../../api/client";
-import { Field, Toggle, AssetPicker } from "./components";
+import { Field, Toggle } from "./components";
 import { COVER_OPTIONS } from "./options";
 import { BACKGROUND_PRESETS } from "../brochure/pageBackground";
 import {
@@ -201,248 +201,263 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
     </section>
   );
 }
-export function DesignTab({ draft, update }: SettingsTabProps) {
+export function DesignTab({
+  draft,
+  update,
+  pageArea = "cover",
+}: SettingsTabProps) {
   const b = draft.brochure;
   return (
     <section className="ns-section">
-      <h2>Cover and colors</h2>
-      <Field label="Default cover style">
-        <select
-          value={b.coverTemplate}
-          onChange={(event) =>
-            update((next) => {
-              next.brochure.coverTemplate = event.target
-                .value as BrochureDefaults["coverTemplate"];
-            })
-          }
-        >
-          {COVER_OPTIONS.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <div className="ns-cover-options">
-        {COVER_OPTIONS.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            className={item.id === b.coverTemplate ? "selected" : ""}
-            aria-pressed={item.id === b.coverTemplate}
-            onClick={() =>
+      <h2>{pageArea === "cover" ? "Cover and colors" : "Page colors"}</h2>
+      <div hidden={pageArea !== "cover"}>
+        <Field label="Default cover style">
+          <select
+            value={b.coverTemplate}
+            onChange={(event) =>
               update((next) => {
-                next.brochure.coverTemplate = item.id;
+                next.brochure.coverTemplate = event.target
+                  .value as BrochureDefaults["coverTemplate"];
               })
             }
           >
-            <img src={resolveAsset(item.image)} alt="" />
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <Field label="Default cover product arrangement">
-        <select
-          value={b.coverProductLayout}
-          onChange={(event) =>
-            update((next) => {
-              next.brochure.coverProductLayout = event.target
-                .value as BrochureDefaults["coverProductLayout"];
-            })
-          }
-        >
-          <option value="pair">Pairs</option>
-          <option value="hero">One large product above the others</option>
-          <option value="row">Row</option>
-        </select>
-      </Field>
-      <div className="ns-grid">
-        {(
-          [
-            "showCoverLogo",
-            "showCoverBand",
-            "showCoverHeadline",
-            "showCoverMessage",
-            "showCoverGradient",
-          ] as const
-        ).map((key, index) => (
-          <Toggle
-            key={key}
-            label={
-              [
-                "Show cover logo",
-                "Show UUU / hajde! band",
-                "Show cover headline",
-                "Show campaign message",
-                "Show cover overlay gradient",
-              ][index] ?? key
-            }
-            checked={b[key]}
-            onChange={(value) =>
+            {COVER_OPTIONS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="ns-cover-options">
+          {COVER_OPTIONS.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              className={item.id === b.coverTemplate ? "selected" : ""}
+              aria-pressed={item.id === b.coverTemplate}
+              onClick={() =>
+                update((next) => {
+                  next.brochure.coverTemplate = item.id;
+                })
+              }
+            >
+              <img src={resolveAsset(item.image)} alt="" />
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <Field label="Default cover product arrangement">
+          <select
+            value={b.coverProductLayout}
+            onChange={(event) =>
               update((next) => {
-                next.brochure[key] = value;
+                next.brochure.coverProductLayout = event.target
+                  .value as BrochureDefaults["coverProductLayout"];
               })
             }
-          />
-        ))}
-      </div>
-      <SettingsGroup title={<> Cover text colors </>}>
+          >
+            <option value="pair">Pairs</option>
+            <option value="hero">One large product above the others</option>
+            <option value="row">Row</option>
+          </select>
+        </Field>
         <div className="ns-grid">
           {(
             [
-              ["coverMessageColor", "Campaign message"],
-              ["coverHeadlineColor", "Headline"],
-              ["coverTypeColor", "Campaign type"],
-              ["coverFooterColor", "Cover footer"],
+              "showCoverLogo",
+              "showCoverBand",
+              "showCoverHeadline",
+              "showCoverMessage",
+              "showCoverGradient",
             ] as const
-          ).map(([key, label]) => (
-            <Field key={key} label={`${label} color`}>
-              <input
-                type="color"
-                value={b[key] || "#ffffff"}
-                onChange={(event) =>
-                  update((next) => {
-                    next.brochure[key] = event.target.value;
-                  })
-                }
-              />
-            </Field>
+          ).map((key, index) => (
+            <Toggle
+              key={key}
+              label={
+                [
+                  "Show cover logo",
+                  "Show UUU / hajde! band",
+                  "Show cover headline",
+                  "Show campaign message",
+                  "Show cover overlay gradient",
+                ][index] ?? key
+              }
+              checked={b[key]}
+              onChange={(value) =>
+                update((next) => {
+                  next.brochure[key] = value;
+                })
+              }
+            />
           ))}
         </div>
-      </SettingsGroup>
-      {(
-        ["coverBackground", "productBackground", "storesBackground"] as const
-      ).map((key, index) => {
-        const background = b[key];
-        const label =
-          [
-            "Cover background",
-            "Product pages background",
-            "Stores page background",
-          ][index] ?? key;
-        return (
-          <SettingsGroup key={key} title={<> {label} </>}>
-            <Field label={`${label} type`}>
-              <select
-                value={
-                  background.image
-                    ? "image"
-                    : background.gradient
-                      ? "gradient"
-                      : background.color
-                        ? "solid"
-                        : "automatic"
-                }
-                onChange={(event) =>
-                  update((next) => {
-                    const target = next.brochure[key];
-                    const mode = event.target.value;
-                    if (mode !== "image") target.image = "";
-                    target.gradient =
-                      mode === "gradient"
-                        ? {
-                            from: target.color || "#1c4075",
-                            to: "#1680a8",
-                            angle: 180,
-                          }
-                        : null;
-                    if (mode === "automatic") target.color = "";
-                    else if (!target.color) target.color = "#1c4075";
-                  })
-                }
-              >
-                <option value="automatic">Follow brochure theme</option>
-                <option value="solid">Solid color</option>
-                <option value="gradient">Gradient</option>
-                {background.image && (
-                  <option value="image" disabled>
-                    Selected background image
-                  </option>
-                )}
-              </select>
-            </Field>
-            <div className="ns-swatches">
-              {BACKGROUND_PRESETS.map((preset) => (
-                <button
-                  type="button"
-                  key={preset.color}
-                  aria-label={`${label}: ${preset.label}`}
-                  title={preset.label}
-                  style={{ background: preset.color }}
-                  onClick={() =>
+        <SettingsGroup title={<> Cover text colors </>}>
+          <div className="ns-grid">
+            {(
+              [
+                ["coverMessageColor", "Campaign message"],
+                ["coverHeadlineColor", "Headline"],
+                ["coverTypeColor", "Campaign type"],
+                ["coverFooterColor", "Cover footer"],
+              ] as const
+            ).map(([key, label]) => (
+              <Field key={key} label={`${label} color`}>
+                <input
+                  type="color"
+                  value={b[key] || "#ffffff"}
+                  onChange={(event) =>
                     update((next) => {
-                      next.brochure[key] = {
-                        ...next.brochure[key],
-                        color: preset.color,
-                        gradient: null,
-                        image: "",
-                      };
+                      next.brochure[key] = event.target.value;
                     })
                   }
                 />
-              ))}
-            </div>
-            <Field label={`${label} color`}>
-              <input
-                type="color"
-                value={background.color || "#1c4075"}
-                onChange={(event) =>
-                  update((next) => {
-                    next.brochure[key].color = event.target.value;
-                    next.brochure[key].gradient = null;
-                    next.brochure[key].image = "";
-                  })
-                }
-              />
-            </Field>
-            {background.gradient && (
-              <div className="ns-grid">
-                <Field label={`${label} gradient start`}>
-                  <input
-                    type="color"
-                    value={background.gradient.from}
-                    onChange={(event) =>
+              </Field>
+            ))}
+          </div>
+        </SettingsGroup>
+      </div>
+      {(["coverBackground", "productBackground", "storesBackground"] as const)
+        .filter(
+          (key) =>
+            key ===
+            (pageArea === "cover"
+              ? "coverBackground"
+              : pageArea === "stores"
+                ? "storesBackground"
+                : "productBackground"),
+        )
+        .map((key) => {
+          const background = b[key];
+          const label =
+            key === "coverBackground"
+              ? "Cover background"
+              : key === "storesBackground"
+                ? "Stores page background"
+                : "Product pages background";
+          return (
+            <SettingsGroup key={key} title={<> {label} </>}>
+              <Field label={`${label} type`}>
+                <select
+                  value={
+                    background.image
+                      ? "image"
+                      : background.gradient
+                        ? "gradient"
+                        : background.color
+                          ? "solid"
+                          : "automatic"
+                  }
+                  onChange={(event) =>
+                    update((next) => {
+                      const target = next.brochure[key];
+                      const mode = event.target.value;
+                      if (mode !== "image") target.image = "";
+                      target.gradient =
+                        mode === "gradient"
+                          ? {
+                              from: target.color || "#1c4075",
+                              to: "#1680a8",
+                              angle: 180,
+                            }
+                          : null;
+                      if (mode === "automatic") target.color = "";
+                      else if (!target.color) target.color = "#1c4075";
+                    })
+                  }
+                >
+                  <option value="automatic">Follow brochure theme</option>
+                  <option value="solid">Solid color</option>
+                  <option value="gradient">Gradient</option>
+                  {background.image && (
+                    <option value="image" disabled>
+                      Selected background image
+                    </option>
+                  )}
+                </select>
+              </Field>
+              <div className="ns-swatches">
+                {BACKGROUND_PRESETS.map((preset) => (
+                  <button
+                    type="button"
+                    key={preset.color}
+                    aria-label={`${label}: ${preset.label}`}
+                    title={preset.label}
+                    style={{ background: preset.color }}
+                    onClick={() =>
                       update((next) => {
-                        if (next.brochure[key].gradient)
-                          next.brochure[key].gradient.from = event.target.value;
+                        next.brochure[key] = {
+                          ...next.brochure[key],
+                          color: preset.color,
+                          gradient: null,
+                          image: "",
+                        };
                       })
                     }
                   />
-                </Field>
-                <Field label={`${label} gradient end`}>
-                  <input
-                    type="color"
-                    value={background.gradient.to}
-                    onChange={(event) =>
-                      update((next) => {
-                        if (next.brochure[key].gradient)
-                          next.brochure[key].gradient.to = event.target.value;
-                      })
-                    }
-                  />
-                </Field>
-                <Field label={`${label} gradient angle`}>
-                  <input
-                    type="number"
-                    min={0}
-                    max={360}
-                    value={background.gradient.angle}
-                    onChange={(event) =>
-                      update((next) => {
-                        if (next.brochure[key].gradient)
-                          next.brochure[key].gradient.angle = Number(
-                            event.target.value,
-                          );
-                      })
-                    }
-                  />
-                </Field>
+                ))}
               </div>
-            )}
-            <p>Choose a default photo in the Background images tab.</p>
-          </SettingsGroup>
-        );
-      })}
+              <Field label={`${label} color`}>
+                <input
+                  type="color"
+                  value={background.color || "#1c4075"}
+                  onChange={(event) =>
+                    update((next) => {
+                      next.brochure[key].color = event.target.value;
+                      next.brochure[key].gradient = null;
+                      next.brochure[key].image = "";
+                    })
+                  }
+                />
+              </Field>
+              {background.gradient && (
+                <div className="ns-grid">
+                  <Field label={`${label} gradient start`}>
+                    <input
+                      type="color"
+                      value={background.gradient.from}
+                      onChange={(event) =>
+                        update((next) => {
+                          if (next.brochure[key].gradient)
+                            next.brochure[key].gradient.from =
+                              event.target.value;
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label={`${label} gradient end`}>
+                    <input
+                      type="color"
+                      value={background.gradient.to}
+                      onChange={(event) =>
+                        update((next) => {
+                          if (next.brochure[key].gradient)
+                            next.brochure[key].gradient.to = event.target.value;
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label={`${label} gradient angle`}>
+                    <input
+                      type="number"
+                      min={0}
+                      max={360}
+                      value={background.gradient.angle}
+                      onChange={(event) =>
+                        update((next) => {
+                          if (next.brochure[key].gradient)
+                            next.brochure[key].gradient.angle = Number(
+                              event.target.value,
+                            );
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+              )}
+              <p>Choose a default photo in the Background images tab.</p>
+            </SettingsGroup>
+          );
+        })}
     </section>
   );
 }

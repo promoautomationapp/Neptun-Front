@@ -349,7 +349,7 @@ export function createPost(
     logoScale: 100,
     logoPosition: "top-left",
     showEventLogo: true,
-    eventLogoUpload: "",
+    eventLogoUpload: campaign?.campaignLogo || "",
     eventLogo: "happy-day",
     eventPosition: "top-right",
     eventScale: 100,
@@ -393,14 +393,18 @@ export function layoutSocialProducts(
   grid: { rows: number; columns: number; gap: number },
 ): Product[] {
   const columns = Math.max(1, Math.min(6, Math.round(grid.columns) || 1));
-  const rows = Math.max(1, Math.min(6, Math.round(grid.rows) || 1), Math.ceil(products.length / columns));
+  const rows = Math.max(
+    1,
+    Math.min(6, Math.round(grid.rows) || 1),
+    Math.ceil(products.length / columns),
+  );
   const gap = Math.max(0, Math.min(20, grid.gap || 0));
   const cellWidth = 84 / columns;
   const cellHeight = 54 / rows;
   return products.map((product, index) => ({
     ...product,
     positioned: true,
-    x: 8 + (index % columns + 0.5) * cellWidth,
+    x: 8 + ((index % columns) + 0.5) * cellWidth,
     y: 22 + (Math.floor(index / columns) + 0.5) * cellHeight,
     scale: Math.max(10, Math.min(70, cellWidth - gap, cellHeight * 1.25)),
   }));

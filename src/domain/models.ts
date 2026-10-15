@@ -54,6 +54,7 @@ export interface Settings {
 }
 export type CampaignMutator = (draft: Campaign) => void;
 export interface Campaign {
+  campaignLogo?: string;
   logoRules?: LogoRule[];
   logoRuleDefaults?: {cover: string; pages: string};
   productDesign?: ProductDesignDefaults;

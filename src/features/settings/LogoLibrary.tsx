@@ -257,7 +257,9 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                 >
                   <option value="both">Cover and inside pages</option>
                   <option value="cover">Cover only</option>
-                  <option value="pages">Inside pages only</option>
+                  <option value="pages">Inside product pages only</option>
+                  <option value="stores">Stores page only</option>
+                  <option value="footer">Stores footer only</option>
                 </select>
               </Field>
               <Field label={`Logo rule ${index + 1} background`}>
@@ -315,6 +317,15 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
             </div>
             <img
               className="ns-artwork-preview"
+              style={{
+                background:
+                  rule.background === "color"
+                    ? rule.color
+                    : rule.background === "light"
+                      ? "#ffffff"
+                      : "#1c4075",
+                padding: 12,
+              }}
               src={resolveAsset(rule.image)}
               alt={`Logo rule ${index + 1} preview`}
             />

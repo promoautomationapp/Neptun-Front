@@ -185,7 +185,7 @@ export function CategoryDefaultsTab({
                 setSelection(visible[next]!.path);
                 event.currentTarget.parentElement
                   ?.querySelectorAll<HTMLButtonElement>('button[role="tab"]')
-                  [next]?.focus();
+                  ?.[next]?.focus();
               }}
             >
               <span>

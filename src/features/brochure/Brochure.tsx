@@ -255,7 +255,7 @@ export function brochureAssetSource(
     asset?.src ||
     ""
   );
-  return id === "neptun" ? logoForBackground(campaign,"pages",pageBackgroundColor(campaign,"stores"),fallback,light) : fallback;
+  return id === "neptun" ? logoForBackground(campaign,"stores",pageBackgroundColor(campaign,"stores"),fallback,light) : fallback;
 }
 
 export { coverProducts, splitPages } from "./campaignPages";
@@ -2098,7 +2098,7 @@ function LastPageWithStores({
         campaign={campaign}
         settings={settings}
         sources={{
-          neptun: logoForBackground(campaign,"pages",pageBackgroundColor(campaign,kind,page),
+          neptun: logoForBackground(campaign,"footer",pageBackgroundColor(campaign,kind,page),
             campaign.brandAssets?.neptun ||
             (campaign.neptunLogoOption === "framed"
               ? "/api/assets/legacy/assets/neptun-logo-framed.png"

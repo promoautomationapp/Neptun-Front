@@ -1,7 +1,11 @@
 import { SettingsGroup } from "./components";
 import { AssetPicker } from "./components";
 import type { SettingsTabProps } from "./SettingsEditor";
-export function ImagesTab({ draft, update }: SettingsTabProps) {
+export function ImagesTab({
+  draft,
+  update,
+  pageArea = "artwork",
+}: SettingsTabProps) {
   return (
     <section className="ns-section">
       <h2>Default background images</h2>
@@ -16,26 +20,37 @@ export function ImagesTab({ draft, update }: SettingsTabProps) {
           ["productBackground", "Product-page background image"],
           ["storesBackground", "Stores-page background image"],
         ] as const
-      ).map(([key, label]) => (
-        <SettingsGroup key={key} title={<> {label} </>}>
-          <AssetPicker
-            label={label}
-            emptyLabel="Use the selected color or gradient"
-            value={draft.brochure[key].image}
-            library={draft.logoLibrary}
-            onUpload={(asset) =>
-              update((next) => {
-                next.logoLibrary.push(asset);
-              })
-            }
-            onChange={(source) =>
-              update((next) => {
-                next.brochure[key].image = source;
-              })
-            }
-          />
-        </SettingsGroup>
-      ))}
+      )
+        .filter(
+          ([key]) =>
+            pageArea === "artwork" ||
+            key ===
+              (pageArea === "cover"
+                ? "coverBackground"
+                : pageArea === "stores"
+                  ? "storesBackground"
+                  : "productBackground"),
+        )
+        .map(([key, label]) => (
+          <SettingsGroup key={key} title={<> {label} </>}>
+            <AssetPicker
+              label={label}
+              emptyLabel="Use the selected color or gradient"
+              value={draft.brochure[key].image}
+              library={draft.logoLibrary}
+              onUpload={(asset) =>
+                update((next) => {
+                  next.logoLibrary.push(asset);
+                })
+              }
+              onChange={(source) =>
+                update((next) => {
+                  next.brochure[key].image = source;
+                })
+              }
+            />
+          </SettingsGroup>
+        ))}
     </section>
   );
 }

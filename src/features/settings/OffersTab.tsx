@@ -29,8 +29,8 @@ export function SavingSelect({
 export function OffersTab({
   draft,
   update,
-  facets,
-  facetsError,
+  facets: _facets,
+  facetsError: _facetsError,
 }: { facets: CategoryFacet[]; facetsError?: string } & SettingsTabProps) {
   return (
     <section className="ns-section">

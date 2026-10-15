@@ -1,3 +1,4 @@
+import { openSettingsSections } from "../helpers/settings-sections";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { SettingsEditor } from "../../src/features/settings/SettingsEditor";
@@ -13,9 +14,11 @@ it("adds and edits a named size, chooses it as the default and safely hides it",
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
   fireEvent.click(view.getByRole("tab", { name: "Format & layout" }));
+  openSettingsSections(view.container);
   fireEvent.click(
     view.getByRole("button", { name: "+ Add custom dimensions" }),
   );
+  openSettingsSections(view.container);
   fireEvent.change(view.getByLabelText("Custom size 1 name"), {
     target: { value: "Counter display" },
   });

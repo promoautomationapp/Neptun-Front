@@ -53,9 +53,13 @@ export function moveItem<T>(
 export function campaignDefaults(
   input: Settings,
   version?: number,
+  typeName?: string,
 ): Partial<Campaign> {
   const settings = resolveSettings(input);
   const b = settings.brochure;
+  const type = typeName
+    ? settings.campaignTypes.find((item) => item.name === typeName)
+    : defaultCampaignType(settings);
   return {
     ...(version !== undefined ? { defaultsVersion: version } : {}),
     ...brochureFormatSelection(b.format, settings.customFormats),

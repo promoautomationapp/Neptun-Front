@@ -1,3 +1,5 @@
+import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
+import type {LogoAsset} from "../settings/settings.schema";
 import {emptyCampaignFilters, filterCampaigns, normalizeCampaignFilters, type CampaignFilters} from "../campaigns/campaignFilters";
 import {CampaignActivityStatus} from "../brochure/CampaignActivityStatus";
 import {hasUnsavedCampaignChanges} from "../brochure/campaignSaveStatus";
@@ -2033,6 +2035,10 @@ export function BrochureEditor({
     selected >= 0 && selected < pages.length ? pages[selected] : null;
   const artworkPageKey =
     selected === -1 ? "cover" : page ? `product-${page.index}` : "stores";
+  function addSavedPageArtwork(asset:LogoAsset,point?:{x:number;y:number}|null) {
+    onUpdate(draft=>{draft.pageArtworks ||= {};draft.pageArtworks[artworkPageKey] ||= [];draft.pageArtworks[artworkPageKey]!.push({id:crypto.randomUUID(),name:asset.name,image:asset.url,x:point?.x??5,y:point?.y??12,width:20});});
+    onToast(t("Artwork added. Drag it to position it on this page."));
+  }
   async function addPageArtwork(
     file: File,
     point: { x: number; y: number } | null = null,
@@ -2101,10 +2107,9 @@ export function BrochureEditor({
     });
   }
   function dropArtwork(event: React.DragEvent<HTMLElement>) {
-    const file = [...(event.dataTransfer?.files || [])].find((item) =>
-      item.type.startsWith("image/"),
-    );
-    if (!file) return;
+    const asset=droppedReusableImage(event.dataTransfer);
+    const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/"));
+    if (!file && !asset) return;
     event.preventDefault();
     const pageNode =
       event.currentTarget.querySelector(
@@ -2123,7 +2128,8 @@ export function BrochureEditor({
           ),
         }
       : null;
-    addPageArtwork(file, point);
+    if(asset)addSavedPageArtwork(asset,point);
+    else if(file)void addPageArtwork(file, point);
   }
   const title =
     selected === -1
@@ -2505,6 +2511,7 @@ export function BrochureEditor({
               <button type="button" className={`cs-button ${canEditCanvas ? "secondary" : "primary"}`} onClick={() => { setPreviewMode(commentMode ? false : !previewMode); setCommentMode(false); setShowSettings(false); }}>{t(canEditCanvas ? "Preview only" : "Edit brochure")}</button>
             </div>
           </div>
+          {canEditCanvas && <ReusableImages settings={settings} onAdd={addSavedPageArtwork} />}
           <CampaignActivityStatus campaignId={campaign.id} mode={canEditCanvas ? "edit" : "preview"} pageLabel={title} />
           {canEditCanvas && (
             <p className="cs-preview-edit-hint">
@@ -2543,7 +2550,7 @@ export function BrochureEditor({
             onDragOver={
               canEditCanvas
                 ? (event) => {
-                    if ([...event.dataTransfer.types].includes("Files")) {
+                    if ([...event.dataTransfer.types].some(type=>type === "Files" || type === REUSABLE_IMAGE_TYPE)) {
                       event.preventDefault();
                       event.dataTransfer.dropEffect = "copy";
                     }
@@ -4014,6 +4021,7 @@ export default function App({ initialUser, onAuthChange }: { initialUser?: Sessi
             }
           >
             <SocialStudio
+              settings={settings}
               catalog={catalog}
               campaigns={campaigns}
               seed={socialSeed}

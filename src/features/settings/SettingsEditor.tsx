@@ -27,8 +27,42 @@ const tabs = [
   { id: "formats", label: "Format & layout" },
   { id: "types", label: "Campaign types" },
 ] as const;
+const areas = [
+  { id: "cover", label: "Cover", tabs: ["design", "images", "logos"] },
+  {
+    id: "inside",
+    label: "Inside pages",
+    tabs: [
+      "products",
+      "offers",
+      "categories",
+      "design",
+      "images",
+      "logos",
+      "formats",
+    ],
+  },
+  {
+    id: "stores",
+    label: "Stores page",
+    tabs: ["stores", "design", "images", "logos"],
+  },
+  { id: "footer", label: "Stores footer", tabs: ["stores", "design", "logos"] },
+  {
+    id: "artwork",
+    label: "Reusable images",
+    tabs: ["logos", "images", "brands"],
+  },
+  {
+    id: "workspace",
+    label: "Campaign types & sizes",
+    tabs: ["types", "formats"],
+  },
+] as const;
+export type SettingsArea = (typeof areas)[number]["id"];
 type TabId = (typeof tabs)[number]["id"];
 export interface SettingsTabProps {
+  pageArea?: SettingsArea;
   draft: WorkspaceSettings;
   update: (change: (next: WorkspaceSettings) => void) => void;
 }
@@ -56,6 +90,12 @@ export function SettingsEditor({
   const [draft, setDraft] = useState(() => structuredClone(initial));
   const [baseline, setBaseline] = useState(() => JSON.stringify(initial));
   const [tab, setTab] = useState<TabId>("design");
+  const [area, setArea] = useState<SettingsArea>("cover");
+  const visibleTabs = tabs.filter((item) =>
+    (
+      areas.find((group) => group.id === area)!.tabs as readonly string[]
+    ).includes(item.id),
+  );
   const [previewCategory, setPreviewCategory] = useState("");
   const [previewRequest, setPreviewRequest] = useState<{
     page: "cover" | "products" | "stores";
@@ -144,7 +184,7 @@ export function SettingsEditor({
       setSaving(false);
     }
   }
-  const props = { draft, update };
+  const props = { draft, update, pageArea: area };
   return (
     <div className="ns-settings">
       <header>
@@ -211,8 +251,36 @@ export function SettingsEditor({
           {message}
         </p>
       )}
+      <div
+        role="tablist"
+        aria-label="Settings page areas"
+        className="ns-page-areas"
+      >
+        {areas.map((group) => (
+          <button
+            key={group.id}
+            role="tab"
+            type="button"
+            aria-selected={area === group.id}
+            disabled={saving || uploads > 0}
+            onClick={() => {
+              setArea(group.id);
+              setTab(group.tabs[0] as TabId);
+              previewPage(
+                group.id === "inside"
+                  ? "products"
+                  : group.id === "stores" || group.id === "footer"
+                    ? "stores"
+                    : "cover",
+              );
+            }}
+          >
+            {group.label}
+          </button>
+        ))}
+      </div>
       <div role="tablist" aria-label="Settings sections" className="ns-tabs">
-        {tabs.map((item, index) => (
+        {visibleTabs.map((item, index) => (
           <button
             type="button"
             ref={(element) => {
@@ -229,17 +297,17 @@ export function SettingsEditor({
             onKeyDown={(event) => {
               const next =
                 event.key === "ArrowRight"
-                  ? (index + 1) % tabs.length
+                  ? (index + 1) % visibleTabs.length
                   : event.key === "ArrowLeft"
-                    ? (index + tabs.length - 1) % tabs.length
+                    ? (index + visibleTabs.length - 1) % visibleTabs.length
                     : event.key === "Home"
                       ? 0
                       : event.key === "End"
-                        ? tabs.length - 1
+                        ? visibleTabs.length - 1
                         : null;
               if (next !== null) {
                 event.preventDefault();
-                const selected = tabs[next];
+                const selected = visibleTabs[next];
                 if (selected) {
                   setTab(selected.id);
                   tabRefs.current[next]?.focus();
@@ -247,7 +315,9 @@ export function SettingsEditor({
               }
             }}
           >
-            {item.label}
+            {item.id === "design" && area !== "cover"
+              ? "Page colors"
+              : item.label}
           </button>
         ))}
       </div>

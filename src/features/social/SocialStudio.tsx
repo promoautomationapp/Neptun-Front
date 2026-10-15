@@ -1,3 +1,6 @@
+import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
+import type {Settings} from "../../domain/models";
+import type {LogoAsset} from "../settings/settings.schema";
 import type { Artwork, Campaign, Placement, Product, SocialPost } from "../../domain/models";
 import { requestAi, type ProofreadChange } from "../ai/ai.api";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -120,6 +123,7 @@ interface PostCanvasProps {
   onMoveOfferBlock?: (code: string, kind: string, placement: Placement) => void;
   onChangeProduct?: ProductChange;
   onDropImage?: (code: string, file: File) => void;
+  onAddSavedArtwork?: (asset:LogoAsset,point:{x:number;y:number})=>void;
   onAddArtwork?: (files: File[], point: {x: number; y: number}) => void;
   onUpdateAsset?: (id: string, value: AssetPlacement) => void;
   onRemoveArtwork?: (id: string) => void;
@@ -129,6 +133,7 @@ interface PostCanvasProps {
   previewCutouts?: Record<string, string>;
 }
 interface SocialStudioProps {
+  settings?: Settings;
   catalog: Product[];
   campaigns: Campaign[];
   seed?: {campaignId: string; products: Product[]} | null;
@@ -213,6 +218,7 @@ function PostCanvas({
   onChangeProduct,
   onDropImage,
   onAddArtwork,
+  onAddSavedArtwork,
   onUpdateAsset,
   onRemoveArtwork,
   showGuides = false,
@@ -311,8 +317,8 @@ function PostCanvas({
         "--social-grid-columns": post.productGrid?.columns || 10,
         "--social-grid-rows": post.productGrid?.rows || 10,
       } as React.CSSProperties}
-      onDragOver={onAddArtwork ? (event) => { if ([...event.dataTransfer.types].includes("Files")) event.preventDefault(); } : undefined}
-      onDrop={onAddArtwork ? (event) => { const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("image/")); if (!files.length) return; event.preventDefault(); event.stopPropagation(); const rect = event.currentTarget.getBoundingClientRect(); if (!rect.width || !rect.height) return; onAddArtwork(files, { x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100 }); } : undefined}
+      onDragOver={onAddArtwork ? (event) => { if ([...event.dataTransfer.types].some(type=>type==="Files"||type===REUSABLE_IMAGE_TYPE)) event.preventDefault(); } : undefined}
+      onDrop={onAddArtwork ? (event) => { const asset=droppedReusableImage(event.dataTransfer);if(asset){event.preventDefault();event.stopPropagation();const rect=event.currentTarget.getBoundingClientRect();onAddSavedArtwork?.(asset,{x:(event.clientX-rect.left)/rect.width*100,y:(event.clientY-rect.top)/rect.height*100});return;} const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("image/")); if (!files.length) return; event.preventDefault(); event.stopPropagation(); const rect = event.currentTarget.getBoundingClientRect(); if (!rect.width || !rect.height) return; onAddArtwork(files, { x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100 }); } : undefined}
     >
       {post.background?.type === "image" && (
         <div className="social-image-shade" />
@@ -722,7 +728,7 @@ function buildReviewItems(post: SocialPost) {
   return { items, apply };
 }
 
-export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStudioProps) {
+export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings }: SocialStudioProps) {
   const [, setBrandLogoRevision] = useState(0);
   useEffect(() => {
     loadPreparedBrandLogos().then(() => setBrandLogoRevision((value) => value + 1));
@@ -949,6 +955,9 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
     setActiveId(next.id);
     setDirtyId(next.id);
     setMessage("");
+  }
+  function addSavedArtwork(asset:LogoAsset,point?:{x:number;y:number}) {
+    update(draft=>{draft.artworks ||= [];draft.artworks.push({id:crypto.randomUUID(),name:asset.name,image:asset.url,x:Math.max(0,Math.min(95,point?.x??12)),y:Math.max(0,Math.min(95,point?.y??12)),width:20});});
   }
   async function deleteActive() {
     if (!post) return;
@@ -1931,6 +1940,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                 <BrandLogoManager campaign={post} onUpdate={update} />
                 <div className="social-artwork-settings">
                   <strong>Images on this post</strong>
+                  <ReusableImages settings={settings} onAdd={addSavedArtwork} />
                   <p>Add campaign marks or other images. Drag them on the post to move; drag the corner to resize. You can also drop image files directly onto the canvas.</p>
                   <label className="social-add">{artworkUpload ? `Uploading ${artworkUpload.completed}/${artworkUpload.total}…` : "＋ Add images"}<input aria-label="Add images to post" type="file" accept="image/*" multiple disabled={Boolean(artworkUpload)} onChange={(event) => { const files = [...(event.target.files || [])]; event.target.value = ""; void addArtworks(files); }} /></label>
                   {(post.artworks || []).map((artwork) => <div className="social-artwork-row" key={artwork.id}><img src={artwork.image} alt="" /><span>{artwork.name}</span><input type="range" min="4" max="70" value={artwork.width} aria-label={`Size: ${artwork.name}`} onChange={(event) => updateAsset(artwork.id, { x: artwork.x, y: artwork.y, width: Number(event.target.value) })} /><button type="button" aria-label={`Remove ${artwork.name}`} onClick={() => update((draft: SocialPost) => { draft.artworks = (draft.artworks || []).filter((item) => item.id !== artwork.id); })}>×</button></div>)}
@@ -1998,6 +2008,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed }: SocialStu
                 })}
                 onDropImage={previewMode ? undefined : dropProductImage}
                 onAddArtwork={previewMode ? undefined : addArtworks}
+                onAddSavedArtwork={previewMode ? undefined : addSavedArtwork}
                 onUpdateAsset={previewMode ? undefined : updateAsset}
                 onRemoveArtwork={previewMode ? undefined : (id) => update((draft: SocialPost) => { draft.artworks = (draft.artworks || []).filter((item) => item.id !== id); })}
                 onReorderDetails={previewMode ? undefined : reorderDetails}

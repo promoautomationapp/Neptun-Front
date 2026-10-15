@@ -262,7 +262,7 @@ export function CreateCampaign({
     if (finalEndDate < startDate)
       return setError(t("End date must be on or after the start date."));
     onCreate({
-      ...campaignDefaults(initialSettings),
+      ...campaignDefaults(initialSettings,undefined,type),
       id: crypto.randomUUID(),
       name: name.trim(),
       type: type === "Other" ? "Custom campaign" : type,

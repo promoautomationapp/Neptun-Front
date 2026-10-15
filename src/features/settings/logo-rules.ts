@@ -4,7 +4,7 @@ export { logoRuleDefaults };
 /** Rules are deliberately snapshotted; future workspace changes do not restyle a brochure. */
 export function logoForBackground(
   campaign: Partial<Campaign>,
-  target: "cover" | "pages",
+  target: "cover" | "pages" | "stores" | "footer",
   color: string,
   fallback: string,
   light?: boolean,
@@ -15,14 +15,17 @@ export function logoForBackground(
       ? campaign.coverLogoSource || ""
       : campaign.brandAssets?.neptun || "";
   // A deliberate logo edit in an individual brochure wins over its inherited rules.
-  if (snapshot && selected !== snapshot[target]) return fallback;
+  if (snapshot && selected !== snapshot[target === "cover" ? "cover" : "pages"])
+    return fallback;
   const hex = /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : "";
   const isLight =
     light ?? (hex ? luminance(hex) > 0.45 : campaign.theme === "light");
-  const rules = (campaign.logoRules || []).filter(
-    (rule) =>
-      rule.enabled && (rule.target === target || rule.target === "both"),
-  );
+  const rules = (campaign.logoRules || [])
+    .filter(
+      (rule) =>
+        rule.enabled && (rule.target === target || rule.target === "both"),
+    )
+    .sort((a, b) => Number(b.target === target) - Number(a.target === target));
   const exact =
     hex &&
     rules.find(

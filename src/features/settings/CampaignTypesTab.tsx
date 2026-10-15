@@ -1,5 +1,5 @@
 import { SettingsGroup } from "./components";
-import { Field, Toggle, OrderButtons } from "./components";
+import { Field, Toggle, OrderButtons, AssetPicker } from "./components";
 import { moveItem, repairDefaultType } from "./campaign-defaults";
 import type { SettingsTabProps } from "./SettingsEditor";
 export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
@@ -88,6 +88,22 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
               </button>
             )}
           </div>
+          <AssetPicker
+            label={`${item.name} default campaign logo`}
+            value={item.logo || ""}
+            library={draft.logoLibrary}
+            onUpload={(asset) =>
+              update((next) => {
+                next.logoLibrary.push(asset);
+              })
+            }
+            onChange={(source) =>
+              update((next) => {
+                next.campaignTypes[index]!.logo = source;
+              })
+            }
+            emptyLabel="No default campaign logo"
+          />
           <div className="ns-grid">
             <Field label={`${item.name} type name`}>
               <input

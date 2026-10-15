@@ -1,3 +1,4 @@
+import { openSettingsSections } from "../helpers/settings-sections";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -78,6 +79,7 @@ it("persists product design controls as settings and new campaign snapshots", as
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
   fireEvent.click(view.getByRole("tab", { name: "Product design" }));
+  openSettingsSections(view.container);
   fireEvent.click(view.getByLabelText("Automatically group products by type"));
   fireEvent.change(view.getByLabelText("Default photo position and size"), {
     target: { value: "custom" },
