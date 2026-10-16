@@ -2040,10 +2040,22 @@ export function BrochureEditor({
   const [dropCode, setDropCode] = useState<string | null>(null);
   const [overPage, setOverPage] = useState<number | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const editModeButton = React.useRef<HTMLButtonElement>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [commentMode, setCommentMode] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const canEditCanvas = !previewMode && !commentMode;
+  useEffect(() => {
+    if (!previewMode) return;
+    const leavePreview = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('[role="dialog"]')) return;
+      event.preventDefault();
+      setPreviewMode(false);
+      editModeButton.current?.focus();
+    };
+    window.addEventListener("keydown", leavePreview);
+    return () => window.removeEventListener("keydown", leavePreview);
+  }, [previewMode]);
   useEffect(() => {
     if (notificationTarget?.campaignId !== campaign.id) return;
     setSelected(
@@ -2654,6 +2666,7 @@ export function BrochureEditor({
         <button
           type="button"
           aria-pressed={canEditCanvas}
+          ref={editModeButton}
           onClick={() => {
             setPreviewMode(false);
             setCommentMode(false);
@@ -2806,6 +2819,15 @@ export function BrochureEditor({
                     {t(showSettings ? "Hide settings" : "More settings")}
                   </button>
                 </>
+              )}
+              {previewMode && (
+                <Button onClick={() => {
+                  setPreviewMode(false);
+                  editModeButton.current?.focus();
+                }}>
+                  <NavIcon name="edit" size={17} />
+                  {t("Back to editing")}
+                </Button>
               )}
               {previewMode && (
                 <Button

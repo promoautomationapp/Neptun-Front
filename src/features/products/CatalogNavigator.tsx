@@ -3,10 +3,7 @@ import type { Product } from "../../domain/models";
 import { t } from "../brochure/i18n";
 import { CategoryTreeSelect } from "../brochure/CategoryTreeSelect";
 import { FilterSelect } from "../brochure/FilterControls";
-import {
-  categoryNodes,
-  productCategoryPath,
-} from "../settings/categoryHierarchy";
+import { productCategoryPath } from "../settings/categoryHierarchy";
 import "../../styles/catalog-navigator.css";
 export interface CatalogSelection {
   categoryPath: string;
@@ -14,20 +11,11 @@ export interface CatalogSelection {
   availability: string;
 }
 export function defaultCatalogSelection(
-  products: Product[],
-  sourcePaths: string[] = [],
+  _products: Product[],
+  _sourcePaths: string[] = [],
 ): CatalogSelection {
-  const roots = categoryNodes(
-    sourcePaths.length
-      ? []
-      : products.map((product) => ({
-          category: product.category || "",
-          subcategory: product.subcategory || "",
-          categoryPath: product.categoryPath,
-        })),
-    sourcePaths,
-  ).filter((node) => !node.parent);
-  return { categoryPath: roots[0]?.path || "", brand: "", availability: "all" };
+  // Opening the catalog must not silently hide brands in an arbitrary branch.
+  return { categoryPath: "", brand: "", availability: "all" };
 }
 export function filterCatalog(
   products: Product[],

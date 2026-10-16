@@ -80,6 +80,24 @@ it("switches between editing, a clean preview and a dedicated comment view", () 
   ).toBeNull();
   expect(props.onUpdate).not.toHaveBeenCalled();
 });
+it("returns from the full-screen preview to editing using its visible button or Escape", () => {
+  const view = render(<BrochureEditor {...props} />);
+  const modes = within(view.getByRole("group", { name: "Brochure view" }));
+  fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
+  fireEvent.click(view.getByRole("button", { name: "Back to editing" }));
+  expect(
+    view.container.querySelector(".cs-page-preview.edit-view"),
+  ).toBeTruthy();
+  expect(document.activeElement).toBe(
+    modes.getByRole("button", { name: "Edit brochure" }),
+  );
+  fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(
+    view.container.querySelector(".cs-page-preview.edit-view"),
+  ).toBeTruthy();
+  expect(props.onUpdate).not.toHaveBeenCalled();
+});
 it("opens the notification thread in comment mode on the intended brochure page", () => {
   const view = render(
     <BrochureEditor

@@ -58,11 +58,16 @@ export function tvScreenInches(product: Partial<Product>) {
   return modelSize || null;
 }
 
-// A gentle size cue within each photo slot, rather than a literal physical-size ratio.
-// Keep the largest supported TV inside the slot; saved manual scales take precedence.
+// Keep a visible size difference between common 55/65-inch offers without
+// letting larger TVs escape the photo slot. Saved manual scales take precedence.
 export function defaultProductImageScale(product: Partial<Product>) {
   const inches = tvScreenInches(product);
-  return inches ? Number((0.94 + (0.06 * (inches - 20)) / 100).toFixed(3)) : 1;
+  if (!inches) return 1;
+  const scale =
+    inches <= 65
+      ? 0.615 + (inches - 20) * 0.007
+      : 0.93 + (inches - 65) * (0.07 / 55);
+  return Number(Math.min(1, scale).toFixed(3));
 }
 
 export function otherScreenInches(product: Partial<Product>) {

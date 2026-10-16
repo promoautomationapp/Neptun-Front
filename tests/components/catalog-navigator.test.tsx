@@ -75,10 +75,10 @@ it("keeps one stable category field as depth changes and resets brand on selecti
   ).toHaveLength(controls);
   expect(view.queryByRole("button", { name: "Subcategory" })).toBeNull();
 });
-it("chooses one initial root category and keeps every descendant including website-missing products", () => {
+it("starts with all categories and keeps every descendant including website-missing products", () => {
   const selection = defaultCatalogSelection(products);
   expect(selection).toEqual({
-    categoryPath: "IT",
+    categoryPath: "",
     brand: "",
     availability: "all",
   });
@@ -204,9 +204,7 @@ it("uses the source menu including empty branches instead of inventing legacy ro
     }),
   ).toBeTruthy();
   expect(view.queryByRole("button", { name: /IT ·/ })).toBeNull();
-  expect(defaultCatalogSelection(products, paths).categoryPath).toBe(
-    "Neptun root",
-  );
+  expect(defaultCatalogSelection(products, paths).categoryPath).toBe("");
   expect(
     filterCatalog(products, {
       categoryPath: "",
@@ -247,4 +245,34 @@ it("contains the search controls in the same filter surface and clears them with
     brand: "",
     availability: "all",
   });
+});
+
+it("offers every brand initially and narrows only after a deliberate category choice", () => {
+  const catalog = Array.from({ length: 35 }, (_, index) => ({
+    code: String(index),
+    name: `Product ${index}`,
+    brand: `Brand ${index}`,
+    categoryPath: index < 8 ? "APPLIANCES > OVENS" : "IT > ACCESSORIES",
+  }));
+  const view = render(
+    <CatalogNavigator
+      products={catalog}
+      selection={defaultCatalogSelection(catalog)}
+      onChange={vi.fn()}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Brand" }));
+  expect(view.getAllByRole("option")).toHaveLength(36);
+  fireEvent.keyDown(view.getByRole("button", { name: "Brand" }), {
+    key: "Escape",
+  });
+  view.rerender(
+    <CatalogNavigator
+      products={catalog}
+      selection={{ categoryPath: "APPLIANCES", brand: "", availability: "all" }}
+      onChange={vi.fn()}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Brand" }));
+  expect(view.getAllByRole("option")).toHaveLength(9);
 });

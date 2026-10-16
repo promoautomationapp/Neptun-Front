@@ -60,6 +60,9 @@ it("renders gently increasing TV sizes within photo slots, including export mark
   expect(
     defaultProductImageScale(tv(75)) / defaultProductImageScale(tv(65)),
   ).toBeLessThan(1.1);
+  expect(
+    defaultProductImageScale(tv(65)) / defaultProductImageScale(tv(55)),
+  ).toBeGreaterThan(1.07);
   expect(defaultProductImageScale({ name: "Unknown", subcategory: "TV" })).toBe(
     1,
   );

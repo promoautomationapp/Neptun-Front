@@ -168,7 +168,43 @@ async function readyImages(root: HTMLElement) {
   await nextFrame();
 }
 
-function preserveExportFontSizes(page: HTMLElement) {
+/** html-to-image skips SVG descendants when detecting used font families. */
+export async function brochureExportFontCSS(
+  root: HTMLElement,
+  embed: (node: HTMLElement) => Promise<string> = getFontEmbedCSS,
+) {
+  const document = root.ownerDocument;
+  const view = document.defaultView;
+  if (!view) throw new Error(t("Could not prepare brochure pages."));
+  const probes = document.createElement("div");
+  probes.hidden = true;
+  probes.setAttribute("data-export-hide", "true");
+  const families = new Set<string>();
+  for (const node of [root, ...root.querySelectorAll("*")]) {
+    const family = view.getComputedStyle(node).fontFamily;
+    if (!family || families.has(family)) continue;
+    families.add(family);
+    const probe = document.createElement("span");
+    probe.style.fontFamily = family;
+    probes.append(probe);
+  }
+  root.append(probes);
+  try {
+    const css = await embed(root);
+    if (
+      /url\(\s*["']?\s*["']?\s*\)/i.test(css) ||
+      (!css && [...families].some((family) => /TSTAR|SkolaSans/i.test(family)))
+    )
+      throw new Error(
+        t("Brochure fonts could not be loaded. Please retry the download."),
+      );
+    return css;
+  } finally {
+    probes.remove();
+  }
+}
+
+function preserveExportTypography(page: HTMLElement) {
   const document = page.ownerDocument;
   const view = document.defaultView;
   if (!view) throw new Error(t("Could not prepare brochure pages."));
@@ -178,16 +214,30 @@ function preserveExportFontSizes(page: HTMLElement) {
   const previous: Array<[Element, string | null]> = [];
   const prefix = `font-${Date.now().toString(36)}`;
   nodes.forEach((node, index) => {
-    const size = view.getComputedStyle(node).fontSize;
+    const computed = view.getComputedStyle(node);
+    const size = computed.fontSize;
     if (!/^\d+(?:\.\d+)?px$/.test(size)) return;
     previous.push([node, node.getAttribute(attribute)]);
     const id = `${prefix}-${index}`;
     node.setAttribute(attribute, id);
-    rules.push(`[${attribute}="${id}"]{font-size:${size}!important;}`);
+    const typography = document.createElement("span").style;
+    for (const property of [
+      "font-size",
+      "font-family",
+      "font-weight",
+      "font-style",
+      "font-stretch",
+      "letter-spacing",
+      "line-height",
+    ]) {
+      const value = computed.getPropertyValue(property);
+      if (value) typography.setProperty(property, value, "important");
+    }
+    rules.push(`[${attribute}="${id}"]{${typography.cssText}}`);
   });
   const style = document.createElement("style");
   // html-to-image rounds computed font sizes down when cloning in some
-  // browsers. An embedded important rule keeps the preview's exact sizes.
+  // browsers. Pin HTML and SVG typography to the same computed preview values.
   style.textContent = rules.join("\n");
   page.appendChild(style);
   return () => {
@@ -219,7 +269,7 @@ export async function captureBrochurePage(
         "The brochure preview size does not match the selected format. Please retry.",
       ),
     );
-  const restoreFontSizes = preserveExportFontSizes(page);
+  const restoreTypography = preserveExportTypography(page);
   try {
     const canvas = await toCanvas(page, {
       width: rect.width,
@@ -237,7 +287,7 @@ export async function captureBrochurePage(
       throw new Error(t("The exported page size is incorrect. Please retry."));
     return canvas;
   } finally {
-    restoreFontSizes();
+    restoreTypography();
   }
 }
 
@@ -301,7 +351,6 @@ export function BrochureExport({
         ? Array.from({ length: pageCount }, (_, index) => index)
         : [pageIndex];
     try {
-      let fontEmbedCSS: string | undefined;
       const base = fileBase(campaign.name);
       let pdf: jsPDF | undefined;
       let zip: JSZip | undefined;
@@ -330,8 +379,9 @@ export function BrochureExport({
         const stage = stageRef.current;
         if (!stage) throw new Error(t("Could not prepare brochure pages."));
         await readyImages(stage);
-        if (!fontEmbedCSS)
-          fontEmbedCSS = await getFontEmbedCSS(stage).catch(() => undefined);
+        // A later page may introduce a font used only by SVG inch labels or
+        // price artwork. Never reuse an incomplete first-page font subset.
+        const fontEmbedCSS = await brochureExportFontCSS(stage);
         const page = brochureExportPageNode(stage, index);
         if (!page) throw new Error(t("Could not prepare brochure pages."));
         setProgress(

@@ -1,4 +1,6 @@
 const translations: Record<string, string> = {
+  "Back to editing": "Kthehu te redaktimi",
+  "Brochure fonts could not be loaded. Please retry the download.": "Fontet e broshurës nuk u ngarkuan. Provoni përsëri shkarkimin.",
   "No social media posts.": "Nuk ka postime në rrjete sociale.",
   "＋ New post": "＋ Postim i ri",
   "Saved posts": "Postimet e ruajtura",

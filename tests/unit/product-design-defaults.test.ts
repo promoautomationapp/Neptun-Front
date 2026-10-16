@@ -25,7 +25,7 @@ describe("snapshotted product design defaults", () => {
     expect(defaultPhotoPlacement(television, {}, "bottom")).toEqual({
       x: 50,
       y: 50,
-      scale: 0.967,
+      scale: 0.93,
     });
     expect(defaultRegionScale({}, "price")).toEqual({});
     expect(productGridStyle({})).toEqual({});
