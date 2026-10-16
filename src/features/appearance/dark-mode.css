@@ -29,6 +29,13 @@ html[data-theme="dark"] .na-account-screen {
 html[data-theme="dark"] .na-account-wordmark img {
   filter: brightness(0) invert(1);
 }
+html[data-theme="dark"] .ns-settings-group > summary {
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"] :is(.ns-category-browser, .ns-category-search) {
+  border-color: var(--np-border);
+}
 
 html[data-theme="dark"]
   body

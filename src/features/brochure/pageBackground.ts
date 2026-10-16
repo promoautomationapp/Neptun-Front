@@ -116,9 +116,15 @@ export function pageBackgroundFill(
   if (image)
     return `url(${JSON.stringify(image)}) center / cover no-repeat ${pageBackgroundColor(campaign, kind, page) || "#245b89"}`;
   const gradient = pageBackgroundGradient(campaign, kind, page);
-  return gradient
-    ? `linear-gradient(${gradient.angle}deg, ${gradient.from}, ${gradient.to})`
-    : pageBackgroundColor(campaign, kind, page);
+  if (gradient)
+    return `linear-gradient(${gradient.angle}deg, ${gradient.from}, ${gradient.to})`;
+  if (
+    kind === "cover" &&
+    campaign.coverTemplate === "redBlue" &&
+    !validBackgroundColor(campaign.coverBackgroundColor)
+  )
+    return '#0869b5 url("/cover-backgrounds/red-blue.svg") center / cover no-repeat';
+  return pageBackgroundColor(campaign, kind, page);
 }
 export function pageBackgroundContrastColor(
   campaign: Partial<Campaign>,

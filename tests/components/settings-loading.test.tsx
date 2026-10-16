@@ -8,6 +8,7 @@ import {
   loadSettings,
   persistSettings,
 } from "../../src/features/settings/settings.api";
+import { catalogFacets } from "../../src/features/products/products.api";
 import type { SettingsTabProps } from "../../src/features/settings/SettingsEditor";
 
 vi.mock("../../src/features/settings/settings.api", () => ({
@@ -15,21 +16,30 @@ vi.mock("../../src/features/settings/settings.api", () => ({
   persistSettings: vi.fn(),
 }));
 vi.mock("../../src/features/products/products.api", () => ({
-  catalogFacets: vi.fn(async () => ({ paths: [], brands: [] })),
+  catalogFacets: vi.fn(async () => ({
+    paths: [],
+    brands: [],
+    sourceCategories: [],
+  })),
 }));
 vi.mock("../../src/features/settings/SettingsEditor", () => ({
   SettingsEditor: ({
     initial,
     onReload,
     onSave,
+    facets,
   }: {
     initial: SettingsTabProps["draft"];
+    facets: { categoryPath?: string }[];
     onReload: () => void;
     onSave: (settings: SettingsTabProps["draft"]) => Promise<unknown>;
   }) => (
     <>
       <h1>Workspace settings</h1>
       <span>{initial.contact.website}</span>
+      <output aria-label="Available category paths">
+        {facets.map((item) => item.categoryPath).join("; ")}
+      </output>
       <button onClick={onReload}>Reload latest settings</button>
       <button onClick={() => void onSave(initial)}>Save settings</button>
     </>
@@ -123,5 +133,30 @@ it("offers recovery after a failed read, including a workspace with no saved def
     expect(
       view.getByRole("heading", { name: "Workspace settings" }),
     ).toBeTruthy(),
+  );
+});
+
+it("includes the full source hierarchy even when a branch currently has no products", async () => {
+  vi.mocked(catalogFacets).mockResolvedValueOnce({
+    brands: [],
+    categories: [],
+    paths: [],
+    sourceCategories: [
+      {
+        id: 3,
+        parentId: 2,
+        name: "AKSESORË",
+        path: ["IT", "KOMPJUTERË", "AKSESORË"],
+        categoryPath: "IT > KOMPJUTERË > AKSESORË",
+        url: "https://neptun-ks.com/",
+        lastSeenAt: "2026-10-16T00:00:00Z",
+      },
+    ],
+  });
+  const view = render(<SettingsPage initialSnapshot={saved()} />);
+  await waitFor(() =>
+    expect(
+      view.getByLabelText("Available category paths").textContent,
+    ).toContain("IT > KOMPJUTERË > AKSESORË"),
   );
 });

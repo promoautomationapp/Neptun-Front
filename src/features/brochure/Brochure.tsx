@@ -2291,7 +2291,7 @@ function CoverPageContent({
   const backgroundColor =
     pageBackgroundContrastColor(campaign, "cover") || "#1c4075";
   const backgroundImage = pageBackgroundImage(campaign, "cover");
-  const customBackgroundFill =
+  const backgroundFill =
     (backgroundImage
       ? pageBackgroundColor(campaign, "cover")
       : pageBackgroundFill(campaign, "cover")) || "#1c4075";
@@ -2308,9 +2308,6 @@ function CoverPageContent({
       : campaign.coverTemplate === "blueRibbon" || COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
         ? campaign.coverTemplate
         : "blueClean";
-  const backgroundFill = !campaign.coverBackgroundColor && !campaign.coverBackgroundGradient && !backgroundImage && template === "redBlue"
-    ? '#0869b5 url("/cover-backgrounds/red-blue.svg") center / cover no-repeat'
-    : customBackgroundFill;
   const coverArt =
     campaign.coverImage ||
     (template === "photo"

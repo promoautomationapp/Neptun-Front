@@ -56,8 +56,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           )}
         </div>
       </SettingsGroup>
-      <details>
-        <summary>Sections shown on the stores page and compact footer</summary>
+      <SettingsGroup title="Sections shown on the stores page and compact footer">
         {(
           [
             {
@@ -89,7 +88,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
             ))}
           </SettingsGroup>
         ))}
-      </details>
+      </SettingsGroup>
       <h3>Store list</h3>
       {draft.stores.map((store, index) => {
         const label = store.name || store.city || `Store ${index + 1}`;

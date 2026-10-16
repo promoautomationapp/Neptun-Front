@@ -86,7 +86,15 @@ export function SettingsPage({
     void catalogFacets()
       .then((value) => {
         if (active) {
-          setFacets(value.paths);
+          setFacets([
+            ...value.paths,
+            ...(value.sourceCategories || []).map((category) => ({
+              category: category.path[0] || category.name,
+              subcategory:
+                category.path.length > 1 ? category.path.at(-1)! : "",
+              categoryPath: category.categoryPath,
+            })),
+          ]);
           setBrands(value.brands);
           setFacetsError("");
         }

@@ -104,10 +104,7 @@
   margin: 0 0 20px;
 }
 .social-library-empty {
-  padding: 55px;
-  text-align: center;
-  border: 1px dashed #bed4e6;
-  border-radius: 16px;
+  padding: 24px 0;
   color: #69839b;
 }
 .social-post-cards {

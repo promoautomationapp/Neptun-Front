@@ -98,7 +98,7 @@ it("previews the chosen background immediately and keeps UUU as a separate switc
   expect(
     view
       .getByLabelText("Settings preview")
-      .querySelector(".brochure-cover")
+      .querySelector(".brochure-output-page")
       ?.getAttribute("style"),
   ).toContain("red-blue.svg");
   expect(view.queryByRole("button", { name: "Blue UUU cover" })).toBeNull();
@@ -118,7 +118,7 @@ it("previews the chosen background immediately and keeps UUU as a separate switc
   expect(
     view
       .getByLabelText("Settings preview")
-      .querySelector(".brochure-cover")
+      .querySelector(".brochure-output-page")
       ?.getAttribute("style"),
   ).toContain("rgb(28, 64, 117)");
 });

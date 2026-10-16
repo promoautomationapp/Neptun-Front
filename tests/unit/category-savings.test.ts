@@ -31,6 +31,14 @@ describe("dynamic category savings", () => {
         savingMode: "amount",
       }),
     ).toBe("amount");
+    expect(
+      resolvedSavingsMode(campaign, {
+        category: "ELEKTROSHTËPIAKE TË MËDHA",
+        categoryPath: "ELEKTROSHTËPIAKE TË MËDHA > AKSESORË",
+        regular: 19.99,
+        sale: 14.99,
+      }),
+    ).toBe("percentage");
     campaign.automaticSavings!.amountThreshold = 150;
     expect(resolvedSavingsMode(campaign, { regular: 499, sale: 399 })).toBe(
       "percentage",
