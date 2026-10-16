@@ -1,4 +1,10 @@
 import { NotificationBell } from "../notifications/NotificationBell";
+import { useLiveSession } from "../auth/useLiveSession";
+import {
+  catalogPathAllowed,
+  effectiveWorkspaceAccess,
+} from "../auth/workspaceAccess";
+import { productCategoryPath } from "../settings/categoryHierarchy";
 import type { WorkspaceNotification } from "../notifications/notifications.api";
 import { StudioPageBoundary } from "./StudioPageBoundary";
 import { NavIcon } from "./NavIcon";
@@ -246,11 +252,14 @@ interface CampaignLibraryProps {
   onDelete: (campaign: Campaign) => void;
   onPrint: (id: string) => void;
   canManageDisabled?: boolean;
+  canDisable?: boolean;
   loading?: boolean;
   restoringId?: string | null;
   onRestore?: (campaign: Campaign) => void;
 }
 interface ProductEditorProps extends CampaignControlsProps {
+  canMakeSocial?: boolean;
+  canUseCatalog?: boolean;
   onImport: () => void;
   onManual: () => void;
   onDetails: (product: Product) => void;
@@ -261,6 +270,8 @@ interface ProductEditorProps extends CampaignControlsProps {
   onMakeSocial: (products: Product[]) => void;
 }
 interface BrochureEditorProps extends StoreControlsProps {
+  canMakeSocial?: boolean;
+  canUseCatalog?: boolean;
   notificationTarget?: {
     id: string;
     campaignId: string;
@@ -400,6 +411,7 @@ export function CampaignLibrary({
   onDelete,
   onPrint,
   canManageDisabled = false,
+  canDisable = true,
   loading = false,
   restoringId,
   onRestore,
@@ -714,15 +726,17 @@ export function CampaignLibrary({
                       <NavIcon name="copy" />
                       {t("Duplicate")}
                     </button>
-                    <button
-                      type="button"
-                      className="cs-card-utility cs-card-delete"
-                      onClick={() => onDelete(item)}
-                      aria-label={`${t("Disable campaign")}: ${item.name}`}
-                    >
-                      <NavIcon name="archive" />
-                      {t("Disable")}
-                    </button>
+                    {canDisable && (
+                      <button
+                        type="button"
+                        className="cs-card-utility cs-card-delete"
+                        onClick={() => onDelete(item)}
+                        aria-label={`${t("Disable campaign")}: ${item.name}`}
+                      >
+                        <NavIcon name="archive" />
+                        {t("Disable")}
+                      </button>
+                    )}
                     <button
                       className="cs-card-open"
                       type="button"
@@ -782,6 +796,8 @@ export function CampaignLibrary({
 }
 
 function ProductEditor({
+  canMakeSocial = true,
+  canUseCatalog = true,
   campaign,
   onUpdate,
   onImport,
@@ -902,7 +918,7 @@ function ProductEditor({
         <div className="cs-actions">
           <Button onClick={onAiReview}>{t("✦ AI review")}</Button>
           <Button onClick={onReCut}>{t("Re-cut product image")}</Button>
-          <Button onClick={onManual}>{t("＋ Add manually")}</Button>
+          {canUseCatalog && <Button onClick={onManual}>{t("＋ Add manually")}</Button>}
           <Button tone="primary" onClick={onImport}>
             {t("↑ Import CSV / Excel")}
           </Button>
@@ -1079,12 +1095,14 @@ function ProductEditor({
                       >
                         {t("Change image ↗")}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onMakeSocial([product])}
-                      >
-                        Make social post ↗
-                      </button>
+                      {canMakeSocial && (
+                        <button
+                          type="button"
+                          onClick={() => onMakeSocial([product])}
+                        >
+                          Make social post ↗
+                        </button>
+                      )}
                       {product.aiOriginalImage && (
                         <button
                           type="button"
@@ -1231,7 +1249,7 @@ function ProductEditor({
             )}
           </p>
           <div className="cs-actions">
-            <Button onClick={onManual}>{t("Add manually")}</Button>
+            {canUseCatalog && <Button onClick={onManual}>{t("Add manually")}</Button>}
             <Button tone="primary" onClick={onImport}>
               {t("Import CSV / Excel")}
             </Button>
@@ -1984,6 +2002,8 @@ function StorePageControls({
 }
 
 export function BrochureEditor({
+  canMakeSocial = true,
+  canUseCatalog = true,
   campaign,
   settings,
   user,
@@ -2026,7 +2046,13 @@ export function BrochureEditor({
   useEffect(() => {
     if (notificationTarget?.campaignId !== campaign.id) return;
     setSelected(
-      Math.max(-1, Math.min(hasStoresPage ? pages.length : Math.max(-1, pages.length - 1), notificationTarget.pageIndex - 1)),
+      Math.max(
+        -1,
+        Math.min(
+          hasStoresPage ? pages.length : Math.max(-1, pages.length - 1),
+          notificationTarget.pageIndex - 1,
+        ),
+      ),
     );
     setCommentMode(true);
     setPreviewMode(false);
@@ -2570,18 +2596,20 @@ export function BrochureEditor({
           <details className="cs-brochure-actions-menu">
             <summary>{t("More actions")}</summary>
             <div>
-              <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>
-              <Button
-                onClick={() =>
-                  onMakeSocial(
-                    selected === -1
-                      ? coverProducts(campaign)
-                      : page?.products || campaign.products.slice(0, 3),
-                  )
-                }
-              >
-                ＋ {t("Create social post")}
-              </Button>
+              {canUseCatalog && <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>}
+              {canMakeSocial && (
+                <Button
+                  onClick={() =>
+                    onMakeSocial(
+                      selected === -1
+                        ? coverProducts(campaign)
+                        : page?.products || campaign.products.slice(0, 3),
+                    )
+                  }
+                >
+                  ＋ {t("Create social post")}
+                </Button>
+              )}
               {canEditCanvas && (
                 <Button onClick={() => setShowGuides((value) => !value)}>
                   {showGuides ? t("Hide guides") : t("Show guides")}
@@ -3027,7 +3055,8 @@ export function BrochureEditor({
         </div>
         {commentMode && (
           <aside className="cs-page-controls cs-review-sidebar">
-            <ReviewPanel key={notificationTarget?.id}
+            <ReviewPanel
+              key={notificationTarget?.id}
               campaign={campaign}
               user={user}
               members={members}
@@ -3583,6 +3612,18 @@ export default function App({
     document.documentElement.lang = language;
   }, [language]);
   const [user, setUser] = useState<SessionUser | null>(initialUser || null);
+  const access = useMemo(
+    () => effectiveWorkspaceAccess(user || { role: "staff" }),
+    [user],
+  );
+  const catalogAccessKey = JSON.stringify([
+    access.canViewCatalog,
+    access.catalogCategoryPaths,
+  ]);
+  useLiveSession(user, (next) => {
+    setUser(next);
+    onAuthChange?.(next);
+  });
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [authReady, setAuthReady] = useState(Boolean(initialUser));
   const [authConfigured, setAuthConfigured] = useState(true);
@@ -3593,9 +3634,23 @@ export default function App({
   const [settings, setSettings] = useState<Settings>(() =>
     resolveSettings(null),
   );
-  const [catalog, setCatalog] = useState<Product[]>([]);
+  const [catalogSnapshot, setCatalog] = useState<Product[]>([]);
+  const catalog = useMemo(
+    () =>
+      catalogSnapshot.filter((product) =>
+        catalogPathAllowed(productCategoryPath(product), access),
+      ),
+    [catalogSnapshot, access],
+  );
   const [catalogLoading, setCatalogLoading] = useState(false);
-  const [catalogSourcePaths, setCatalogSourcePaths] = useState<string[]>([]);
+  const [sourcePathsSnapshot, setCatalogSourcePaths] = useState<string[]>([]);
+  const catalogSourcePaths = useMemo(
+    () =>
+      sourcePathsSnapshot.filter((path) =>
+        catalogPathAllowed(path, access, true),
+      ),
+    [sourcePathsSnapshot, access],
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [notificationTarget, setNotificationTarget] =
     useState<BrochureEditorProps["notificationTarget"]>(null);
@@ -3636,6 +3691,11 @@ export default function App({
     );
   }
   function setSection(next: string) {
+    if (
+      (next === "catalog" && !access.canViewCatalog) ||
+      (next === "social" && !access.canViewSocialPosts)
+    )
+      return;
     if (next === section || section !== "stores" || canLeaveSettings())
       setSectionValue(next);
   }
@@ -3694,6 +3754,27 @@ export default function App({
     availability: "all",
   });
   const [catalogVisible, setCatalogVisible] = useState(60);
+  useEffect(() => {
+    if (
+      (section === "catalog" && !access.canViewCatalog) ||
+      (section === "social" && !access.canViewSocialPosts) ||
+      (["users", "activity"].includes(section) &&
+        user &&
+        !canManageUsers(user)) ||
+      (section === "insights" && user?.role !== "superadmin")
+    )
+      setSectionValue("campaigns");
+    if (!access.canViewSocialPosts) setSocialSeed(null);
+    if (!access.canDisableBrochures) setDeleteTarget(null);
+    if (!access.canViewCatalog) setModal((current) => current === "manual" ? null : current);
+    setDetail((current) =>
+      current &&
+      !current.editable &&
+      !catalogPathAllowed(productCategoryPath(current.product), access)
+        ? null
+        : current,
+    );
+  }, [access, section, user]);
   const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
   const [exportId, setExportId] = useState<string | null>(null);
   const [exportPage, setExportPage] = useState(0);
@@ -3733,8 +3814,6 @@ export default function App({
   useEffect(() => {
     if (!user) return;
     const controller = new AbortController();
-    let productsSnapshot: Product[] = [];
-    setCatalogLoading(true);
     void getMembers()
       .then((result) => {
         if (!controller.signal.aborted) setMembers(result);
@@ -3750,7 +3829,7 @@ export default function App({
         setCampaigns((current) =>
           mergeCampaignSnapshots(
             current,
-            enrichSavedCampaigns(saved, productsSnapshot),
+            enrichSavedCampaigns(saved, []),
             activeEditorRef.current.activeId,
             activeEditorRef.current.section === "editor",
           ),
@@ -3763,6 +3842,20 @@ export default function App({
       .finally(() => {
         if (!controller.signal.aborted) setCampaignsLoading(false);
       });
+    return () => controller.abort();
+  }, [user?.email]);
+  useEffect(() => {
+    if (!user) return;
+    const controller = new AbortController();
+    setCatalog([]);
+    setCatalogSourcePaths([]);
+    catalogCategoryInitialized.current = false;
+    setCatalogSelection({ categoryPath: "", brand: "", availability: "all" });
+    if (!access.canViewCatalog) {
+      setCatalogLoading(false);
+      return () => controller.abort();
+    }
+    setCatalogLoading(true);
     void catalogFacets(controller.signal)
       .then((facets) => {
         if (!controller.signal.aborted)
@@ -3777,7 +3870,6 @@ export default function App({
     void loadCatalog(controller.signal)
       .then((products) => {
         if (controller.signal.aborted) return;
-        productsSnapshot = products;
         setCatalog(products);
         setCampaigns((current) => enrichSavedCampaigns(current, products));
       })
@@ -3789,7 +3881,7 @@ export default function App({
         if (!controller.signal.aborted) setCatalogLoading(false);
       });
     return () => controller.abort();
-  }, [user?.email]);
+  }, [user?.email, catalogAccessKey]);
   useEffect(() => {
     if (!user) return;
     const controller = new AbortController();
@@ -4358,7 +4450,7 @@ export default function App({
     setToast(t("Campaign duplicated."));
   }
   async function confirmDeleteCampaign() {
-    if (!deleteTarget || deleteBusy) return;
+    if (!deleteTarget || deleteBusy || !access.canDisableBrochures) return;
     setDeleteBusy(true);
     try {
       await removeCampaign(deleteTarget.id, deleteTarget.version);
@@ -4396,8 +4488,11 @@ export default function App({
     }
   }
   const catalogItems = useMemo(
-    () => catalogWithExcelProducts(catalog, campaigns),
-    [catalog, campaigns],
+    () =>
+      catalogWithExcelProducts(catalog, campaigns).filter((product) =>
+        catalogPathAllowed(productCategoryPath(product), access),
+      ),
+    [catalog, campaigns, access],
   );
   useEffect(() => {
     if (
@@ -4541,8 +4636,12 @@ export default function App({
           {(
             [
               ["campaigns", "Campaigns"],
-              ["catalog", "Product catalog"],
-              ["social", "Social posts"],
+              ...(access.canViewCatalog
+                ? [["catalog", "Product catalog"]]
+                : []),
+              ...(access.canViewSocialPosts
+                ? [["social", "Social posts"]]
+                : []),
               ["stores", "Settings"],
               ...(canManageUsers(user)
                 ? [
@@ -4612,20 +4711,22 @@ export default function App({
                             : t("Settings")}
           </div>
           <div className="cs-topbar-right">
-            <CatalogRefreshControl
-              onUpdated={async () => {
-                const [products, facets] = await Promise.all([
-                  loadCatalog(),
-                  catalogFacets(),
-                ]);
-                setCatalog(products);
-                setCatalogSourcePaths(
-                  facets.sourceCategories.map(
-                    (category) => category.categoryPath,
-                  ),
-                );
-              }}
-            />
+            {access.canViewCatalog && (
+              <CatalogRefreshControl
+                onUpdated={async () => {
+                  const [products, facets] = await Promise.all([
+                    loadCatalog(),
+                    catalogFacets(),
+                  ]);
+                  setCatalog(products);
+                  setCatalogSourcePaths(
+                    facets.sourceCategories.map(
+                      (category) => category.categoryPath,
+                    ),
+                  );
+                }}
+              />
+            )}
             <span>NEPTUN KOSOVO</span>
             <NotificationBell onOpen={openReviewNotification} />
             <LanguageSwitch language={language} onChange={changeLanguage} />
@@ -4647,6 +4748,7 @@ export default function App({
             onDuplicate={duplicateCampaign}
             onDelete={setDeleteTarget}
             canManageDisabled={user.role === "superadmin"}
+            canDisable={access.canDisableBrochures}
             loading={campaignsLoading}
             restoringId={restoringId}
             onRestore={enableCampaign}
@@ -4659,7 +4761,7 @@ export default function App({
             }}
           />
         )}
-        {section === "catalog" && (
+        {section === "catalog" && access.canViewCatalog && (
           <div className="cs-main-panel">
             <div className="cs-section-head">
               <div>
@@ -4827,7 +4929,7 @@ export default function App({
             )}
           </div>
         )}
-        {section === "social" && (
+        {section === "social" && access.canViewSocialPosts && (
           <StudioPageBoundary onReturn={() => setSection("campaigns")}>
             <React.Suspense
               fallback={
@@ -4839,6 +4941,7 @@ export default function App({
               }
             >
               <SocialStudio
+                canViewCatalog={access.canViewCatalog}
                 settings={settings}
                 catalog={catalog}
                 campaigns={campaigns.filter((item) => !item.disabledAt)}
@@ -4939,28 +5042,36 @@ export default function App({
                   {brochurePageCount(campaign, splitPages(campaign).length)}{" "}
                   {t("brochure pages")} · {t("Saved for the team")}
                 </p>
-                <button
-                  type="button"
-                  className="cs-social-shortcut"
-                  onClick={() => {
-                    setSocialSeed({
-                      campaignId: campaign.id,
-                      products: campaign.products.slice(0, 3),
-                    });
-                    setSection("social");
-                  }}
-                >
-                  <span className="cs-social-shortcut-icon" aria-hidden="true">
-                    ▧
-                  </span>
-                  <span className="cs-social-shortcut-copy">
-                    <strong>{t("Create social post")}</strong>
-                    <small>{t("From this brochure")}</small>
-                  </span>
-                  <span className="cs-social-shortcut-arrow" aria-hidden="true">
-                    →
-                  </span>
-                </button>
+                {access.canViewSocialPosts && (
+                  <button
+                    type="button"
+                    className="cs-social-shortcut"
+                    onClick={() => {
+                      setSocialSeed({
+                        campaignId: campaign.id,
+                        products: campaign.products.slice(0, 3),
+                      });
+                      setSection("social");
+                    }}
+                  >
+                    <span
+                      className="cs-social-shortcut-icon"
+                      aria-hidden="true"
+                    >
+                      ▧
+                    </span>
+                    <span className="cs-social-shortcut-copy">
+                      <strong>{t("Create social post")}</strong>
+                      <small>{t("From this brochure")}</small>
+                    </span>
+                    <span
+                      className="cs-social-shortcut-arrow"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </button>
+                )}
                 <div className="cs-editor-progress">
                   <span
                     className={`status-${campaignValidity(campaign, campaignNow) === "expired" ? "expired" : campaign.status || "in_progress"} ${
@@ -5063,6 +5174,8 @@ export default function App({
             />
             {editorTab === "products" ? (
               <ProductEditor
+                canMakeSocial={access.canViewSocialPosts}
+                canUseCatalog={access.canViewCatalog}
                 campaign={campaign}
                 onUpdate={updateCampaign}
                 onImport={() => setModal("import")}
@@ -5083,6 +5196,8 @@ export default function App({
               />
             ) : (
               <BrochureEditor
+                canMakeSocial={access.canViewSocialPosts}
+                canUseCatalog={access.canViewCatalog}
                 key={`${campaign.id}-${brochurePreviewVersion}`}
                 campaign={campaign}
                 settings={settings}
@@ -5235,7 +5350,7 @@ export default function App({
           onClose={() => setModal(null)}
         />
       )}
-      {modal === "manual" && campaign && (
+      {modal === "manual" && campaign && access.canViewCatalog && (
         <ManualPicker
           catalog={catalog}
           existing={campaign.products}
@@ -5267,6 +5382,7 @@ export default function App({
       )}
       {detail && (
         <Details
+          canLoadCatalogPhotos={catalogPathAllowed(productCategoryPath(detail.product), access)}
           product={
             detail.editable
               ? campaign?.products.find(

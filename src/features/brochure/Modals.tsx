@@ -1596,6 +1596,7 @@ export function ManualPicker({
 }
 
 export function Details({
+  canLoadCatalogPhotos = true,
   product: originalProduct,
   campaign,
   onAppearanceChange,
@@ -1603,6 +1604,7 @@ export function Details({
   onImageEdit,
   onClose,
 }: {
+  canLoadCatalogPhotos?: boolean;
   product: Product;
   campaign?: Campaign;
   onAppearanceChange?: (
@@ -1617,7 +1619,7 @@ export function Details({
   onClose: () => void;
 }) {
   const catalogPhotos = useCatalogPhotos(
-    originalProduct.catalogMissing ? undefined : originalProduct,
+    originalProduct.catalogMissing || !canLoadCatalogPhotos ? undefined : originalProduct,
   );
   const product = onProductChange
     ? originalProduct

@@ -19,7 +19,8 @@ const sessionSchema = z.object({
   configured: z.boolean(),
   user: userSchema.nullable(),
 });
-export const getSession = () => request("/api/team/session", sessionSchema);
+export const getSession = (signal?: AbortSignal) =>
+  request("/api/team/session", sessionSchema, { signal });
 export const login = (email: string, password: string) =>
   request("/api/team/login", z.object({ user: userSchema }), {
     method: "POST",

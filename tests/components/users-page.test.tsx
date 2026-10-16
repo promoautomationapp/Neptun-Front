@@ -5,6 +5,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { UsersPage } from "../../src/features/users/UsersPage";
 import type { User } from "../../src/features/auth/auth.api";
 import { userSchema } from "../../src/features/auth/auth.api";
+import { defaultWorkspaceAccess } from "../../src/features/auth/workspaceAccess";
+import { setLanguage } from "../../src/features/brochure/i18n";
 
 const admin: User = {
   id: "admin",
@@ -84,6 +86,7 @@ it("hides support accounts from Neptun admins and invites new staff by default",
     email: "new@example.test",
     name: "New Staff",
     role: "staff",
+    access: defaultWorkspaceAccess(),
   });
   expect(view.queryByLabelText(/password/i)).toBeNull();
 });
@@ -98,6 +101,111 @@ it("does not request admin data for staff", () => {
   );
   expect(view.getByText(/Only admins/)).toBeTruthy();
   expect(api).not.toHaveBeenCalled();
+});
+
+it("saves simple custom switches and searched category branches, then can reset to usual role access", async () => {
+  setLanguage("en");
+  const api = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input).includes("/products/facets"))
+      return response({
+        categories: ["IT"],
+        brands: [],
+        sourceCategories: [],
+        paths: [
+          {
+            category: "IT",
+            subcategory: "Computers",
+            brand: "",
+            categoryPath: "IT > Computers > Laptops",
+          },
+        ],
+      });
+    if (init?.method === "PATCH")
+      return response({ user: { ...staff, ...JSON.parse(String(init.body)) } });
+    return response({ users: [staff], emailConfigured: true });
+  });
+  vi.stubGlobal("fetch", api);
+  const view = render(<UsersPage currentUser={admin} />);
+  fireEvent.click(await view.findByRole("button", { name: "Edit" }));
+  expect(
+    api.mock.calls.some(([input]) => String(input).includes("facets")),
+  ).toBe(false);
+  const details = view.container.querySelector(
+    "details.na-access-editor",
+  ) as HTMLDetailsElement;
+  details.open = true;
+  fireEvent(details, new Event("toggle"));
+  fireEvent.click(view.getByRole("radio", { name: "Custom access" }));
+  fireEvent.click(view.getByRole("switch", { name: "Disable brochures" }));
+  fireEvent.click(view.getByRole("switch", { name: "View social posts" }));
+  fireEvent.click(view.getByRole("radio", { name: "Selected branches" }));
+  expect(
+    (view.getByRole("button", { name: "Save user" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+  fireEvent.click(
+    await view.findByRole("button", { name: "Add category branch" }),
+  );
+  fireEvent.change(
+    view.getByRole("searchbox", {
+      name: "Search categories or subcategories…",
+    }),
+    { target: { value: "laptop" } },
+  );
+  fireEvent.click(
+    view.getByRole("button", { name: "IT > Computers > Laptops" }),
+  );
+  fireEvent.click(view.getByRole("button", { name: "Save user" }));
+  await waitFor(() =>
+    expect(view.queryByRole("button", { name: "Save user" })).toBeNull(),
+  );
+  const patches = () =>
+    api.mock.calls.filter(([, init]) => init?.method === "PATCH");
+  expect(JSON.parse(String(patches()[0]?.[1]?.body)).access).toEqual({
+    ...defaultWorkspaceAccess(),
+    mode: "custom",
+    canDisableBrochures: false,
+    canViewSocialPosts: false,
+    catalogCategoryPaths: ["IT > Computers > Laptops"],
+  });
+  fireEvent.click(view.getByRole("button", { name: "Edit" }));
+  const reopened = view.container.querySelector(
+    "details.na-access-editor",
+  ) as HTMLDetailsElement;
+  reopened.open = true;
+  fireEvent(reopened, new Event("toggle"));
+  fireEvent.click(
+    view.getByRole("radio", { name: "Usual access for this role" }),
+  );
+  fireEvent.click(view.getByRole("button", { name: "Save user" }));
+  await waitFor(() => expect(patches()).toHaveLength(2));
+  expect(JSON.parse(String(patches()[1]?.[1]?.body)).access).toEqual(
+    defaultWorkspaceAccess(),
+  );
+});
+
+it("restores a verified disabled colleague while email delivery is unavailable", async () => {
+  const api = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
+    init?.method === "PATCH"
+      ? response({ user: { ...staff, emailVerified: true } })
+      : response({
+          users: [{ ...staff, status: "disabled", emailVerified: true }],
+          emailConfigured: false,
+        }),
+  );
+  vi.stubGlobal("fetch", api);
+  const view = render(<UsersPage currentUser={admin} />);
+  const button = await view.findByRole("button", { name: "Restore access" });
+  expect((button as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.click(button);
+  await view.findByText("User access restored.");
+  expect(
+    JSON.parse(
+      String(
+        api.mock.calls.find(([, init]) => init?.method === "PATCH")?.[1]?.body,
+      ),
+    ),
+  ).toEqual({ status: "active" });
 });
 
 it("keeps invite actions unavailable when email delivery is not configured", async () => {
@@ -147,7 +255,11 @@ it("edits a colleague through the backend and uses its confirmed result", async 
         api.mock.calls.find(([, init]) => init?.method === "PATCH")?.[1]?.body,
       ),
     ),
-  ).toEqual({ name: "Updated Staff", role: "pm" });
+  ).toEqual({
+    name: "Updated Staff",
+    role: "pm",
+    access: defaultWorkspaceAccess(),
+  });
 });
 
 it("accepts real admin and support session roles without losing their display metadata", () => {

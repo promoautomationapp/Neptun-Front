@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { request } from "./client";
-import { workspaceAccessSchema, type WorkspaceAccess } from "../features/auth/workspaceAccess";
+import {
+  workspaceAccessSchema,
+  type WorkspaceAccess,
+} from "../features/auth/workspaceAccess";
 
 export const managedUserSchema = z.object({
   id: z.string(),

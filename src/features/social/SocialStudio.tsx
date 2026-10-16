@@ -137,6 +137,7 @@ interface PostCanvasProps {
 interface SocialStudioProps {
   settings?: Settings;
   canManageDisabled?: boolean;
+  canViewCatalog?: boolean;
   catalog: Product[];
   campaigns: Campaign[];
   seed?: {campaignId: string; products: Product[]} | null;
@@ -497,13 +498,13 @@ function PostCanvas({
   );
 }
 
-function ProductPicker({ catalog, campaigns, post, onAdd, onClose }: {catalog: Product[]; campaigns: Campaign[]; post: SocialPost; onAdd: (product: Product) => void; onClose: () => void}) {
+function ProductPicker({ catalog, campaigns, post, onAdd, onClose, canViewCatalog = true }: {catalog: Product[]; campaigns: Campaign[]; post: SocialPost; onAdd: (product: Product) => void; onClose: () => void; canViewCatalog?: boolean}) {
   const [query, setQuery] = useState("");
-  const [source, setSource] = useState(post.sourceCampaignId || "catalog");
+  const [source, setSource] = useState(post.sourceCampaignId || (canViewCatalog ? "catalog" : campaigns[0]?.id || ""));
   const [chosen, setChosen] = useState<string | null>(null);
   const [sale, setSale] = useState("");
   const campaign = campaigns.find((item) => item.id === source);
-  const products = campaign?.products || catalog;
+  const products = campaign?.products || (canViewCatalog ? catalog : []);
   const existing = new Set(
     (post.products || []).map((item) => String(item.code)),
   );
@@ -534,7 +535,7 @@ function ProductPicker({ catalog, campaigns, post, onAdd, onClose }: {catalog: P
           <div>
             <small>PRODUCTS</small>
             <h2>Add to this post</h2>
-            <p>Use any brochure or choose directly from the catalog.</p>
+            <p>{canViewCatalog ? "Use any brochure or choose directly from the catalog." : "Choose products from a shared brochure."}</p>
           </div>
           <button
             type="button"
@@ -554,7 +555,7 @@ function ProductPicker({ catalog, campaigns, post, onAdd, onClose }: {catalog: P
             }}
             searchable
             options={[
-              { value: "catalog", label: "Full product catalog" },
+              ...(canViewCatalog ? [{ value: "catalog", label: "Product catalog" }] : []),
               ...campaigns.map((item) => ({
                 value: item.id,
                 label: item.name,
@@ -731,7 +732,7 @@ function buildReviewItems(post: SocialPost) {
   return { items, apply };
 }
 
-export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, canManageDisabled = false }: SocialStudioProps) {
+export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, canManageDisabled = false, canViewCatalog = true }: SocialStudioProps) {
   const [, setBrandLogoRevision] = useState(0);
   useEffect(() => {
     loadPreparedBrandLogos().then(() => setBrandLogoRevision((value) => value + 1));
@@ -2319,6 +2320,8 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
       )}
       {picker && post && (
         <ProductPicker
+          key={String(canViewCatalog)}
+          canViewCatalog={canViewCatalog}
           catalog={catalog}
           campaigns={campaigns}
           post={post}

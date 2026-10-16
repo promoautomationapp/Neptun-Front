@@ -10,16 +10,20 @@
   try {
     if (loginRequested) sessionStorage.removeItem(key);
     isSignedIn = sessionStorage.getItem(key) === "yes";
-  } catch {}
+  } catch {
+    /* Optional browser state must not interrupt the interface. */
+  }
   if (isSignedIn) {
     document.body.classList.remove("signed-out");
     gate.hidden = true;
   }
-  const enter = (e: { preventDefault: () => void; }) => {
+  const enter = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
       sessionStorage.setItem(key, "yes");
-    } catch {}
+    } catch {
+      /* Optional browser state must not interrupt the interface. */
+    }
     if (loginRequested)
       history.replaceState(null, "", location.pathname + "#studio");
     document.body.classList.remove("signed-out");
@@ -31,7 +35,9 @@
   document.getElementById("demo-logout")?.addEventListener("click", () => {
     try {
       sessionStorage.removeItem(key);
-    } catch {}
+    } catch {
+      /* Optional browser state must not interrupt the interface. */
+    }
     gate.hidden = false;
     document.body.classList.add("signed-out");
     gate.scrollIntoView({ behavior: "auto" });

@@ -31,7 +31,7 @@ export function App() {
       return;
     }
     const controller = new AbortController();
-    void getSession()
+    void getSession(controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) setUser(result.user);
       })

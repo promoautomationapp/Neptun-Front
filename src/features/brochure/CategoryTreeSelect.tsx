@@ -28,6 +28,7 @@ export interface CategoryTreeSelectProps {
   label?: string;
   placeholder?: string;
   includeAll?: boolean;
+  showCounts?: boolean;
 }
 
 export function CategoryTreeSelect({
@@ -41,6 +42,7 @@ export function CategoryTreeSelect({
   label = t("Category & subcategory"),
   placeholder = t("All categories"),
   includeAll = true,
+  showCounts = true,
 }: CategoryTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -232,7 +234,11 @@ export function CategoryTreeSelect({
           type="button"
           className={node.depth ? "cs-category-child" : "cs-category-parent"}
           aria-pressed={selectedPath === node.path}
-          aria-label={`${translatedPath(node.path)} · ${counts.get(node.path) || 0} ${t("products")}`}
+          aria-label={
+            showCounts
+              ? `${translatedPath(node.path)} · ${counts.get(node.path) || 0} ${t("products")}`
+              : translatedPath(node.path)
+          }
           onClick={() => choose(node.path)}
         >
           <span>
@@ -241,7 +247,7 @@ export function CategoryTreeSelect({
               <small>{translatedPath(node.parent)}</small>
             )}
           </span>
-          <b>{counts.get(node.path) || 0}</b>
+          {showCounts && <b>{counts.get(node.path) || 0}</b>}
         </button>
         {hasChildren && !term && (
           <button
@@ -292,9 +298,7 @@ export function CategoryTreeSelect({
       >
         <span className="cs-category-trigger-text">
           <strong>
-            {selectedParts.length
-              ? t(selectedParts.at(-1)!)
-              : placeholder}
+            {selectedParts.length ? t(selectedParts.at(-1)!) : placeholder}
           </strong>
           {selectedParts.length > 1 && (
             <small>{selectedParts.slice(0, -1).map(t).join(" > ")}</small>

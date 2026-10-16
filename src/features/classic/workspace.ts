@@ -110,7 +110,9 @@ export function mountWorkspace() {
     if (location.hash) {
       try {
         history.replaceState(history.state, "", location.href.split("#")[0]);
-      } catch {}
+      } catch {
+        /* Optional browser state must not interrupt the interface. */
+      }
     }
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -164,14 +166,13 @@ export function mountWorkspace() {
     pending: PendingImport | null = null,
     monthFilter = "all",
     saveChain: Promise<void> = Promise.resolve(),
-    storageError = false,
     brochureFormat = "a4",
     aiChecked = false,
-    aiIgnored = new Set<string>(),
     builderSaveTimer: ReturnType<typeof setTimeout> | null = null,
     cloudSyncTimer: ReturnType<typeof setTimeout> | null = null,
     cloudSyncBusy = false,
     backgroundBatchBusy = false;
+  const aiIgnored = new Set<string>();
   function activeCampaign(): ClassicCampaign {
     if (!current) throw new Error("No active campaign is open.");
     return current;
@@ -434,7 +435,7 @@ export function mountWorkspace() {
       });
       if (!response.ok) throw Error("Campaign details could not be shared");
       if (current?.id === id) note("Saved here and shared with the team.");
-    } catch (error) {
+    } catch {
       if (current?.id === id)
         note(
           "Saved on this browser, but team sync failed. Check the shared workspace connection.",
@@ -451,7 +452,9 @@ export function mountWorkspace() {
     if (token && !automatic) {
       try {
         sessionStorage.removeItem("neptun-shared-token");
-      } catch {}
+      } catch {
+        /* Optional browser state must not interrupt the interface. */
+      }
       token = "";
     }
     if (!token) {
@@ -529,7 +532,9 @@ export function mountWorkspace() {
                       ),
                     );
                   }
-                } catch {}
+                } catch {
+                  /* Optional browser state must not interrupt the interface. */
+                }
               }
             },
           ),
@@ -541,7 +546,9 @@ export function mountWorkspace() {
         if (!remoteIds.has(local.id)) upload.push(local);
       try {
         sessionStorage.setItem("neptun-shared-token", token);
-      } catch {}
+      } catch {
+        /* Optional browser state must not interrupt the interface. */
+      }
       library = [...merged.values()];
       if (current?.id && merged.has(activeCampaign().id))
         current = clone(merged.get(activeCampaign().id) ?? null);
@@ -555,7 +562,9 @@ export function mountWorkspace() {
       if (automatic) {
         try {
           sessionStorage.removeItem("neptun-shared-token");
-        } catch {}
+        } catch {
+          /* Optional browser state must not interrupt the interface. */
+        }
       }
       note(
         error instanceof Error
@@ -596,7 +605,6 @@ export function mountWorkspace() {
           }),
       )
       .then(() => {
-        storageError = false;
         if (current?.id === snapshot.id)
           note(
             "Saved on this browser · " +
@@ -608,7 +616,6 @@ export function mountWorkspace() {
         if (!backgroundBatchBusy) queueCloudSync(snapshot.id);
       })
       .catch(() => {
-        storageError = true;
         note(
           "Could not save on this browser. Download a backup now to keep your work.",
           true,
@@ -886,7 +893,9 @@ export function mountWorkspace() {
       if (sharedToken()) {
         try {
           sessionStorage.removeItem("neptun-shared-token");
-        } catch {}
+        } catch {
+          /* Optional browser state must not interrupt the interface. */
+        }
         renderLibrary();
         $(".studio-top span").textContent =
           "Neptun template · saved locally on this browser with downloadable backups";
@@ -1438,7 +1447,7 @@ export function mountWorkspace() {
       note(
         `${imported} products imported and included${suffix}. Added ${attached} exact photo${attached === 1 ? "" : "s"}; ${exactTotal} exact-match photos are now attached. ${missing} products still need a photo${failed ? ` (${failed} photo${failed === 1 ? "" : "s"} could not load)` : ""}. Review every image before approving.`,
       );
-    } catch (error) {
+    } catch {
       if (current?.id === campaignId) {
         if (campaign.importSummary) {
           campaign.importSummary.matching = false;
@@ -1676,7 +1685,7 @@ export function mountWorkspace() {
         note(
           `${mode === "ai" ? "AI" : "Demo"} cutout saved for ${p.name}. Review and approve it in Images.`,
         );
-      } catch (error) {
+      } catch {
         button.disabled = false;
         button.textContent = "Use cutout";
         status.textContent =
@@ -3069,8 +3078,8 @@ export function mountWorkspace() {
     ) {
       c.fillStyle = color;
       c.font = `${weight} ${size}px "${font}",Arial,sans-serif`;
-      let line = "",
-        lines = [];
+      let line = "";
+      const lines: string[] = [];
       for (const word of String(value ?? "").split(/\s+/)) {
         const next = line ? line + " " + word : word;
         if (c.measureText(next).width > max && line) {
@@ -3099,8 +3108,8 @@ export function mountWorkspace() {
     ) {
       c.fillStyle = color;
       c.font = `${weight} ${size}px "${font}",Arial,sans-serif`;
-      let line = "",
-        lines = [];
+      let line = "";
+      let lines: string[] = [];
       for (const word of String(value ?? "").split(/\s+/)) {
         const next = line ? line + " " + word : word;
         if (c.measureText(next).width > w && line) {
@@ -3220,7 +3229,7 @@ export function mountWorkspace() {
                 "500",
               );
             }
-            let specs = String(p.specs || "")
+            const specs = String(p.specs || "")
               .split(/[,;\n]/)
               .map((a) => a.trim())
               .filter(Boolean)
@@ -3580,7 +3589,6 @@ export function mountWorkspace() {
         library = library.filter((c) => !demo.some((d) => d.id === c.id));
       }
     } catch {
-      storageError = true;
       note(
         "Browser storage is unavailable. Download backups before closing.",
         true,

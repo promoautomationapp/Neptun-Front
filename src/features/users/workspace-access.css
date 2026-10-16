@@ -15,39 +15,212 @@
   list-style: none;
   color: #1d4668;
 }
-.na-access-editor > summary::-webkit-details-marker { display: none; }
-.na-access-editor summary strong { font-size: 14px; }
-.na-access-editor summary small { display: block; margin-top: 5px; color: #647d91; font-size: 12px; }
-.na-access-chevron { font-size: 20px; transition: transform .15s; }
-.na-access-editor[open] .na-access-chevron { transform: rotate(180deg); }
-.na-access-body { padding: 2px 18px 18px; }
-.na-access-segments { display: flex; gap: 5px; padding: 4px; background: #f0f5f9; border-radius: 10px; flex-wrap: wrap; }
-.na-access-segments button { flex: 1 1 140px; border: 1px solid transparent; border-radius: 7px; padding: 10px; background: transparent; color: #5b7287; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
-.na-access-segments button[aria-checked="true"] { border-color: #c6d9e7; background: #fff; color: #1b527b; box-shadow: 0 1px 3px #143c5910; }
-.na-access-help, .na-access-shared-note, .na-access-admin { font-size: 12px !important; line-height: 1.6 !important; color: #617b90 !important; }
-.na-access-permissions { display: grid; gap: 0; }
-.na-access-permission { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; border-top: 1px solid #e7eef4; }
-.na-access-permission label { display: block; color: #294e6a; font-size: 13px; cursor: pointer; }
-.na-access-permission small { display: block; margin-top: 5px; font-size: 12px; line-height: 1.5; color: #6b8092; }
-.na-access-switch { flex: 0 0 38px; width: 38px; height: 23px; border: 1px solid #b8cbd9; border-radius: 20px; background: #d6e1e9; padding: 2px; cursor: pointer; }
-.na-access-switch span { display: block; width: 17px; height: 17px; border-radius: 50%; background: white; box-shadow: 0 1px 3px #244f7130; transition: transform .15s; }
-.na-access-switch[aria-checked="true"] { background: #1d689b; border-color: #1d689b; }
-.na-access-switch[aria-checked="true"] span { transform: translateX(15px); }
-.na-access-categories { border-top: 1px solid #e7eef4; padding-top: 16px; margin-top: 2px; }
-.na-access-categories h3 { margin: 0 0 12px; font-size: 13px; color: #294e6a; }
-.na-access-categories .cs-category-select { max-width: none; width: 100%; margin-top: 12px; }
-.na-access-branches { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; list-style: none; margin: 12px 0; }
-.na-access-branches li { display: flex; align-items: center; min-width: 0; max-width: 100%; gap: 8px; padding: 6px 6px 6px 11px; background: #eaf3fa; border: 1px solid #d0e1ee; border-radius: 9px; color: #245678; font-size: 12px; }
-.na-access-branches li span { overflow-wrap: anywhere; }
-.na-access-branches button { flex-shrink: 0; border: none; border-radius: 5px; width: 25px; height: 25px; padding: 0; background: #fff; color: #255879; font-size: 19px; cursor: pointer; }
-.na-access-validation { color: #a3482c !important; font-size: 12px !important; margin: 10px 0 0; }
-.na-access-load-error { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: #80532c; margin: 12px 0; font-size: 12px; }
-.na-access-shared-note { padding: 12px 0 0; margin-bottom: 0; border-top: 1px solid #e7eef4; }
-.na-access-admin { grid-column: 1 / -1; margin: 0; padding: 12px 16px; background: #edf5fb; border: 1px solid #d7e5ef; border-radius: 10px; }
-.na-access-editor button:focus-visible, .na-access-editor summary:focus-visible { outline: 3px solid #55a9dc55; outline-offset: 2px; }
-.na-access-editor button:disabled { opacity: .55; cursor: default; }
-.na-user-access-badge { display: block; margin-top: 6px; color: #627b8f; font-size: 11px; }
+.na-access-editor > summary::-webkit-details-marker {
+  display: none;
+}
+.na-access-editor summary strong {
+  font-size: 14px;
+}
+.na-access-editor summary small {
+  display: block;
+  margin-top: 5px;
+  color: #647d91;
+  font-size: 12px;
+}
+.na-access-chevron {
+  font-size: 20px;
+  transition: transform 0.15s;
+}
+.na-access-editor[open] .na-access-chevron {
+  transform: rotate(180deg);
+}
+.na-access-body {
+  padding: 2px 18px 18px;
+}
+.na-access-segments {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  background: #f0f5f9;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.na-access-segments button {
+  flex: 1 1 140px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 10px;
+  background: transparent;
+  color: #5b7287;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.na-access-segments button[aria-checked="true"] {
+  border-color: #c6d9e7;
+  background: #fff;
+  color: #1b527b;
+  box-shadow: 0 1px 3px #143c5910;
+}
+.na-access-help,
+.na-access-shared-note,
+.na-access-admin {
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+  color: #617b90 !important;
+}
+.na-access-permissions {
+  display: grid;
+  gap: 0;
+}
+.na-access-permission {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 0;
+  border-top: 1px solid #e7eef4;
+}
+.na-access-permission label {
+  display: block;
+  color: #294e6a;
+  font-size: 13px;
+  cursor: pointer;
+}
+.na-access-permission small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b8092;
+}
+.na-access-switch {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 23px;
+  border: 1px solid #b8cbd9;
+  border-radius: 20px;
+  background: #d6e1e9;
+  padding: 2px;
+  cursor: pointer;
+}
+.na-access-switch span {
+  display: block;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px #244f7130;
+  transition: transform 0.15s;
+}
+.na-access-switch[aria-checked="true"] {
+  background: #1d689b;
+  border-color: #1d689b;
+}
+.na-access-switch[aria-checked="true"] span {
+  transform: translateX(15px);
+}
+.na-access-categories {
+  border-top: 1px solid #e7eef4;
+  padding-top: 16px;
+  margin-top: 2px;
+}
+.na-access-categories h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #294e6a;
+}
+.na-access-categories .cs-category-select {
+  max-width: none;
+  width: 100%;
+  margin-top: 12px;
+}
+.na-access-branches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0;
+  list-style: none;
+  margin: 12px 0;
+}
+.na-access-branches li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  gap: 8px;
+  padding: 6px 6px 6px 11px;
+  background: #eaf3fa;
+  border: 1px solid #d0e1ee;
+  border-radius: 9px;
+  color: #245678;
+  font-size: 12px;
+}
+.na-access-branches li span {
+  overflow-wrap: anywhere;
+}
+.na-access-branches button {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 5px;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  background: #fff;
+  color: #255879;
+  font-size: 19px;
+  cursor: pointer;
+}
+.na-access-validation {
+  color: #a3482c !important;
+  font-size: 12px !important;
+  margin: 10px 0 0;
+}
+.na-access-load-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #80532c;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.na-access-shared-note {
+  padding: 12px 0 0;
+  margin-bottom: 0;
+  border-top: 1px solid #e7eef4;
+}
+.na-access-admin {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 16px;
+  background: #edf5fb;
+  border: 1px solid #d7e5ef;
+  border-radius: 10px;
+}
+.na-access-editor button:focus-visible,
+.na-access-editor summary:focus-visible {
+  outline: 3px solid #55a9dc55;
+  outline-offset: 2px;
+}
+.na-access-editor button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.na-user-access-badge {
+  display: block;
+  margin-top: 6px;
+  color: #627b8f;
+  font-size: 11px;
+}
 @media (max-width: 600px) {
-  .na-access-editor > summary, .na-access-body { padding-left: 13px; padding-right: 13px; }
-  .na-access-permission { gap: 10px; }
+  .na-access-editor > summary,
+  .na-access-body {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .na-access-permission {
+    gap: 10px;
+  }
 }

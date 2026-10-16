@@ -27,6 +27,17 @@ body {
   min-height: 60px;
   height: auto;
   padding-block: 12px;
+  gap: 12px;
+}
+.campaign-app .cs-topbar > .cs-breadcrumb {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.campaign-app .cs-topbar > .cs-topbar-right {
+  flex: 0 0 auto;
+}
+.campaign-app .cs-topbar-right > .cs-avatar {
+  flex: 0 0 auto;
 }
 .campaign-app .cs-topbar > *,
 .na-page-heading > *,

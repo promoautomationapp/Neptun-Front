@@ -30,13 +30,26 @@ export function effectiveWorkspaceAccess(user: {
     ? defaultWorkspaceAccess()
     : user.access;
 }
-export function catalogPathAllowed(path: string, access: WorkspaceAccess) {
+export function catalogPathAllowed(
+  path: string,
+  access: WorkspaceAccess,
+  includeAncestors = false,
+) {
   if (!access.canViewCatalog) return false;
   if (access.catalogCategoryPaths === null) return true;
-  const normalized = path.toLocaleLowerCase().trim();
+  const canonical = (value: string) =>
+    value
+      .normalize("NFC")
+      .toLocaleLowerCase()
+      .split(/\s*(?:>|›)\s*/)
+      .map((part) => part.trim().replace(/\s+/g, " "))
+      .filter(Boolean)
+      .join(" > ");
+  const normalized = canonical(path);
   return access.catalogCategoryPaths.some(
     (branch) =>
-      normalized === branch.toLocaleLowerCase().trim() ||
-      normalized.startsWith(branch.toLocaleLowerCase().trim() + " > "),
+      normalized === canonical(branch) ||
+      normalized.startsWith(canonical(branch) + " > ") ||
+      (includeAncestors && canonical(branch).startsWith(normalized + " > ")),
   );
 }

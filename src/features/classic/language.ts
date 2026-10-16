@@ -1,7 +1,6 @@
 (() => {
   "use strict";
   const words: Record<string, string> = {
-    
     "Welcome back": "Mirë se u kthyet",
     "Sign in to open your campaign workspace.":
       "Hyni për të hapur hapësirën e fushatës.",
@@ -23,10 +22,9 @@
     "Step 2 of 4": "Hapi 2 nga 4",
     "Step 3 of 4": "Hapi 3 nga 4",
     "Step 4 of 4": "Hapi 4 nga 4",
-    
-    
+
     "Check details and prices": "Kontrolloni detajet dhe çmimet",
-    
+
     "The selected Neptun campaign is loaded from the brochure library. Product codes, names and prices stay together.":
       "Fushata e zgjedhur e Neptun është ngarkuar nga biblioteka. Kodet, emrat dhe çmimet e produkteve ruhen së bashku.",
     "Check each image against its product code and model. Automatic website lookup and background removal still need a backend connection.":
@@ -40,7 +38,7 @@
     "Finish walkthrough": "Përfundoni udhëzuesin",
     "Exit walkthrough": "Mbyllni udhëzuesin",
     "The workflow": "Procesi",
-    
+
     "The pilot": "Prova pilot",
     "YOUR SPREADSHEET. YOUR PRODUCTS. YOUR BRAND.":
       "SPREADSHEETA JUAJ. PRODUKTET TUAJA. MARKA JUAJ.",
@@ -166,8 +164,7 @@
     "Check prices": "Kontrolloni çmimet",
     "Missing image": "Mungon imazhi",
     "Approve image": "Aprovoni imazhin",
-    
-    
+
     "Check the model. Approve the image.":
       "Kontrolloni modelin. Aprovoni imazhin.",
     "Human review stays in control before a reference image enters the page.":
@@ -225,33 +222,33 @@
     "Open workspace": "Hap hapësirën e punës",
     "NEPTUN KOSOVO · CAMPAIGN WORKSPACE":
       "NEPTUN KOSOVË · HAPËSIRA E FUSHATAVE",
-    
+
     "Campaign studio": "Studio e fushatës",
-    
+
     "How the workflow works": "Si funksionon procesi",
     "Choose a step to open it in the campaign workspace.":
       "Zgjidhni një hap për ta hapur në hapësirën e fushatës.",
-    
+
     Import: "Importimi",
-    
+
     Images: "Imazhet",
-    
+
     Details: "Detajet",
-    
+
     "Preview and download": "Parapamje dhe shkarkim",
     "STEP 01 · IMPORT": "HAPI 01 · IMPORTIMI",
     "STEP 02 · IMAGES": "HAPI 02 · IMAZHET",
     "STEP 03 · DETAILS": "HAPI 03 · DETAJET",
     "STEP 04 · BROCHURE": "HAPI 04 · BROSHURA",
     "Start with the spreadsheet": "Filloni me spreadsheet-in",
-    
+
     "Match and approve product images":
       "Përputhni dhe aprovoni imazhet e produkteve",
-    
+
     "Check the details and prices": "Kontrolloni detajet dhe çmimet",
-    
+
     "Preview and download the brochure": "Shikoni dhe shkarkoni broshurën",
-    
+
     "Open this step": "Hapni këtë hap",
     "Open product list": "Hapni listën e produkteve",
     "Review product images": "Kontrolloni imazhet e produkteve",
@@ -268,8 +265,7 @@
     "Needs review": "Duhet kontrolluar",
     Ready: "Gati",
     Sort: "Renditja",
-    
-    
+
     "Name A–Z": "Emri A–Z",
     products: "produkte",
     "Newest first": "Më të rejat së pari",
@@ -491,7 +487,9 @@
   let lang: "en" | "sq" = "en";
   try {
     lang = localStorage.getItem("neptun-language") === "sq" ? "sq" : "en";
-  } catch {}
+  } catch {
+    /* Optional browser state must not interrupt the interface. */
+  }
   const originals = new WeakMap<Text, string>();
   const originalAttributes = new WeakMap<Element, Record<string, string>>();
   function textMap(raw: string, to: "en" | "sq") {
@@ -584,15 +582,18 @@
     lang = v === "sq" ? "sq" : "en";
     try {
       localStorage.setItem("neptun-language", lang);
-    } catch {}
+    } catch {
+      /* Optional browser state must not interrupt the interface. */
+    }
     render();
   }
   document.addEventListener(
     "click",
     (e) => {
-      const b = e.target instanceof Element
-        ? e.target.closest<HTMLElement>("[data-language]")
-        : null;
+      const b =
+        e.target instanceof Element
+          ? e.target.closest<HTMLElement>("[data-language]")
+          : null;
       if (!b) return;
       e.preventDefault();
       setLanguage(b.dataset.language ?? "en");
