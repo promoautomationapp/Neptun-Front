@@ -120,6 +120,14 @@ body {
 .cs-modal-head > button {
   flex: 0 0 auto;
 }
+.cs-modal-head > .cs-icon-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.cs-icon-button > svg {
+  display: block;
+}
 .cs-modal > .cs-modal-body {
   min-width: 0;
   min-height: 0;

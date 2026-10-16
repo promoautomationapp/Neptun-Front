@@ -1,4 +1,5 @@
 import { NavIcon } from "../studio/NavIcon";
+import { CloseIcon } from "../../components/CloseIcon";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import {ReusableImages,droppedReusableImage,REUSABLE_IMAGE_TYPE} from "../settings/ReusableImages";
 import type {Settings} from "../../domain/models";
@@ -541,8 +542,9 @@ function ProductPicker({ catalog, campaigns, post, onAdd, onClose, canViewCatalo
             type="button"
             className="social-modal-close"
             onClick={onClose}
+            aria-label="Close product picker"
           >
-            ×
+            <CloseIcon />
           </button>
         </header>
         <div className="social-picker-controls">

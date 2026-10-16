@@ -115,6 +115,7 @@ export function AppearanceToggle() {
       onClick={() => setMode(next)}
     >
       <AppearanceIcon mode={next} />
+      <span>{t(next === "dark" ? "Dark mode" : "Light mode")}</span>
     </button>
   );
 }

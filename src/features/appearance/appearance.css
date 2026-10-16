@@ -1,19 +1,28 @@
 .np-appearance-toggle {
-  display: grid;
-  place-items: center;
-  flex: 0 0 36px;
-  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  width: auto;
   height: 36px;
-  padding: 7px;
+  padding: 7px 11px;
   border: 1px solid #d7e3ee;
-  border-radius: 50%;
+  border-radius: 9px;
   background: #f5f8fc;
   color: #315674;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
   cursor: pointer;
 }
 .np-appearance-toggle svg {
-  width: 20px;
-  height: 20px;
+  display: block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
 }
 .np-appearance-toggle:hover {
   background: #e9f2fa;
@@ -119,10 +128,10 @@
 }
 @media (max-width: 620px) {
   .np-appearance-toggle {
-    width: 32px;
     height: 32px;
-    flex-basis: 32px;
-    padding: 6px;
+    gap: 5px;
+    padding: 6px 8px;
+    font-size: 10px;
   }
   .campaign-app .cs-topbar {
     gap: 8px;
@@ -130,7 +139,22 @@
   .campaign-app .cs-topbar-right {
     gap: 5px;
   }
+  .campaign-app .cs-topbar > .cs-breadcrumb {
+    display: none;
+  }
+  .campaign-app .cs-topbar > .cs-topbar-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .campaign-app .cs-topbar-right > .cs-avatar {
+    display: none;
+  }
   .cs-signin-panel > .np-appearance-toggle {
     margin-bottom: 8px;
+  }
+}
+@media (max-width: 380px) {
+  .campaign-app .cs-catalog-refresh-button > span:nth-child(2) {
+    display: none;
   }
 }

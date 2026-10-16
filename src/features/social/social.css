@@ -1082,6 +1082,9 @@
   color: #71899d;
 }
 .social-modal-close {
+  display: grid;
+  place-items: center;
+  padding: 0;
   align-self: start;
   border: 0;
   background: #f0f5f8;

@@ -167,6 +167,7 @@ import { ProfilePage } from "../users/ProfilePage";
 import { canManageUsers } from "../auth/auth.api";
 import { SidebarAccount } from "./SidebarAccount";
 import { resolveSettings } from "../settings/settings.schema";
+import type { SettingsSnapshot } from "../settings/settings.api";
 import type { Settings } from "../../domain/models";
 import {
   bootstrapWorkspace,
@@ -3641,6 +3642,8 @@ export default function App({
   const [settings, setSettings] = useState<Settings>(() =>
     resolveSettings(null),
   );
+  const [settingsSnapshot, setSettingsSnapshot] =
+    useState<SettingsSnapshot | null>(null);
   const [catalogSnapshot, setCatalog] = useState<Product[]>([]);
   const catalog = useMemo(
     () =>
@@ -3831,8 +3834,9 @@ export default function App({
           console.error("Could not load team members:", error);
       });
     // Saved brochures must not wait behind all pages of the source catalog.
+    setSettingsSnapshot(null);
     void bootstrapWorkspace()
-      .then(({ campaigns: saved, settings: custom }) => {
+      .then(({ campaigns: saved, settings: custom, settingsSnapshot: snapshot }) => {
         if (controller.signal.aborted) return;
         setCampaigns((current) =>
           mergeCampaignSnapshots(
@@ -3843,6 +3847,7 @@ export default function App({
           ),
         );
         setSettings(resolveSettings(custom));
+        setSettingsSnapshot(snapshot);
       })
       .catch((error) => {
         if (!controller.signal.aborted) setToast(errorMessage(error));
@@ -4993,6 +4998,8 @@ export default function App({
         )}
         {section === "stores" && (
           <SettingsPage
+            initialSnapshot={settingsSnapshot}
+            onSnapshotChange={setSettingsSnapshot}
             previewProducts={catalog}
             onSaved={setSettings}
             onDirtyChange={setSettingsDirty}

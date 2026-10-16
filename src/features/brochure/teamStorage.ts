@@ -134,11 +134,12 @@ export async function restoreCampaign(campaign: Campaign): Promise<Campaign> {
 }
 
 let settingsVersion: number | undefined;
-export const getSettings = async () => {
+const getSettingsSnapshot = async () => {
   const snapshot = await loadSettings();
   settingsVersion = snapshot.version;
-  return snapshot.settings;
+  return snapshot;
 };
+export const getSettings = async () => (await getSettingsSnapshot()).settings;
 export const saveSettings = async (settings: Settings) => {
   if (settingsVersion === undefined) await getSettings();
   const snapshot = await persistSettings(
@@ -166,9 +167,9 @@ export async function reviewCampaign(
   return saved;
 }
 export async function bootstrapWorkspace() {
-  const [campaigns, settings] = await Promise.all([
+  const [campaigns, settingsSnapshot] = await Promise.all([
     getCampaigns(),
-    getSettings(),
+    getSettingsSnapshot(),
   ]);
-  return { campaigns, settings };
+  return { campaigns, settings: settingsSnapshot.settings, settingsSnapshot };
 }

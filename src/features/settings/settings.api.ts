@@ -8,7 +8,11 @@ const snapshotSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 export type SettingsSnapshot = z.infer<typeof snapshotSchema>;
-export const loadSettings = () => request("/api/team/settings", snapshotSchema);
+export const loadSettings = (signal?: AbortSignal) =>
+  request("/api/team/settings", snapshotSchema, {
+    signal,
+    timeoutMs: 15_000,
+  });
 export const persistSettings = (
   settings: WorkspaceSettings,
   expectedVersion: number,

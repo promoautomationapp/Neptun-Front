@@ -1,16 +1,23 @@
 const translations: Record<string, string> = {
   "Switch to dark mode": "Aktivizo pamjen e errët",
   "Switch to light mode": "Aktivizo pamjen e çelët",
+  "Dark mode": "Pamja e errët",
+  "Light mode": "Pamja e çelët",
+  "Loading Settings…": "Po ngarkohen cilësimet…",
   Appearance: "Pamja",
   "Light (default)": "E çelët (parazgjedhje)",
   Dark: "E errët",
-  "Choose how your workspace looks. Light mode is the default.": "Zgjidhni pamjen e hapësirës suaj. Pamja e çelët është parazgjedhje.",
-  "Saved for your account on this device. Brochures, social posts and downloads keep their original colours.": "Ruhet për llogarinë tuaj në këtë pajisje. Broshurat, postimet sociale dhe shkarkimet i ruajnë ngjyrat origjinale.",
+  "Choose how your workspace looks. Light mode is the default.":
+    "Zgjidhni pamjen e hapësirës suaj. Pamja e çelët është parazgjedhje.",
+  "Saved for your account on this device. Brochures, social posts and downloads keep their original colours.":
+    "Ruhet për llogarinë tuaj në këtë pajisje. Broshurat, postimet sociale dhe shkarkimet i ruajnë ngjyrat origjinale.",
   "This brochure is disabled.": "Kjo broshurë është e çaktivizuar.",
   "No matching teammates": "Nuk u gjet asnjë anëtar i ekipit",
   "Remove mention": "Hiq përmendjen",
-  "Type @ to mention a teammate": "Shkruani @ për të përmendur një anëtar të ekipit",
-  "Could not save the comment. Your draft is kept.": "Komenti nuk u ruajt. Teksti juaj mbetet këtu.",
+  "Type @ to mention a teammate":
+    "Shkruani @ për të përmendur një anëtar të ekipit",
+  "Could not save the comment. Your draft is kept.":
+    "Komenti nuk u ruajt. Teksti juaj mbetet këtu.",
   "Loading campaigns…": "Po ngarkohen fushatat…",
   "Disable campaign": "Çaktivizo fushatën",
   Disable: "Çaktivizo",

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { t } from "../features/brochure/i18n";
+import { CloseIcon } from "./CloseIcon";
 
 export function Modal({
   title,
@@ -62,7 +63,7 @@ export function Modal({
             onClick={onClose}
             aria-label={t("Close")}
           >
-            ×
+            <CloseIcon />
           </button>
         </div>
         <div className="cs-modal-body">{content}</div>

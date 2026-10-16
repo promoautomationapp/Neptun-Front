@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { CloseIcon } from "../../components/CloseIcon";
 import { getLanguage } from "../brochure/i18n";
 import {
   getNotifications,
@@ -307,7 +308,7 @@ export function NotificationBell({ onOpen, enabled = true }: BellProps) {
                   trigger.current?.focus();
                 }}
               >
-                ×
+                <CloseIcon />
               </button>
             </header>
             <div className="nn-toolbar">
