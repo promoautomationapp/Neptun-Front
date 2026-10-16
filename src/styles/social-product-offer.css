@@ -101,3 +101,7 @@
   position: relative;
   overflow: visible;
 }
+.social-canvas img[data-social-apple-photo="true"],
+.social-canvas [data-apple-photo-clearance="true"] img {
+  filter: none;
+}

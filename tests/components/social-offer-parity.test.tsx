@@ -159,3 +159,19 @@ it.each(["showDetails", "showPrice"] as const)(
     ).toBeNull();
   },
 );
+
+it.each([
+  ["APPLE", "iPhone 17 Pro", true],
+  ["SAMSUNG", "Galaxy S26", false],
+] as const)(
+  "opts %s product photos into the shared Apple clearance rule=%s",
+  (brand, name, protectedPhoto) => {
+    const view = render(
+      <PostCanvas post={fixture({ brand, name, image: "/product.png" })} />,
+    );
+    const photo = view.getByAltText(name);
+    expect(photo.getAttribute("data-social-apple-photo")).toBe(
+      protectedPhoto ? "true" : null,
+    );
+  },
+);

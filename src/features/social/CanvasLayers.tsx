@@ -74,6 +74,8 @@ interface ProductVisualGesture {
   y: number;
   scale: number;
 }
+import { hasApplePhotos } from "../brochure/productTypes";
+import { APPLE_PHOTO_CLEARANCE_EVENT } from "../brochure/ApplePhotoClearance";
 import { isBundleOffer } from "../brochure/productBundles";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { otherScreenInches, tvScreenInches } from "../brochure/tvSpecs";
@@ -509,7 +511,7 @@ export function SocialProductVisual({
         const labelHeight = canvas.width * 0.044;
         const labelTop = Math.max(
           canvas.top - parent.top + canvas.width * 0.01,
-          visibleTop - labelHeight,
+          visibleTop - labelHeight - (hasApplePhotos(product) ? canvas.width * 6 / 1080 : 0),
         );
         setMarker({
           right: `${((parent.width - visibleRight) / parent.width) * 100}%`,
@@ -522,8 +524,13 @@ export function SocialProductVisual({
     observer?.observe(img);
     const productElement = img.closest(".social-product");
     if (productElement) observer?.observe(productElement);
+    const canvasElement = img.closest(".social-canvas");
+    canvasElement?.addEventListener(APPLE_PHOTO_CLEARANCE_EVENT, update);
     if (img.complete) update();
-    return () => observer?.disconnect();
+    return () => {
+      observer?.disconnect();
+      canvasElement?.removeEventListener(APPLE_PHOTO_CLEARANCE_EVENT, update);
+    };
   }, [
     image,
     product.screenArtwork,
@@ -540,6 +547,7 @@ export function SocialProductVisual({
         <img
           className={`social-product-main-image ${adjustImage ? "social-adjusting-image" : ""}`}
           ref={imageRef}
+          data-social-apple-photo={hasApplePhotos(product) ? "true" : undefined}
           src={image}
           alt={product.name}
           draggable={false}

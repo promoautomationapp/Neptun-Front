@@ -10,6 +10,7 @@ import { requestAi, type ProofreadChange } from "../ai/ai.api";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
+import { SocialApplePhotoClearance } from "./SocialApplePhotoClearance";
 import { SocialOfferFrame } from "./SocialOfferFrame";
 import { SocialProductDetails, socialProductDetailEntries } from "./SocialProductDetails";
 import { captureSocialPost } from "./socialExport";
@@ -21,7 +22,6 @@ import {
   cssBackground,
   outputDimensions,
   productForPost,
-  postDetailEntries,
   postPriceCampaign,
   postPriceProduct,
   postImageBackgroundContext,
@@ -103,7 +103,7 @@ const PRICE_STYLES = [
   { id: "minimal", label: "Simple red price", detail: "Crossed original and a large red sale price" },
 ];
 const DETAIL_STYLES = [
-  { id: "chips", label: "Outlined specifications", detail: "Brand, product name and three outlined feature chips" },
+  { id: "chips", label: "Outlined specifications", detail: "Brochure detail tiles with editable text, size and fill" },
   { id: "simple", label: "Brand and name", detail: "Clean product copy without feature chips" },
 ];
 const POST_VISIBILITY = [
@@ -466,6 +466,7 @@ export function PostCanvas({
           );
         })}
       </div>
+      <SocialApplePhotoClearance />
       {!items.length && (
         <div className="social-empty-canvas">
           Add one or more products to start your post
@@ -2028,7 +2029,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                 }
               />
               <p className="social-preview-hint">
-                Drag a product, logo, detail or price to move it; drag a corner to resize. Use the photo positioning tool to move the photo inside its area. Drop a new image on a product to replace its photo. Preview hides the editing controls.
+                Drag a product, logo, detail or price to move it; drag a corner to resize. Use the photo positioning tool to move the photo inside its area. Drop a new image on a product to replace its photo. Double-click a detail to change its fill; use its pencil to edit the text. Preview hides the editing controls.
               </p>
               <div className="social-export-bar">
                 <span>Download</span>
@@ -2209,7 +2210,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                       <label className="social-wide">
                         {Array.isArray(item.brochureDetails) || (isMobilePhone(item) && !isAppleProduct(item)) || isAirConditioner(item) ? t("Product details · one per line, in order") : "Specifications for new catalog products (one per line: label: value)"}
                         <textarea
-                          value={Array.isArray(item.brochureDetails) ? item.brochureDetails.join("\n") : postDetailEntries(item)
+                          value={Array.isArray(item.brochureDetails) ? item.brochureDetails.map(row => typeof row === "string" ? row : row.text).join("\n") : socialProductDetailEntries(item)
                             .map(([key, value]) => `${key}: ${value}`)
                             .join("\n")}
                           onChange={(event) =>
@@ -2223,7 +2224,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                         />
                       </label>
                       <div className="social-wide cs-detail-fill-list">
-                        {postDetailEntries(item).filter(([, value]) => value != null && String(value).trim()).map(([key, value]) => <label className="cs-detail-fill-choice" key={key}><span>{String(value)}</span><SearchableSelect aria-label={`${t("Block style")}: ${key}`} value={typeof item.detailBlockStyles?.[key] === "string" ? item.detailBlockStyles[key] : "auto"} onChange={(event) => update((draft: SocialPost) => {
+                        {socialProductDetailEntries(item).filter(([, value]) => value != null && String(value).trim()).map(([key, value]) => <label className="cs-detail-fill-choice" key={key}><span>{String(value)}</span><SearchableSelect aria-label={`${t("Block style")}: ${key}`} value={typeof item.detailBlockStyles?.[key] === "string" ? item.detailBlockStyles[key] : "auto"} onChange={(event) => update((draft: SocialPost) => {
                           const product = draft.products.find((entry) => entry.code === item.code);
                           const style = event.target.value;
                           if (product && (style === "auto" || style === "filled" || style === "outline")) product.detailBlockStyles = { ...product.detailBlockStyles, [key]: style };

@@ -245,7 +245,7 @@ function ArtworkPhoto({
     }
     const image = imageRef.current;
     const container = image?.parentElement;
-    const card = container?.closest(".brochure-product");
+    const card = container?.closest(".brochure-product,.social-canvas");
     const update = () => {
       const next = bundleScreenArtworkPlacement(member, image, container);
       setScreen((current) =>
@@ -441,7 +441,8 @@ export function ProductArtworkLayer({
       );
     };
     update();
-    area?.addEventListener("brochure-photo-clearance", update);
+    const clearanceSource = area?.closest(".social-canvas") || area;
+    clearanceSource?.addEventListener("brochure-photo-clearance", update);
     const observer =
       typeof ResizeObserver === "function" ? new ResizeObserver(update) : null;
     if (layer) observer?.observe(layer);
@@ -466,7 +467,7 @@ export function ProductArtworkLayer({
       mutations?.disconnect();
       image?.removeEventListener("load", update);
       image?.removeEventListener("error", update);
-      area?.removeEventListener("brochure-photo-clearance", update);
+      clearanceSource?.removeEventListener("brochure-photo-clearance", update);
     };
   }, [
     imageRef,
