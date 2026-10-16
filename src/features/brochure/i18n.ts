@@ -1,4 +1,11 @@
 const translations: Record<string, string> = {
+  "Switch to dark mode": "Aktivizo pamjen e errët",
+  "Switch to light mode": "Aktivizo pamjen e çelët",
+  Appearance: "Pamja",
+  "Light (default)": "E çelët (parazgjedhje)",
+  Dark: "E errët",
+  "Choose how your workspace looks. Light mode is the default.": "Zgjidhni pamjen e hapësirës suaj. Pamja e çelët është parazgjedhje.",
+  "Saved for your account on this device. Brochures, social posts and downloads keep their original colours.": "Ruhet për llogarinë tuaj në këtë pajisje. Broshurat, postimet sociale dhe shkarkimet i ruajnë ngjyrat origjinale.",
   "This brochure is disabled.": "Kjo broshurë është e çaktivizuar.",
   "No matching teammates": "Nuk u gjet asnjë anëtar i ekipit",
   "Remove mention": "Hiq përmendjen",

@@ -145,6 +145,42 @@ it("adds separate images, moves/resizes one, and restores both layers on reload 
   expect(requestAi).not.toHaveBeenCalled();
 });
 
+it("keeps shared brochure products usable but removes catalog selection when catalog access is off", async () => {
+  setLanguage("en");
+  const view = render(
+    <SocialStudio
+      canViewCatalog={false}
+      catalog={[{ code: "catalog-hidden", name: "Hidden catalog product" }]}
+      campaigns={[
+        {
+          id: "shared-brochure",
+          name: "Shared brochure",
+          products: [
+            {
+              code: "shared-product",
+              name: "Saved brochure offer",
+              sale: 90,
+              skipAiCutout: true,
+            },
+          ],
+        },
+      ]}
+    />,
+  );
+  await open(view);
+  fireEvent.click(view.getByRole("button", { name: "＋ Add products" }));
+  await view.findByRole("heading", { name: "Add to this post" });
+  expect(view.getByText("Saved brochure offer")).toBeTruthy();
+  expect(view.queryByText("Hidden catalog product")).toBeNull();
+  fireEvent.click(
+    view.getByRole("button", { name: "Product source: Shared brochure" }),
+  );
+  expect(view.getAllByRole("option")).toHaveLength(1);
+  expect(view.getByRole("option", { name: /Shared brochure/ })).toBeTruthy();
+  expect(view.queryByRole("option", { name: /catalog/i })).toBeNull();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
 it("keeps successful uploads when another fails and saves to the original post after leaving it", async () => {
   let finish!: (value: string) => void;
   vi.mocked(readImage).mockImplementation((file) =>
@@ -330,9 +366,7 @@ it("saves the latest edits before disabling an existing post", async () => {
     target: { value: "Latest saved name" },
   });
   fireEvent.click(view.getByRole("button", { name: "Disable" }));
-  fireEvent.click(
-    view.getByRole("button", { name: "Disable post" }),
-  );
+  fireEvent.click(view.getByRole("button", { name: "Disable post" }));
   await view.findByText("Post disabled.");
   expect(savePost).toHaveBeenCalledWith(
     expect.objectContaining({ name: "Latest saved name" }),
@@ -352,9 +386,7 @@ it("saves a new draft before disabling it rather than dropping an unsaved post",
     target: { value: "New draft to keep" },
   });
   fireEvent.click(view.getByRole("button", { name: "Disable" }));
-  fireEvent.click(
-    view.getByRole("button", { name: "Disable post" }),
-  );
+  fireEvent.click(view.getByRole("button", { name: "Disable post" }));
   await view.findByText("Post disabled.");
   expect(stored.some((item) => item.name === "New draft to keep")).toBe(true);
   expect(vi.mocked(savePost).mock.invocationCallOrder[0]).toBeLessThan(

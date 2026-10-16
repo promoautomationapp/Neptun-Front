@@ -1619,7 +1619,9 @@ export function Details({
   onClose: () => void;
 }) {
   const catalogPhotos = useCatalogPhotos(
-    originalProduct.catalogMissing || !canLoadCatalogPhotos ? undefined : originalProduct,
+    originalProduct.catalogMissing || !canLoadCatalogPhotos
+      ? undefined
+      : originalProduct,
   );
   const product = onProductChange
     ? originalProduct

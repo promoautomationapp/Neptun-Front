@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AppearanceToggle } from "../appearance/Appearance";
 import { login } from "./auth.api";
 import { forgotPassword } from "../../api/users";
 import "../../styles/review.css";
@@ -34,6 +35,7 @@ export function SignIn({
         </div>
       </div>
       <div className="cs-signin-panel">
+        <AppearanceToggle />
         <span className="cs-eyebrow">NEPTUN KOSOVO</span>
         <h2>
           {recovery ? (

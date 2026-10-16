@@ -1,4 +1,5 @@
 import { PasswordChange } from "../auth/PasswordChange";
+import { AppearanceSettings } from "../appearance/Appearance";
 import { roleLabel } from "../auth/auth.api";
 import type { User } from "../auth/auth.api";
 import "../../styles/account-management.css";
@@ -20,6 +21,7 @@ export function ProfilePage({
         </div>
       </header>
       <div className="na-profile-grid">
+        <AppearanceSettings />
         <section className="na-edit-card">
           <h2>Account details</h2>
           <dl className="na-account-details">

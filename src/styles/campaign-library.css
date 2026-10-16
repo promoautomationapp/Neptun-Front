@@ -334,3 +334,12 @@
   border: 1px solid #e1e9f0;
   background: linear-gradient(#e9eff5 0 60%, #fff 60%);
 }
+@media (min-width: 851px) and (min-height: 620px) and (max-height: 780px) {
+  .campaign-app .cs-main-panel.cs-library {
+    padding-block: 16px;
+  }
+  .cs-library .cs-library-heading,
+  .cs-library .cs-campaign-filters {
+    margin-bottom: 12px;
+  }
+}

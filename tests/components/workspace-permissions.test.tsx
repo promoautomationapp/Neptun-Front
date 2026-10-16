@@ -14,6 +14,10 @@ import {
 } from "../../src/features/auth/workspaceAccess";
 import { setLanguage } from "../../src/features/brochure/i18n";
 
+vi.mock("../../src/features/brochure/CampaignActivityStatus", () => ({
+  CampaignActivityStatus: () => <div />,
+}));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -54,6 +58,7 @@ function server(access: WorkspaceAccess = disabledAccess) {
     categoryPath: "TV > OLED",
     image: "",
     sale: 100,
+    skipAiCutout: true,
   };
   const api = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     if (init?.method && init.method !== "GET")
@@ -122,6 +127,25 @@ it("hides forbidden areas and disable actions without making forbidden catalog r
       String(input).includes("/api/team/session"),
     ),
   ).toHaveLength(1);
+  fireEvent.click(
+    view.getByRole("button", { name: "Open campaign: Shared brochure" }),
+  );
+  await view.findByRole("button", { name: "Upload products" });
+  expect(view.queryByRole("button", { name: /Create social post/ })).toBeNull();
+  const actions = view.container.querySelector(
+    "details.cs-brochure-actions-menu",
+  ) as HTMLDetailsElement;
+  actions.open = true;
+  fireEvent(actions, new Event("toggle"));
+  expect(view.queryByRole("button", { name: /Add products/ })).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "02 Products & prices" }));
+  expect(view.queryByRole("button", { name: /Add manually/ })).toBeNull();
+  expect(view.queryByRole("button", { name: /Make social post/ })).toBeNull();
+  expect(
+    api.mock.calls.some(([input]) =>
+      /\/api\/(products|catalog)(?:\/|\?|$)/.test(String(input)),
+    ),
+  ).toBe(false);
 });
 
 it("filters catalog supplements from shared brochures and removes revoked access without replacing the shell", async () => {
@@ -146,5 +170,7 @@ it("filters catalog supplements from shared brochures and removes revoked access
   expect(view.queryByText("Allowed laptop")).toBeNull();
   expect(view.container.querySelector(".cs-sidebar")).toBe(sidebar);
   expect(view.container.querySelector(".cs-topbar")).toBe(header);
-  expect(await view.findByRole("button", { name: "New campaign" })).toBeTruthy();
+  expect(
+    await view.findByRole("button", { name: "New campaign" }),
+  ).toBeTruthy();
 });

@@ -1,0 +1,136 @@
+.np-appearance-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  border: 1px solid #d7e3ee;
+  border-radius: 50%;
+  background: #f5f8fc;
+  color: #315674;
+  cursor: pointer;
+}
+.np-appearance-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+.np-appearance-toggle:hover {
+  background: #e9f2fa;
+  border-color: #91bad7;
+}
+.np-appearance-toggle:focus-visible,
+.np-appearance-choice:focus-visible {
+  outline: 3px solid #5ab8ef;
+  outline-offset: 3px;
+}
+.cs-signin-panel > .np-appearance-toggle {
+  align-self: flex-end;
+  margin-bottom: 14px;
+}
+.na-account-screen > .np-appearance-toggle {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+}
+.np-appearance-settings {
+  grid-column: 1 / -1;
+}
+.np-appearance-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 190px));
+  gap: 12px;
+  margin: 20px 0 14px;
+}
+.np-appearance-choice {
+  min-width: 0;
+  text-align: left;
+  padding: 9px;
+  border: 2px solid #d8e4ed;
+  border-radius: 12px;
+  background: #fff;
+  color: #294b67;
+  font: inherit;
+  cursor: pointer;
+}
+.np-appearance-choice[aria-checked="true"] {
+  border-color: #287cb6;
+  box-shadow: 0 0 0 3px #287cb618;
+}
+.np-appearance-sample {
+  display: flex;
+  height: 78px;
+  gap: 8px;
+  padding: 9px;
+  border-radius: 6px;
+  background: #eef3f8;
+  border: 1px solid #d8e3ed;
+}
+.np-appearance-sample > i {
+  width: 23%;
+  border-radius: 3px;
+  background: #183b66;
+}
+.np-appearance-sample > span {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.np-appearance-sample b {
+  border-radius: 3px;
+  background: #fff;
+  border: 1px solid #d9e3ed;
+}
+.np-appearance-sample b:first-child {
+  grid-column: 1 / -1;
+  height: 10px;
+}
+.np-appearance-choice.dark .np-appearance-sample {
+  background: #0d1726;
+  border-color: #30455e;
+}
+.np-appearance-choice.dark .np-appearance-sample > i {
+  background: #203f64;
+}
+.np-appearance-choice.dark .np-appearance-sample b {
+  background: #1b2d44;
+  border-color: #30455e;
+}
+.np-appearance-choice > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 3px 2px;
+  font-size: 12px;
+}
+.np-appearance-choice svg {
+  width: 17px;
+  height: 17px;
+}
+.np-appearance-choice strong {
+  flex: 1;
+}
+.np-appearance-settings > small {
+  display: block;
+  color: #657c91;
+  line-height: 1.6;
+  font-size: 12px;
+}
+@media (max-width: 620px) {
+  .np-appearance-toggle {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    padding: 6px;
+  }
+  .campaign-app .cs-topbar {
+    gap: 8px;
+  }
+  .campaign-app .cs-topbar-right {
+    gap: 5px;
+  }
+  .cs-signin-panel > .np-appearance-toggle {
+    margin-bottom: 8px;
+  }
+}

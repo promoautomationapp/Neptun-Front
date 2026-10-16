@@ -162,9 +162,9 @@ export function CategoryTreeSelect({
         position: "fixed",
         width,
         left: Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)),
-        ...(flip
-          ? { bottom: window.innerHeight - rect.top + 5 }
-          : { top: rect.bottom + 5 }),
+        // Clear the stylesheet's below-trigger top when the portal opens upward.
+        top: flip ? "auto" : rect.bottom + 5,
+        bottom: flip ? window.innerHeight - rect.top + 5 : "auto",
         maxHeight: Math.min(480, Math.max(160, flip ? above : below)),
       });
     };

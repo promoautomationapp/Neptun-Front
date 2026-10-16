@@ -1,0 +1,628 @@
+/* Display chrome only. Brochure paper, product images and exported artwork retain their own palette. */
+html[data-theme="dark"] {
+  --np-bg: #0d1726;
+  --np-surface: #152338;
+  --np-raised: #1b2d44;
+  --np-border: #30455e;
+  --np-text: #e6eef8;
+  --np-muted: #a4b6cb;
+  --np-accent: #8acaf8;
+  --np-selected: #234c70;
+  background: var(--np-bg);
+  color-scheme: dark;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .campaign-app,
+html[data-theme="dark"] .campaign-app > .cs-content,
+html[data-theme="dark"] .cs-signin-panel {
+  background: var(--np-bg);
+  color: var(--np-text);
+}
+html[data-theme="dark"] .campaign-app > .cs-sidebar {
+  background: #0a1b30;
+}
+html[data-theme="dark"] .na-account-screen {
+  background:
+    radial-gradient(at top left, #18314d, transparent 65%), var(--np-bg);
+  color: var(--np-text);
+}
+html[data-theme="dark"] .na-account-wordmark img {
+  filter: brightness(0) invert(1);
+}
+
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-topbar,
+    .cs-campaign-card,
+    .cs-catalog-card,
+    .cs-empty,
+    .cs-offer-row,
+    .cs-settings-card,
+    .cs-pages-sidebar,
+    .cs-page-controls,
+    .cs-modal,
+    .na-account-card,
+    .na-edit-card,
+    .na-table-card,
+    .na-team-summary > div,
+    .na-access-editor,
+    .na-access-admin,
+    .na-account-identity,
+    .ns-section,
+    .ns-settings-group,
+    .ns-category-panel,
+    .ns-reusable-images,
+    .cs-insight-metric,
+    .cs-usage-chart,
+    .cs-insights-table,
+    .cs-activity-filters,
+    .cs-activity-table,
+    .cs-review-panel,
+    .cs-review-comments article,
+    .cs-comment-popover,
+    .nn-panel,
+    .social-card,
+    .social-controls,
+    .social-rich-modal,
+    .social-picker-modal,
+    .social-confirm-modal,
+    .social-controls > section,
+    .social-editor-sidebar
+  ) {
+  background: var(--np-surface);
+  border-color: var(--np-border);
+  color: var(--np-text);
+}
+
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-content,
+    .cs-modal,
+    .na-account-card,
+    .cs-signin-panel,
+    .nn-panel,
+    .cs-comment-popover,
+    .ns-searchable-panel,
+    .cs-category-portal,
+    .studio-select-popover,
+    .social-modal-backdrop
+  )
+  :is(h1, h2, h3, h4, h5, label, dt, dd, strong):not(
+    .brochure-page *,
+    .social-canvas *,
+    .ns-preview-canvas *,
+    .social-design-preview *
+  ) {
+  color: var(--np-text);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-content,
+    .cs-modal,
+    .na-account-card,
+    .cs-signin-panel,
+    .nn-panel,
+    .cs-comment-popover,
+    .social-modal-backdrop
+  )
+  :is(p, small):not(
+    .brochure-page *,
+    .social-canvas *,
+    .ns-preview-canvas *,
+    .social-design-preview *
+  ) {
+  color: var(--np-muted);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-breadcrumb,
+    .cs-filter-label,
+    .cs-label,
+    .cs-preview-top,
+    .ns-field > span,
+    .cs-campaign-card-meta,
+    .cs-campaign-card-title small,
+    .cs-activity-summary,
+    .cs-insights-note,
+    .cs-insights-loading,
+    .ns-preview-note,
+    .na-account-footnote,
+    .na-field-help,
+    .na-access-help,
+    .na-access-shared-note,
+    .na-user-access-badge,
+    .ns-setting-description,
+    .cs-pin-message time
+  ) {
+  color: var(--np-muted) !important;
+}
+
+html[data-theme="dark"]
+  body
+  :is(input, textarea, select):not(
+    [type="color"],
+    [type="range"],
+    [type="checkbox"],
+    [type="radio"],
+    .brochure-page *,
+    .social-canvas *,
+    .ns-preview-canvas *
+  ) {
+  color: var(--np-text);
+  background: #101d2e;
+  border-color: var(--np-border);
+}
+html[data-theme="dark"] body :is(input, textarea)::placeholder {
+  color: #94a8bf;
+  opacity: 1;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-search,
+    .cs-category-trigger,
+    .ns-searchable-trigger,
+    .studio-select-trigger,
+    .ns-searchable-panel,
+    .cs-category-portal,
+    .studio-select-popover,
+    .cs-filter-options,
+    .cs-filter-trigger,
+    .cs-brochure-actions-menu > div,
+    .cs-mention-options,
+    .nn-bell,
+    .np-appearance-toggle,
+    .cs-language-switch,
+    .cs-catalog-refresh-button,
+    .cs-comment-popover .cs-pin-message
+  ) {
+  background: var(--np-raised);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .ns-searchable-option,
+    .cs-category-option,
+    .cs-category-all,
+    .cs-category-expand,
+    .studio-select-options button,
+    .cs-filter-options button,
+    .cs-mention-options button
+  ) {
+  background: transparent;
+  color: var(--np-text);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .ns-searchable-option,
+    .cs-category-option,
+    .studio-select-options button,
+    .cs-filter-options button,
+    .cs-mention-options button
+  ):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"]) {
+  background: var(--np-selected);
+  color: #fff;
+}
+
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-button,
+    .cs-card-utility,
+    .cs-card-open,
+    .cs-card-download,
+    .cs-card-enable,
+    .cs-catalog-refresh-button,
+    .na-row-actions button,
+    .na-user-filters > button,
+    .ns-settings button,
+    .cs-insights button,
+    .cs-activity button,
+    .cs-editor-progress button,
+    .cs-social-shortcut,
+    .cs-brochure-view-modes,
+    .social-controls button,
+    .social-canvas-toolbar,
+    .social-modal-backdrop button,
+    .np-appearance-choice,
+    .nn-mark-one,
+    .cs-mention-chip,
+    .cs-product-quick-actions > button
+  ):not(.brochure-page *, .social-canvas *, .ns-preview-canvas *) {
+  background: var(--np-raised);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-button.primary,
+    .cs-delete-confirm,
+    .ns-settings button.primary,
+    .ns-settings button[aria-pressed="true"],
+    .ns-settings button[aria-selected="true"],
+    .cs-language-switch button.active,
+    .social-primary,
+    .np-appearance-choice[aria-checked="true"],
+    .na-access-segments button[aria-checked="true"],
+    .ns-searchable-option[aria-selected="true"]
+  ) {
+  background: var(--np-selected);
+  color: #fff;
+  border-color: #5896c2;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-card-delete,
+    .cs-delete-confirm,
+    .na-alert.error,
+    .cs-team-auth-error,
+    .ns-error
+  ) {
+  color: #ffad98 !important;
+}
+html[data-theme="dark"] body .cs-button.primary {
+  background: #df4b35;
+  border-color: #ee775f;
+  color: #fff;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-editor-tabs button.active,
+    .cs-insights-tabs button[aria-selected="true"],
+    .cs-insights-subtabs button[aria-selected="true"],
+    .ns-tabs button[aria-selected="true"],
+    .cs-brochure-view-modes button[aria-pressed="true"],
+    .social-canvas-toolbar button.selected
+  ) {
+  background: var(--np-selected);
+  color: #fff;
+}
+html[data-theme="dark"]
+  body
+  :is(.cs-insights-tabs, .cs-insights-subtabs, .ns-tabs, .cs-editor-tabs) {
+  border-color: var(--np-border);
+}
+
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-catalog-navigator,
+    .cs-campaign-filters,
+    .cs-campaign-card-meta,
+    .cs-campaign-card-actions,
+    .cs-campaign-card-download,
+    .cs-campaign-type,
+    .cs-catalog-counts > div,
+    .cs-catalog-source-icon,
+    .cs-metrics > div,
+    .ns-live-preview,
+    .ns-preview-switch,
+    .ns-preview-pages,
+    .ns-page-areas,
+    .na-access-segments,
+    .na-access-branches li,
+    .cs-language-switch,
+    .na-account-details,
+    .cs-review-reply,
+    .nn-close,
+    .nn-items li.is-unread,
+    .social-picker-product,
+    .social-selected-product,
+    .social-empty,
+    .np-appearance-choice,
+    .cs-delete-dialog > strong
+  ) {
+  background: var(--np-raised);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-campaign-type,
+    .cs-catalog-breadcrumb,
+    .cs-pin-mention,
+    .cs-review-count,
+    .cs-social-shortcut-copy small,
+    .nn-type,
+    .nn-read-all,
+    .cs-product-quick-actions button
+  ) {
+  color: var(--np-accent);
+}
+html[data-theme="dark"] body .na-access-segments button {
+  color: var(--np-muted);
+}
+html[data-theme="dark"] body .na-access-branches button {
+  background: var(--np-surface);
+  color: var(--np-text);
+}
+html[data-theme="dark"] body .na-access-switch {
+  background: #3c4f66;
+  border-color: #687e95;
+}
+html[data-theme="dark"] body .na-access-switch[aria-checked="true"] {
+  background: #2879ad;
+  border-color: #6bb8e7;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .na-access-permission,
+    .na-access-categories,
+    .na-access-shared-note,
+    .na-user-filters,
+    .cs-modal-head,
+    .cs-modal-footer,
+    .social-rich-modal header,
+    .social-rich-modal footer,
+    .social-picker-modal header,
+    .social-picker-modal footer,
+    .nn-toolbar,
+    .nn-items li
+  ) {
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-modal-footer,
+    .social-rich-toolbar,
+    .social-rich-editor,
+    .social-rich-editor .tiptap
+  ) {
+  background: var(--np-surface);
+  color: var(--np-text);
+}
+html[data-theme="dark"] body :is(.cs-modal-backdrop, .social-modal-backdrop) {
+  background: #020915b8;
+}
+
+html[data-theme="dark"]
+  body
+  :is(.na-users-table, .cs-activity-table table, .cs-insights-table table) {
+  color: var(--np-text);
+}
+html[data-theme="dark"]
+  body
+  :is(.na-users-table, .cs-activity-table, .cs-insights-table)
+  :is(th, td) {
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(.na-users-table, .cs-activity-table, .cs-insights-table)
+  th {
+  background: var(--np-raised);
+  color: var(--np-muted);
+}
+html[data-theme="dark"] body .cs-insights-table table tbody tr:nth-child(even) {
+  background: #192a40;
+}
+html[data-theme="dark"]
+  body
+  :is(.na-users-table, .cs-activity-table, .cs-insights-table)
+  tbody
+  tr:hover {
+  background: #20364f;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .na-status.active,
+    .na-alert.success,
+    .ns-success,
+    .cs-insight-status[data-status="succeeded"],
+    .cs-insight-status[data-status="completed"]
+  ) {
+  background: #173e36;
+  color: #a0e2c2 !important;
+  border-color: #2a6652;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .na-status.invited,
+    .na-alert.warning,
+    .cs-insights-notice,
+    .cs-insights-inventory,
+    .cs-insight-status[data-status="uncertain"]
+  ) {
+  background: #42351f;
+  color: #f2d6a0 !important;
+  border-color: #745b30;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .na-alert.error,
+    .ns-error,
+    .nn-error,
+    .cs-insights-error,
+    .cs-insight-status[data-status="failed"]
+  ) {
+  background: #472b2a;
+  border-color: #78514a;
+}
+html[data-theme="dark"]
+  body
+  :is(.na-status.disabled, .na-you, .cs-insight-status) {
+  background: #293b51;
+  color: #c2d2e4;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .nn-item-open,
+    .nn-message,
+    .nn-panel small,
+    .cs-review-comment-meta,
+    .cs-review-comment-meta strong
+  ) {
+  color: var(--np-text);
+}
+html[data-theme="dark"]
+  body
+  :is(.nn-item-open:hover, .nn-toolbar [aria-selected="true"], .nn-loading) {
+  background: var(--np-raised);
+  color: var(--np-accent);
+}
+html[data-theme="dark"]
+  body
+  :is(.cs-review-comments p, .cs-review-help, .cs-review-empty) {
+  color: var(--np-muted) !important;
+}
+html[data-theme="dark"] body .cs-usage-chart :is(text, .cs-chart-empty) {
+  fill: var(--np-muted);
+  color: var(--np-muted);
+}
+html[data-theme="dark"] body .cs-usage-chart :is(.cs-chart-grid, line) {
+  stroke: var(--np-border);
+}
+html[data-theme="dark"] body .cs-usage-bar-track {
+  background: #243b55;
+}
+html[data-theme="dark"]
+  body
+  :is(.pa-app-footer, .pa-powered-by-copy, .pa-powered-by-copy strong) {
+  color: var(--np-muted);
+}
+
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-campaign-cover,
+    .cs-library-filter-toggle,
+    .cs-catalog-crumbs button,
+    .cs-detail-prices span,
+    .cs-detail-discount,
+    .cs-picker-result-wrap,
+    .cs-selected-item,
+    .cs-photo-progress,
+    .cs-photo-progress-icon,
+    .missing-catalog-notice,
+    .missing-catalog-placeholder,
+    .social-library,
+    .social-editor-top,
+    .social-panel,
+    .social-settings,
+    .social-product-editors > div,
+    .social-artwork-settings,
+    .social-layout-controls,
+    .social-picker-item,
+    .social-picker-price,
+    .social-link-form,
+    .social-export-bar,
+    .social-review,
+    .social-cutout-pending,
+    .social-upload,
+    .studio-image-upload,
+    .social-segment,
+    .social-disabled-card
+  ) {
+  background: var(--np-surface);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .social-settings button,
+    .social-product-list button,
+    .social-review button,
+    .social-add,
+    .social-ai-button,
+    .social-segment button,
+    .social-export-bar button,
+    .social-template-grid button,
+    .social-logo-choices button,
+    .social-artwork-row button,
+    .social-layout-controls button,
+    .cs-photo-progress-actions button,
+    .missing-catalog-actions > button,
+    .cs-history-controls button
+  ):not(.social-canvas *, .social-design-preview *) {
+  background: var(--np-raised);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .social-settings button.selected,
+    .social-settings button[aria-pressed="true"],
+    .social-post-cards button.active
+  ) {
+  background: var(--np-selected);
+  border-color: #6bb8e7;
+  color: #fff;
+}
+
+/* Explicitly retain the authored artwork colour scheme, including previews and export clones. */
+html[data-theme="dark"]
+  body
+  :is(.cs-insights-tabs, .cs-insights-subtabs)
+  button,
+html[data-theme="dark"] body .cs-editor-tabs > button {
+  background: transparent;
+  color: var(--np-muted);
+  box-shadow: none;
+}
+html[data-theme="dark"]
+  body
+  :is(.cs-insights-tabs, .cs-insights-subtabs)
+  button[aria-selected="true"],
+html[data-theme="dark"] body .cs-editor-tabs > button.active {
+  background: transparent;
+  color: var(--np-accent);
+  border-bottom-color: var(--np-accent);
+}
+html[data-theme="dark"]
+  body
+  :is(.cs-category-parent, .cs-category-child, .ns-searchable-options button) {
+  color: var(--np-text);
+  background: transparent;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-category-parent,
+    .cs-category-child,
+    .ns-searchable-options button
+  ):is(:hover, [aria-selected="true"], [aria-pressed="true"]) {
+  background: var(--np-selected);
+}
+html[data-theme="dark"]
+  body
+  :is(.cs-category-parent, .cs-category-child)
+  :is(small, b) {
+  color: var(--np-muted);
+}
+html[data-theme="dark"]
+  :is(
+    .brochure-page,
+    .social-canvas,
+    .ns-preview-canvas,
+    .brochure-output-page,
+    .print-stack
+  ) {
+  color-scheme: light;
+}
+@media print {
+  html[data-theme="dark"],
+  html[data-theme="dark"] body {
+    background: #fff;
+    color: #172e48;
+    color-scheme: light;
+  }
+}

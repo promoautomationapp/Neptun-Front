@@ -6,6 +6,7 @@ import { SignIn } from "../features/auth/SignIn";
 import { AccountAccess } from "../features/auth/AccountAccess";
 import { AccountFrame } from "../features/auth/AccountFrame";
 import { PasswordChange } from "../features/auth/PasswordChange";
+import { AppearanceProvider } from "../features/appearance/Appearance";
 
 export function accountLinkToken(
   location: Pick<Location, "pathname" | "search">,
@@ -52,43 +53,50 @@ export function App() {
     setUser(next);
     setMessage(notice);
   }
-  if (accountToken !== null)
-    return (
-      <AccountAccess
-        token={accountToken}
-        onComplete={(notice) => {
-          window.history.replaceState({}, "", "/");
-          setAccountToken(null);
-          setUser(null);
-          setMessage(notice);
-        }}
-      />
-    );
-  if (!ready)
-    return (
-      <AccountFrame>
-        <p role="status">Checking session…</p>
-      </AccountFrame>
-    );
-  if (!user)
-    return <SignIn onSignIn={(next) => authChange(next)} notice={message} />;
-  if (user.mustChangePassword)
-    return (
-      <AccountFrame>
-        <span className="cs-eyebrow">ACCOUNT SECURITY</span>
-        <h1>Update your password</h1>
-        <p>Choose your own password before continuing to the workspace.</p>
-        <div className="na-account-identity">
-          <strong>{user.name || "Your account"}</strong>
-          <span>{user.email}</span>
-        </div>
-        <PasswordChange
-          onChanged={(notice, signInRequired) => {
-            if (signInRequired) authChange(null, notice);
-            else setUser({ ...user, mustChangePassword: false });
+  function renderScreen() {
+    if (accountToken !== null)
+      return (
+        <AccountAccess
+          token={accountToken}
+          onComplete={(notice) => {
+            window.history.replaceState({}, "", "/");
+            setAccountToken(null);
+            setUser(null);
+            setMessage(notice);
           }}
         />
-      </AccountFrame>
-    );
-  return <Studio initialUser={user} onAuthChange={authChange} />;
+      );
+    if (!ready)
+      return (
+        <AccountFrame>
+          <p role="status">Checking session…</p>
+        </AccountFrame>
+      );
+    if (!user)
+      return <SignIn onSignIn={(next) => authChange(next)} notice={message} />;
+    if (user.mustChangePassword)
+      return (
+        <AccountFrame>
+          <span className="cs-eyebrow">ACCOUNT SECURITY</span>
+          <h1>Update your password</h1>
+          <p>Choose your own password before continuing to the workspace.</p>
+          <div className="na-account-identity">
+            <strong>{user.name || "Your account"}</strong>
+            <span>{user.email}</span>
+          </div>
+          <PasswordChange
+            onChanged={(notice, signInRequired) => {
+              if (signInRequired) authChange(null, notice);
+              else setUser({ ...user, mustChangePassword: false });
+            }}
+          />
+        </AccountFrame>
+      );
+    return <Studio initialUser={user} onAuthChange={authChange} />;
+  }
+  return (
+    <AppearanceProvider userId={user?.id} loading={!ready}>
+      {renderScreen()}
+    </AppearanceProvider>
+  );
 }

@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { AppearanceToggle } from "../appearance/Appearance";
 import "../../styles/account-management.css";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
 
 export function AccountFrame({ children }: { children: ReactNode }) {
   return (
     <div className="na-account-screen">
+      <AppearanceToggle />
       <div className="na-account-brand">
         <span className="na-account-wordmark">
           <img src="/branding/neptun-logo.png" alt="NEPTUN" />

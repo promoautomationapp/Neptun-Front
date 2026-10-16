@@ -1,4 +1,5 @@
 import { NotificationBell } from "../notifications/NotificationBell";
+import { AppearanceToggle } from "../appearance/Appearance";
 import { useLiveSession } from "../auth/useLiveSession";
 import {
   catalogPathAllowed,
@@ -918,7 +919,9 @@ function ProductEditor({
         <div className="cs-actions">
           <Button onClick={onAiReview}>{t("✦ AI review")}</Button>
           <Button onClick={onReCut}>{t("Re-cut product image")}</Button>
-          {canUseCatalog && <Button onClick={onManual}>{t("＋ Add manually")}</Button>}
+          {canUseCatalog && (
+            <Button onClick={onManual}>{t("＋ Add manually")}</Button>
+          )}
           <Button tone="primary" onClick={onImport}>
             {t("↑ Import CSV / Excel")}
           </Button>
@@ -1249,7 +1252,9 @@ function ProductEditor({
             )}
           </p>
           <div className="cs-actions">
-            {canUseCatalog && <Button onClick={onManual}>{t("Add manually")}</Button>}
+            {canUseCatalog && (
+              <Button onClick={onManual}>{t("Add manually")}</Button>
+            )}
             <Button tone="primary" onClick={onImport}>
               {t("Import CSV / Excel")}
             </Button>
@@ -2596,7 +2601,9 @@ export function BrochureEditor({
           <details className="cs-brochure-actions-menu">
             <summary>{t("More actions")}</summary>
             <div>
-              {canUseCatalog && <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>}
+              {canUseCatalog && (
+                <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>
+              )}
               {canMakeSocial && (
                 <Button
                   onClick={() =>
@@ -3766,7 +3773,8 @@ export default function App({
       setSectionValue("campaigns");
     if (!access.canViewSocialPosts) setSocialSeed(null);
     if (!access.canDisableBrochures) setDeleteTarget(null);
-    if (!access.canViewCatalog) setModal((current) => current === "manual" ? null : current);
+    if (!access.canViewCatalog)
+      setModal((current) => (current === "manual" ? null : current));
     setDetail((current) =>
       current &&
       !current.editable &&
@@ -4729,6 +4737,7 @@ export default function App({
             )}
             <span>NEPTUN KOSOVO</span>
             <NotificationBell onOpen={openReviewNotification} />
+            <AppearanceToggle />
             <LanguageSwitch language={language} onChange={changeLanguage} />
             <div className="cs-avatar">N</div>
           </div>
@@ -5382,7 +5391,10 @@ export default function App({
       )}
       {detail && (
         <Details
-          canLoadCatalogPhotos={catalogPathAllowed(productCategoryPath(detail.product), access)}
+          canLoadCatalogPhotos={catalogPathAllowed(
+            productCategoryPath(detail.product),
+            access,
+          )}
           product={
             detail.editable
               ? campaign?.products.find(
