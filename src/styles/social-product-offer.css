@@ -1,0 +1,103 @@
+/* The brochure's name / code / price row, in the social canvas coordinates. */
+.social-canvas .social-offer {
+  display: block;
+  position: relative;
+  min-width: 0;
+}
+.social-canvas .social-product-bottom {
+  display: flex;
+  position: relative;
+  align-items: flex-end;
+  gap: calc(1.2cqw * var(--social-artwork-scale, 1));
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  border: 0;
+}
+.social-canvas .social-product-bottom > .social-product-copy {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+  text-shadow: none;
+  font-family: TSTAR, Arial, sans-serif;
+  font-weight: 700;
+  font-size: calc(1.6cqw * var(--social-artwork-scale, 1));
+  line-height: 1.2;
+}
+.social-canvas .social-product-copy > [data-product-name] {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.social-canvas .social-product-code {
+  display: block;
+  font-family: TSTAR, Arial, sans-serif;
+  font-size: calc(1.2cqw * var(--social-artwork-scale, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  padding-top: .25cqw;
+}
+.social-canvas .social-product-brand {
+  font-family: TSTAR, Arial, sans-serif;
+  font-size: calc(3cqw * var(--social-artwork-scale, 1));
+  line-height: 1;
+}
+.social-canvas .social-product-brand .brochure-brand-artwork {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 .35cqw;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.social-canvas .brochure-brand-mark {
+  display: block;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: 1;
+}
+.social-canvas .social-product-brand img {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(3.5cqw * var(--social-artwork-scale, 1));
+  object-position: left bottom;
+}
+.social-canvas .social-product-bottom > .social-price-stack {
+  flex: 0 0 48%;
+  width: 48%;
+  min-width: 0;
+  max-width: 48%;
+  margin: 0;
+}
+.social-canvas.social-count-1 .social-product-bottom > .social-price-stack {
+  flex-basis: 40%;
+  width: 40%;
+  max-width: 40%;
+}
+.social-canvas .social-savings-block {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8cqw * var(--social-artwork-scale, 1));
+  width: 24%;
+  aspect-ratio: 1;
+}
+.social-canvas.social-count-1 .social-savings-block { width: 15%; }
+.social-canvas .social-savings-block > .social-red-reference-saving {
+  position: static;
+  display: block;
+  width: 100%;
+}
+.social-canvas.social-light .brochure-product-name-divider {
+  background: #7a96ac;
+}
+.social-canvas.social-guides .product-detail-block.editable:not(.moving) > .product-detail-block-tools {
+  opacity: 1;
+  pointer-events: auto;
+}
+.social-canvas .social-product-bottom > .social-price-stack.reference-price-card {
+  display: block;
+  position: relative;
+  overflow: visible;
+}

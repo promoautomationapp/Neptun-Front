@@ -84,6 +84,7 @@ import {
 } from "../brochure/screenGeometry";
 import { EditableScreenAnnotation } from "../brochure/EditableScreenAnnotation";
 import { ProductArtworkLayer } from "../brochure/ProductArtworkLayer";
+import { materializeProductNameAlignment } from "../brochure/ProductNameDivider";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -243,14 +244,20 @@ export function EditableOfferBlock({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    const correction = offerElement instanceof HTMLElement && offerElement.classList.contains("social-product-copy")
+      ? materializeProductNameAlignment(offerElement, canvas.width, 1)
+      : { x: 0, y: 0 };
+    const x = (value.x || 0) + correction.x;
+    const y = (value.y || 0) + correction.y;
+    if (correction.x || correction.y) onChange?.({ x, y, scale: value.scale || 1 });
     gesture.current = {
       kind,
       startX: event.clientX,
       startY: event.clientY,
       canvas,
       rect,
-      x: value.x || 0,
-      y: value.y || 0,
+      x,
+      y,
       scale: value.scale || 1,
     };
     onGestureStart?.();
@@ -326,8 +333,8 @@ export function EditableOfferBlock({
         transform: `translate(${value.x || 0}cqw, ${value.y || 0}cqw) scale(${value.scale || 1})`,
         transformOrigin: "center",
       }}
-      title={editable ? `Click to edit ${name}` : undefined}
-      onClick={editable ? onEdit : undefined}
+      title={editable ? `Double-click to edit ${name}` : undefined}
+      onDoubleClick={editable ? (event) => { event.stopPropagation(); onEdit?.(); } : undefined}
     >
       {children}
       {editable && (

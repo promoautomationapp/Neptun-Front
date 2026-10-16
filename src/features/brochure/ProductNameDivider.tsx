@@ -85,7 +85,7 @@ export function ProductNameDivider({
         if (!rowBox.width || !rowBox.height) return;
         const scale = rowBox.width / (row.offsetWidth || rowBox.width);
         const pageWidth =
-          row.closest(".brochure-page")?.getBoundingClientRect().width ??
+          row.closest(".brochure-page, .social-canvas")?.getBoundingClientRect().width ??
           rowBox.width;
         const gap = ((defaults?.gap ?? 2) * pageWidth) / 1080;
         const boundary = native?.getBoundingClientRect();

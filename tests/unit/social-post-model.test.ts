@@ -18,6 +18,9 @@ it("copies a brochure product without losing structured detail keys, image prepa
     productArtworks: [
       { id: "brand", image: "/brand.png", x: 10, y: 20, width: 30 },
     ],
+    brandLogo: "/chosen-brand.png",
+    hideBrandLogo: true,
+    autoSpecsDisabled: true,
     detailBlockStyles: { memory: "filled" },
     aiOriginalImage: "/original.png",
     aiPreparationRevision: 4,
@@ -36,6 +39,9 @@ it("copies a brochure product without losing structured detail keys, image prepa
     sale: 629,
     cutoutStatus: "done",
     aiPreparationRevision: 4,
+    brandLogo: "/chosen-brand.png",
+    hideBrandLogo: true,
+    autoSpecsDisabled: true,
     detailBlockStyles: { memory: "filled" },
   });
   copied.bundleProducts![0]!.name = "Changed";

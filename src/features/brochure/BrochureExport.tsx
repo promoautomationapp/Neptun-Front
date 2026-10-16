@@ -204,7 +204,7 @@ export async function brochureExportFontCSS(
   }
 }
 
-function preserveExportTypography(page: HTMLElement) {
+export function preserveExportTypography(page: HTMLElement) {
   const document = page.ownerDocument;
   const view = document.defaultView;
   if (!view) throw new Error(t("Could not prepare brochure pages."));

@@ -1,0 +1,326 @@
+/* Brochure-sized squares, scaled with the product artwork in multi-offer posts. */
+.social-canvas .social-specs.social-detail-strip {
+  --social-detail-copy-size: calc(1.524cqw * var(--social-artwork-scale, 1));
+  --social-detail-copy-long-size: calc(
+    1.14cqw * var(--social-artwork-scale, 1)
+  );
+  --social-detail-metric-size: calc(2.096cqw * var(--social-artwork-scale, 1));
+  --social-detail-number-size: calc(2.286cqw * var(--social-artwork-scale, 1));
+  --social-detail-label-size: calc(1.2cqw * var(--social-artwork-scale, 1));
+  --social-detail-text-weight: 900;
+  --social-detail-gap: min(
+    calc(0.95cqw * var(--social-artwork-scale, 1)),
+    calc(10% / var(--social-detail-columns, 5))
+  );
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: flex-start;
+  grid-template-columns: none;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  gap: var(--social-detail-gap);
+  margin: 0;
+  padding: calc(0.35cqw * var(--social-artwork-scale, 1)) 0 0;
+  overflow: visible;
+}
+
+.social-canvas .social-specs.social-detail-reference-blue {
+  --social-detail-text-weight: 300;
+}
+
+.social-canvas .social-specs.social-detail-strip > .product-detail-block {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  width: min(
+    calc(8.5cqw * var(--social-artwork-scale, 1)),
+    calc(
+      (
+          100% - (var(--social-detail-columns, 5) - 1) *
+            var(--social-detail-gap)
+        ) /
+        var(--social-detail-columns, 5)
+    )
+  );
+  max-width: none;
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  margin: 0;
+  padding: calc(0.42cqw * var(--social-artwork-scale, 1));
+  border: calc(0.13cqw * var(--social-artwork-scale, 1)) solid currentColor;
+  border-radius: calc(0.55cqw * var(--social-artwork-scale, 1));
+  background: transparent;
+  color: inherit;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-size: var(--social-detail-copy-size);
+  font-weight: var(--social-detail-text-weight);
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > :is(b, small) {
+  display: block;
+  flex: none;
+  max-width: 100%;
+  min-height: 0;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-weight: var(--social-detail-text-weight);
+  white-space: pre-line;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > small {
+  font-size: var(--social-detail-label-size);
+  line-height: 1.2;
+  opacity: 1;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-fitted-value {
+  font-size: var(--social-detail-copy-size);
+  font-weight: var(--social-detail-text-weight);
+  line-height: 1.2;
+  white-space: pre-line;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-copy-long {
+  font-size: var(--social-detail-copy-long-size);
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-metric {
+  font-size: var(--social-detail-metric-size);
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-number {
+  font-size: var(--social-detail-number-size);
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .detail-memory
+  > b.detail-fitted-value {
+  font-weight: 700;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > .detail-strip-label {
+  margin: 0 0 calc(0.18cqw * var(--social-artwork-scale, 1));
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+}
+
+.social-canvas
+  .social-specs.social-detail-reference-blue
+  > .product-detail-block
+  > .detail-strip-label {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block:is(.detail-filled, .detail-style-filled):not(
+    .detail-style-outline
+  ) {
+  background: #fff;
+  color: #1c4075;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block.detail-style-outline {
+  background: transparent;
+  color: inherit;
+}
+
+.social-canvas .social-specs.social-detail-strip > .social-warranty-box {
+  padding: calc(0.22cqw * var(--social-artwork-scale, 1));
+  gap: calc(0.18cqw * var(--social-artwork-scale, 1));
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .social-warranty-box
+  > b.detail-warranty-count {
+  font-size: calc(4.5cqw * var(--social-artwork-scale, 1));
+  font-weight: 900;
+  line-height: 0.95;
+  margin: 0;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .social-warranty-box
+  > small {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: calc(1.05cqw * var(--social-artwork-scale, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .social-warranty-box
+  > small
+  > span {
+  display: block;
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-mobile-strip {
+  text-transform: uppercase;
+  font-size: var(--social-detail-copy-size);
+  letter-spacing: -0.035em;
+}
+
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b:is(.detail-btu, .detail-energy, .detail-temperature) {
+  font-size: var(--social-detail-metric-size);
+  line-height: 1.05;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b:is(.detail-btu, .detail-energy, .detail-temperature)
+  > :is(span, em, small) {
+  display: block;
+  flex: none;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: normal;
+  font-weight: inherit;
+  line-height: inherit;
+  overflow: visible;
+  white-space: nowrap;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-energy-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.08em;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-energy
+  > em:first-child {
+  color: #8cd4e7;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block.detail-filled:not(.detail-style-outline)
+  > b.detail-energy
+  > em:first-child {
+  color: #1c4075;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-energy
+  > em:last-child:not(:first-child),
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-temperature
+  > .detail-temperature-high {
+  color: #bf1e25;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-temperature
+  > .detail-temperature-to {
+  margin: 0.1em 0;
+  font-size: 0.43em;
+  line-height: 1.1;
+}
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > b.detail-airflow {
+  font-size: var(--social-detail-copy-size);
+}
+
+.social-canvas .social-specs.social-detail-strip.social-details-at-image-left {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(0.95cqw * var(--social-artwork-scale, 1));
+}
+.social-canvas
+  .social-specs.social-detail-strip.social-details-at-image-left
+  > .product-detail-block {
+  width: min(calc(8.5cqw * var(--social-artwork-scale, 1)), 100%);
+}
+
+/* The legacy chip rule also matches nested spans. Keep the text editor usable. */
+.social-canvas
+  .social-specs.social-detail-strip
+  > .product-detail-block
+  > .detail-block-inline-editor {
+  flex: none;
+  min-height: 0;
+  text-align: left;
+  font-size: 12px;
+  white-space: normal;
+  overflow: visible;
+}

@@ -8,6 +8,12 @@ import type {LogoAsset} from "../settings/settings.schema";
 import type { Artwork, Campaign, Placement, Product, SocialPost } from "../../domain/models";
 import { requestAi, type ProofreadChange } from "../ai/ai.api";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
+import { SocialOfferFrame } from "./SocialOfferFrame";
+import { SocialProductDetails, socialProductDetailEntries } from "./SocialProductDetails";
+import { captureSocialPost } from "./socialExport";
+import { ProductBrandArtwork } from "../brochure/ProductBrandArtwork";
 import { getPosts, savePost, removePost, restorePost } from "./socialStorage";
 import {
   createPost,
@@ -33,16 +39,15 @@ import { money, discount } from "../brochure/Brochure";
 import { isAppleProduct, usesBlueReferencePrice, usesRedReferencePrice } from "../brochure/priceDesign";
 import { ReferencePriceCard } from "../brochure/ReferencePriceCard";
 import { RedReferencePrice, RedReferenceSavings } from "../brochure/RedReferencePrice";
-import { defaultProductDetailPlacement, isMemoryDetail, isMobilePhone } from "../brochure/mobileDetails";
-import { DetailContent } from "../brochure/DetailContent";
-import { deleteDisplayedDetail, reorderDisplayedDetails } from "../brochure/detailRows";
+import { defaultProductDetailPlacement, isMobilePhone } from "../brochure/mobileDetails";
+import { reorderDisplayedDetails } from "../brochure/detailRows";
 import { productColors } from "../brochure/colors";
 import { warrantyDuration } from "../brochure/warranty";
 import { ProductDetailBlock } from "../brochure/ProductDetailBlock";
 import { isAirConditioner } from "../brochure/productArtwork";
 import { ProductArtworkControls } from "../brochure/ProductArtworkControls";
 import { t } from "../brochure/i18n";
-import { brandLogoFor, loadPreparedBrandLogos } from "../brochure/brandLogos";
+import { loadPreparedBrandLogos } from "../brochure/brandLogos";
 import { lightBackground, validBackgroundColor } from "../brochure/pageBackground";
 import { RichTextModal, safeRichHtml } from "./RichTextModal";
 import { StudioSelect } from "./StudioSelect";
@@ -53,6 +58,7 @@ import { plainBackgroundPreview } from "./plainBackgroundPreview";
 import { NeptunWordmark } from "../brochure/NeptunWordmark";
 import { BrandLogoManager } from "../brochure/BrandLogoManager";
 import "./social.css";
+import "../../styles/social-product-offer.css";
 
 const POSITIONS = [
   "top-left",
@@ -209,7 +215,7 @@ function SocialScreenAnnotationControls({ product, onChange }: {product: Product
   </section>;
 }
 
-function PostCanvas({
+export function PostCanvas({
   post,
   onMove,
   onResize,
@@ -244,43 +250,15 @@ function PostCanvas({
   const drag = useRef<{code: string; kind: string; width: number; point: {x: number; y: number}; startX: number; element: HTMLElement} | null>(null);
   const [draggingCanvas, setDraggingCanvas] = useState(false);
   function detailsBlock(product: Product, atImage = false) {
-    const imported = Array.isArray(product.brochureDetails);
-    const specs = postDetailEntries(product);
-    if (!post.showSpecs || post.detailStyle === "simple" || (!specs.length && !(usesRedReferencePrice(postPriceProduct(product), priceCampaign) && !product.hideWarranty && warrantyDuration(product.warranty)))) return null;
-    const conditioner = isAirConditioner(product);
-    const phone = isMobilePhone(product);
-    function removeDetail(_key: string, index: number) {
-      if (!onChangeProduct) return;
-      onChangeProduct(product.code, deleteDisplayedDetail(product, specs, index));
-    }
-    return <EditableOfferBlock name="product details"
-      className={`social-specs ${imported ? "social-imported-specs" : ""} ${atImage ? "social-details-at-image-left" : ""}`}
-      placement={product.offerPlacements?.details}
+    if (!post.showSpecs || post.detailStyle === "simple") return null;
+    const reference = usesRedReferencePrice(postPriceProduct(product), priceCampaign) ? "red" : usesBlueReferencePrice(postPriceProduct(product), priceCampaign) ? "blue" : "legacy";
+    return <SocialProductDetails product={product} reference={reference} atImage={atImage}
       editable={Boolean(onMoveOfferBlock)}
-      onChange={(value) => onMoveOfferBlock?.(product.code, "details", value)}
-      onEdit={() => onEditDetails?.(product.code)}
-      onGestureStart={() => setDraggingCanvas(true)} onGestureEnd={() => setDraggingCanvas(false)}
-      style={atImage ? { display: "grid", gridTemplateColumns: "minmax(0, 1fr)", overflow: "visible" } : undefined}>
-      {specs.map(([key, value], index) => {
-        const whiteConditionerDetail = /\bBTU\b|temperatur|operativ|°\s*C/i.test(`${key} ${value}`);
-        const hasStyleOverride = product.detailBlockStyles?.[key] === "filled" || product.detailBlockStyles?.[key] === "outline";
-        const memory = phone && (isMemoryDetail(key, value) || isMemoryDetail(value, value));
-        const filledMemory = memory && usesRedReferencePrice(postPriceProduct(product), priceCampaign) && !hasStyleOverride;
-        return <ProductDetailBlock key={key} product={product} detailKey={key}
-          onChange={onChangeProduct ? (field, value) => onChangeProduct(product.code, field, value) : undefined}
-          onEdit={onEditDetails ? () => onEditDetails(product.code) : undefined}
-          onRemove={onChangeProduct ? () => removeDetail(key, index) : undefined}
-          className={`${memory ? "social-mobile-memory-detail" : ""} ${conditioner ? whiteConditionerDetail ? "conditioner-detail-white" : "conditioner-detail-outline" : ""}`}
-          style={{ position: "relative", overflow: "visible", ...(memory ? { fontWeight: 900 } : {}), ...(filledMemory ? {background: "#fff", color: "#1c4075", borderColor: "#fff"} : {}), ...(conditioner && !hasStyleOverride ? { background: whiteConditionerDetail ? "#fff" : "transparent", color: whiteConditionerDetail ? "#1c4075" : "inherit", borderColor: whiteConditionerDetail ? "#fff" : "currentColor" } : {}), ...(atImage ? { whiteSpace: "normal" } : {}) }}
-          draggable={Boolean(onReorderDetails)}
-          onDragStart={onReorderDetails ? (event: { stopPropagation: () => void; dataTransfer: { setData: (arg0: string,arg1: string) => void; }; }) => { event.stopPropagation(); event.dataTransfer.setData("application/x-social-detail", `${product.code}:${index}`); } : undefined}
-          onDragOver={onReorderDetails ? (event) => { if ([...event.dataTransfer.types].includes("application/x-social-detail")) event.preventDefault(); } : undefined}
-          onDrop={onReorderDetails ? (event) => { const source = event.dataTransfer.getData("application/x-social-detail"); if (source.startsWith(`${product.code}:`)) { event.preventDefault(); event.stopPropagation(); onReorderDetails(product.code, Number(source.slice(String(product.code).length + 1)), index); } } : undefined}>
-          <DetailContent product={product} label={key} value={value} imported={imported} />
-        </ProductDetailBlock>;
-      })}
-      {usesRedReferencePrice(postPriceProduct(product), priceCampaign) && !product.hideWarranty && warrantyDuration(product.warranty) && <ProductDetailBlock product={product} detailKey="__warranty" className="social-warranty-box" onChange={onChangeProduct ? (field, value) => onChangeProduct(product.code, field, value) : undefined} onRemove={onChangeProduct ? () => onChangeProduct(product.code, "hideWarranty", true) : undefined}><b>{warrantyDuration(product.warranty)?.count}</b><small>{warrantyDuration(product.warranty)?.unit}<br />GARANCION</small></ProductDetailBlock>}
-    </EditableOfferBlock>;
+      onChange={onChangeProduct ? changes => onChangeProduct(product.code, changes) : undefined}
+      onPlacementChange={value => onMoveOfferBlock?.(product.code, "details", value)}
+      onEdit={onEditDetails ? () => onEditDetails(product.code) : undefined}
+      onReorder={onReorderDetails ? (from, to) => onReorderDetails(product.code, from, to) : undefined}
+      onGestureStart={() => setDraggingCanvas(true)} onGestureEnd={() => setDraggingCanvas(false)} />;
   }
   function beginDrag(event: React.PointerEvent<HTMLElement>, product: Product, kind = "move", width = product.scale ?? 50, point: {x: number; y: number} = {x: product.x ?? 50, y: product.y ?? 49}) {
     if (!onMove || imageAdjustCode === product.code) return;
@@ -320,6 +298,7 @@ function PostCanvas({
         aspectRatio: `${dims.width} / ${dims.height}`,
         background: cssBackground(post.background),
         maxWidth,
+        "--social-artwork-scale": items.length <= 1 ? 1.2 : items.length === 2 ? .95 : .7,
         "--social-grid-columns": post.productGrid?.columns || 10,
         "--social-grid-rows": post.productGrid?.rows || 10,
       } as React.CSSProperties}
@@ -427,14 +406,12 @@ function PostCanvas({
             savingMode === "percentage"
               ? `${discount(product.regular, product.sale)}%`
               : `${money(Number(product.regular) - Number(product.sale))}€`;
-          const brandLogo = brandLogoFor(null, product.brand);
           const priceStyle = product.priceStyle || post.priceStyle || "current";
           const redReferencePrice = usesRedReferencePrice(postPriceProduct(product), priceCampaign);
           const blueReferencePrice = usesBlueReferencePrice(postPriceProduct(product), priceCampaign);
           const offerBlock = (kind: string, className: string, children: React.ReactNode) => <EditableOfferBlock
-            name={kind === "copy" ? "product name" : kind === "details" ? "product details" : "price"}
+            name={kind === "copy" ? "product name" : kind === "details" ? "product details" : kind === "savings" ? "savings badge" : "price"}
             className={className}
-            style={className.includes("social-reference-blue-price") ? { display: "block", position: "relative", width: "32cqw", maxWidth: "100%", overflow: "visible" } : undefined}
             placement={product.offerPlacements?.[kind]}
             editable={Boolean(onMoveOfferBlock)}
             onChange={(value) => onMoveOfferBlock?.(product.code, kind, value)}
@@ -443,30 +420,28 @@ function PostCanvas({
             onGestureEnd={() => setDraggingCanvas(false)}
           >{children}</EditableOfferBlock>;
           return (
-            <div
-              className={`social-offer ${redReferencePrice ? "red-reference-offer" : ""} ${blueReferencePrice ? "blue-reference-offer" : ""}`}
+            <SocialOfferFrame
+              className={`${redReferencePrice ? "red-reference-offer" : ""} ${blueReferencePrice ? "blue-reference-offer" : ""}`}
               key={product.code}
-              onDoubleClick={() => onEditDetails?.(product.code)}
-            >
-              {post.showDetails && (
-                offerBlock("copy", "social-product-copy", <>
+              manualCopy={Boolean(product.offerPlacements?.copy)}
+              onEdit={() => onEditDetails?.(product.code)}
+              copy={post.showDetails && (
+                offerBlock("copy", "social-product-copy brochure-product-copy", <>
                   {product.hideColors !== true && productColors(product).length > 0 && <ProductDetailBlock product={product} detailKey="__colors" className="social-product-colors" onChange={onChangeProduct ? (field, value) => onChangeProduct(product.code, field, value) : undefined} onRemove={onChangeProduct ? () => onChangeProduct(product.code, "hideColors", true) : undefined}>{productColors(product).map((color) => <i key={color.name} title={color.name} style={{background:color.hex}} />)}</ProductDetailBlock>}
                   <div className={`social-product-brand ${brandOnLight ? "on-light" : "on-dark"}`}>
-                    {brandLogo ? (
-                      <img src={brandLogo} alt={product.brand} />
-                    ) : (
-                      product.brand
-                    )}
+                    <ProductBrandArtwork campaign={{id: post.id, name: post.name, products: [], offerStyle: post.priceStyle}} product={product}
+                      onChange={onChangeProduct ? (field, value) => onChangeProduct(product.code, field, value) : undefined} />
                   </div>
-                  <div>{product.name}</div>
+                  <span data-product-name="true">{product.name}</span>
+                  <small className="social-product-code brochure-product-code">{product.code}</small>
                   {product.postDetails && <div>{product.postDetails}</div>}
                   {blueReferencePrice && !product.hideWarranty && warrantyDuration(product.warranty) && <ProductDetailBlock product={product} detailKey="__warranty" className="social-warranty-line" onChange={onChangeProduct ? (field, value) => onChangeProduct(product.code, field, value) : undefined} onRemove={onChangeProduct ? () => onChangeProduct(product.code, "hideWarranty", true) : undefined}>{warrantyDuration(product.warranty)?.count} {warrantyDuration(product.warranty)?.unit} GARANCION</ProductDetailBlock>}
                 </>)
               )}
-              {defaultProductDetailPlacement(postPriceProduct(product), priceCampaign) !== "left" && detailsBlock(product)}
-              {post.showPrice && hasSale && (
-                redReferencePrice ? offerBlock("price", "social-price-stack red-reference-price", <>
-                  {post.showSaving && hasRegular && <RedReferenceSavings product={product} savingMode={savingMode} className="social-red-reference-saving" />}
+              details={defaultProductDetailPlacement(postPriceProduct(product), priceCampaign) !== "left" && detailsBlock(product)}
+              savings={redReferencePrice && post.showPrice && hasSale && post.showSaving && hasRegular && offerBlock("savings", "social-savings-block", <RedReferenceSavings product={product} savingMode={savingMode} className="social-red-reference-saving" />)}
+              price={post.showPrice && hasSale && (
+                redReferencePrice ? offerBlock("price", "social-price-stack brochure-price red-reference-price", <>
                   <RedReferencePrice product={product} installments={12} showRegular={post.showRegular && hasRegular} showInstallments={post.showInstallments} />
                 </>) : blueReferencePrice ? offerBlock("price", "social-price-stack reference-price-card social-reference-blue-price", <ReferencePriceCard product={product} installments={12} savingMode={savingMode} showRegular={post.showRegular && hasRegular} showSaving={post.showSaving && hasRegular} showInstallments={post.showInstallments} />) : offerBlock("price", `social-price-stack price-${priceStyle}`, <>
                   {post.showSaving && hasRegular && (
@@ -487,7 +462,7 @@ function PostCanvas({
                   )}
                 </>)
               )}
-            </div>
+            />
           );
         })}
       </div>
@@ -958,7 +933,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
   function reorderDetails(code: string, from: number, to: number) {
     update((draft: SocialPost) => {
       const product = draft.products.find((item) => item.code === code);
-      if (product) Object.assign(product, reorderDisplayedDetails(product, postDetailEntries(product), from, to));
+      if (product) Object.assign(product, reorderDisplayedDetails(product, socialProductDetailEntries(product), from, to));
     });
   }
   function create(products: Product[] = [], campaign: Campaign | null = null) {
@@ -1138,59 +1113,26 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
         throw new Error(
           "This size exceeds the browser canvas limit. Choose a smaller size or aspect ratio.",
         );
-      const { toCanvas } = await import("html-to-image");
-      const node = canvasRef.current;
-      await Promise.all(
-        [...node.querySelectorAll("img")].map(
-          (image) => image.decode?.().catch(() => {}) || Promise.resolve(),
-        ),
-      );
-      // Render at the requested size. Scaling the responsive preview makes
-      // container units resolve at preview size while the capture clips at
-      // output size, cutting off products and prices on portrait posts.
+      // Render a live canvas at output size so text fitting and divider
+      // measurements resolve in the same coordinate system as the download.
       const exportHost = document.createElement("div");
       exportHost.style.cssText = `position:fixed;left:-100000px;top:0;width:${width}px;height:${height}px;pointer-events:none;`;
-      const exportNode = node.cloneNode(true);
-      if (!(exportNode instanceof HTMLDivElement)) throw new Error("Could not prepare the post preview.");
-      exportNode.classList.remove("social-guides", "social-edit-mode");
-      exportNode.querySelectorAll('[data-export-hide="true"]').forEach((element) => element.remove());
-      exportNode.style.width = `${width}px`;
-      exportNode.style.height = `${height}px`;
-      exportNode.style.maxWidth = "none";
-      exportNode.style.margin = "0";
-      exportNode.style.boxShadow = "none";
-      exportHost.appendChild(exportNode);
       document.body.appendChild(exportHost);
-      let canvas;
+      const exportRoot = createRoot(exportHost);
+      const exportRef = React.createRef<HTMLDivElement>();
+      let canvas: HTMLCanvasElement;
       try {
-        await Promise.all([...exportNode.querySelectorAll("img")].map((image) => image.decode?.().catch(() => {}) || Promise.resolve()));
-        canvas = await toCanvas(exportNode, {
-          width,
-          height,
-          pixelRatio: 1,
-          skipAutoScale: true,
-          cacheBust: false,
-        });
+        flushSync(() => exportRoot.render(<PostCanvas post={structuredClone(post)} previewCutouts={{...previewCutouts}} canvasRef={exportRef} />));
+        if (!exportRef.current) throw new Error("Could not prepare the post preview.");
+        exportRef.current.style.width = `${width}px`;
+        exportRef.current.style.height = `${height}px`;
+        exportRef.current.style.maxWidth = "none";
+        exportRef.current.style.margin = "0";
+        exportRef.current.style.boxShadow = "none";
+        canvas = await captureSocialPost(exportRef.current, width, height);
       } finally {
+        exportRoot.unmount();
         exportHost.remove();
-      }
-      if (
-        Math.abs(canvas.width - width) > width * 0.02 ||
-        Math.abs(canvas.height - height) > height * 0.02
-      )
-        throw new Error(
-          `Export dimensions did not match the selected preset (${canvas.width}×${canvas.height} vs ${width}×${height}).`,
-        );
-      if (canvas.width !== width || canvas.height !== height) {
-        const exact = document.createElement("canvas");
-        exact.width = width;
-        exact.height = height;
-        const context = exact.getContext("2d");
-        if (!context) throw new Error("Canvas rendering is unavailable.");
-        context.drawImage(canvas, 0, 0, width, height);
-        canvas.width = 0;
-        canvas.height = 0;
-        canvas = exact;
       }
       const blob = await new Promise<Blob>((resolve, reject) =>
         canvas.toBlob(
@@ -2040,7 +1982,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                   260,
                   Math.min(
                     750,
-                    ((viewportHeight - 215) * dims.width) / dims.height,
+                    ((viewportHeight - 390) * dims.width) / dims.height,
                   ),
                 )}
                 canvasRef={canvasRef}
