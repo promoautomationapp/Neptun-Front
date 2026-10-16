@@ -37,7 +37,7 @@ describe("shared brochure defaults", () => {
     expect(campaign).toMatchObject({
       brochureFormat: "neptun1080x1350",
       layout: "grid6portrait",
-      coverTemplate: "blueRibbon",
+      coverTemplate: "blueClean",
       coverProductLayout: "pair",
       priceLogo: "symbol",
       offerStyle: "current",

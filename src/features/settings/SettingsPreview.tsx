@@ -98,6 +98,7 @@ export function SettingsPreview({
   const [page, setPage] = useState("cover");
   const [enlarged, setEnlarged] = useState(false);
   const [lastValid, setLastValid] = useState(initial);
+  useEffect(() => setComparison("draft"), [draft]);
   const parsed = workspaceSettingsSchema.safeParse(draft);
   useEffect(() => {
     const next = workspaceSettingsSchema.safeParse(draft);

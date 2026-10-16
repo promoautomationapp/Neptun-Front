@@ -1,18 +1,13 @@
 const asset = (name: string) => `/api/assets/legacy/assets/${name}`;
 export const COVER_OPTIONS = [
   {
-    id: "blueRibbon",
-    label: "Blue UUU cover",
-    image: "/cover-backgrounds/blue-ribbon.svg",
-  },
-  {
     id: "blueClean",
-    label: "Clean blue cover",
+    label: "NEPTUN blue (default)",
     image: "/cover-backgrounds/blue-clean.svg",
   },
   {
     id: "redBlue",
-    label: "Red / blue cover",
+    label: "Orange top / blue",
     image: "/cover-backgrounds/red-blue.svg",
   },
 ] as const;

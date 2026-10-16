@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { createPortal } from "react-dom";
 import React from "react";
 import { Button, Modal } from "./Modals";
@@ -47,7 +48,16 @@ export function LifestyleImageEditor({ source = "", context, products = [], onAp
       <div className="cs-lifestyle-preview">{current ? <img src={current.image} alt={t("Full image preview")} /> : <p>{t("Upload an image or create one with AI.")}</p>}</div>
       <div className="cs-lifestyle-panel">
         <div className="cs-lifestyle-tabs" role="group" aria-label={t("Image source")}><button type="button" aria-pressed={mode === "upload"} onClick={() => setMode("upload")}>{t("Upload image")}</button><button type="button" aria-pressed={mode === "ai"} onClick={() => setMode("ai")}>{t("Create / refine with AI")}</button></div>
-        {mode === "upload" ? <><p>{t("See the whole image before applying it. You can move, resize, replace or remove it in the brochure.")}</p><label className="cs-upload-button">↑ {t("Choose image")}<input type="file" accept="image/*" aria-label={t("Upload lifestyle image")} onChange={(event) => { upload(event.target.files?.[0]); event.target.value = ""; }} /></label><small>PNG, JPG, WebP · 12 MB</small></> : <>
+        {mode === "upload" ? <><p>{t("See the whole image before applying it. You can move, resize, replace or remove it in the brochure.")}</p><FileUpload
+          accept="image/*"
+          aria-label={t("Upload lifestyle image")}
+          onChange={(event) => {
+            upload(event.target.files?.[0]);
+            event.target.value = "";
+          }}
+        >
+          {t("Choose image")}
+        </FileUpload><small>PNG, JPG, WebP · 12 MB</small></> : <>
           <p>{t("Describe your scene. To refine it, select a version and tell AI what to change.")}</p>
           <label>{t("Your direction")}<textarea rows={5} maxLength={1000} value={prompt} aria-label={t("AI image direction")} onChange={(event) => setPrompt(event.target.value)} placeholder={t("A bright living room, softer lighting, more space around the products…")} /></label>
           <div className="cs-lifestyle-quota" role="status">{quota ? `${quota.used} / ${quota.limit} ${t("AI images used this month")} · ${quota.attempts} / ${quota.attemptLimit} ${t("attempts")}` : t("Loading image limit…")}</div>

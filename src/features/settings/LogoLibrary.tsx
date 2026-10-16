@@ -1,5 +1,6 @@
+import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
-import { useContext, useId, useState } from "react";
+import { useContext, useState } from "react";
 import { resolveAsset, uploadImage } from "../../api/client";
 import {
   Field,
@@ -16,8 +17,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const preview = useContext(SettingsPreviewContext);
-  const reportBusy = useContext(UploadStateContext),
-    uploadId = useId();
+  const reportBusy = useContext(UploadStateContext);
   const choices = [
     ...logoRuleDefaults.filter(
       (item) => !draft.hiddenBuiltinLogos.includes(item.id),
@@ -85,22 +85,14 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
         and dark backgrounds. Replacing a logo changes future brochures; saved
         brochures keep their images.
       </p>
-      <label className="ns-upload" htmlFor={uploadId}>
-        {busy ? "Uploading…" : "+ Add logo"}
-      </label>
-      <input
-        className="ns-file"
-        id={uploadId}
+      <FileUpload
         aria-label="Add logo to library"
-        type="file"
         accept="image/png,image/jpeg,image/webp,image/gif"
-        disabled={busy}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          void upload(file);
-        }}
-      />
+        busy={busy}
+        onChange={(event) => upload(event.target.files?.[0])}
+      >
+        Add logo
+      </FileUpload>
       {error && <p role="alert">{error}</p>}
       <div className="ns-logo-library">
         {unique.map((item) => (
@@ -173,21 +165,18 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
               >
                 Use inside pages
               </button>
-              <label className="ns-upload">
+              <FileUpload
+                aria-label={`Replace ${item.name}`}
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                disabled={busy}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  void upload(file, item);
+                }}
+              >
                 Replace
-                <input
-                  className="ns-file"
-                  aria-label={`Replace ${item.name}`}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={busy}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    void upload(file, item);
-                  }}
-                />
-              </label>
+              </FileUpload>
               <button
                 type="button"
                 disabled={selected(item.url)}

@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
 import type { Campaign, CampaignMutator } from "../../domain/models";
@@ -109,33 +110,29 @@ export function PageLayersControls({
         use its corner to resize.
       </p>
       <div className="cs-page-layer-actions">
-        <label>
+        <FileUpload
+          accept="image/*"
+          multiple
+          aria-label="Add multiple page images"
+          onChange={(event) => {
+            upload(event.target.files);
+            event.target.value = "";
+          }}
+        >
           Add images
-          <input
-            type="file"
+        </FileUpload>
+        {pageKey === "cover" && (
+          <FileUpload
             accept="image/*"
             multiple
-            aria-label="Add multiple page images"
+            aria-label="Add campaign logos"
             onChange={(event) => {
-              upload(event.target.files);
+              void upload(event.target.files, false, true);
               event.target.value = "";
             }}
-          />
-        </label>
-        {pageKey === "cover" && (
-          <label>
+          >
             {t("Add campaign logos")}
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              aria-label="Add campaign logos"
-              onChange={(event) => {
-                void upload(event.target.files, false, true);
-                event.target.value = "";
-              }}
-            />
-          </label>
+          </FileUpload>
         )}
         <button type="button" onClick={() => add([base("text")])}>
           Add text
@@ -227,18 +224,16 @@ export function PageLayersControls({
             </label>
           ) : (
             <>
-              <label>
+              <FileUpload
+                accept="image/*"
+                aria-label="Replace page layer image"
+                onChange={(event) => {
+                  upload(event.target.files, true);
+                  event.target.value = "";
+                }}
+              >
                 Replace image
-                <input
-                  type="file"
-                  accept="image/*"
-                  aria-label="Replace page layer image"
-                  onChange={(event) => {
-                    upload(event.target.files, true);
-                    event.target.value = "";
-                  }}
-                />
-              </label>
+              </FileUpload>
               {selected.height != null && (
                 <label>
                   Image fit

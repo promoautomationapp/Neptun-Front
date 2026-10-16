@@ -1,4 +1,10 @@
 const translations: Record<string, string> = {
+  "No social media posts.": "Nuk ka postime në rrjete sociale.",
+  "＋ New post": "＋ Postim i ri",
+  "Saved posts": "Postimet e ruajtura",
+  "Loading posts…": "Po ngarkohen postimet…",
+  "Could not load social posts. Please try again.": "Postimet nuk u ngarkuan. Provoni përsëri.",
+  "Could not upload the file. Please try again.": "Skedari nuk u ngarkua. Provoni përsëri.",
   "Switch to dark mode": "Aktivizo pamjen e errët",
   "Switch to light mode": "Aktivizo pamjen e çelët",
   "Dark mode": "Pamja e errët",

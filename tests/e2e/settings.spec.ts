@@ -150,7 +150,7 @@ test("shared Settings work in the browser, retain the original font and fit mobi
   };
   await expect(
     page.getByRole("combobox", { name: "Default cover style" }),
-  ).toContainText("Blue UUU cover");
+  ).toContainText("NEPTUN blue (default)");
   const screenshotDirectory = process.env.NEPTUN_SCREENSHOT_DIR;
   if (screenshotDirectory)
     await page.screenshot({

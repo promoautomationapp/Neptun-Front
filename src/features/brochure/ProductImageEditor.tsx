@@ -1,4 +1,5 @@
 import { requestAi } from "../ai/ai.api";
+import { FileUpload } from "../../components/FileUpload";
 import { imageOrientation } from "../ai/image-inspection";
 import type { Product } from "../../domain/models";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
@@ -287,19 +288,17 @@ export function ProductImageEditor({
                 </span>
               )}
             </div>
-            <label className="cs-image-upload">
+            <div className="cs-image-upload">
               <span>{t("Upload another image")}</span>
-              <span className="cs-image-upload-button">
-                ↑ {t("Choose image")}
-              </span>
-              <input
-                ref={uploadInput}
-                type="file"
+              <FileUpload
+                inputRef={uploadInput}
                 accept="image/*"
                 aria-label={t("Upload another image")}
                 onChange={(event) => selectUpload(event.target.files?.[0])}
-              />
-            </label>
+              >
+                {t("Choose image")}
+              </FileUpload>
+            </div>
             <label className="cs-image-cutout">
               <input
                 type="checkbox"

@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from "react";
+import { requestedLayoutChanged } from "./layoutObservation";
 import redGeometry from "./redPriceGeometry.json";
 import {
   fitArtworkInside,
@@ -97,6 +98,7 @@ export function ApplePhotoClearance({
     const observeMutations = () =>
       mutations?.observe(card, {
         attributes: true,
+        attributeOldValue: true,
         attributeFilter: [
           "style",
           "class",
@@ -518,7 +520,9 @@ export function ApplePhotoClearance({
       resize.observe(area);
     }
     if (typeof MutationObserver === "function")
-      mutations = new MutationObserver(queueUpdate);
+      mutations = new MutationObserver((records) => {
+        if (requestedLayoutChanged(records)) queueUpdate();
+      });
     card.addEventListener("load", queueUpdate, true);
     card.addEventListener("error", queueUpdate, true);
     document.fonts?.ready.then(queueUpdate);

@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { LifestyleImageEditor } from "./LifestyleImageEditor";
 import type { Box, Product, ScreenArtwork } from "../../domain/models";
@@ -225,18 +226,16 @@ export function ScreenImageEditor({
                 {t("Create / refine wallpaper with AI")}
               </Button>
             )}
-            <label className="cs-upload-button">
-              ↑ {t("Upload screen picture")}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  choose(file);
-                }}
-              />
-            </label>
+            <FileUpload
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                choose(file);
+              }}
+            >
+              {t("Upload screen picture")}
+            </FileUpload>
             {television && tvCount > 1 && (
               <fieldset className="cs-screen-wallpaper-scope">
                 <legend>{t("Apply wallpaper to")}</legend>

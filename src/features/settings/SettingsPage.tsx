@@ -15,6 +15,7 @@ export function SettingsPage({
   onDirtyChange,
   onBusyChange,
   previewProducts,
+  canViewCatalog = true,
 }: {
   initialSnapshot?: SettingsSnapshot | null;
   onSnapshotChange?: (snapshot: SettingsSnapshot) => void;
@@ -22,6 +23,7 @@ export function SettingsPage({
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
   previewProducts?: Product[];
+  canViewCatalog?: boolean;
 }) {
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(() =>
     initialSnapshot
@@ -74,6 +76,12 @@ export function SettingsPage({
     };
   }, [reload, seed, onSnapshotChange]);
   useEffect(() => {
+    if (!canViewCatalog) {
+      setFacets([]);
+      setBrands([]);
+      setFacetsError("");
+      return;
+    }
     let active = true;
     void catalogFacets()
       .then((value) => {
@@ -89,7 +97,7 @@ export function SettingsPage({
     return () => {
       active = false;
     };
-  }, [reload, previewProducts]);
+  }, [reload, previewProducts, canViewCatalog]);
   if (error)
     return (
       <div className="ns-settings">

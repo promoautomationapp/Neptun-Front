@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
 import type {
@@ -196,18 +197,16 @@ export function CoverDesignControls({
             )}
         </SearchableSelect>
       </label>
-      <label className="cs-cover-file">
+      <FileUpload
+        accept="image/*"
+        aria-label="Upload cover logo"
+        onChange={(event) => {
+          upload(event.target.files?.[0], "coverLogoSource");
+          event.target.value = "";
+        }}
+      >
         Upload logo
-        <input
-          type="file"
-          accept="image/*"
-          aria-label="Upload cover logo"
-          onChange={(event) => {
-            upload(event.target.files?.[0], "coverLogoSource");
-            event.target.value = "";
-          }}
-        />
-      </label>
+      </FileUpload>
       <label>
         Title
         <input
@@ -251,30 +250,25 @@ export function CoverDesignControls({
       )}
       <details>
         <summary>UUU artwork & gradient</summary>
-        <label className="cs-cover-file">
+        <FileUpload
+          accept="image/*"
+          aria-label="Upload UUU artwork"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file?.type.startsWith("image/") && file.size <= 12 * 1024 * 1024)
+              readImage(file)
+                .then((image) =>
+                  onUpdate((draft: Campaign) => {
+                    draft.brandAssets ||= {};
+                    draft.brandAssets.coverBand = image;
+                  }),
+                )
+                .catch(() => onToast?.("Could not read this image."));
+            event.target.value = "";
+          }}
+        >
           Replace UUU artwork
-          <input
-            type="file"
-            accept="image/*"
-            aria-label="Upload UUU artwork"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (
-                file?.type.startsWith("image/") &&
-                file.size <= 12 * 1024 * 1024
-              )
-                readImage(file)
-                  .then((image) =>
-                    onUpdate((draft: Campaign) => {
-                      draft.brandAssets ||= {};
-                      draft.brandAssets.coverBand = image;
-                    }),
-                  )
-                  .catch(() => onToast?.("Could not read this image."));
-              event.target.value = "";
-            }}
-          />
-        </label>
+        </FileUpload>
         <label>
           <input
             type="checkbox"

@@ -17,7 +17,9 @@ const socialModule = vi.hoisted(() => {
   });
   return { pending, fail: (reason: Error) => fail(reason) };
 });
-vi.mock("../../src/features/social/SocialStudio", () => socialModule.pending);
+vi.mock("../../src/features/social/SocialStudio", async () => ({
+  SocialStudio: (await import("react")).lazy(() => socialModule.pending),
+}));
 
 afterEach(() => {
   cleanup();

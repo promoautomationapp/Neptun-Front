@@ -1,3 +1,5 @@
+import { FileUpload } from "../../components/FileUpload";
+import { SocialStudio } from "../social/SocialStudio";
 import { NotificationBell } from "../notifications/NotificationBell";
 import { AppearanceToggle } from "../appearance/Appearance";
 import { useLiveSession } from "../auth/useLiveSession";
@@ -170,7 +172,7 @@ import { resolveSettings } from "../settings/settings.schema";
 import type { SettingsSnapshot } from "../settings/settings.api";
 import type { Settings } from "../../domain/models";
 import {
-  bootstrapWorkspace,
+  getSettingsSnapshot,
   getCampaigns,
   getCampaign,
   hasAcknowledgedCampaign,
@@ -331,12 +333,6 @@ function reviewStatusLabel(status: string | undefined): string {
 function brochureAspectStyle(aspect: string | number): BrochureCssStyle {
   return { "--brochure-page-aspect": aspect };
 }
-const SocialStudio = React.lazy(() =>
-  import("../social/SocialStudio").then((module) => ({
-    default: module.SocialStudio,
-  })),
-);
-
 function LanguageSwitch({
   language,
   onChange,
@@ -1318,22 +1314,20 @@ function PriceLogoPicker({ campaign, onUpdate }: CampaignControlsProps) {
           </button>
         )}
       </div>
-      <label className="cs-price-logo-upload">
-        {t("↑ Upload a new logo")}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={async (event) => {
-            const image = await readImage(event.target.files?.[0]);
-            if (image)
-              onUpdate((draft: Campaign) => {
-                draft.customPriceLogo = image;
-                draft.priceLogo = "custom";
-              });
-            event.target.value = "";
-          }}
-        />
-      </label>
+      <FileUpload
+        accept="image/*"
+        onChange={async (event) => {
+          const image = await readImage(event.target.files?.[0]);
+          if (image)
+            onUpdate((draft: Campaign) => {
+              draft.customPriceLogo = image;
+              draft.priceLogo = "custom";
+            });
+          event.target.value = "";
+        }}
+      >
+        {t("Upload a new logo")}
+      </FileUpload>
     </div>
   );
 }
@@ -1393,22 +1387,20 @@ function BrochureAssetPicker({ campaign, onUpdate }: CampaignControlsProps) {
                 </div>
               )}
               <div className="cs-brand-asset-actions">
-                <label>
-                  ↑ {custom ? "Replace" : "Upload"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (event) => {
-                      const image = await readImage(event.target.files?.[0]);
-                      if (image)
-                        onUpdate((draft: Campaign) => {
-                          draft.brandAssets ||= {};
-                          draft.brandAssets[asset.id] = image;
-                        });
-                      event.target.value = "";
-                    }}
-                  />
-                </label>
+                <FileUpload
+                  accept="image/*"
+                  onChange={async (event) => {
+                    const image = await readImage(event.target.files?.[0]);
+                    if (image)
+                      onUpdate((draft: Campaign) => {
+                        draft.brandAssets ||= {};
+                        draft.brandAssets[asset.id] = image;
+                      });
+                    event.target.value = "";
+                  }}
+                >
+                  {custom ? "Replace" : "Upload"}
+                </FileUpload>
                 {custom && (
                   <button
                     type="button"
@@ -1537,16 +1529,19 @@ function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
             type="button"
             key={template.id}
             className={
-              (campaign.coverTemplate || "blueRibbon") === template.id
+              (campaign.coverTemplate === "redBlue" ? "redBlue" : "blueClean") === template.id
                 ? "chosen"
                 : ""
             }
             aria-pressed={
-              (campaign.coverTemplate || "blueRibbon") === template.id
+              (campaign.coverTemplate === "redBlue" ? "redBlue" : "blueClean") === template.id
             }
             onClick={() =>
               onUpdate((draft: Campaign) => {
                 draft.coverTemplate = template.id;
+                draft.coverBackgroundColor = template.id === "blueClean" ? "#1c4075" : "";
+                draft.coverBackgroundGradient = null;
+                draft.coverBackgroundImage = "";
               })
             }
           >
@@ -2779,36 +2774,28 @@ export function BrochureEditor({
                     />
                   )}
                   {selected === -1 && (
-                    <label className="cs-button secondary cs-preview-file">
-                      {t("Change cover logo")}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        aria-label={t("Change cover logo")}
-                        onChange={(event) => {
-                          void replaceCoverLogo(event.target.files?.[0]);
-                          event.target.value = "";
-                        }}
-                      />
-                    </label>
-                  )}
-                  <label className="cs-button secondary cs-preview-file">
-                    {t(
-                      selected === -1
-                        ? "Add campaign logo / image"
-                        : "Add image to page",
-                    )}
-                    <input
-                      type="file"
+                    <FileUpload
                       accept="image/*"
-                      aria-label={t("Add image to page")}
+                      aria-label={t("Change cover logo")}
                       onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (file) void addPageArtwork(file);
+                        void replaceCoverLogo(event.target.files?.[0]);
                         event.target.value = "";
                       }}
-                    />
-                  </label>
+                    >
+                      {t("Change cover logo")}
+                    </FileUpload>
+                  )}
+                  <FileUpload
+                    accept="image/*"
+                    aria-label={t("Add image to page")}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void addPageArtwork(file);
+                      event.target.value = "";
+                    }}
+                  >
+                    {t(selected === -1 ? "Add campaign logo / image" : "Add image to page")}
+                  </FileUpload>
                   <button
                     type="button"
                     className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`}
@@ -3834,9 +3821,8 @@ export default function App({
           console.error("Could not load team members:", error);
       });
     // Saved brochures must not wait behind all pages of the source catalog.
-    setSettingsSnapshot(null);
-    void bootstrapWorkspace()
-      .then(({ campaigns: saved, settings: custom, settingsSnapshot: snapshot }) => {
+    void getCampaigns(controller.signal)
+      .then((saved) => {
         if (controller.signal.aborted) return;
         setCampaigns((current) =>
           mergeCampaignSnapshots(
@@ -3846,8 +3832,6 @@ export default function App({
             activeEditorRef.current.section === "editor",
           ),
         );
-        setSettings(resolveSettings(custom));
-        setSettingsSnapshot(snapshot);
       })
       .catch((error) => {
         if (!controller.signal.aborted) setToast(errorMessage(error));
@@ -3857,6 +3841,22 @@ export default function App({
       });
     return () => controller.abort();
   }, [user?.email]);
+  useEffect(() => {
+    setSettingsSnapshot(null);
+    if (!user) return;
+    const controller = new AbortController();
+    // Settings has its own request: long brochure lists must not hold it back.
+    void getSettingsSnapshot(controller.signal)
+      .then((snapshot) => {
+        if (controller.signal.aborted) return;
+        setSettings(resolveSettings(snapshot.settings));
+        setSettingsSnapshot(snapshot);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setToast(errorMessage(error));
+      });
+    return () => controller.abort();
+  }, [user?.id, user?.organizationId]);
   useEffect(() => {
     if (!user) return;
     const controller = new AbortController();
@@ -4998,6 +4998,7 @@ export default function App({
         )}
         {section === "stores" && (
           <SettingsPage
+            canViewCatalog={access.canViewCatalog}
             initialSnapshot={settingsSnapshot}
             onSnapshotChange={setSettingsSnapshot}
             previewProducts={catalog}

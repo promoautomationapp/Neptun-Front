@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { FileUpload } from "../../components/FileUpload";
 import type { Gradient } from "../../domain/models";
 import { t } from "./i18n";
 import {
@@ -280,9 +281,8 @@ export function BackgroundPicker({
         <div
           className={`cs-background-image-control ${mode === "image" ? "active" : ""}`}
         >
-          <input
-            ref={imageInput}
-            type="file"
+          <FileUpload
+            inputRef={imageInput}
             accept="image/png,image/jpeg,image/webp"
             aria-label={t("Upload background image")}
             onChange={(event) => {
@@ -290,16 +290,11 @@ export function BackgroundPicker({
               event.target.value = "";
               uploadImage(file);
             }}
-          />
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => imageInput.current?.click()}
+            busy={uploading}
+            busyLabel={t("Loading image…")}
           >
-            {uploading
-              ? t("Loading image…")
-              : `↑ ${t(image ? "Replace background image" : "Upload background image")}`}
-          </button>
+            {t(image ? "Replace background image" : "Upload background image")}
+          </FileUpload>
           {image && (
             <button
               type="button"

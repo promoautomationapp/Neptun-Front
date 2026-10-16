@@ -1,4 +1,5 @@
 import { SearchableSelect } from "../../components/SearchableSelect";
+import { FileUpload } from "../../components/FileUpload";
 import {
   cloneElement,
   createContext,
@@ -131,7 +132,6 @@ export function AssetPicker({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const id = useId();
   const reportBusy = useContext(UploadStateContext);
   const known = library.some((item) => item.url === value);
   return (
@@ -158,15 +158,9 @@ export function AssetPicker({
         />
       )}
       {!value && !defaultImage && <small>{defaultHint}</small>}
-      <label htmlFor={id} className="ns-upload">
-        {busy ? "Uploading…" : "Upload new image"}
-      </label>
-      <input
-        id={id}
-        className="ns-file"
-        type="file"
+      <FileUpload
         accept="image/png,image/jpeg,image/webp,image/gif"
-        disabled={busy}
+        busy={busy}
         aria-label={`Upload ${label}`}
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -196,7 +190,9 @@ export function AssetPicker({
               reportBusy(false);
             });
         }}
-      />
+      >
+        Upload new image
+      </FileUpload>
       <small>
         PNG, JPEG, WebP or GIF, up to 12 MB. Uploading selects it as the
         default; Save settings applies the choice.

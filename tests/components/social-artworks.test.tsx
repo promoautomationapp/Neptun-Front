@@ -76,6 +76,7 @@ function open(view: ReturnType<typeof render>, name = "Social QA") {
     .then((button) => fireEvent.click(button));
 }
 beforeEach(() => {
+  setLanguage("en");
   stored = [fixture()];
   vi.mocked(getPosts).mockImplementation(async () => structuredClone(stored));
   vi.mocked(savePost).mockImplementation(async (post) => {
@@ -100,6 +101,28 @@ beforeEach(() => {
       );
     },
   );
+});
+it("shows a simple empty list for both staff and superadmins without saving or running AI", async () => {
+  stored = [];
+  const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await view.findByText("No social media posts.");
+  expect(view.queryByRole("alert")).toBeNull();
+  expect(view.getByRole("button", { name: "＋ New post" })).toBeTruthy();
+  view.rerender(<SocialStudio catalog={[]} campaigns={[]} canManageDisabled />);
+  await view.findByText("No social media posts.");
+  expect(savePost).not.toHaveBeenCalled();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("keeps an unavailable post list distinct from an empty list and offers a working retry", async () => {
+  vi.mocked(getPosts).mockRejectedValueOnce(new Error("Connection interrupted"));
+  stored = [];
+  const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await view.findByRole("alert");
+  expect(view.queryByText("No social media posts.")).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "Try again" }));
+  await view.findByText("No social media posts.");
+  expect(view.queryByRole("alert")).toBeNull();
 });
 afterEach(() => {
   cleanup();
@@ -322,7 +345,7 @@ it("hides disabled posts from workspace users and lets only superadmins enable t
     },
   ];
   const ordinary = render(<SocialStudio catalog={[]} campaigns={[]} />);
-  await ordinary.findByText(/No posts yet/);
+  await ordinary.findByText("No social media posts.");
   expect(ordinary.queryByText("Disabled social sample")).toBeNull();
   expect(
     ordinary.queryByRole("button", { name: /Post visibility/ }),

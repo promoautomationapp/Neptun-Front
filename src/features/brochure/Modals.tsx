@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { Modal } from "../../components/Modal";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import type {
@@ -315,30 +316,28 @@ export function CreateCampaign({
                   : t("Upload an Excel or CSV file to build your brochure.")}
               </small>
             </div>
-            <label className="cs-upload-button cs-create-products-upload">
+            <FileUpload
+              accept=".csv,.xlsx,.xls"
+              aria-label={t(
+                importedProducts.length
+                  ? "Replace products"
+                  : "Upload products",
+              )}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) {
+                  setImportFile(file);
+                  setImportOpen(true);
+                }
+              }}
+            >
               {t(
                 importedProducts.length
                   ? "Replace products"
                   : "Upload products",
               )}
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                aria-label={t(
-                  importedProducts.length
-                    ? "Replace products"
-                    : "Upload products",
-                )}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  if (file) {
-                    setImportFile(file);
-                    setImportOpen(true);
-                  }
-                }}
-              />
-            </label>
+            </FileUpload>
             {importedProducts.length > 0 && (
               <button
                 type="button"
@@ -772,19 +771,17 @@ export function ImportSales({
             )}
           </p>
         </div>
-        <label className="cs-upload-button">
+        <FileUpload
+          accept=".csv,.xlsx,.xls"
+          disabled={busy}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            load(file);
+          }}
+        >
           {busy ? t("Reading spreadsheet…") : t("Choose file")}
-          <input
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            disabled={busy}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              load(file);
-            }}
-          />
-        </label>
+        </FileUpload>
       </div>
       {busy && (
         <p className="cs-import-loading" role="status">

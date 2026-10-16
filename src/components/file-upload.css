@@ -1,0 +1,87 @@
+.np-upload-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.np-upload-control > input[type="file"][hidden] {
+  display: none !important;
+}
+.np-upload-button.np-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 9px 13px;
+  border: 1px solid #b9cee0;
+  border-radius: 9px;
+  background: #edf5fc;
+  color: #20557d;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+.np-upload-button > svg,
+.np-upload-spinner {
+  display: block;
+  flex: 0 0 18px;
+}
+.np-upload-error {
+  width: 100%;
+  margin-top: 6px;
+  color: #ad3c32;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.np-upload-button > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.np-upload-button:hover:not(:disabled) {
+  background: #dfedf9;
+  border-color: #7eaccd;
+}
+.np-upload-button:focus-visible {
+  outline: 3px solid #4caee4;
+  outline-offset: 3px;
+}
+.np-upload-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.np-upload-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: np-upload-spin 0.8s linear infinite;
+}
+html[data-theme="dark"] .np-upload-button.np-upload-button {
+  background: #233e59;
+  border-color: #466683;
+  color: #e2effa;
+}
+html[data-theme="dark"] .np-upload-button:hover:not(:disabled) {
+  background: #2d4c6a;
+  border-color: #7196b6;
+}
+@keyframes np-upload-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .np-upload-spinner {
+    animation: none;
+  }
+}

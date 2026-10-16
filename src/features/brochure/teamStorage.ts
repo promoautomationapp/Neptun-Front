@@ -134,8 +134,8 @@ export async function restoreCampaign(campaign: Campaign): Promise<Campaign> {
 }
 
 let settingsVersion: number | undefined;
-const getSettingsSnapshot = async () => {
-  const snapshot = await loadSettings();
+export const getSettingsSnapshot = async (signal?: AbortSignal) => {
+  const snapshot = await loadSettings(signal);
   settingsVersion = snapshot.version;
   return snapshot;
 };

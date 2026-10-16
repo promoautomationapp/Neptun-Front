@@ -1,4 +1,5 @@
 import { COVER_OPTIONS } from "../settings/options";
+import { stableMeasurement } from "./layoutObservation";
 import { logoForBackground } from "../settings/logo-rules";
 import {
   defaultPhotoPlacement,
@@ -1324,7 +1325,7 @@ function StandardProductCard({
     if (cancelled) setSize(cardSize(product, layout || "classic8"));
     else if (next) onResizeCard?.(product, next);
   }
-  const [screenCorner, setScreenCorner] = React.useState<{
+  const [screenCorner, writeScreenCorner] = React.useState<{
     top: number;
     left?: number;
     right?: number;
@@ -1332,8 +1333,12 @@ function StandardProductCard({
     height?: number;
     guides?: boolean;
   } | null>(null);
-  const [screenOverlay, setScreenOverlay] =
+  const [screenOverlay, writeScreenOverlay] =
     React.useState<React.CSSProperties | null>(null);
+  const setScreenCorner = React.useCallback((next: typeof screenCorner) =>
+    writeScreenCorner((current) => stableMeasurement(current, next)), []);
+  const setScreenOverlay = React.useCallback((next: React.CSSProperties | null) =>
+    writeScreenOverlay((current) => stableMeasurement(current, next)), []);
   React.useLayoutEffect(() => {
     if (
       !product.screenArtwork?.image ||
@@ -2286,7 +2291,7 @@ function CoverPageContent({
   const backgroundColor =
     pageBackgroundContrastColor(campaign, "cover") || "#1c4075";
   const backgroundImage = pageBackgroundImage(campaign, "cover");
-  const backgroundFill =
+  const customBackgroundFill =
     (backgroundImage
       ? pageBackgroundColor(campaign, "cover")
       : pageBackgroundFill(campaign, "cover")) || "#1c4075";
@@ -2300,9 +2305,12 @@ function CoverPageContent({
   const template =
     campaign.coverTemplate === "photo"
       ? "photo"
-      : COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
+      : campaign.coverTemplate === "blueRibbon" || COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
         ? campaign.coverTemplate
-        : "blueRibbon";
+        : "blueClean";
+  const backgroundFill = !campaign.coverBackgroundColor && !campaign.coverBackgroundGradient && !backgroundImage && template === "redBlue"
+    ? '#0869b5 url("/cover-backgrounds/red-blue.svg") center / cover no-repeat'
+    : customBackgroundFill;
   const coverArt =
     campaign.coverImage ||
     (template === "photo"

@@ -518,11 +518,12 @@
 }
 .ns-logo-library {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 12px;
   margin: 16px 0;
 }
 .ns-logo-card {
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   border: 1px solid #d9e3ed;
   border-radius: 12px;
@@ -531,13 +532,18 @@
   gap: 10px;
   align-content: start;
 }
+.ns-logo-card > * {
+  min-width: 0;
+  max-width: 100%;
+}
 .ns-logo-samples {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-radius: 8px;
   overflow: hidden;
 }
 .ns-logo-samples span {
+  min-width: 0;
   padding: 12px 8px;
   display: flex;
   min-height: 70px;
@@ -548,25 +554,40 @@
   background: #1c4075;
 }
 .ns-logo-samples img {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   height: 48px;
   object-fit: contain;
 }
 .ns-logo-card strong {
   overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
 }
 .ns-logo-card small {
   color: #57728a;
 }
 .ns-logo-actions {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
 }
 .ns-logo-actions button,
-.ns-logo-actions label {
+.ns-logo-actions .np-upload-control {
+  min-width: 0;
   width: 100%;
   font-size: 12px;
   text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ns-logo-actions .np-upload-button {
+  width: 100%;
+}
+.ns-logo-card .np-upload-control {
+  margin: 0;
 }
 .ns-logo-rule {
   display: grid;

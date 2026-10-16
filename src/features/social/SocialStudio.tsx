@@ -1,3 +1,4 @@
+import { FileUpload } from "../../components/FileUpload";
 import { NavIcon } from "../studio/NavIcon";
 import { CloseIcon } from "../../components/CloseIcon";
 import { SearchableSelect } from "../../components/SearchableSelect";
@@ -743,6 +744,8 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
   const [postVisibility, setPostVisibility] = useState("active");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [loadRevision, setLoadRevision] = useState(0);
   const [picker, setPicker] = useState(false);
   const [rich, setRich] = useState(false);
   const [imageCode, setImageCode] = useState<string | null>(null);
@@ -825,6 +828,8 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
   );
   useEffect(() => {
     let alive = true;
+    setLoadError("");
+    setLoaded(false);
     getPosts()
       .then((saved) => {
         if (alive) {
@@ -834,14 +839,14 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
       })
       .catch((error) => {
         if (alive) {
-          setMessage(errorMessage(error));
+          setLoadError(errorMessage(error));
           setLoaded(true);
         }
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [loadRevision, canManageDisabled]);
   useEffect(() => {
     if (!loaded || !seed) return;
     const campaign = campaigns.find((item) => item.id === seed.campaignId);
@@ -1256,7 +1261,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
       <div className="social-studio-head">
         <div>
           <small>NEPTUN / CONTENT STUDIO</small>
-          <h1>Social posts</h1>
+          <h1>{t("Social posts")}</h1>
           <p>
             Create a post from a brochure or any products in the catalog. Save
             it for both accounts and export the right size for each channel.
@@ -1267,7 +1272,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
           type="button"
           onClick={() => create()}
         >
-          ＋ New post
+          {t("＋ New post")}
         </button>
       </div>
       {message && (
@@ -1278,17 +1283,21 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
           </button>
         </div>
       )}
-      {!loaded && <p>Loading posts…</p>}
-      {loaded && !post && (
+      {!loaded && <p role="status">{t("Loading posts…")}</p>}
+      {loadError && <div className="social-message" role="alert">
+        {t("Could not load social posts. Please try again.")}
+        <button type="button" onClick={() => setLoadRevision((value) => value + 1)}>{t("Try again")}</button>
+      </div>}
+      {loaded && !loadError && !post && (
         <div className="social-library">
           <div className="social-library-toolbar">
-            <h2>Saved posts</h2>
+            <h2>{t("Saved posts")}</h2>
             <span>{visiblePosts.length} posts</span>
             {canManageDisabled && <StudioSelect label={t("Post visibility")} value={postVisibility} onChange={setPostVisibility} options={[{value:"active",label:t("Active posts")},{value:"disabled",label:t("Disabled posts")},{value:"all",label:t("All posts")}]} />}
           </div>
           {!visiblePosts.length && (
-            <div className="social-library-empty">
-              {postVisibility === "disabled" ? t("No disabled posts.") : "No posts yet. Create one from the catalog or open a brochure and choose “Make social post”."}
+            <div className="social-library-empty" role="status">
+              {postVisibility === "disabled" ? t("No disabled posts.") : t("No social media posts.")}
             </div>
           )}
           <div className="social-post-cards">
@@ -1975,7 +1984,21 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                   <strong>Images on this post</strong>
                   <ReusableImages settings={settings} onAdd={addSavedArtwork} />
                   <p>Add campaign marks or other images. Drag them on the post to move; drag the corner to resize. You can also drop image files directly onto the canvas.</p>
-                  <label className="social-add">{artworkUpload ? `Uploading ${artworkUpload.completed}/${artworkUpload.total}…` : "＋ Add images"}<input aria-label="Add images to post" type="file" accept="image/*" multiple disabled={Boolean(artworkUpload)} onChange={(event) => { const files = [...(event.target.files || [])]; event.target.value = ""; void addArtworks(files); }} /></label>
+                  <FileUpload
+                    aria-label="Add images to post"
+                    accept="image/*"
+                    multiple
+                    disabled={Boolean(artworkUpload)}
+                    onChange={(event) => {
+                      const files = [...(event.target.files || [])];
+                      event.target.value = "";
+                      void addArtworks(files);
+                    }}
+                  >
+                    {artworkUpload
+                      ? `Uploading ${artworkUpload.completed}/${artworkUpload.total}…`
+                      : "Add images"}
+                  </FileUpload>
                   {(post.artworks || []).map((artwork) => <div className="social-artwork-row" key={artwork.id}><img src={artwork.image} alt="" /><span>{artwork.name}</span><input type="range" min="4" max="70" value={artwork.width} aria-label={`Size: ${artwork.name}`} onChange={(event) => updateAsset(artwork.id, { x: artwork.x, y: artwork.y, width: Number(event.target.value) })} /><button type="button" aria-label={`Remove ${artwork.name}`} onClick={() => update((draft: SocialPost) => { draft.artworks = (draft.artworks || []).filter((item) => item.id !== artwork.id); })}>×</button></div>)}
                 </div>
               </section>

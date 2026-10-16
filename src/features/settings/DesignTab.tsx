@@ -1,5 +1,6 @@
 import { SearchableSelect } from "../../components/SearchableSelect";
-import { SettingsGroup } from "./components";
+import { SettingsGroup, SettingsPreviewContext } from "./components";
+import { useContext } from "react";
 import { resolveAsset } from "../../api/client";
 import { Field, Toggle } from "./components";
 import { COVER_OPTIONS } from "./options";
@@ -204,22 +205,41 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
 }
 export function DesignTab({
   draft,
-  update,
+  update: updateDraft,
   pageArea = "cover",
 }: SettingsTabProps) {
   const b = draft.brochure;
+  const preview = useContext(SettingsPreviewContext);
+  const update: SettingsTabProps["update"] = (change) => {
+    updateDraft(change);
+    preview(
+      pageArea === "cover"
+        ? "cover"
+        : pageArea === "stores" || pageArea === "footer"
+          ? "stores"
+          : "products",
+    );
+  };
+  const selectedTemplate =
+    b.coverTemplate === "redBlue" ? "redBlue" : "blueClean";
+  const selectTemplate = (template: "blueClean" | "redBlue") =>
+    update((next) => {
+      next.brochure.coverTemplate = template;
+      next.brochure.coverBackground = {
+        color: template === "blueClean" ? "#1c4075" : "",
+        gradient: null,
+        image: "",
+      };
+    });
   return (
     <section className="ns-section">
       <h2>{pageArea === "cover" ? "Cover and colors" : "Page colors"}</h2>
       <div hidden={pageArea !== "cover"}>
         <Field label="Default cover style">
           <SearchableSelect
-            value={b.coverTemplate === "photo" ? "blueRibbon" : b.coverTemplate}
+            value={selectedTemplate}
             onChange={(event) =>
-              update((next) => {
-                next.brochure.coverTemplate = event.target
-                  .value as BrochureDefaults["coverTemplate"];
-              })
+              selectTemplate(event.target.value as "blueClean" | "redBlue")
             }
           >
             {COVER_OPTIONS.map((item) => (
@@ -234,13 +254,9 @@ export function DesignTab({
             <button
               type="button"
               key={item.id}
-              className={item.id === b.coverTemplate ? "selected" : ""}
-              aria-pressed={item.id === b.coverTemplate}
-              onClick={() =>
-                update((next) => {
-                  next.brochure.coverTemplate = item.id;
-                })
-              }
+              className={item.id === selectedTemplate ? "selected" : ""}
+              aria-pressed={item.id === selectedTemplate}
+              onClick={() => selectTemplate(item.id)}
             >
               <img src={resolveAsset(item.image)} alt="" />
               {item.label}
