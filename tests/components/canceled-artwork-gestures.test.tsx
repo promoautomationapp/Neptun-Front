@@ -154,7 +154,10 @@ it("restores a resized detail block on lost capture without adding an undo step"
   const item = view.container.querySelector<HTMLElement>(
     ".product-detail-block",
   )!;
-  const handle = view.getByRole("button", { name: /Resize/ });
+  const handle =
+    view.container.querySelector<HTMLElement>(
+      '[data-resize-corner="bottom-right"]',
+    ) || view.getByRole("button", { name: /Resize/ });
   fireEvent.pointerDown(handle, { clientX: 100, clientY: 100, button: 0 });
   fireEvent.pointerMove(handle, { clientX: 180, clientY: 140 });
   expect(item.style.width).not.toBe("30%");
@@ -180,7 +183,10 @@ for (const type of ["page", "cover", "stores"] as const) {
   }
   it(`restores ${type} resize and commits the next completed gesture once`, () => {
     const { target, change, getByRole } = fixture(type);
-    const resize = getByRole("button", { name: /Resize/ });
+    const resize =
+      document.querySelector<HTMLElement>(
+        '[data-resize-corner="bottom-right"]',
+      ) || getByRole("button", { name: /Resize/ });
     fireEvent.pointerDown(resize, { clientX: 100, clientY: 100, button: 0 });
     fireEvent.pointerMove(resize, { clientX: 180, clientY: 140 });
     expect(target.style.width).not.toBe("30%");

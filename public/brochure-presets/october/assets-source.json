@@ -1,0 +1,115 @@
+{
+  "online.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/Icon Online Dyqan.ai",
+    "bounds": [
+      405.0108642578125,
+      534.14501953125,
+      1608.929931640625,
+      1485.0765380859375
+    ]
+  },
+  "hajde.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/Hajde Logo.ai",
+    "bounds": [
+      -0.00020599365234375,
+      -0.0001068115234375,
+      643.0590209960938,
+      176.43939208984375
+    ]
+  },
+  "hajde-white.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/Hajde Logobardhe.ai",
+    "bounds": [
+      -0.00020599365234375,
+      -0.0001068115234375,
+      643.0590209960938,
+      176.43939208984375
+    ]
+  },
+  "balfin.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/Part of BALFIN.pdf",
+    "bounds": [
+      56.04230499267578,
+      36.423194885253906,
+      298.5196838378906,
+      125.206298828125
+    ]
+  },
+  "uuu-hajde.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/logo UUUU.pdf",
+    "bounds": [
+      71.44860076904297,
+      346.8525390625,
+      865.0426025390625,
+      764.4110107421875
+    ]
+  },
+  "bestbuy.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/bba_kosovo_2025_neptun.pdf",
+    "bounds": [
+      48.0,
+      169.8890380859375,
+      546.0,
+      667.8890380859375
+    ],
+    "renderedFromNativeVector": true,
+    "reason": "Native PDF rendering preserves nested shading; transparent alpha retained."
+  },
+  "qudal.svg": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Links/Qudal_2025_kosovo_neptun_ver3.pdf",
+    "bounds": [
+      28.34600830078125,
+      28.346221923828125,
+      311.8110046386719,
+      311.8102111816406
+    ],
+    "renderedFromNativeVector": true,
+    "reason": "MuPDF SVG export does not preserve nested PDF shadings; native PDF vector rendering retains exact color and alpha."
+  },
+  "apple-reseller.png": {
+    "source": "Broshura_BG_Tetor_FINALE.pdf",
+    "page": 6,
+    "xref": 500,
+    "softmask": 499,
+    "nativeAlphaDimensions": [
+      343,
+      122
+    ]
+  },
+  "neptun-footer.svg": {
+    "source": "Broshura_BG_Tetor_FINALE.pdf",
+    "page": 4,
+    "bounds": [
+      39.16801452636719,
+      1285.78955078125,
+      171.2480010986328,
+      1313.999755859375
+    ],
+    "paths": 7
+  },
+  "neptun-footer-tv.svg": {
+    "source": "Broshura_BG_Tetor_FINALE.pdf",
+    "page": 2,
+    "bounds": [
+      35.999900817871094,
+      1285.78955078125,
+      168.0800018310547,
+      1313.999755859375
+    ],
+    "paths": 7
+  },
+  "neptun-cover.png": {
+    "source": "Broshura_BG_Tetor_FINALE.pdf",
+    "page": 1,
+    "xref": 58,
+    "softmask": 57
+  },
+  "service.svg": {
+    "source": "neptun-campaign-studio/public/assets/elektro-servis-color.svg",
+    "nativeVector": true
+  },
+  "CeraPro-Bold.otf": {
+    "source": "/Users/brikenaahmeti/Downloads/Broshura_BG_Gusht_1.1/Document fonts/Cera Pro Bold.otf",
+    "fullEditableFont": true
+  }
+}

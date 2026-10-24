@@ -1,3 +1,4 @@
+import { isTelevision } from "./tvSpecs";
 import { requestAi } from "../ai/ai.api";
 import { FileUpload } from "../../components/FileUpload";
 import { imageOrientation } from "../ai/image-inspection";
@@ -27,6 +28,7 @@ export function ProductImageEditor({
   onSave,
   onClose,
   onFindImage,
+  onEditScreen,
   canResumeSearch = false,
 }: {
   product: Product;
@@ -35,6 +37,7 @@ export function ProductImageEditor({
   onSave: (changes: Partial<Product>) => void;
   onClose: () => void;
   onFindImage?: () => void | Promise<void>;
+  onEditScreen?: () => void;
   canResumeSearch?: boolean;
 }) {
   const catalogPhotos = useCatalogPhotos(catalogProduct);
@@ -245,9 +248,20 @@ export function ProductImageEditor({
         />
         <p>
           {t(
-            "Choose a catalog photo or upload your own. Click the image in the brochure anytime to change it again.",
+            "Choose a catalog photo or upload your own. Double-click the image in the brochure anytime to change it again.",
           )}
         </p>
+        {isTelevision(product) && onEditScreen && (
+          <div className="cs-tv-image-choice">
+            <strong>{t("Change the picture inside this TV")}</strong>
+            <p>
+              {t("Keep the TV frame and add a wallpaper inside the screen.")}
+            </p>
+            <Button onClick={onEditScreen}>
+              {t("Change TV screen image")}
+            </Button>
+          </div>
+        )}
         <div className="cs-image-drop-hint">
           {t("Drop an image here or choose a photo below")}
         </div>

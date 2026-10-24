@@ -87,6 +87,25 @@ export function ProductLayoutControls({
         )}
       </p>
       <strong>{t("Product photo")}</strong>
+      <label className="cs-product-photo-size">
+        <span>
+          {t("Photo size")} <output>{Math.round(photo.scale * 100)}%</output>
+        </span>
+        <input
+          type="range"
+          aria-label={t("Photo size")}
+          min="20"
+          max="250"
+          step="5"
+          value={Math.round(photo.scale * 100)}
+          onChange={(event) =>
+            onChange("brochureImagePlacement", {
+              ...photo,
+              scale: Number(event.target.value) / 100,
+            })
+          }
+        />
+      </label>
       <div className="cs-product-layout-fields">
         {field("Left (%)", photo.x, 0, 100, 1, (x) =>
           onChange("brochureImagePlacement", { ...photo, x }),

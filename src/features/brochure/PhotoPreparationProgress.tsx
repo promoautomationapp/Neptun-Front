@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { Campaign } from "../../domain/models";
 import { t } from "./i18n";
 import "../../styles/photo-preparation-progress.css";
@@ -20,7 +20,7 @@ export function PhotoPreparationProgress({
   onRetry: () => void;
   onEdit: (code: string) => void;
 }) {
-  if (!items.length) return null;
+  const [dismissed, setDismissed] = useState(false);
   const ready = items.filter((x) => x.state === "ready").length,
     originals = items.filter((x) => x.state === "original"),
     failed = items.filter((x) => x.state === "failed"),
@@ -31,6 +31,13 @@ export function PhotoPreparationProgress({
   const finished = ready + originals.length + failed.length,
     percent = Math.round((finished / items.length) * 100),
     busy = finished < items.length;
+  useEffect(() => {
+    setDismissed(false);
+    if (busy || failed.length || !items.length) return;
+    const timer = window.setTimeout(() => setDismissed(true), 4000);
+    return () => window.clearTimeout(timer);
+  }, [busy, failed.length, campaign.id, items.length]);
+  if (!items.length || dismissed) return null;
   const missing = campaign.products
     .flatMap((p) => (p.bundleProducts?.length ? p.bundleProducts : [p]))
     .filter((p) => !p.image && !p.localImage && !p.imageUrl).length;

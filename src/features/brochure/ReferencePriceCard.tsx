@@ -58,6 +58,9 @@ function PriceText({ value, part, sale = false }: PriceTextProps) {
   );
   return (
     <text
+      className={
+        sale ? "reference-offer-price-text" : "reference-regular-price-text"
+      }
       x={sale ? part.bounds[0] : center(part.bounds)}
       y={part.baseline}
       textAnchor={sale ? "start" : "middle"}

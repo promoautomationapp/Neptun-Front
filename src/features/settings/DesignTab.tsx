@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup, SettingsPreviewContext } from "./components";
 import { useContext } from "react";
@@ -173,13 +174,18 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          <option value="grid6portrait">Six offers · 2 × 3 (default)</option>
+          <option value="feature3">
+            Three offers · one above two (default)
+          </option>
+          <option value="tv8">Eight TVs · 3–2–3</option>
+          <option value="grid6portrait">Six offers · 2 × 3</option>
           <option value="grid6">Six offers · 3 × 2</option>
           <option value="classic8">
             Eight offers · 3 × 3 with one open slot
           </option>
           <option value="grid9">Nine offers · 3 × 3</option>
           <option value="duo4">Four offers · two columns</option>
+          <option value="pair2">Two offers · one above the other</option>
         </SearchableSelect>
       </Field>
       <Toggle
@@ -308,6 +314,15 @@ export function DesignTab({
             />
           ))}
         </div>
+        <Toggle
+          label={t("Show cover footer")}
+          checked={b.showCoverFooter ?? true}
+          onChange={(value) =>
+            update((next) => {
+              next.brochure.showCoverFooter = value;
+            })
+          }
+        />
         <SettingsGroup title={<> Cover text colors </>}>
           <div className="ns-grid">
             {(
@@ -333,6 +348,59 @@ export function DesignTab({
           </div>
         </SettingsGroup>
       </div>
+      {pageArea === "inside" && b.brochureVisualStyle === "october" && (
+        <SettingsGroup title={<>{t("Category header and page footer")}</>}>
+          <p>
+            {t(
+              "These are the starting choices for this design. Every page can override its category text, logo, line and page number.",
+            )}
+          </p>
+          {(
+            [
+              ["showHeader", "Show blue category header"],
+              ["showOnlineLogo", "Show online shopping logo"],
+              ["showFooterLogo", "Show NEPTUN footer logo"],
+              ["showFooterLine", "Show footer line"],
+            ] as const
+          ).map(([key, label]) => (
+            <Toggle
+              key={key}
+              label={t(label)}
+              checked={b.pageDecorationDefaults?.[key] ?? true}
+              onChange={(value) =>
+                update((next) => {
+                  next.brochure.pageDecorationDefaults ??= {};
+                  next.brochure.pageDecorationDefaults[key] = value;
+                })
+              }
+            />
+          ))}
+          <div className="ns-grid">
+            {(
+              [
+                ["headerColor", "Category header color", "#007dc5"],
+                ["headerTextColor", "Category text color", "#ffffff"],
+                ["footerLineColor", "Footer line color", "#003870"],
+                ["footerLogoColor", "Footer logo color", "#003870"],
+              ] as const
+            ).map(([key, label, fallback]) => (
+              <Field key={key} label={t(label)}>
+                <input
+                  type="color"
+                  value={b.pageDecorationDefaults?.[key] || fallback}
+                  onChange={(event) =>
+                    update((next) => {
+                      next.brochure.pageDecorationDefaults ??= {};
+                      next.brochure.pageDecorationDefaults[key] =
+                        event.target.value;
+                    })
+                  }
+                />
+              </Field>
+            ))}
+          </div>
+        </SettingsGroup>
+      )}
       {(["coverBackground", "productBackground", "storesBackground"] as const)
         .filter(
           (key) =>

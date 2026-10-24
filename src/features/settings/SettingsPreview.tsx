@@ -1,3 +1,4 @@
+import { availableBrochurePresets } from "../brochure/brochurePresets";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Product, Campaign } from "../../domain/models";
 import type { WorkspaceSettings } from "./settings.schema";
@@ -64,14 +65,16 @@ export function settingsPreviewCampaign(
           }),
     };
   });
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   return {
     ...campaignDefaults(settings),
     id: "settings-preview",
     name: "Brochure preview",
     type: type.name,
     tagline: type.tagline,
-    startDate: "2026-10-01",
-    endDate: "2026-10-15",
+    startDate: `${month}-01`,
+    endDate: `${month}-15`,
     products,
     coverProductCodes: products.slice(0, 3).map((product) => product.code),
     theme: "blue",
@@ -86,7 +89,9 @@ export function SettingsPreview({
   products = [],
   categoryPath = "",
   pageRequest,
+  presetId,
 }: {
+  presetId?: string;
   pageRequest?: { page: "cover" | "products" | "stores"; revision: number };
   draft: WorkspaceSettings;
   initial: WorkspaceSettings;
@@ -124,6 +129,24 @@ export function SettingsPreview({
   const settings =
     comparison === "saved" ? initial : parsed.success ? draft : lastValid;
   const campaign = settingsPreviewCampaign(settings, products, categoryPath);
+  const selected = availableBrochurePresets(settings).find(
+    (preset) =>
+      preset.id ===
+      (comparison === "saved" ? initial.defaultBrochurePresetId : presetId),
+  );
+  if (selected) {
+    campaign.brochurePresetId = selected.id;
+    campaign.brochureVisualStyle = selected.design.brochureVisualStyle;
+    campaign.tagline = selected.design.tagline ?? campaign.tagline;
+    campaign.coverTextColorOverrides = selected.design.coverTextColorOverrides;
+    campaign.brochureFooter = {
+      ...selected.design.brochureFooter,
+      ...campaign.brochureFooter,
+    };
+    campaign.pageDecorationDefaults =
+      settings.brochure.pageDecorationDefaults ??
+      selected.design.pageDecorationDefaults;
+  }
   const format = resolveBrochureFormat(campaign);
   const content =
     page === "cover" ? (
@@ -222,7 +245,7 @@ export function SettingsPreview({
   );
 }
 
-function PreviewPaper({
+export function PreviewPaper({
   children,
   ratio,
   aspectRatio,

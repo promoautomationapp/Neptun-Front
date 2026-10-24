@@ -21,6 +21,7 @@ it("keeps advanced groups closed, previews logo defaults live, saves color rules
   const settings = resolveSettings(null),
     asset = "/api/assets/00000000-0000-4000-8000-000000000001";
   settings.logoLibrary = [{ id: "one", name: "Blue logo", url: asset }];
+  settings.brochure.showInteriorFooter = true;
   const save = vi.fn(async (value: WorkspaceSettings) => value);
   const view = render(<SettingsEditor initial={settings} onSave={save} />);
   fireEvent.click(view.getByRole("tab", { name: "Logos & icons" }));
@@ -84,6 +85,7 @@ it("renders a selected color logo on the cover and keeps manually selected broch
     },
   ];
   settings.brochure.coverBackground.color = "#ffffff";
+  settings.brochure.coverBackground.gradient = null;
   const campaign = {
     ...campaignDefaults(settings),
     id: "1",

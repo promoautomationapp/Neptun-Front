@@ -26,6 +26,7 @@ it("opens an independent enlarged preview without saving or altering the draft",
   const initial = resolveSettings(null);
   const draft = structuredClone(initial);
   draft.brochure.coverBackground.color = "#112233";
+  draft.brochure.coverBackground.gradient = null;
   const unchanged = JSON.stringify(draft);
   const view = render(
     <SettingsPreview draft={draft} initial={initial} tab="design" />,
@@ -68,7 +69,9 @@ it("renders real backgrounds, logos and price palettes while comparing saved def
     ),
   ).toBeTruthy();
   fireEvent.click(view.getByRole("button", { name: "Saved defaults" }));
-  expect(frame().style.background).toBe("rgb(28, 64, 117)");
+  expect(frame().style.background).toBe(
+    "linear-gradient(110deg, rgb(31, 86, 135), rgb(56, 115, 159))",
+  );
   expect(
     view.container.querySelector(
       `img[src="${draft.brochure.coverLogoSource}"]`,

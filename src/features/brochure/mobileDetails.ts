@@ -2,6 +2,7 @@ import type { Campaign, Product } from "../../domain/models";
 import { isAppleProduct, isMobilePhone } from "./productTypes";
 import { productDesignFor } from "../settings/product-design-defaults";
 import { usesBlueReferencePrice } from "./priceDesign";
+import { isOctoberBrochure } from "./octoberDesign";
 import {
   detailPlainText,
   normalizedDetail,
@@ -24,6 +25,7 @@ export function defaultProductDetailPlacement(
     product.detailPlacement === "bottom"
   )
     return product.detailPlacement;
+  if (isOctoberBrochure(campaign) && isAppleProduct(product)) return "bottom";
   const choice = productDesignFor(campaign).details.placement;
   if (choice !== "automatic") return choice;
   const priceProduct: Product = {

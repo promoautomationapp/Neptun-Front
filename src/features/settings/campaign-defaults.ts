@@ -80,6 +80,12 @@ export function campaignDefaults(
       : {}),
     ...(version !== undefined ? { defaultsVersion: version } : {}),
     ...brochureFormatSelection(b.format, settings.customFormats),
+    ...(b.brochureVisualStyle
+      ? { brochureVisualStyle: b.brochureVisualStyle }
+      : {}),
+    ...(b.pageDecorationDefaults
+      ? { pageDecorationDefaults: structuredClone(b.pageDecorationDefaults) }
+      : {}),
     layout: b.layout,
     autoProductLayout: b.automaticProductLayout,
     productDesign: structuredClone(settings.productDesign),
@@ -96,6 +102,12 @@ export function campaignDefaults(
     pricePalette: structuredClone(b.pricePalette),
     installments: b.installments,
     paymentText: b.paymentText,
+    brochureFooter: {
+      style: b.footerStyle,
+      ...(b.showCoverFooter !== undefined
+        ? { visible: b.showCoverFooter }
+        : {}),
+    },
     showCoverLogo: b.showCoverLogo,
     showCoverBand: b.showCoverBand,
     showCoverHeadline: b.showCoverHeadline,

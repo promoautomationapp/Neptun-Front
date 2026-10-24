@@ -100,8 +100,9 @@ const TEMPLATES = [
 const PRICE_STYLES = [
   { id: "current", label: "Red haPPy offer", detail: "Red price, crossed original and blue installment strip" },
   { id: "card", label: "Blue brochure card", detail: "Savings tab, regular price, haPPy price and monthly amount" },
-  { id: "minimal", label: "Simple red price", detail: "Crossed original and a large red sale price" },
 ];
+const normalizedPriceStyle = (value?: string): string =>
+  value === "card" || value === "compact" ? "card" : "current";
 const DETAIL_STYLES = [
   { id: "chips", label: "Outlined specifications", detail: "Brochure detail tiles with editable text, size and fill" },
   { id: "simple", label: "Brand and name", detail: "Clean product copy without feature chips" },
@@ -406,7 +407,7 @@ export function PostCanvas({
             savingMode === "percentage"
               ? `${discount(product.regular, product.sale)}%`
               : `${money(Number(product.regular) - Number(product.sale))}€`;
-          const priceStyle = product.priceStyle || post.priceStyle || "current";
+          const priceStyle = normalizedPriceStyle(product.offerStyle || product.priceStyle || post.priceStyle);
           const redReferencePrice = usesRedReferencePrice(postPriceProduct(product), priceCampaign);
           const blueReferencePrice = usesBlueReferencePrice(postPriceProduct(product), priceCampaign);
           const offerBlock = (kind: string, className: string, children: React.ReactNode) => <EditableOfferBlock
@@ -1491,7 +1492,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                 </div>
                 <div className="social-choice-heading"><strong>Price design</strong><small>Preview the regular price, saving and 12 month payment together.</small></div>
                 <div className="social-template-grid social-price-choice-grid">
-                  {PRICE_STYLES.map((item) => <button type="button" key={item.id} className={(post.priceStyle || "current") === item.id ? "selected" : ""} aria-pressed={(post.priceStyle || "current") === item.id} onClick={() => update((draft: SocialPost) => { draft.priceStyle = item.id; })}>
+                  {PRICE_STYLES.map((item) => <button type="button" key={item.id} className={normalizedPriceStyle(post.priceStyle) === item.id ? "selected" : ""} aria-pressed={normalizedPriceStyle(post.priceStyle) === item.id} onClick={() => update((draft: SocialPost) => { draft.priceStyle = item.id; })}>
                     <DesignPreview kind="price" id={item.id} />
                     <b>{item.label}</b><small>{item.detail}</small>
                   </button>)}
@@ -2138,7 +2139,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                       </label>
                       <div className="social-field">
                         <span>Price design for this product</span>
-                        <StudioSelect label={`Price design for ${item.name}`} value={item.offerStyle === "compact" ? "card" : item.offerStyle || item.priceStyle || "default"} options={[{ value: "default", label: `Use post design · ${PRICE_STYLES.find((style) => style.id === (post.priceStyle || "current"))?.label}` }, ...PRICE_STYLES.map((style) => ({ value: style.id, label: style.label, detail: style.detail }))]} onChange={(value: string) => update((draft: SocialPost) => { const product = draft.products.find((entry) => entry.code === item.code); if (!product) return; if (value === "default") { delete product.priceStyle; delete product.offerStyle; } else { product.priceStyle = value; product.offerStyle = value; } })} />
+                        <StudioSelect label={`Price design for ${item.name}`} value={item.offerStyle || item.priceStyle ? normalizedPriceStyle(item.offerStyle || item.priceStyle) : "default"} options={[{ value: "default", label: `Use post design · ${PRICE_STYLES.find((style) => style.id === normalizedPriceStyle(post.priceStyle))?.label}` }, ...PRICE_STYLES.map((style) => ({ value: style.id, label: style.label, detail: style.detail }))]} onChange={(value: string) => update((draft: SocialPost) => { const product = draft.products.find((entry) => entry.code === item.code); if (!product) return; if (value === "default") { delete product.priceStyle; delete product.offerStyle; } else { product.priceStyle = value; product.offerStyle = value; } })} />
                       </div>
                       <div className="social-field">
                         <span>Savings badge for this product</span>

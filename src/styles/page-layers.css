@@ -76,3 +76,127 @@
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+.brochure-page .brochure-floating-artworks.editable .page-text-artwork {
+  cursor: default;
+  outline-color: transparent;
+}
+.brochure-page
+  .brochure-floating-artworks.editable
+  .page-text-artwork:is(:hover, :focus-within, .is-selected) {
+  outline: 1px solid #2d8ccb;
+  outline-offset: 4px;
+}
+.brochure-page .page-layer-text[contenteditable="true"] {
+  cursor: text;
+  touch-action: auto;
+  outline: 0;
+  min-height: 1em;
+}
+.brochure-page .page-text-artwork .page-text-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  left: 0;
+  top: -29px;
+  width: auto;
+  height: 23px;
+  min-height: 23px;
+  padding: 2px 6px;
+  border: 1px solid #c9dfec;
+  border-radius: 5px;
+  box-shadow: 0 2px 7px #153a551a;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #264b66);
+  font:
+    600 10px/1 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: grab;
+}
+.brochure-page .page-text-artwork .page-text-move:active {
+  cursor: grabbing;
+}
+.brochure-page .page-text-artwork.is-selected .page-text-move,
+.brochure-page .page-text-artwork.is-selected [data-resize-corner] {
+  opacity: 1;
+}
+.brochure-page .page-text-toolbar {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 12px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: min(330px, 80cqw);
+  min-height: 42px;
+  padding: 6px 9px;
+  border: 1px solid var(--np-border, #d4e1e9);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px #0e2a4633;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #264b66);
+  font:
+    600 11px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: default;
+  pointer-events: auto;
+  z-index: 35;
+}
+.brochure-page .page-text-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.brochure-page .page-text-toolbar input[type="number"] {
+  width: 50px;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 4px;
+  border: 1px solid var(--np-border, #cfdee7);
+  border-radius: 5px;
+  background: var(--np-raised, #f5f9fb);
+  color: inherit;
+  font: inherit;
+}
+.brochure-page .page-text-toolbar input[type="color"] {
+  width: 27px;
+  height: 27px;
+  padding: 1px;
+  border: 1px solid var(--np-border, #cfdee7);
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+}
+.brochure-page .page-text-toolbar button {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: 1px solid #f3c1bc;
+  border-radius: 6px;
+  background: #fff1ef;
+  color: #be463a;
+  box-shadow: none;
+  opacity: 1;
+  cursor: pointer;
+}
+html[data-theme="dark"] .brochure-page .page-text-toolbar button {
+  border-color: #824943;
+  background: #452c2b;
+  color: #ffaaa0;
+}
+@media (max-width: 520px) {
+  .brochure-page .page-text-toolbar {
+    gap: 7px;
+    padding: 5px 7px;
+  }
+  .brochure-page .page-text-toolbar label span {
+    display: none;
+  }
+}

@@ -1,3 +1,9 @@
+import {
+  CornerHandles,
+  resizeFromCorner,
+  type ResizeCorner,
+} from "./resizeCorners";
+import { EditorIcon } from "./EditorIcon";
 import React, { useEffect, useRef, useState } from "react";
 import type { Box, Campaign, Placement } from "../../domain/models";
 import { t } from "./i18n";
@@ -8,6 +14,7 @@ const clamp = (value: number, min: number, max: number) =>
 type StoreGestureAction = "move" | "resize";
 interface StoreGesture {
   action: StoreGestureAction;
+  corner?: ResizeCorner;
   canvas: DOMRect;
   x: number;
   y: number;
@@ -87,6 +94,8 @@ export function StoresElement({
     ref.current?.closest(".cs-page-preview")?.classList.add("dragging-guides");
     gesture.current = {
       action,
+      corner: (event.currentTarget.dataset.resizeCorner ||
+        "bottom-right") as ResizeCorner,
       canvas: canvas.getBoundingClientRect(),
       x: event.clientX,
       y: event.clientY,
@@ -113,22 +122,25 @@ export function StoresElement({
             x: clamp(state.original.x + dx, 0, 100 - state.original.width),
             y: clamp(state.original.y + dy, 0, 100 - state.original.height),
           }
-        : {
-            ...state.original,
-            width: clamp(state.original.width + dx, 3, 100 - state.original.x),
-            height: clamp(
-              state.original.height + dy,
-              2,
-              100 - state.original.y,
-            ),
-          };
+        : resizeFromCorner(state.original, dx, dy, state.corner, {
+            minWidth: 3,
+            minHeight: 2,
+            maxWidth: state.corner?.endsWith("left")
+              ? state.original.x + state.original.width
+              : 100 - state.original.x,
+            maxHeight: state.corner?.startsWith("top")
+              ? state.original.y + state.original.height
+              : 100 - state.original.y,
+          });
     setPlacement(state.next);
   }
   function end(event: React.PointerEvent<HTMLElement>) {
     const state = gesture.current;
     if (!state) return;
     gesture.current = null;
-    ref.current?.closest(".cs-page-preview")?.classList.remove("dragging-guides");
+    ref.current
+      ?.closest(".cs-page-preview")
+      ?.classList.remove("dragging-guides");
     if (event.currentTarget.hasPointerCapture?.(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);
     if (state.next !== state.original) onChange?.(kind, state.next);
@@ -136,7 +148,9 @@ export function StoresElement({
   function cancel() {
     if (gesture.current) setPlacement(gesture.current.original);
     gesture.current = null;
-    ref.current?.closest(".cs-page-preview")?.classList.remove("dragging-guides");
+    ref.current
+      ?.closest(".cs-page-preview")
+      ?.classList.remove("dragging-guides");
   }
   const handlers = (
     action: StoreGestureAction,
@@ -164,6 +178,12 @@ export function StoresElement({
     >
       {children}
       {onChange && (
+        <CornerHandles
+          label={kind}
+          onStart={(event) => start(event, "resize")}
+        />
+      )}
+      {onChange && (
         <div className="stores-element-tools" data-export-hide="true">
           <button
             type="button"
@@ -171,15 +191,7 @@ export function StoresElement({
             title={t("Drag to move")}
             {...handlers("move")}
           >
-            ✥
-          </button>
-          <button
-            type="button"
-            aria-label={`${t("Resize")}: ${kind}`}
-            title={t("Drag to resize")}
-            {...handlers("resize")}
-          >
-            ↘
+            <EditorIcon name="move" />
           </button>
           {onHide && (
             <button
@@ -192,7 +204,7 @@ export function StoresElement({
                 onHide(kind);
               }}
             >
-              ×
+              <EditorIcon name="trash" />
             </button>
           )}
         </div>

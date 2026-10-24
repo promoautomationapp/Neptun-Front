@@ -68,6 +68,39 @@ export function isMacBook(product: Partial<Product> = {}) {
     /^(?:APPLE\s+)?MAC\s*BOOK(?:S|\s+(?:AIR|PRO))?$/.test(subcategory)
   );
 }
+
+/** Device families stay together in the October brochure, even on sparse pages. */
+export function appleProductFamily(product: Partial<Product> = {}) {
+  if (!isAppleProduct(product)) return null;
+  if (isMacBook(product)) return "macbook";
+  const identity = normalized(
+    `${product.name || ""} ${product.subcategory || ""}`,
+  );
+  if (accessory.test(identity)) return "other";
+  if (/\bIPHONE\b/.test(identity)) return "iphone";
+  if (/\bIPAD\b/.test(identity)) return "ipad";
+  return "other";
+}
+
+const accessoryCategory =
+  /\b(?:AK?SESOR\w*|AKESOR\w*|ACCESSOR\w*|PERIPHERALS?|PERIFERI\w*|KUFJE|HEADPHONES?|EARPHONES?|EARBUDS?|KEYBOARDS?|TASTIER\w*|MOUSE|MICE|MAUS\w*|GAMEPADS?|CONTROLLERS?|KONTROLL\w*)\b/;
+const accessoryIdentity =
+  /\b(?:KUFJE|HEADPHONES?|EARPHONES?|EARBUDS?|AIRPODS|BUDS|KEYBOARDS?|TASTIER\w*|MOUSE|MICE|MAUS\w*|GAMEPADS?|CONTROLLERS?|CHARGERS?|CABLES?|KABLLO\w*|POWER\s*BANK|ADAPTORS?|ADAPTERS?|SLEEVES?|PROTECTORS?)\b/;
+const principalDevice =
+  /^(?:(?:GAMING\s+)?(?:LAPTOP|NOTEBOOK|TABLET|SMARTPHONE|TELEFON\w*|TV|TELEVIZOR\w*|MONITOR|DESKTOP|COMPUTER|KOMPJUTER|KONSOLE|CONSOLE)\b)|\b(?:MAC\s*BOOK|IPHONE|IPAD|GALAXY|REDMI\s+(?!BUDS))\b/;
+
+export function isBrochureAccessory(product: Partial<Product> = {}) {
+  // Classify using the most specific category first. A phone or notebook can
+  // have a broad parent category called "Devices and accessories".
+  const subcategory = normalized(product.subcategory);
+  const category = normalized(product.category);
+  const name = normalized(product.name);
+  if (accessoryCategory.test(subcategory)) return true;
+  if (principalDevice.test(subcategory)) return false;
+  if (accessoryIdentity.test(name)) return true;
+  if (principalDevice.test(name)) return false;
+  return accessoryCategory.test(category);
+}
 const otherDevice =
   /\b(?:TABLET\w*|IPAD|LAPTOP|NOTEBOOK|MACBOOK|IMAC|MONITOR|SMARTWATCH|WATCH|TV|TELEVIZOR|TELEFON\w*\s+FIKS)\b/;
 const phoneCategory =

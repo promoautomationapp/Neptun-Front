@@ -9,6 +9,7 @@ import {
   otherScreenInches,
   tvScreenInches,
 } from "../brochure/tvSpecs";
+import { isOctoberBrochure } from "../brochure/octoberDesign";
 
 const baseline = productDesignSchema.parse({});
 
@@ -30,7 +31,17 @@ export function defaultPhotoPlacement(
   if (photo.mode === "custom")
     return { x: photo.x, y: photo.y, scale: photo.scale };
   const television = tvScreenInches(product);
-  const scale = photo.automaticTvSizing ? defaultProductImageScale(product) : 1;
+  const scale = photo.automaticTvSizing
+    ? Math.min(
+        1,
+        defaultProductImageScale(product) /
+          (campaign.brochureFooter?.style === "reference"
+            ? 0.86
+            : isOctoberBrochure(campaign)
+              ? 0.92
+              : 1),
+      )
+    : 1;
   return {
     x: detailPlacement === "left" ? 63 : otherScreenInches(product) ? 46 : 50,
     y: otherScreenInches(product) ? 56 : 50,

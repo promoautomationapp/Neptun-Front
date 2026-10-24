@@ -13,6 +13,8 @@ it("creates brochures from saved defaults with independently editable content", 
   settings.brochure.storesDisplay = "footer";
   settings.brochure.coverBackground.color = "#112233";
   settings.brochure.productBackground.color = "#aabbcc";
+  settings.brochure.productBackground.gradient = null;
+  settings.brochure.coverBackground.gradient = null;
   settings.brochure.showCoverMessage = true;
   settings.brochure.priceLogo = "wordmark";
   settings.stores[0]!.visible = false;

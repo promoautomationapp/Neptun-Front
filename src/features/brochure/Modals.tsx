@@ -1,3 +1,9 @@
+import {
+  BrochurePresetPicker,
+  BrochurePresetPreview,
+} from "./BrochurePresetPicker";
+import { availableBrochurePresets } from "./brochurePresets";
+import type { BrochurePreset } from "./brochurePresets";
 import { FileUpload } from "../../components/FileUpload";
 import { Modal } from "../../components/Modal";
 import { SearchableSelect } from "../../components/SearchableSelect";
@@ -139,6 +145,20 @@ export function CreateCampaign({
   onClose: () => void;
 }) {
   const [initialSettings] = useState(() => resolveSettings(settings));
+  const [presets] = useState(() => availableBrochurePresets(initialSettings));
+  const [selectedPreset, setSelectedPreset] = useState(
+    () =>
+      presets.find(
+        (preset) => preset.id === initialSettings.defaultBrochurePresetId,
+      ) ?? presets[0]!,
+  );
+  const [previewPreset, setPreviewPreset] = useState<BrochurePreset | null>(
+    null,
+  );
+  const initialDesign = selectedPreset.design;
+  const blueDesign =
+    initialDesign.brochureVisualStyle === "october" ||
+    selectedPreset.id === "neptun-october";
   const initialType = defaultCampaignType(initialSettings);
   const typeOptions = visibleCampaignTypes(initialSettings);
   const [type, setType] = useState(initialType.name);
@@ -151,27 +171,35 @@ export function CreateCampaign({
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
   const [dateMode, setDateMode] = useState("range");
   const [backgroundColor, setBackgroundColor] = useState(
-    initialSettings.brochure.productBackground.color,
+    initialDesign.productBackgroundColor ??
+      initialSettings.brochure.productBackground.color,
   );
   const [backgroundGradient, setBackgroundGradient] = useState<Gradient | null>(
-    initialSettings.brochure.productBackground.gradient,
+    initialDesign.productBackgroundGradient === undefined
+      ? initialSettings.brochure.productBackground.gradient
+      : initialDesign.productBackgroundGradient,
   );
   const [backgroundImage, setBackgroundImage] = useState(
-    initialSettings.brochure.productBackground.image,
+    initialDesign.productBackgroundImage ??
+      initialSettings.brochure.productBackground.image,
   );
-  const [layout, setLayout] = useState<string>(initialSettings.brochure.layout);
+  const [layout, setLayout] = useState<string>(
+    initialDesign.layout ?? initialSettings.brochure.layout,
+  );
   const [autoProductLayout, setAutoProductLayout] = useState(
-    initialSettings.brochure.automaticProductLayout,
+    initialDesign.autoProductLayout ??
+      initialSettings.brochure.automaticProductLayout,
   );
   const [brochureFormat, setBrochureFormat] = useState<string>(
-    initialSettings.brochure.format,
+    initialDesign.brochureFormat ?? initialSettings.brochure.format,
   );
   const [tagline, setTagline] = useState(
-    initialSettings.brochure.showCoverMessage ? initialType.tagline : "",
+    initialDesign.tagline ??
+      (initialDesign.showCoverMessage ? initialType.tagline : ""),
   );
   const [taglineEdited, setTaglineEdited] = useState(false);
   const [showCoverBand, setShowCoverBand] = useState(
-    initialSettings.brochure.showCoverBand,
+    initialDesign.showCoverBand ?? initialSettings.brochure.showCoverBand,
   );
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | undefined>(undefined);
@@ -191,6 +219,24 @@ export function CreateCampaign({
   )
     ? "light"
     : "blue";
+  function choosePreset(preset: BrochurePreset) {
+    setSelectedPreset(preset);
+    const d = preset.design;
+    setBackgroundColor(d.productBackgroundColor ?? "");
+    setBackgroundGradient(d.productBackgroundGradient ?? null);
+    setBackgroundImage(d.productBackgroundImage ?? "");
+    setLayout(d.layout ?? "feature3");
+    setAutoProductLayout(d.autoProductLayout ?? true);
+    setBrochureFormat(d.brochureFormat ?? "neptun1080x1350");
+    setShowCoverBand(d.showCoverBand ?? false);
+    setTagline(
+      d.tagline ??
+        (d.showCoverMessage
+          ? (typeOptions.find((item) => item.name === type)?.tagline ?? "")
+          : ""),
+    );
+    setTaglineEdited(false);
+  }
   function chooseBackgroundColor(value: string) {
     setBackgroundColor(value);
     setBackgroundGradient(null);
@@ -208,9 +254,10 @@ export function CreateCampaign({
     setType(value);
     if (!taglineEdited)
       setTagline(
-        initialSettings.brochure.showCoverMessage
-          ? typeOptions.find((item) => item.name === value)?.tagline || ""
-          : "",
+        selectedPreset.design.tagline ??
+          (selectedPreset.design.showCoverMessage
+            ? typeOptions.find((item) => item.name === value)?.tagline || ""
+            : ""),
       );
 
     if (value !== "Other") setName(`${t(value)} ${new Date().getFullYear()}`);
@@ -223,6 +270,8 @@ export function CreateCampaign({
       return setError(t("End date must be on or after the start date."));
     onCreate({
       ...campaignDefaults(initialSettings, undefined, type),
+      ...structuredClone(selectedPreset.design),
+      brochurePresetId: selectedPreset.id,
       id: crypto.randomUUID(),
       name: name.trim(),
       type: type === "Other" ? "Custom campaign" : type,
@@ -270,258 +319,310 @@ export function CreateCampaign({
       />
     );
   return (
-    <Modal
-      title={t("Create a campaign")}
-      kicker={t("01 / CAMPAIGN SETUP")}
-      onClose={onClose}
-      wide
-    >
-      <div className="cs-create-grid cs-create-simple">
-        <div className="cs-create-fields">
-          <div className="cs-campaign-type-picker">
-            <FilterSelect
-              label={t("Campaign type")}
-              value={type}
-              onChange={chooseType}
-              options={[
-                ...typeOptions.map((item) => ({
-                  value: item.name,
-                  label: t(item.name),
-                })),
-                ...(!typeOptions.some(
-                  (item) => item.name === "Custom campaign",
-                ) &&
-                (!initialSettings.defaultCampaignTypeId || !typeOptions.length)
-                  ? [{ value: "Custom campaign", label: t("Custom campaign") }]
-                  : []),
-              ]}
+    <>
+      <Modal
+        title={t("Create a campaign")}
+        kicker={t("01 / CAMPAIGN SETUP")}
+        onClose={onClose}
+        wide
+      >
+        <div className="cs-create-grid cs-create-simple">
+          <div className="cs-create-fields">
+            <BrochurePresetPicker
+              presets={presets}
+              value={selectedPreset.id}
+              onChange={choosePreset}
+              onPreview={setPreviewPreset}
             />
-          </div>
-          <Field label={t("Campaign name")}>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("Your campaign name")}
-            />
-          </Field>
-          <section
-            className="cs-create-products"
-            aria-label={t("Campaign products")}
-          >
-            <div>
-              <strong>{t("Products")}</strong>
-              <small>
-                {importedProducts.length
-                  ? `${importedProducts.length} ${t(importedProducts.length === 1 ? "product ready" : "products ready")}`
-                  : t("Upload an Excel or CSV file to build your brochure.")}
-              </small>
+            {blueDesign && (
+              <div className="cs-preset-upload">
+                <ImageUploadButton
+                  label={t("Cover photograph")}
+                  value={coverImage}
+                  hint={t(
+                    "Upload the first cover photograph. The NEPTUN logo and blue campaign band stay separate and editable.",
+                  )}
+                  onFile={async (file: File) =>
+                    setCoverImage(await readImage(file))
+                  }
+                  onRemove={() => setCoverImage("")}
+                />
+                {coverImage && (
+                  <div className="cs-cover-thumb">
+                    <img src={coverImage} alt={t("Your cover photograph")} />
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="cs-campaign-type-picker">
+              <FilterSelect
+                label={t("Campaign type")}
+                value={type}
+                onChange={chooseType}
+                options={[
+                  ...typeOptions.map((item) => ({
+                    value: item.name,
+                    label: t(item.name),
+                  })),
+                  ...(!typeOptions.some(
+                    (item) => item.name === "Custom campaign",
+                  ) &&
+                  (!initialSettings.defaultCampaignTypeId ||
+                    !typeOptions.length)
+                    ? [
+                        {
+                          value: "Custom campaign",
+                          label: t("Custom campaign"),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             </div>
-            <FileUpload
-              accept=".csv,.xlsx,.xls"
-              aria-label={t(
-                importedProducts.length
-                  ? "Replace products"
-                  : "Upload products",
-              )}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (file) {
-                  setImportFile(file);
-                  setImportOpen(true);
-                }
-              }}
+            <Field label={t("Campaign name")}>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={t("Your campaign name")}
+              />
+            </Field>
+            <section
+              className="cs-create-products"
+              aria-label={t("Campaign products")}
             >
-              {t(
-                importedProducts.length
-                  ? "Replace products"
-                  : "Upload products",
-              )}
-            </FileUpload>
-            {importedProducts.length > 0 && (
-              <button
-                type="button"
-                className="cs-create-products-clear"
-                onClick={() => {
-                  setImportedProducts([]);
-                  setImportMetadata(null);
+              <div>
+                <strong>{t("Products")}</strong>
+                <small>
+                  {importedProducts.length
+                    ? `${importedProducts.length} ${t(importedProducts.length === 1 ? "product ready" : "products ready")}`
+                    : t("Upload an Excel or CSV file to build your brochure.")}
+                </small>
+              </div>
+              <FileUpload
+                accept=".csv,.xlsx,.xls"
+                aria-label={t(
+                  importedProducts.length
+                    ? "Replace products"
+                    : "Upload products",
+                )}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) {
+                    setImportFile(file);
+                    setImportOpen(true);
+                  }
                 }}
               >
-                {t("Remove")}
-              </button>
-            )}
-          </section>
-          <div
-            className="cs-date-mode"
-            role="group"
-            aria-label={t("Campaign duration")}
-          >
-            <button
-              type="button"
-              className={dateMode === "single" ? "active" : ""}
-              aria-pressed={dateMode === "single"}
-              onClick={() => setDateMode("single")}
-            >
-              {t("One day")}
-            </button>
-            <button
-              type="button"
-              className={dateMode === "range" ? "active" : ""}
-              aria-pressed={dateMode === "range"}
-              onClick={() => {
-                setDateMode("range");
-                if (endDate < startDate) setEndDate(startDate);
-              }}
-            >
-              {t("Date range")}
-            </button>
-          </div>
-          <div
-            className={dateMode === "single" ? "cs-one-date" : "cs-two-fields"}
-          >
-            <FilterDate
-              label={t(dateMode === "single" ? "Campaign date" : "Start date")}
-              value={startDate}
-              onChange={(value: string) => {
-                setStartDate(value);
-                if (dateMode === "range" && endDate < value) setEndDate(value);
-              }}
-            />
-            {dateMode === "range" && (
-              <FilterDate
-                label={t("End date")}
-                value={endDate}
-                min={startDate || undefined}
-                onChange={setEndDate}
-              />
-            )}
-          </div>
-          <BrochureFormatPicker
-            value={brochureFormat}
-            customFormats={initialSettings.customFormats}
-            onChange={setBrochureFormat}
-          />
-
-          <details className="cs-create-options">
-            <summary>
-              <span className="cs-create-settings-icon" aria-hidden="true">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                  <circle cx="8" cy="6" r="2" fill="#edf5fa" />
-                  <circle cx="16" cy="12" r="2" fill="#edf5fa" />
-                  <circle cx="10" cy="18" r="2" fill="#edf5fa" />
-                </svg>
-              </span>
-              <span>
-                {t("Customize design (optional)")}
-                <small>{t("Colors, cover and layout")}</small>
-              </span>
-              <span className="cs-create-settings-chevron" aria-hidden="true">
-                ⌄
-              </span>
-            </summary>
-            <div>
-              <label className="cs-create-cover-band">
-                <input
-                  type="checkbox"
-                  checked={showCoverBand}
-                  onChange={(event) => setShowCoverBand(event.target.checked)}
-                />
-                <span>{t("Show UUU / hajde! section")}</span>
-              </label>
-              <Field label={t("Cover message")}>
-                <input
-                  value={tagline}
-                  onChange={(event) => {
-                    setTaglineEdited(true);
-                    setTagline(event.target.value);
+                {t(
+                  importedProducts.length
+                    ? "Replace products"
+                    : "Upload products",
+                )}
+              </FileUpload>
+              {importedProducts.length > 0 && (
+                <button
+                  type="button"
+                  className="cs-create-products-clear"
+                  onClick={() => {
+                    setImportedProducts([]);
+                    setImportMetadata(null);
                   }}
-                  placeholder={t("A short message for the cover")}
-                />
-              </Field>
-              <ImageUploadButton
-                label={t("Cover artwork")}
-                hint={t(
-                  "Each campaign has its own cover image. PNG or JPG recommended.",
-                )}
-                value={coverImage}
-                onFile={async (file: File) =>
-                  setCoverImage(await readImage(file))
-                }
-                onRemove={() => setCoverImage("")}
-              />
-              {coverImage && (
-                <div className="cs-cover-thumb">
-                  <img src={coverImage} alt="Campaign cover preview" />
-                  <button type="button" onClick={() => setCoverImage("")}>
-                    {t("Remove image")}
-                  </button>
-                </div>
+                >
+                  {t("Remove")}
+                </button>
               )}
+            </section>
+            <div
+              className="cs-date-mode"
+              role="group"
+              aria-label={t("Campaign duration")}
+            >
+              <button
+                type="button"
+                className={dateMode === "single" ? "active" : ""}
+                aria-pressed={dateMode === "single"}
+                onClick={() => setDateMode("single")}
+              >
+                {t("One day")}
+              </button>
+              <button
+                type="button"
+                className={dateMode === "range" ? "active" : ""}
+                aria-pressed={dateMode === "range"}
+                onClick={() => {
+                  setDateMode("range");
+                  if (endDate < startDate) setEndDate(startDate);
+                }}
+              >
+                {t("Date range")}
+              </button>
             </div>
-            <div className="cs-create-design">
-              <span className="cs-label">{t("BROCHURE DIRECTION")}</span>
-              <h3>{t("Choose a foundation.")}</h3>
-              <p>
-                {t(
-                  "Every page keeps the NEPTUN identity, offer price system and campaign dates.",
+            <div
+              className={
+                dateMode === "single" ? "cs-one-date" : "cs-two-fields"
+              }
+            >
+              <FilterDate
+                label={t(
+                  dateMode === "single" ? "Campaign date" : "Start date",
                 )}
-              </p>
-              <p className="cs-muted">
-                {t("Inside pages background")} ·{" "}
-                {t(
-                  "The cover keeps its own background. Change it separately in cover settings.",
-                )}
-              </p>
-              <BackgroundPicker
-                compact
-                color={backgroundColor}
-                defaultColor="#245b89"
-                gradient={backgroundGradient}
-                image={backgroundImage}
-                onChange={chooseBackgroundColor}
-                onGradientChange={chooseBackgroundGradient}
-                onImageChange={chooseBackgroundImage}
-                scopeLabel="Default product pages"
-              />
-              <span className="cs-label">{t("Grid")}</span>
-              <BrochureGridPicker
-                value={layout}
-                onChange={(value) => {
-                  setLayout(value);
-                  setAutoProductLayout(false);
+                value={startDate}
+                onChange={(value: string) => {
+                  setStartDate(value);
+                  if (dateMode === "range" && endDate < value)
+                    setEndDate(value);
                 }}
               />
-              {autoProductLayout && (
-                <p className="cs-control-help">
-                  {t("MacBooks use two products per row by default.")}
-                </p>
+              {dateMode === "range" && (
+                <FilterDate
+                  label={t("End date")}
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={setEndDate}
+                />
               )}
-              <p className="cs-create-design-reminder">
-                {t(
-                  "Background and grid can be changed later. Run AI again after changing the background.",
-                )}
-              </p>
             </div>
-          </details>
+            <BrochureFormatPicker
+              value={brochureFormat}
+              customFormats={initialSettings.customFormats}
+              onChange={setBrochureFormat}
+            />
+
+            <details className="cs-create-options">
+              <summary>
+                <span className="cs-create-settings-icon" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  >
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                    <circle cx="8" cy="6" r="2" fill="#edf5fa" />
+                    <circle cx="16" cy="12" r="2" fill="#edf5fa" />
+                    <circle cx="10" cy="18" r="2" fill="#edf5fa" />
+                  </svg>
+                </span>
+                <span>
+                  {t("Customize design (optional)")}
+                  <small>{t("Colors, cover and layout")}</small>
+                </span>
+                <span className="cs-create-settings-chevron" aria-hidden="true">
+                  ⌄
+                </span>
+              </summary>
+              <div>
+                <label className="cs-create-cover-band">
+                  <input
+                    type="checkbox"
+                    checked={showCoverBand}
+                    onChange={(event) => setShowCoverBand(event.target.checked)}
+                  />
+                  <span>{t("Show UUU / hajde! section")}</span>
+                </label>
+                <Field label={t("Cover message")}>
+                  <input
+                    value={tagline}
+                    onChange={(event) => {
+                      setTaglineEdited(true);
+                      setTagline(event.target.value);
+                    }}
+                    placeholder={t("A short message for the cover")}
+                  />
+                </Field>
+                {!blueDesign && (
+                  <ImageUploadButton
+                    label={t("Cover artwork")}
+                    hint={t(
+                      "Each campaign has its own cover image. PNG or JPG recommended.",
+                    )}
+                    value={coverImage}
+                    onFile={async (file: File) =>
+                      setCoverImage(await readImage(file))
+                    }
+                    onRemove={() => setCoverImage("")}
+                  />
+                )}
+                {coverImage && !blueDesign && (
+                  <div className="cs-cover-thumb">
+                    <img src={coverImage} alt="Campaign cover preview" />
+                    <button type="button" onClick={() => setCoverImage("")}>
+                      {t("Remove image")}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="cs-create-design">
+                <span className="cs-label">{t("BROCHURE DIRECTION")}</span>
+                <h3>{t("Choose a foundation.")}</h3>
+                <p>
+                  {t(
+                    "Every page keeps the NEPTUN identity, offer price system and campaign dates.",
+                  )}
+                </p>
+                <p className="cs-muted">
+                  {t("Inside pages background")} ·{" "}
+                  {t(
+                    "The cover keeps its own background. Change it separately in cover settings.",
+                  )}
+                </p>
+                <BackgroundPicker
+                  compact
+                  color={backgroundColor}
+                  defaultColor="#245b89"
+                  gradient={backgroundGradient}
+                  image={backgroundImage}
+                  onChange={chooseBackgroundColor}
+                  onGradientChange={chooseBackgroundGradient}
+                  onImageChange={chooseBackgroundImage}
+                  scopeLabel="Default product pages"
+                />
+                <span className="cs-label">{t("Grid")}</span>
+                <BrochureGridPicker
+                  value={layout}
+                  onChange={(value) => {
+                    setLayout(value);
+                    setAutoProductLayout(false);
+                  }}
+                />
+                {autoProductLayout && (
+                  <p className="cs-control-help">
+                    {t("MacBooks use two products per row by default.")}
+                  </p>
+                )}
+                <p className="cs-create-design-reminder">
+                  {t(
+                    "Background and grid can be changed later. Run AI again after changing the background.",
+                  )}
+                </p>
+              </div>
+            </details>
+          </div>
         </div>
-      </div>
-      {error && <p className="cs-error">{error}</p>}
-      <div className="cs-modal-actions">
-        <Button onClick={onClose}>{t("Cancel")}</Button>
-        <Button tone="primary" onClick={create}>
-          {t("Create campaign →")}
-        </Button>
-      </div>
-    </Modal>
+        {error && <p className="cs-error">{error}</p>}
+        <div className="cs-modal-actions">
+          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button tone="primary" onClick={create}>
+            {t("Create campaign →")}
+          </Button>
+        </div>
+      </Modal>
+      {previewPreset && (
+        <BrochurePresetPreview
+          preset={previewPreset}
+          settings={initialSettings}
+          onClose={() => setPreviewPreset(null)}
+          onUse={() => {
+            choosePreset(previewPreset);
+            setPreviewPreset(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -1600,7 +1701,9 @@ export function Details({
   onProductChange,
   onImageEdit,
   onClose,
+  focusDetailKey,
 }: {
+  focusDetailKey?: string;
   canLoadCatalogPhotos?: boolean;
   product: Product;
   campaign?: Campaign;
@@ -1615,6 +1718,44 @@ export function Details({
   onImageEdit?: () => void;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    if (!focusDetailKey) return;
+    const frame = requestAnimationFrame(() => {
+      const rows = [
+        ...document.querySelectorAll<HTMLElement>("[data-detail-editor-key]"),
+      ];
+      const row = rows.find(
+        (element) => element.dataset.detailEditorKey === focusDetailKey,
+      );
+      const field = row?.querySelector<HTMLInputElement>("input:last-of-type");
+      if (field) {
+        row?.scrollIntoView?.({ block: "center" });
+        field.focus();
+        field.select();
+        return;
+      }
+      const textarea = document.querySelector<HTMLTextAreaElement>(
+        "[data-brochure-details-editor]",
+      );
+      if (textarea) {
+        const entries = savedDetailEntries(originalProduct) || [];
+        const index = entries.findIndex(
+          ([key]) => String(key) === focusDetailKey,
+        );
+        const lines = textarea.value.split("\n"),
+          start = lines
+            .slice(0, Math.max(0, index))
+            .reduce((length, line) => length + line.length + 1, 0);
+        textarea.scrollIntoView?.({ block: "center" });
+        textarea.focus();
+        textarea.setSelectionRange(
+          start,
+          start + (lines[Math.max(0, index)]?.length || 0),
+        );
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusDetailKey, originalProduct.code]);
   const catalogPhotos = useCatalogPhotos(
     originalProduct.catalogMissing || !canLoadCatalogPhotos
       ? undefined
@@ -1930,6 +2071,7 @@ export function Details({
                       }),
                     )
                   }
+                  data-brochure-details-editor="true"
                   aria-label={t("Brochure details, one per line")}
                 />
               </>
@@ -1941,7 +2083,11 @@ export function Details({
                   )}
                 </p>
                 {savedSpecs.map(([key, value], index) => (
-                  <div className="cs-spec-edit-row" key={index}>
+                  <div
+                    className="cs-spec-edit-row"
+                    key={index}
+                    data-detail-editor-key={String(key)}
+                  >
                     <input
                       aria-label={`${t("Detail label")} ${index + 1}`}
                       value={key}

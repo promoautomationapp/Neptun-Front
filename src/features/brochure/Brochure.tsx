@@ -1,3 +1,15 @@
+import { EditorIcon } from "./EditorIcon";
+import { PageDecorations, type PageDecorationChange } from "./PageDecorations";
+import { isOctoberBrochure, OCTOBER_ASSETS } from "./octoberDesign";
+import { ActionMenu } from "./ActionMenu";
+import { ImageCornerHandles } from "./ImageCornerHandles";
+import {
+  CornerHandles,
+  resizeFromCorner,
+  type ResizeCorner,
+} from "./resizeCorners";
+import { inlineText } from "./inlineText";
+import { useProductQuickEdit } from "./InlinePriceEditor";
 import { COVER_OPTIONS } from "../settings/options";
 import { stableMeasurement } from "./layoutObservation";
 import { logoForBackground } from "../settings/logo-rules";
@@ -130,6 +142,7 @@ import defaultStores from "../../config/stores.defaults.json";
 import "../../styles/mobile-details.css";
 import "../../styles/brochure-detail-strip.css";
 import "../../styles/background-readability.css";
+import "../../styles/brochure-october.css";
 import { visibleImageBounds, televisionScreenBox } from "./screenGeometry";
 import {
   televisionAnnotationBaseBox,
@@ -168,12 +181,12 @@ export const installmentCount = (campaign: Pick<Campaign, "installments">) =>
     Math.max(1, Number.parseInt(String(campaign.installments), 10) || 12),
   );
 export const paymentTextFor = (
-  campaign: Pick<Campaign, "paymentText" | "installments">,
+  campaign: Pick<Campaign, "paymentText" | "installments" | "brochureFooter">,
 ) =>
   campaign.paymentText?.trim() &&
   campaign.paymentText.trim() !== DEFAULT_PAYMENT_TEXT
     ? campaign.paymentText.trim()
-    : `Paguan deri në ${installmentCount(campaign)} këste me 0% interes.`;
+    : `${campaign.brochureFooter?.style === "reference" ? "Paguani" : "Paguan"} deri në ${installmentCount(campaign)} këste me 0% interes.`;
 /** Selectable styles contain only logo-free artwork. Legacy photo remains render-only. */
 export const COVER_TEMPLATES = COVER_OPTIONS.map(({ image, ...option }) => ({
   ...option,
@@ -318,6 +331,7 @@ interface LayoutHandlesProps {
 }
 interface LayoutGesture {
   type: string;
+  corner?: ResizeCorner;
   element: HTMLElement;
   card: DOMRect;
   page: DOMRect;
@@ -403,6 +417,7 @@ function LayoutHandles({
       Object.assign(element.style, regionStyle(initial));
     gesture.current = {
       type,
+      corner: (handle.dataset.resizeCorner || "bottom-right") as ResizeCorner,
       element,
       card,
       page,
@@ -443,23 +458,33 @@ function LayoutHandles({
               ),
             ),
           }
-        : {
-            ...action.initial,
-            width: Math.max(
-              minimumWidth,
-              Math.min(
-                100,
-                action.initial.width + (dx / action.widthReference) * 100,
-              ),
-            ),
-            height: Math.max(
-              2,
-              Math.min(
-                30,
-                action.initial.height + (dy / action.page.width) * 100,
-              ),
-            ),
-          };
+        : (() => {
+            const ratio = action.page.width / action.widthReference;
+            const frame = {
+              x: action.initial.x * ratio,
+              y: action.initial.y * ratio,
+              width: action.initial.width,
+              height: action.initial.height * ratio,
+            };
+            const value = resizeFromCorner(
+              frame,
+              (dx / action.widthReference) * 100,
+              (dy / action.widthReference) * 100,
+              action.corner,
+              {
+                minWidth: minimumWidth,
+                maxWidth: 100,
+                minHeight: 2 * ratio,
+                maxHeight: 30 * ratio,
+              },
+            );
+            return {
+              x: value.x / ratio,
+              y: value.y / ratio,
+              width: value.width,
+              height: value.height / ratio,
+            };
+          })();
     action.next = next;
     Object.assign(action.element.style, regionStyle(next));
     setDimensions(
@@ -557,22 +582,13 @@ function LayoutHandles({
         onLostPointerCapture={(event) => end(event, true)}
         onClick={(event) => event.stopPropagation()}
       >
-        ✥
+        <EditorIcon name="move" />
       </button>
-      <button
-        type="button"
+      <CornerHandles
+        label={`${kind}: ${product.name}`}
         className="cs-region-handle resize"
-        title={t("Resize width and height")}
-        aria-label={`${t("Resize")} ${kind}: ${product.name}`}
-        onPointerDown={(event) => begin(event, "resize")}
-        onPointerMove={move}
-        onPointerUp={end}
-        onPointerCancel={(event) => end(event, true)}
-        onLostPointerCapture={(event) => end(event, true)}
-        onClick={(event) => event.stopPropagation()}
-      >
-        ↘
-      </button>
+        onStart={(event) => begin(event, "resize")}
+      />
     </span>
   );
 }
@@ -751,7 +767,7 @@ function Price({
 
 export interface ProductEditingProps {
   onEditImage?: (product: Product) => void;
-  onEditDetails?: (product: Product) => void;
+  onEditDetails?: (product: Product, detailKey?: string) => void;
   onEditPrice?: (product: Product) => void;
   onEditSavings?: (product: Product) => void;
   onEditScreen?: (product: Product) => void;
@@ -795,6 +811,7 @@ export interface ProductEditingProps {
   dropCode?: string | null;
 }
 interface ProductCardProps extends ProductEditingProps {
+  quickEdit?: ReturnType<typeof useProductQuickEdit>;
   campaign: Campaign;
   product: Product;
   light?: boolean;
@@ -802,6 +819,7 @@ interface ProductCardProps extends ProductEditingProps {
   priceLogo: string;
   installments: number;
   layout?: string;
+  gridIndex?: number;
   pageColor?: string;
 }
 export interface BrochurePageProps extends ProductEditingProps {
@@ -810,6 +828,18 @@ export interface BrochurePageProps extends ProductEditingProps {
   settings?: Settings;
   onArtworkChange?: PageArtworkProps["onChange"];
   onArtworkRemove?: PageArtworkProps["onRemove"];
+  onReplaceCoverLogo?: (file: File) => void;
+  onReplaceCoverPhoto?: (file: File) => void;
+  onReplaceCoverArtwork?: (key: string, file: File) => void;
+  onPageDecorationChange?: PageDecorationChange;
+  onCoverTextChange?: (
+    field: "coverHeadline" | "type" | "tagline" | "coverBrandTagline",
+    value: string,
+  ) => void;
+  onFooterTextChange?: (
+    field: "dateText" | "paymentText",
+    value: string,
+  ) => void;
   onCoverElementChange?: CoverElementProps["onChange"];
   onCoverElementHide?: CoverElementProps["onHide"];
   onStoresFooterChange?: CompactStoresFooterProps["onChange"];
@@ -822,6 +852,8 @@ export interface ProductPageProps extends BrochurePageProps {
   page: BrochurePage;
 }
 interface ImageGesture {
+  corner?: ResizeCorner;
+  imageRect?: DOMRect;
   type: "move" | "scale";
   x: number;
   y: number;
@@ -841,16 +873,25 @@ interface CardGesture {
   next?: { width: number; height: number };
 }
 function ProductCard(props: ProductCardProps) {
+  const quickEdit = useProductQuickEdit({
+    campaign: props.campaign,
+    product: props.product,
+    onChange: props.onProductChange
+      ? (changes) => props.onProductChange?.(props.product, changes)
+      : undefined,
+    onEditImage: props.onEditImage,
+  });
   return isLargeBundleOffer(props.product) ? (
-    <LargeBundleProductCard {...props} />
+    <LargeBundleProductCard {...props} quickEdit={quickEdit} />
   ) : (
-    <StandardProductCard {...props} />
+    <StandardProductCard {...props} quickEdit={quickEdit} />
   );
 }
 function LargeBundleProductCard(props: ProductCardProps) {
   const {
     campaign,
     product,
+    quickEdit,
     light,
     priceLogo,
     installments,
@@ -872,7 +913,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
   } = props;
   const photoAreaRef = React.useRef<HTMLDivElement>(null);
   const contentPlacement = product.brochureContentPlacement || {};
-  const size = cardSize(product, layout || "classic8");
+  const size = cardSize(product, layout || "classic8", props.gridIndex);
   const brandLogo = product.brandLogo || brandLogoFor(campaign, product.brand);
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
@@ -907,6 +948,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
     ) : null;
   return (
     <article
+      {...quickEdit?.events}
       data-custom-product-font={
         productDesignFor(campaign).typography.font !== "automatic"
           ? "true"
@@ -922,6 +964,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
       onDrop={(event) => onProductDrop?.(product, event)}
       onDragEnd={onProductDragEnd}
     >
+      {quickEdit?.editor}
       <LargeBundleOffer
         product={product}
         editable={Boolean(onEditImage || onProductChange)}
@@ -1080,6 +1123,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
 function StandardProductCard({
   campaign,
   product,
+  quickEdit,
   light = false,
   hero = false,
   priceLogo,
@@ -1097,6 +1141,7 @@ function StandardProductCard({
   onReorderDetails,
   onProductChange,
   layout,
+  gridIndex,
   onProductDragStart,
   onProductDragEnd,
   onProductDragOver,
@@ -1140,7 +1185,10 @@ function StandardProductCard({
   // Apple's orange price uses HTML, but its current design still uses the
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
-  const warrantyInStrip = referenceStrip && detailPlacement !== "left";
+  const warrantyInStrip =
+    !isOctoberBrochure(campaign) &&
+    referenceStrip &&
+    detailPlacement !== "left";
   const preferredSpecs = importedSpecs
     ? allSpecs
     : brochureDefaultDetailEntries(product, allSpecs);
@@ -1167,15 +1215,15 @@ function StandardProductCard({
     product.brochureImagePlacement || null,
   );
   const [size, setSize] = React.useState(
-    cardSize(product, layout || "classic8"),
+    cardSize(product, layout || "classic8", gridIndex),
   );
   React.useEffect(
     () => setPlacement(product.brochureImagePlacement || null),
     [product.brochureImagePlacement],
   );
   React.useEffect(
-    () => setSize(cardSize(product, layout || "classic8")),
-    [product.brochureCardSize, layout],
+    () => setSize(cardSize(product, layout || "classic8", gridIndex)),
+    [product.brochureCardSize, layout, gridIndex],
   );
   const fittedImagePlacement = useProductImageFit({
     imageRef,
@@ -1206,6 +1254,9 @@ function StandardProductCard({
       x: event.clientX,
       y: event.clientY,
       rect,
+      corner: (event.currentTarget.dataset.resizeCorner ||
+        "bottom-right") as ResizeCorner,
+      imageRect: imageRef.current?.getBoundingClientRect(),
       initial: {
         x: fittedImagePlacement.x ?? 50,
         y: fittedImagePlacement.y ?? 50,
@@ -1236,28 +1287,42 @@ function StandardProductCard({
               Math.min(100, action.initial.y + (dy / action.rect.height) * 100),
             ),
           }
-        : {
-            ...action.initial,
-            scale: Math.max(
-              0.2,
-              Math.min(
-                2.5,
-                action.initial.scale +
-                  (dx + dy) / Math.max(action.rect.width, action.rect.height),
-              ),
-            ),
-          };
+        : (() => {
+            const frame = action.imageRect;
+            if (!frame?.width || !frame.height) return action.initial;
+            const next = resizeFromCorner(
+              {
+                x: frame.left - action.rect.left,
+                y: frame.top - action.rect.top,
+                width: frame.width,
+                height: frame.height,
+              },
+              dx,
+              dy,
+              action.corner,
+              {
+                lockAspect: true,
+                minWidth: (frame.width * 0.2) / action.initial.scale,
+                maxWidth: (frame.width * 2.5) / action.initial.scale,
+              },
+            );
+            return {
+              x: ((next.x + next.width / 2) / action.rect.width) * 100,
+              y: ((next.y + next.height / 2) / action.rect.height) * 100,
+              scale: (action.initial.scale * next.width) / frame.width,
+            };
+          })();
     setPlacement(action.next);
   }
   function endImageGesture(
     event:
       | React.PointerEvent<HTMLButtonElement>
-      | React.PointerEvent<HTMLImageElement>,
+      | React.PointerEvent<HTMLImageElement>
+      | React.PointerEvent<HTMLDivElement>,
     cancelled = false,
   ) {
     if (!gesture.current || gesture.current.type === "card") return;
     const next = gesture.current.next;
-    const type = gesture.current.type;
     event.stopPropagation();
     event.currentTarget
       .closest(".cs-page-preview")
@@ -1265,7 +1330,6 @@ function StandardProductCard({
     gesture.current = null;
     if (cancelled) setPlacement(product.brochureImagePlacement || null);
     else if (next) onPlaceImage?.(product, next);
-    else if (type === "move" && onEditImage) onEditImage(product);
   }
   function beginCardGesture(event: React.PointerEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -1322,7 +1386,7 @@ function StandardProductCard({
     event.currentTarget
       .closest(".cs-page-preview")
       ?.classList.remove("dragging-guides");
-    if (cancelled) setSize(cardSize(product, layout || "classic8"));
+    if (cancelled) setSize(cardSize(product, layout || "classic8", gridIndex));
     else if (next) onResizeCard?.(product, next);
   }
   const [screenCorner, writeScreenCorner] = React.useState<{
@@ -1335,10 +1399,16 @@ function StandardProductCard({
   } | null>(null);
   const [screenOverlay, writeScreenOverlay] =
     React.useState<React.CSSProperties | null>(null);
-  const setScreenCorner = React.useCallback((next: typeof screenCorner) =>
-    writeScreenCorner((current) => stableMeasurement(current, next)), []);
-  const setScreenOverlay = React.useCallback((next: React.CSSProperties | null) =>
-    writeScreenOverlay((current) => stableMeasurement(current, next)), []);
+  const setScreenCorner = React.useCallback(
+    (next: typeof screenCorner) =>
+      writeScreenCorner((current) => stableMeasurement(current, next)),
+    [],
+  );
+  const setScreenOverlay = React.useCallback(
+    (next: React.CSSProperties | null) =>
+      writeScreenOverlay((current) => stableMeasurement(current, next)),
+    [],
+  );
   React.useLayoutEffect(() => {
     if (
       !product.screenArtwork?.image ||
@@ -1499,6 +1569,10 @@ function StandardProductCard({
   ]);
   return (
     <article
+      {...quickEdit?.events}
+      data-blue-reference-defaults={
+        isOctoberBrochure(campaign) ? "true" : undefined
+      }
       className={`brochure-product style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${detailPlacement === "left" ? "details-left" : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
       onDragOver={(event) => {
         if (
@@ -1527,6 +1601,7 @@ function StandardProductCard({
       data-product-divider-hidden={
         !productDesign.divider.visible ? "true" : undefined
       }
+      data-apple-product={isAppleProduct(product) ? "true" : undefined}
       data-default-layout={
         redReference && !Object.values(contentPlacement).some(Boolean)
           ? "true"
@@ -1535,7 +1610,10 @@ function StandardProductCard({
       style={{
         position: "relative",
         ...productTypographyStyle(campaign),
-        ...(onResizeCard || product.brochureCardSize
+        ...(onResizeCard ||
+        product.brochureCardSize ||
+        layout === "tv8" ||
+        layout === "feature3"
           ? { gridColumn: `span ${size.width}`, gridRow: `span ${size.height}` }
           : {}),
         "--detail-strip-columns": Math.max(
@@ -1544,6 +1622,7 @@ function StandardProductCard({
         ),
       }}
     >
+      {quickEdit?.editor}
       {onEditImage && (
         <MissingCatalogNotice
           product={product}
@@ -1554,6 +1633,14 @@ function StandardProductCard({
       <div
         className={`brochure-product-image-wrap ${product.showImage === false ? "brochure-photo-hidden" : ""}`}
         ref={wrapRef}
+        onPointerMove={onPlaceImage ? moveImageGesture : undefined}
+        onPointerUp={onPlaceImage ? endImageGesture : undefined}
+        onPointerCancel={
+          onPlaceImage ? (event) => endImageGesture(event, true) : undefined
+        }
+        onLostPointerCapture={
+          onPlaceImage ? (event) => endImageGesture(event, true) : undefined
+        }
         onDragEnter={
           onDropImage
             ? (event) => {
@@ -1611,6 +1698,7 @@ function StandardProductCard({
             >
               <img
                 className="brochure-product-image"
+                draggable={false}
                 ref={imageRef}
                 src={product.image}
                 alt={product.name}
@@ -1660,7 +1748,8 @@ function StandardProductCard({
             aria-hidden="true"
             style={{
               ...screenOverlay,
-              objectFit: product.screenArtwork.fit || "cover",
+              objectFit: product.screenArtwork.fit || "contain",
+              background: "#000",
             }}
           />
         )}
@@ -1692,6 +1781,21 @@ function StandardProductCard({
             className="brochure-red-reference-saving"
             onEditSavings={onEditSavings}
             style={{
+              ...(campaign.brochureFooter?.style === "reference" &&
+              hero &&
+              screenOverlay &&
+              !contentPlacement.saving
+                ? {
+                    left:
+                      Number(screenOverlay.left) + Number(screenOverlay.width),
+                    top:
+                      Number(screenOverlay.top) +
+                      Number(screenOverlay.height) * 0.58,
+                    right: "auto",
+                    width: "9cqw",
+                    transform: "translate(-50%, -50%)",
+                  }
+                : {}),
               ...regionStyle(contentPlacement.saving),
               ...defaultRegionScale(
                 campaign,
@@ -1754,44 +1858,24 @@ function StandardProductCard({
           </button>
         )}
         {onPlaceImage && product.image && !isBundleOffer(product) && (
-          <button
-            type="button"
-            className="cs-image-scale-handle"
-            title={t("Drag to resize image")}
-            aria-label={`${t("Resize image")}: ${product.name}`}
-            onPointerDown={(event) => beginImageGesture(event, "scale")}
-            onPointerMove={moveImageGesture}
-            onPointerUp={endImageGesture}
-            onPointerCancel={(event) => endImageGesture(event, true)}
-            onLostPointerCapture={(event) => endImageGesture(event, true)}
-          >
-            ↘
-          </button>
+          <ImageCornerHandles
+            imageRef={imageRef}
+            areaRef={wrapRef}
+            revision={fittedImagePlacement}
+            label={`${t("Image")}: ${product.name}`}
+            onStart={(event) => beginImageGesture(event, "scale")}
+          />
         )}
         {(onEditImage || onEditDetails || onMove) && (
-          <div
-            className="cs-product-edit-pins"
-            aria-label={`${t("Edit product")}: ${product.name}`}
+          <ActionMenu
+            className="cs-product-tools"
+            label={
+              <>
+                <EditorIcon name="edit" />
+                {t("Edit product")}
+              </>
+            }
           >
-            {onLayoutRegion &&
-              validSale(product) &&
-              (usesRedReferencePrice(product, campaign) ||
-                (!usesBlueReferencePrice(product, campaign) &&
-                  (style === "current" || style === "minimal"))) && (
-                <LayoutHandles
-                  product={product}
-                  kind="saving"
-                  placement={contentPlacement.saving}
-                  onChange={onLayoutRegion}
-                  baseWidth={24}
-                  targetSelector={
-                    usesRedReferencePrice(product, campaign)
-                      ? ".brochure-red-reference-saving"
-                      : ".brochure-saving"
-                  }
-                  toolbar
-                />
-              )}
             {onEditImage && (
               <button
                 type="button"
@@ -1799,7 +1883,8 @@ function StandardProductCard({
                 title={t("Change image")}
                 aria-label={`${t("Change image")}: ${product.name}`}
               >
-                ▧
+                <EditorIcon name="image" />
+                {t("Change image")}
               </button>
             )}
             {onEditScreen && hasEditableScreen(product) && (
@@ -1809,7 +1894,8 @@ function StandardProductCard({
                 title={t("Image inside the screen")}
                 aria-label={`${t("Image inside the screen")}: ${product.name}`}
               >
-                ▣
+                <EditorIcon name="screen" />
+                {t("TV wallpaper")}
               </button>
             )}
             {onEditDetails && (
@@ -1819,7 +1905,8 @@ function StandardProductCard({
                 title={t("Edit product details")}
                 aria-label={`${t("Edit product details")}: ${product.name}`}
               >
-                ✎
+                <EditorIcon name="edit" />
+                {t("Product details")}
               </button>
             )}
             {onMove && (
@@ -1829,7 +1916,8 @@ function StandardProductCard({
                 title={t("Move product to another page")}
                 aria-label={`${t("Move product to another page")}: ${product.name}`}
               >
-                ↔
+                <EditorIcon name="move" />
+                {t("Move to another page")}
               </button>
             )}
             {onProductDragStart && (
@@ -1847,10 +1935,11 @@ function StandardProductCard({
                 title={t("Drag to reorder or move to a page")}
                 aria-label={`${t("Drag to reorder or move to a page")}: ${product.name}`}
               >
-                ⠿
+                <EditorIcon name="drag" />
+                {t("Drag to reorder")}
               </span>
             )}
-          </div>
+          </ActionMenu>
         )}
       </div>
       <ApplePhotoClearance photoAreaRef={wrapRef} />
@@ -1887,13 +1976,40 @@ function StandardProductCard({
               ))}
             </ProductDetailBlock>
           )}
-          <ProductBrandArtwork
-            campaign={campaign}
-            product={product}
-            onChange={changeProduct}
-          />
-          <span data-product-name="true">{product.name}</span>
-          <small className="brochure-product-code">{product.code}</small>
+          {(!isOctoberBrochure(campaign) ||
+            !isAppleProduct(product) ||
+            product.hideBrandLogo === false ||
+            product.brandLogo) && (
+            <ProductBrandArtwork
+              campaign={campaign}
+              product={product}
+              onChange={changeProduct}
+            />
+          )}
+          <span
+            data-product-name="true"
+            {...inlineText(
+              product.name,
+              t("Product name"),
+              changeProduct
+                ? (value) => changeProduct("name", value)
+                : undefined,
+            )}
+          >
+            {product.name}
+          </span>
+          <small
+            className="brochure-product-code"
+            {...inlineText(
+              String(product.brochureCode ?? product.code),
+              t("Product code in brochure"),
+              changeProduct
+                ? (value) => changeProduct("brochureCode", value)
+                : undefined,
+            )}
+          >
+            {String(product.brochureCode ?? product.code)}
+          </small>
           {warranty && !warrantyInStrip && (
             <ProductDetailBlock
               product={product}
@@ -2011,7 +2127,11 @@ function StandardProductCard({
                     }
                   : undefined
               }
-              onEdit={onEditDetails ? () => onEditDetails(product) : undefined}
+              onEdit={
+                onEditDetails
+                  ? () => onEditDetails(product, String(key))
+                  : undefined
+              }
               onRemove={
                 changeProduct
                   ? () => {
@@ -2278,6 +2398,11 @@ function CoverPageContent({
   onArtworkChange,
   onArtworkRemove,
   onCampaignAssetChange,
+  onReplaceCoverLogo,
+  onReplaceCoverPhoto,
+  onReplaceCoverArtwork,
+  onCoverTextChange,
+  onFooterTextChange,
   onCoverElementChange,
   onCoverElementHide,
   onProductDragStart,
@@ -2288,6 +2413,7 @@ function CoverPageContent({
   dropCode,
 }: BrochurePageProps) {
   const products = coverProducts(campaign);
+  const october = isOctoberBrochure(campaign);
   const backgroundColor =
     pageBackgroundContrastColor(campaign, "cover") || "#1c4075";
   const backgroundImage = pageBackgroundImage(campaign, "cover");
@@ -2305,7 +2431,8 @@ function CoverPageContent({
   const template =
     campaign.coverTemplate === "photo"
       ? "photo"
-      : campaign.coverTemplate === "blueRibbon" || COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
+      : campaign.coverTemplate === "blueRibbon" ||
+          COVER_TEMPLATES.some((item) => item.id === campaign.coverTemplate)
         ? campaign.coverTemplate
         : "blueClean";
   const coverArt =
@@ -2313,8 +2440,14 @@ function CoverPageContent({
     (template === "photo"
       ? "/api/assets/legacy/assets/default-cover-hero.png"
       : "");
-  const readability =
-    coverArt && !backgroundImage
+  const referenceCoverGradient =
+    october &&
+    !backgroundImage &&
+    campaign.coverBackgroundGradient?.from === "#144c83" &&
+    campaign.coverBackgroundGradient?.to === "#70acdc";
+  const readability = referenceCoverGradient
+    ? backgroundReadability({ kind: "solid", color: "#144c83" })
+    : coverArt && !backgroundImage
       ? backgroundReadability({
           kind: "image",
           color: backgroundColor,
@@ -2335,7 +2468,7 @@ function CoverPageContent({
   );
   return (
     <section
-      className={`brochure-page brochure-cover cover-editable-elements ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
+      className={`brochure-page brochure-cover cover-editable-elements ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -2350,14 +2483,98 @@ function CoverPageContent({
           aria-hidden="true"
         />
       )}
-      {coverArt && (
-        <div
-          className="cover-campaign-art"
-          style={{
-            backgroundImage: `linear-gradient(180deg,rgba(9,36,72,.20),rgba(9,36,72,.07) 62%,rgba(9,36,72,.35)),url(${coverArt})`,
-          }}
-          aria-hidden="true"
-        />
+      {october ? (
+        <CoverElement
+          campaign={campaign}
+          kind="campaign-photo"
+          defaultPlacement={{ x: 0, y: 0, width: 100, height: 56.32 }}
+          className="october-cover-photo"
+          onChange={onCoverElementChange}
+          onHide={onCoverElementHide}
+          onReplaceFile={onReplaceCoverPhoto}
+        >
+          {coverArt ? (
+            <img src={coverArt} alt={t("Cover photograph")} draggable={false} />
+          ) : onReplaceCoverPhoto ? (
+            <button
+              type="button"
+              className="october-cover-upload"
+              onClick={() =>
+                document.getElementById("october-cover-upload")?.click()
+              }
+            >
+              <EditorIcon name="image" />
+              {t("Upload your cover photograph")}
+            </button>
+          ) : null}
+          {onReplaceCoverPhoto && (
+            <input
+              id="october-cover-upload"
+              hidden
+              data-export-hide="true"
+              type="file"
+              accept="image/*"
+              aria-label={t("Upload your cover photograph")}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) onReplaceCoverPhoto(file);
+              }}
+            />
+          )}
+        </CoverElement>
+      ) : (
+        coverArt && (
+          <div
+            className="cover-campaign-art"
+            style={{
+              backgroundImage: `linear-gradient(180deg,rgba(9,36,72,.20),rgba(9,36,72,.07) 62%,rgba(9,36,72,.35)),url(${coverArt})`,
+            }}
+            aria-hidden="true"
+          />
+        )
+      )}
+      {october && (
+        <>
+          <CoverElement
+            campaign={campaign}
+            kind="campaign-ribbon"
+            defaultPlacement={{ x: 0, y: 42.05, width: 100, height: 13.33 }}
+            className="october-cover-ribbon"
+            onChange={onCoverElementChange}
+            onHide={onCoverElementHide}
+          >
+            <svg
+              viewBox="0 0 1080 190"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="october-ribbon-gradient">
+                  <stop
+                    stopColor={
+                      campaign.coverBackgroundGradient?.from || "#144c83"
+                    }
+                  />
+                  <stop
+                    offset="1"
+                    stopColor={
+                      campaign.coverBackgroundGradient?.to || "#70acdc"
+                    }
+                  />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0 70L1080 0V130L0 190Z"
+                fill="url(#october-ribbon-gradient)"
+              />
+            </svg>
+          </CoverElement>
+          <div
+            className="october-cover-body"
+            style={{ background: backgroundFill }}
+          />
+        </>
       )}
       <PageArtwork
         campaign={campaign}
@@ -2382,6 +2599,12 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="logo"
+          defaultPlacement={
+            october
+              ? { x: 31.85, y: 3.26, width: 35.57, height: 6.085 }
+              : undefined
+          }
+          onReplaceFile={onReplaceCoverLogo}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
@@ -2400,6 +2623,27 @@ function CoverPageContent({
           )}
         </CoverElement>
       )}
+      {october && campaign.showCoverLogo !== false && (
+        <CoverElement
+          campaign={campaign}
+          kind="brand-tagline"
+          defaultPlacement={{ x: 46.63, y: 9.95, width: 22.1, height: 1.9 }}
+          onChange={onCoverElementChange}
+          onHide={onCoverElementHide}
+        >
+          <span
+            {...inlineText(
+              campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë.",
+              t("Brand tagline"),
+              onCoverTextChange
+                ? (value) => onCoverTextChange("coverBrandTagline", value)
+                : undefined,
+            )}
+          >
+            {campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë."}
+          </span>
+        </CoverElement>
+      )}
       {campaign.showCoverHeadline !== false && headline && (
         <CoverElement
           campaign={campaign}
@@ -2409,13 +2653,29 @@ function CoverPageContent({
         >
           {headline.trim().toLocaleLowerCase() !==
             campaign.type?.trim().toLocaleLowerCase() && (
-            <span style={{ color: coverTextColor(campaign, "coverTypeColor") }}>
+            <span
+              style={{ color: coverTextColor(campaign, "coverTypeColor") }}
+              {...inlineText(
+                campaign.type || "",
+                t("Campaign type"),
+                onCoverTextChange
+                  ? (value) => onCoverTextChange("type", value)
+                  : undefined,
+              )}
+            >
               {campaign.type}
             </span>
           )}
           <h1
+            {...inlineText(
+              headline,
+              t("Cover headline"),
+              onCoverTextChange
+                ? (value) => onCoverTextChange("coverHeadline", value)
+                : undefined,
+            )}
             style={{
-              fontSize: `${headlineSize}cqw`,
+              fontSize: `calc(${headlineSize}cqw * var(--cover-text-scale, 1))`,
               color: coverTextColor(campaign, "coverHeadlineColor"),
             }}
           >
@@ -2427,19 +2687,59 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="band"
+          onReplaceFile={
+            onReplaceCoverArtwork
+              ? (file) => onReplaceCoverArtwork("cover-band", file)
+              : undefined
+          }
+          defaultPlacement={
+            october
+              ? { x: -10.23, y: 37, width: 59.36, height: 24.99 }
+              : undefined
+          }
           className={
-            !campaign.coverElementPlacements?.band &&
-            brochureAssetSource(campaign, "coverBand") ===
-              "/api/assets/legacy/assets/uuu-hajde-band.png"
-              ? "cover-band-default-artwork"
-              : ""
+            october && !campaign.campaignAssets?.["cover-band"]?.image
+              ? "october-native-band"
+              : !campaign.coverElementPlacements?.band &&
+                  brochureAssetSource(campaign, "coverBand") ===
+                    "/api/assets/legacy/assets/uuu-hajde-band.png"
+                ? "cover-band-default-artwork"
+                : ""
           }
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
           <img
-            src={brochureAssetSource(campaign, "coverBand")}
+            src={
+              campaign.campaignAssets?.["cover-band"]?.image ||
+              (october
+                ? OCTOBER_ASSETS.uuu
+                : brochureAssetSource(campaign, "coverBand"))
+            }
             alt="UUU / hajde!"
+            draggable={false}
+          />
+        </CoverElement>
+      )}
+      {october && campaign.showCoverBand === true && (
+        <CoverElement
+          campaign={campaign}
+          kind="october-hajde"
+          onReplaceFile={
+            onReplaceCoverArtwork
+              ? (file) => onReplaceCoverArtwork("cover-hajde", file)
+              : undefined
+          }
+          defaultPlacement={{ x: 12.31, y: 48.24, width: 21.15, height: 4.64 }}
+          onChange={onCoverElementChange}
+          onHide={onCoverElementHide}
+        >
+          <img
+            src={
+              campaign.campaignAssets?.["cover-hajde"]?.image ||
+              OCTOBER_ASSETS.hajdeWhite
+            }
+            alt="hajde!"
             draggable={false}
           />
         </CoverElement>
@@ -2448,6 +2748,11 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="message"
+          defaultPlacement={
+            october
+              ? { x: 46.35, y: 45.51, width: 43.61, height: 5.9 }
+              : undefined
+          }
           className={
             campaign.showCoverBand === true &&
             !campaign.coverElementPlacements?.message
@@ -2458,8 +2763,15 @@ function CoverPageContent({
           onHide={onCoverElementHide}
         >
           <p
+            {...inlineText(
+              tagline,
+              t("Campaign message"),
+              onCoverTextChange
+                ? (value) => onCoverTextChange("tagline", value)
+                : undefined,
+            )}
             style={{
-              fontSize: `${taglineSize}cqw`,
+              fontSize: `calc(${taglineSize}cqw * var(--cover-text-scale, 1))`,
               color: coverTextColor(campaign, "coverMessageColor"),
             }}
           >
@@ -2525,12 +2837,28 @@ function CoverPageContent({
           )}
         </div>
       </div>
-      <BrochureFooter campaign={campaign} onChange={onCampaignAssetChange} />
+      {october && (
+        <CoverElement
+          campaign={campaign}
+          kind="october-awards"
+          defaultPlacement={{ x: 79.1, y: 92.68, width: 17.08, height: 6.74 }}
+          onChange={onCoverElementChange}
+          onHide={onCoverElementHide}
+        >
+          <AwardBadges campaign={campaign} onChange={onCampaignAssetChange} />
+        </CoverElement>
+      )}
+      <BrochureFooter
+        campaign={campaign}
+        onChange={onCampaignAssetChange}
+        onPlacementChange={onCoverElementChange}
+        onTextChange={onFooterTextChange}
+      />
     </section>
   );
 }
 
-function formatDates(start?: string, end?: string) {
+function formatDates(start?: string, end?: string, includeYear = true) {
   if (!start && !end) return "Datat e fushatës";
   const months = [
     "janar",
@@ -2549,7 +2877,7 @@ function formatDates(start?: string, end?: string) {
   const fmt = (date?: string) => {
     if (!date) return "—";
     const [year, month, day] = date.split("-").map(Number);
-    return `${day} ${months[(month ?? 0) - 1] || ""} ${year}`;
+    return `${day} ${months[(month ?? 0) - 1] || ""}${includeYear ? ` ${year}` : ""}`;
   };
   return start === end ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
 }
@@ -2586,6 +2914,7 @@ function ProductPageContent({
   onArtworkChange,
   onArtworkRemove,
   onCampaignAssetChange,
+  onPageDecorationChange,
   onProductDragStart,
   onProductDragEnd,
   onProductDragOver,
@@ -2593,6 +2922,7 @@ function ProductPageContent({
   draggingCode,
   dropCode,
 }: ProductPageProps) {
+  const october = isOctoberBrochure(campaign);
   const backgroundColor = pageBackgroundContrastColor(
     campaign,
     "product",
@@ -2607,7 +2937,7 @@ function ProductPageContent({
   const priceLogo = priceLogoSource(campaign);
   return (
     <section
-      className={`brochure-page brochure-interior has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
+      className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -2636,14 +2966,26 @@ function ProductPageContent({
         onChange={onArtworkChange}
         onRemove={onArtworkRemove}
       />
+      {october && (
+        <PageDecorations
+          campaign={campaign}
+          page={page}
+          onAssetChange={onCampaignAssetChange}
+          onChange={onPageDecorationChange}
+        />
+      )}
       <div
         className="brochure-products"
         style={{
-          gridTemplateRows: `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`,
+          gridTemplateRows:
+            !page.products.some((item) => item.brochureCardSize) &&
+            page.layout === "tv8"
+              ? "1fr 1.18fr 1.03fr"
+              : `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`,
           ...productGridStyle(campaign, page.spacing),
         }}
       >
-        {page.products.map((product: Product) => (
+        {page.products.map((product: Product, gridIndex: number) => (
           <ProductCard
             key={product.code}
             campaign={campaign}
@@ -2652,7 +2994,10 @@ function ProductPageContent({
             pageColor={backgroundColor}
             priceLogo={priceLogo}
             installments={installmentCount(campaign)}
-            hero={page.layout === "feature" && product === page.products[0]}
+            hero={
+              ["feature", "feature3"].includes(page.layout) &&
+              product === page.products[0]
+            }
             onEditImage={onEditImage}
             onEditDetails={onEditDetails}
             onEditPrice={onEditPrice}
@@ -2666,6 +3011,7 @@ function ProductPageContent({
             onReorderDetails={onReorderDetails}
             onProductChange={onProductChange}
             layout={page.layout}
+            gridIndex={gridIndex}
             onProductDragStart={onProductDragStart}
             onProductDragEnd={onProductDragEnd}
             onProductDragOver={onProductDragOver}
@@ -2675,7 +3021,7 @@ function ProductPageContent({
           />
         ))}
       </div>
-      {page.showFooter && (
+      {page.showFooter && !october && (
         <div className="brochure-interior-brand-footer">
           <CampaignAssetArtwork
             campaign={campaign}
@@ -2777,7 +3123,7 @@ export function StoresPage({
   return (
     <BrochureFormatFrame campaign={campaign} kind="stores">
       <section
-        className={`brochure-page brochure-stores stores-reference-page stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
+        className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
         style={{
           ...brochureFormatStyle(campaign),
           ...backgroundReadabilityStyle(
@@ -2804,7 +3150,18 @@ export function StoresPage({
         {element(
           "heading",
           { x: 0, y: 2.7, width: 41, height: 4 },
-          <span className="stores-heading">DYQANET</span>,
+          <span
+            className="stores-heading"
+            {...inlineText(
+              contact.storesHeading || "DYQANET",
+              t("Stores heading"),
+              onContactChange
+                ? (value) => onContactChange("storesHeading", value)
+                : undefined,
+            )}
+          >
+            {contact.storesHeading || "DYQANET"}
+          </span>,
         )}
         {element(
           "hajde",
@@ -2946,7 +3303,17 @@ export function StoresPage({
           { x: 3.4, y: 87, width: 56.8, height: 7.7 },
           <div className="stores-disclaimer">
             {campaign.contactVisibility?.membershipDisclaimer !== false && (
-              <strong className="stores-members-note">
+              <strong
+                className="stores-members-note"
+                {...inlineText(
+                  contact.membershipDisclaimer ||
+                    "*çmimet haPPy vlejnë vetëm për anëtarët e programit haPPy",
+                  t("Membership note"),
+                  onContactChange
+                    ? (value) => onContactChange("membershipDisclaimer", value)
+                    : undefined,
+                )}
+              >
                 {contact.membershipDisclaimer ||
                   "*çmimet haPPy vlejnë vetëm për anëtarët e programit haPPy"}
               </strong>
@@ -3030,27 +3397,115 @@ export function StoresPage({
   );
 }
 
-function BrochureFooter({
+export function BrochureFooter({
   campaign,
   onChange,
+  onPlacementChange,
+  onTextChange,
 }: {
   campaign: Campaign;
   onChange?: CampaignAssetChange;
+  onPlacementChange?: CoverElementProps["onChange"];
+  onTextChange?: (field: "dateText" | "paymentText", value: string) => void;
 }) {
+  const design = campaign.brochureFooter || {};
+  if (design.visible === false) return null;
+  const editable = (
+    field: "dateText" | "paymentText",
+  ): React.HTMLAttributes<HTMLSpanElement> =>
+    onTextChange
+      ? {
+          contentEditable: true,
+          suppressContentEditableWarning: true,
+          role: "textbox",
+          "aria-label": t(
+            field === "dateText"
+              ? "Brochure dates text"
+              : "Footer payment text",
+          ),
+          onPointerDown: (event) => event.stopPropagation(),
+          onBlur: (event) => {
+            const value = event.currentTarget.textContent || "";
+            const original =
+              field === "paymentText"
+                ? paymentTextFor(campaign)
+                : (design.dateText ?? footerDateText(campaign));
+            if (value !== original) onTextChange(field, value);
+          },
+          onKeyDown: (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
+          },
+          onPaste: (event) => {
+            event.preventDefault();
+            document.execCommand(
+              "insertText",
+              false,
+              event.clipboardData.getData("text/plain").replace(/\n/g, " "),
+            );
+          },
+        }
+      : {};
+  const reference = design.style === "reference";
+  const height = design.height ?? (reference ? 5 : 4);
   return (
-    <div
-      className="brochure-offer-footer"
-      style={{ color: coverTextColor(campaign, "coverFooterColor") }}
+    <CoverElement
+      campaign={campaign}
+      kind="footer"
+      className="brochure-footer-element"
+      defaultPlacement={{
+        x: 0,
+        y: 100 - height - (design.bottom ?? 3) / 13.5,
+        width: 100,
+        height,
+      }}
+      onChange={onPlacementChange}
     >
-      <span className="brochure-footer-dates">
-        Vlen {formatDates(campaign.startDate, campaign.endDate)}
-      </span>
-      <span className="brochure-footer-payment">
-        {paymentTextFor(campaign)}
-      </span>
-      <AwardBadges campaign={campaign} onChange={onChange} />
-    </div>
+      <div
+        className={`brochure-offer-footer ${reference ? "reference-offer-footer" : ""}`}
+        style={{
+          color: coverTextColor(campaign, "coverFooterColor"),
+          ...(!reference
+            ? { gridTemplateColumns: `${design.dateWidth ?? 34}% 1fr 20%` }
+            : {}),
+          ...(design.from || design.to
+            ? {
+                background: `linear-gradient(90deg, ${design.from || "#f3432b"} 0%, ${design.from || "#f3432b"} 38%, ${design.to || "#205785"} 100%)`,
+              }
+            : {}),
+        }}
+      >
+        <span
+          className="brochure-footer-dates"
+          style={{ fontSize: `${design.dateSize ?? (reference ? 2 : 1.9)}cqw` }}
+          {...editable("dateText")}
+        >
+          {design.dateText ?? footerDateText(campaign)}
+        </span>
+        <span
+          className="brochure-footer-payment"
+          style={{
+            fontSize: `${design.paymentSize ?? (reference ? 2 : 1.45)}cqw`,
+          }}
+          {...editable("paymentText")}
+        >
+          {paymentTextFor(campaign)}
+        </span>
+        {!reference && <AwardBadges campaign={campaign} onChange={onChange} />}
+      </div>
+    </CoverElement>
   );
+}
+
+function footerDateText(campaign: Campaign) {
+  const reference = campaign.brochureFooter?.style === "reference";
+  const sameYear =
+    !campaign.startDate ||
+    !campaign.endDate ||
+    campaign.startDate.slice(0, 4) === campaign.endDate.slice(0, 4);
+  return `Vlen ${formatDates(campaign.startDate, campaign.endDate, !reference || !sameYear)}${reference ? ", në dyqane dhe online." : ""}`;
 }
 
 function AwardBadges({
@@ -3066,7 +3521,7 @@ function AwardBadges({
     id: string,
     label: string,
     children: React.ReactNode,
-    width = "4cqw",
+    width = isOctoberBrochure(campaign) ? "8.2cqw" : "4cqw",
   ) => (
     <CampaignAssetArtwork
       campaign={campaign}

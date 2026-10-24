@@ -37,9 +37,14 @@ export function ReviewPanel({
 }: ReviewPanelProps) {
   const root = useRef<HTMLElement>(null);
   const [busy, setBusy] = useState(false);
+  const [filter, setFilter] = useState<"all" | "open" | "resolved">("all");
   const status = campaign.status || "in_progress";
   const comments = reviewCommentsForLayout(campaign).filter(
     (item) => item.pageIndex === pageIndex,
+  );
+  const visibleComments = comments.filter(
+    (item) =>
+      filter === "all" || (filter === "resolved" ? item.fixed : !item.fixed),
   );
   const openCount = (campaign.reviewComments || []).filter(
     (item) => !item.fixed,
@@ -48,6 +53,7 @@ export function ReviewPanel({
   const canComment = user?.role === "staff" || user?.role === "pm" || isAdmin;
   useEffect(() => {
     if (!focusedCommentId) return;
+    setFilter("all");
     const article = [
       ...(root.current?.querySelectorAll<HTMLElement>(
         "[data-review-comment-id]",
@@ -71,9 +77,40 @@ export function ReviewPanel({
         </div>
         <span className="cs-review-count">{comments.length}</span>
       </div>
-      {comments.length ? (
+      <div
+        className="cs-comment-filters"
+        role="group"
+        aria-label={t("Filter comments")}
+      >
+        {(["all", "open", "resolved"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={filter === value}
+            onClick={() => setFilter(value)}
+          >
+            {t(
+              value === "all"
+                ? "All"
+                : value === "open"
+                  ? "Open comments"
+                  : "Resolved",
+            )}
+            <span>
+              {
+                comments.filter(
+                  (item) =>
+                    value === "all" ||
+                    (value === "resolved" ? item.fixed : !item.fixed),
+                ).length
+              }
+            </span>
+          </button>
+        ))}
+      </div>
+      {visibleComments.length ? (
         <div className="cs-review-comments">
-          {comments.map((item) => (
+          {visibleComments.map((item) => (
             <article
               key={item.id}
               data-review-comment-id={item.id}
@@ -81,7 +118,12 @@ export function ReviewPanel({
               className={item.fixed ? "fixed" : "open"}
             >
               <div className="cs-review-comment-meta">
-                <strong>{item.authorEmail}</strong>
+                <span className="cs-pin-author">
+                  <span className="cs-comment-avatar" aria-hidden="true">
+                    {(item.authorEmail || "?").slice(0, 2).toUpperCase()}
+                  </span>
+                  <strong>{item.authorEmail}</strong>
+                </span>
                 <time dateTime={item.createdAt}>
                   {new Date(item.createdAt ?? Number.NaN).toLocaleString()}
                 </time>
@@ -154,7 +196,13 @@ export function ReviewPanel({
           ))}
         </div>
       ) : (
-        <p className="cs-review-empty">{t("No comments on this page yet.")}</p>
+        <p className="cs-review-empty">
+          {t(
+            comments.length
+              ? "No comments match this filter."
+              : "No comments on this page yet.",
+          )}
+        </p>
       )}
       {canComment && (
         <CommentForm

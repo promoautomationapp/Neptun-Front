@@ -15,16 +15,6 @@ export const OFFER_STYLES = [
     name: "Blue price card",
     detail: "Savings tab above a blue price card",
   },
-  {
-    id: "minimal",
-    name: "Simple prices",
-    detail: "Large red price and savings circle",
-  },
-  {
-    id: "compact",
-    name: "Compact catalog card",
-    detail: "Specs above details and a compact blue price card",
-  },
 ];
 
 export const SAVING_MODES = [
@@ -36,7 +26,9 @@ export function offerStyleFor(
   campaign: Partial<Campaign> | null | undefined,
   product?: Partial<Product> | null,
 ) {
-  const style = product?.offerStyle || campaign?.offerStyle;
+  const saved = product?.offerStyle || campaign?.offerStyle;
+  const style =
+    saved === "minimal" ? "current" : saved === "compact" ? "card" : saved;
   if (
     !product?.offerStyle &&
     (!style || style === "current") &&

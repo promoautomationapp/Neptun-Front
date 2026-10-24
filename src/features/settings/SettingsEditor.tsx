@@ -1,3 +1,9 @@
+import { t } from "../brochure/i18n";
+import { BrochurePresetsTab } from "./BrochurePresetsTab";
+import {
+  availableBrochurePresets,
+  captureEditedBrochurePreset,
+} from "../brochure/brochurePresets";
 import { ProductDesignTab } from "./ProductDesignTab";
 import { CategoryDefaultsTab } from "./CategoryDefaultsTab";
 import { BrandsTab } from "./BrandsTab";
@@ -16,6 +22,7 @@ import { SettingsPreview } from "./SettingsPreview";
 import { ImagesTab } from "./ImagesTab";
 import type { Product } from "../../domain/models";
 const tabs = [
+  { id: "presets", label: "Brochure presets" },
   { id: "design", label: "Cover & colors" },
   { id: "images", label: "Background images" },
   { id: "logos", label: "Logos & icons" },
@@ -28,6 +35,7 @@ const tabs = [
   { id: "types", label: "Campaign types" },
 ] as const;
 const areas = [
+  { id: "presets", label: "Brochure designs", tabs: ["presets"] },
   { id: "cover", label: "Cover", tabs: ["design", "images", "logos"] },
   {
     id: "inside",
@@ -88,6 +96,9 @@ export function SettingsEditor({
   previewProducts?: Product[];
 }) {
   const [draft, setDraft] = useState(() => structuredClone(initial));
+  const [selectedPresetId, setSelectedPresetId] = useState(
+    initial.defaultBrochurePresetId,
+  );
   const [baseline, setBaseline] = useState(() => JSON.stringify(initial));
   const [tab, setTab] = useState<TabId>("design");
   const [area, setArea] = useState<SettingsArea>("cover");
@@ -131,6 +142,7 @@ export function SettingsEditor({
   );
   useEffect(() => {
     setDraft(structuredClone(initial));
+    setSelectedPresetId(initial.defaultBrochurePresetId);
     setBaseline(JSON.stringify(initial));
     setError("");
   }, [initial]);
@@ -157,7 +169,31 @@ export function SettingsEditor({
     [],
   );
   async function save() {
-    const parsed = workspaceSettingsSchema.safeParse(draft);
+    const validDraft = workspaceSettingsSchema.safeParse(draft);
+    if (!validDraft.success) {
+      setError(
+        validDraft.error.issues
+          .map((issue) => `${issue.path.join(" › ")}: ${issue.message}`)
+          .join(" "),
+      );
+      return;
+    }
+    const next = structuredClone(validDraft.data);
+    const selected = availableBrochurePresets(next).find(
+      (preset) => preset.id === selectedPresetId,
+    );
+    if (selected) {
+      const captured = captureEditedBrochurePreset(
+        next,
+        selected,
+      ) as WorkspaceSettings["brochurePresets"][number];
+      const index = next.brochurePresets.findIndex(
+        (preset) => preset.id === selected.id,
+      );
+      if (index < 0) next.brochurePresets.push(captured);
+      else next.brochurePresets[index] = captured;
+    }
+    const parsed = workspaceSettingsSchema.safeParse(next);
     if (!parsed.success) {
       setError(
         parsed.error.issues
@@ -275,7 +311,7 @@ export function SettingsEditor({
               );
             }}
           >
-            {group.label}
+            {group.id === "presets" ? t(group.label) : group.label}
           </button>
         ))}
       </div>
@@ -317,7 +353,9 @@ export function SettingsEditor({
           >
             {item.id === "design" && area !== "cover"
               ? "Page colors"
-              : item.label}
+              : item.id === "presets"
+                ? t(item.label)
+                : item.label}
           </button>
         ))}
       </div>
@@ -334,6 +372,13 @@ export function SettingsEditor({
                 className="ns-tab-content"
                 disabled={saving || uploads > 0}
               >
+                {tab === "presets" && (
+                  <BrochurePresetsTab
+                    {...props}
+                    selectedId={selectedPresetId}
+                    onSelect={setSelectedPresetId}
+                  />
+                )}
                 {tab === "design" && <DesignTab {...props} />}
                 {tab === "images" && <ImagesTab {...props} />}
                 {tab === "logos" && <LogosTab {...props} brands={brands} />}
@@ -365,6 +410,7 @@ export function SettingsEditor({
           pageRequest={previewRequest}
           draft={draft}
           initial={initial}
+          presetId={selectedPresetId}
           tab={tab}
           products={previewProducts}
           categoryPath={tab === "categories" ? previewCategory : ""}

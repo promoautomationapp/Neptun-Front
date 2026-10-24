@@ -1,0 +1,1140 @@
+.cs-brochure-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  flex-wrap: wrap;
+}
+.cs-brochure-header-actions {
+  gap: 8px;
+}
+.cs-brochure-actions-menu {
+  z-index: 80;
+}
+.cs-brochure-actions-menu > div {
+  min-width: 240px;
+  max-width: calc(100vw - 40px);
+}
+.cs-ai-action-menu > summary {
+  color: var(--studio-accent, #4964a5);
+  background: var(--studio-ai, #f2f2fc);
+  border-color: var(--studio-border, #d9dff1);
+}
+.cs-ai-action-menu > div > .cs-button {
+  padding: 12px;
+  gap: 12px;
+  white-space: normal;
+  text-align: left;
+}
+.cs-ai-action-menu .cs-button > span:last-child {
+  display: grid;
+  gap: 5px;
+}
+.cs-ai-action-menu small {
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--studio-secondary, #71869a);
+}
+.cs-inline-page-navigation {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+.cs-inline-page-navigation button {
+  border: 1px solid var(--studio-border, #dae4ec);
+  border-radius: 7px;
+  color: var(--studio-text, #234561);
+  background: var(--studio-surface, #fff);
+  width: 32px;
+  height: 32px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.cs-inline-page-navigation button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.cs-inline-page-navigation span {
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  text-align: center;
+}
+.brochure-footer-element {
+  z-index: 5;
+}
+.brochure-footer-element .brochure-offer-footer {
+  position: relative;
+  inset: auto;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+.brochure-footer-element [contenteditable="true"] {
+  cursor: text;
+  min-width: 0;
+  outline: none;
+}
+.brochure-footer-element [contenteditable="true"]:focus {
+  outline: 1px dashed currentColor;
+  outline-offset: -2px;
+}
+.brochure-footer-element .cover-element-tools {
+  top: -24px;
+}
+.cs-footer-design-controls {
+  display: grid;
+  gap: 16px;
+}
+.cs-footer-design-controls > label {
+  display: grid;
+  gap: 7px;
+  color: var(--studio-text, #284b68);
+  font-size: 12px;
+}
+.cs-footer-design-controls label > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cs-footer-design-controls .cs-store-page-switch {
+  display: flex;
+  align-items: center;
+}
+.cs-footer-design-controls input:not([type="range"]):not([type="checkbox"]),
+.cs-footer-design-controls textarea {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--studio-border, #d9e4ee);
+  border-radius: 7px;
+  background: var(--studio-surface, #fff);
+  color: var(--studio-text, #284b68);
+  font: inherit;
+}
+.cs-footer-design-controls input[type="color"] {
+  height: 38px;
+  padding: 4px !important;
+}
+.cs-footer-design-controls input[type="range"],
+.cs-screen-size-control input {
+  width: 100%;
+  accent-color: #367da8;
+}
+.cs-screen-editor-overlay,
+.brochure-screen-image,
+.bundle-screen-artwork {
+  background: #000;
+}
+.cs-screen-size-control {
+  display: grid;
+  gap: 9px;
+  font-size: 12px;
+}
+.cs-screen-size-control > span {
+  display: flex;
+  justify-content: space-between;
+}
+.cs-screen-fit-help {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cs-review-comments article {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-border, #e2eaf1);
+  background: var(--studio-surface, #fff);
+  box-shadow: 0 3px 10px #173b5b04;
+}
+.cs-review-comment-meta {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cs-review-comment-meta strong {
+  overflow-wrap: anywhere;
+}
+.cs-review-comment-meta .cs-pin-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cs-comment-filters {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 18px 0;
+  border-radius: 9px;
+  background: var(--studio-muted, #f0f4f8);
+}
+.cs-comment-filters button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 5px;
+  border: 1px solid transparent !important;
+  border-radius: 7px;
+  background: transparent !important;
+  color: var(--studio-secondary, #70859a) !important;
+  font-size: 10px;
+  cursor: pointer;
+}
+.cs-comment-filters button[aria-pressed="true"] {
+  background: var(--studio-surface, #fff) !important;
+  color: var(--studio-text, #254c6a) !important;
+  border-color: var(--studio-border, #dbe5ee) !important;
+}
+.cs-product-photo-size {
+  grid-column: 1/-1;
+  display: grid;
+  gap: 8px;
+}
+.cs-product-photo-size > span {
+  display: flex;
+  justify-content: space-between;
+}
+.cs-product-layout-fields .cs-product-photo-size input[type="range"] {
+  width: 100%;
+  padding: 0;
+  accent-color: #367da8;
+}
+.cs-comment-popover {
+  border-radius: 16px;
+  padding: 18px;
+  gap: 14px;
+  border-color: var(--studio-border, #d7e2eb);
+  background: var(--studio-surface, #fff);
+  color: var(--studio-text, #20405b);
+  box-shadow: 0 18px 60px #0d294533;
+}
+.cs-comment-popover:focus-visible {
+  outline: 2px solid #5ba6d1;
+}
+.cs-pin-message {
+  padding: 12px;
+  border: 1px solid var(--studio-border, #e1eaf1);
+  background: var(--studio-muted, #f5f8fb);
+  border-radius: 10px;
+}
+.cs-pin-form textarea {
+  min-height: 90px;
+  line-height: 1.5;
+}
+.cs-pin-form textarea:focus {
+  outline: 2px solid #65a9d080;
+  outline-offset: 1px;
+}
+.cs-pin-form button {
+  min-height: 36px;
+  border-radius: 8px;
+}
+.cs-comment-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px 10px 10px 3px;
+  border-width: 2px;
+}
+.cs-comment-avatar {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--studio-ai, #e6eef9);
+  color: var(--studio-accent, #386895);
+  font-size: 10px;
+  font-weight: 800;
+  flex: none;
+}
+.cs-pin-message .cs-pin-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.cs-comment-status {
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  color: #32775d;
+  background: #e7f5ed;
+}
+.cs-comment-status.open {
+  color: var(--studio-accent, #326994);
+  background: var(--studio-ai, #edf5fc);
+}
+.cs-brochure-preview-dialog {
+  --studio-surface: #fff;
+  --studio-muted: #eef2f6;
+  --studio-text: #23425e;
+  --studio-secondary: #72869a;
+  --studio-border: #d9e3ec;
+  position: fixed;
+  inset: 20px;
+  margin: auto;
+  width: calc(100vw - 40px);
+  max-width: 1800px;
+  height: calc(100dvh - 40px);
+  max-height: none;
+  border: 1px solid var(--studio-border);
+  border-radius: 18px;
+  padding: 0;
+  background: var(--studio-muted);
+  color: var(--studio-text);
+  box-shadow: 0 30px 100px #081c4666;
+  overflow: hidden;
+}
+.cs-brochure-preview-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.cs-brochure-preview-dialog::backdrop {
+  background: #0c192ad9;
+  backdrop-filter: blur(5px);
+}
+.cs-preview-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px;
+  background: var(--studio-surface);
+  border-bottom: 1px solid var(--studio-border);
+  flex: none;
+}
+.cs-preview-dialog-header > div:first-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.cs-preview-dialog-header strong {
+  font-size: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cs-preview-dialog-body {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.cs-preview-thumbnails {
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-right: 1px solid var(--studio-border);
+  background: var(--studio-surface);
+}
+.cs-preview-thumbnails button {
+  flex: none;
+  width: 100%;
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--studio-muted);
+  color: var(--studio-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+.cs-preview-thumbnails button[aria-current="page"] {
+  border-color: #5298c8;
+  color: var(--studio-text);
+  box-shadow: 0 0 0 2px #5298c81a;
+}
+.cs-preview-thumbnails button > span:last-child {
+  display: block;
+  font:
+    600 10px/1.4 Arial,
+    sans-serif;
+  margin-top: 6px;
+}
+.cs-preview-thumbnail-art {
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+}
+.cs-preview-dialog-stage {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  padding: 24px;
+}
+.cs-preview-dialog-paper {
+  width: min(100%, calc((100dvh - 235px) * var(--brochure-preview-ratio, 0.8)));
+  flex: none;
+  box-shadow: 0 8px 30px #0d29452b;
+}
+.cs-preview-dialog-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  padding: 12px 20px;
+  background: var(--studio-surface);
+  border-top: 1px solid var(--studio-border);
+  flex: none;
+}
+.cs-preview-dialog-footer > div {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  min-width: 180px;
+  font-size: 12px;
+}
+.cs-preview-dialog-footer > div > span {
+  font-size: 11px;
+  color: var(--studio-secondary);
+}
+.cs-preview-dialog-footer button:disabled {
+  opacity: 0.4;
+}
+.cs-brochure-preview-dialog button:focus-visible,
+.cs-brochure-toolbar button:focus-visible {
+  outline: 3px solid #65b1dc;
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .cs-brochure-preview-dialog {
+    inset: 5px;
+    width: calc(100vw - 10px);
+    height: calc(100dvh - 10px);
+    border-radius: 12px;
+  }
+  .cs-preview-dialog-header {
+    padding: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .cs-preview-dialog-header .cs-button {
+    font-size: 10px;
+    min-height: 34px;
+    padding: 7px 10px;
+  }
+  .cs-preview-dialog-body {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .cs-preview-thumbnails {
+    flex-direction: row;
+    flex: none;
+    height: 125px;
+    border-right: 0;
+    border-top: 1px solid var(--studio-border);
+    padding: 8px;
+    gap: 8px;
+  }
+  .cs-preview-thumbnails button {
+    width: 76px;
+  }
+  .cs-preview-dialog-stage {
+    flex: 1;
+    padding: 12px;
+  }
+  .cs-preview-dialog-paper {
+    width: min(
+      100%,
+      calc((100dvh - 345px) * var(--brochure-preview-ratio, 0.8))
+    );
+  }
+  .cs-preview-dialog-footer {
+    gap: 8px;
+    padding: 10px;
+  }
+  .cs-preview-dialog-footer > div {
+    min-width: 90px;
+  }
+  .cs-preview-dialog-footer .cs-button {
+    padding: 8px;
+    font-size: 11px;
+  }
+}
+@media print {
+  .cs-brochure-preview-dialog {
+    display: none !important;
+  }
+}
+.cs-brochure-toolbar .cs-brochure-view-modes {
+  margin: 0;
+}
+.cs-review-sidebar .cs-review-panel {
+  border: 0;
+  padding: 4px;
+}
+.cs-review-comment-meta .cs-pin-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cs-product-photo-size {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.cs-product-photo-size > span {
+  display: flex;
+  justify-content: space-between;
+}
+.cs-product-photo-size input[type="range"] {
+  width: 100%;
+  accent-color: #367da8;
+}
+html[data-theme="dark"] {
+  --studio-surface: var(--np-surface);
+  --studio-muted: var(--np-raised);
+  --studio-text: var(--np-text);
+  --studio-secondary: var(--np-muted);
+  --studio-border: var(--np-border);
+  --studio-accent: var(--np-accent);
+  --studio-ai: #273950;
+}
+html[data-theme="dark"] .cs-brochure-preview-dialog {
+  --studio-surface: var(--np-surface);
+  --studio-muted: var(--np-bg);
+  --studio-text: var(--np-text);
+  --studio-secondary: var(--np-muted);
+  --studio-border: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-brochure-actions-menu > summary,
+    .cs-brochure-actions-menu > div,
+    .cs-pages-sidebar > button,
+    .cs-campaign-history button,
+    .cs-inline-page-navigation button,
+    .cs-preview-dialog-header,
+    .cs-preview-dialog-footer,
+    .cs-preview-thumbnails
+  ) {
+  background: var(--np-surface);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-pages-sidebar > button.active,
+    .cs-brochure-actions-menu[open] > summary
+  ) {
+  background: var(--np-selected);
+  color: var(--np-text);
+  border-color: #5789b1;
+}
+html[data-theme="dark"] body .cs-brochure-preview-dialog .cs-button {
+  background: var(--np-raised);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"] body .cs-ai-action-menu > summary {
+  background: #293451;
+  color: #c3ccff;
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-review-panel,
+    .cs-comment-popover,
+    .cs-pin-message,
+    .cs-review-comments article
+  ) {
+  background: var(--np-surface);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"]
+  body
+  :is(
+    .cs-pin-form textarea,
+    .cs-pin-form select,
+    .cs-comment-popover input,
+    .cs-footer-design-controls input:not([type="color"]):not([type="range"]),
+    .cs-footer-design-controls textarea
+  ) {
+  background: var(--np-bg);
+  color: var(--np-text);
+  border-color: var(--np-border);
+}
+html[data-theme="dark"] body .cs-comment-status {
+  background: #1d413a;
+  color: #a4ddc5;
+}
+html[data-theme="dark"] body .cs-comment-status.open {
+  background: var(--np-selected);
+  color: var(--np-text);
+}
+html[data-theme="dark"] body .cs-preview-top,
+html[data-theme="dark"] body .cs-brochure-status-bar {
+  background: var(--np-surface);
+  border-color: var(--np-border);
+  color: var(--np-text);
+}
+html[data-theme="dark"] body .cs-preview-top strong {
+  color: var(--np-text);
+}
+html[data-theme="dark"] body .cs-brochure-mode {
+  color: var(--np-accent);
+}
+html[data-theme="dark"] body .cs-save-status {
+  color: #a2d7bb;
+}
+html[data-theme="dark"] body .cs-presence-unavailable,
+html[data-theme="dark"] body .cs-brochure-view-modes button {
+  color: var(--np-muted);
+}
+html[data-theme="dark"]
+  body
+  .cs-brochure-view-modes
+  button[aria-pressed="true"] {
+  color: var(--np-text);
+}
+
+/* Canvas editing uses the same familiar controls in light and dark workspaces. */
+.brochure-page [contenteditable="true"] {
+  cursor: text;
+  outline: none;
+  border-radius: 2px;
+}
+.brochure-page [contenteditable="true"]:hover {
+  box-shadow: 0 0 0 1px #72bff5a0;
+}
+.brochure-page [contenteditable="true"]:focus {
+  box-shadow: 0 0 0 2px #70c4ff;
+  background: #ffffff12;
+}
+.cs-inline-price-editor {
+  position: absolute;
+  right: 2%;
+  top: 24%;
+  z-index: 150;
+  display: grid;
+  gap: 10px;
+  width: min(290px, 96%);
+  padding: 16px;
+  border: 1px solid var(--studio-border, #d7e3ed);
+  border-radius: 14px;
+  background: var(--studio-surface, #fff);
+  box-shadow: 0 16px 50px #071e4240;
+  color: var(--studio-text, #23425e);
+  font:
+    12px/1.4 "DM Sans",
+    Arial,
+    sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.cs-inline-price-editor header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cs-inline-price-editor header button {
+  border: 0;
+  background: transparent;
+  color: var(--studio-secondary, #71869a);
+  font-size: 22px;
+  cursor: pointer;
+}
+.cs-inline-price-editor label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  color: inherit;
+}
+.cs-inline-price-editor input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--studio-border, #d8e4ee);
+  border-radius: 7px;
+  background: var(--studio-muted, #f6f9fc);
+  color: inherit;
+  padding: 8px;
+  font:
+    600 16px/1.3 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-inline-price-editor output {
+  color: var(--studio-accent, #317c65);
+  font-size: 11px;
+}
+.cs-inline-price-editor button[type="submit"] {
+  background: #245b89;
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  font:
+    700 12px/1.3 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.cs-inline-price-editor button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.cs-inline-price-editor .cs-inline-price-confirm {
+  display: flex;
+  align-items: center;
+}
+.cs-tv-image-choice {
+  padding: 16px;
+  margin: 14px 0;
+  border: 1px solid var(--studio-border, #d3e2ef);
+  border-radius: 12px;
+  background: var(--studio-muted, #f1f7fc);
+  display: grid;
+  gap: 8px;
+}
+.cs-tv-image-choice p {
+  font-size: 12px;
+}
+.cs-tv-image-choice .cs-button {
+  justify-self: start;
+}
+.cs-product-tools {
+  position: absolute;
+  z-index: 80;
+  left: 5px;
+  top: 5px;
+  font:
+    11px/1.3 "DM Sans",
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.cs-product-tools > summary {
+  min-height: 30px;
+  padding: 6px 9px;
+  gap: 6px;
+  font-size: 10px;
+  background: var(--studio-surface, #fff);
+  color: var(--studio-text, #23425e);
+  box-shadow: 0 2px 9px #12385b20;
+}
+.cs-product-tools > div {
+  right: auto;
+  left: 0;
+  min-width: 205px;
+  width: max-content;
+  max-width: min(270px, 60vw);
+  padding: 7px;
+  gap: 3px;
+  border-radius: 12px;
+}
+.cs-product-tools > div > button,
+.cs-product-tools > div > span[role="button"] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--studio-text, #23425e);
+  padding: 8px;
+  text-align: left;
+  font:
+    600 11px/1.3 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.cs-product-tools > div > button:hover,
+.cs-product-tools > div > span[role="button"]:hover {
+  background: var(--studio-muted, #edf5fb);
+}
+.cs-product-tools svg {
+  flex: none;
+  color: var(--studio-accent, #367da8);
+}
+.resize-corner {
+  position: absolute !important;
+  z-index: 45;
+  display: block !important;
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 2px solid #368fd0 !important;
+  border-radius: 3px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 4px #12395b30 !important;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+  right: auto !important;
+  bottom: auto !important;
+}
+.resize-top-left {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+.resize-top-right {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+.resize-bottom-left {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+.resize-bottom-right {
+  left: 100%;
+  top: 100%;
+  cursor: nwse-resize;
+}
+:is(
+    .brochure-product-image-wrap,
+    .cover-editable-element,
+    .product-detail-block,
+    .product-artwork-item
+  ):is(:hover, :focus-within)
+  > .resize-corner,
+.product-artwork-chrome > .resize-corner,
+.show-guides .resize-corner {
+  opacity: 1;
+  pointer-events: auto;
+}
+.resize-corner:focus-visible {
+  opacity: 1;
+  outline: 3px solid #93d0fc;
+  outline-offset: 3px;
+  pointer-events: auto;
+}
+.cs-image-corner {
+  z-index: 30;
+}
+.cover-element-tools {
+  gap: 5px;
+}
+.cover-element-tools > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: auto;
+  min-width: 28px;
+  height: 28px;
+  padding: 4px 7px;
+  border: 1px solid #b8d0e2;
+  border-radius: 7px;
+  background: #fff;
+  color: #295477;
+  font:
+    600 10px/1.3 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cover-element-tools > button:last-child {
+  background: #fff3f0;
+  color: #bc4c37;
+  border-color: #efc1b7;
+}
+.product-detail-block-tools {
+  gap: 4px;
+}
+.product-detail-block-tools > button {
+  min-width: 25px;
+  width: auto;
+  height: 25px;
+  padding: 4px;
+  border-radius: 6px;
+}
+.product-detail-block-tools > .detail-block-fill {
+  color: #2b698b;
+  font:
+    600 9px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+}
+html[data-theme="dark"] body .cs-inline-price-editor {
+  color-scheme: dark;
+  background: var(--np-surface);
+  border-color: var(--np-border);
+  color: var(--np-text);
+}
+html[data-theme="dark"] body .cs-inline-price-editor input[type="number"] {
+  background: var(--np-bg);
+  border-color: var(--np-border);
+  color: var(--np-text);
+}
+@media (hover: none) {
+  .resize-corner {
+    opacity: 1;
+    pointer-events: auto;
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+.cs-product-tools {
+  top: -34px;
+}
+.cs-product-tools > summary {
+  box-shadow: 0 2px 7px #12385b16;
+  border-color: var(--studio-border, #d8e5ef);
+}
+:is(
+    .brochure-price,
+    .brochure-product-copy,
+    .brochure-specs,
+    .red-reference-saving
+  ):is(:hover, :focus-within)
+  > .cs-region-handles
+  > .resize-corner,
+.brochure-floating-artwork:is(:hover, :focus-within) [data-resize-corner],
+.stores-editable-element:is(:hover, :focus-within) > .resize-corner,
+.cs-screen-editor-overlay:is(:hover, :focus-within) > .resize-corner {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cover-product-frame:nth-child(even) .cs-product-tools > div,
+.brochure-product:nth-child(even) .cs-product-tools > div {
+  left: auto;
+  right: 0;
+}
+.cs-region-handle.move {
+  border-radius: 6px;
+  background: #fff;
+  color: #2b668f;
+  border-color: #a7c9df;
+}
+.brochure-page :is([contenteditable="true"], input, textarea) {
+  user-select: text;
+}
+.brochure-product-image-wrap .cs-product-tools {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+}
+.cover-element-tools > button:first-child {
+  background: #fff;
+  color: #295477;
+  border-color: #b8d0e2;
+}
+.cover-product-frame > .resize-corner {
+  opacity: 0;
+  pointer-events: none;
+}
+.cover-product-frame:has(> .cover-element-tools:hover) > .resize-corner,
+.cover-product-frame:has(> .cover-element-tools:focus-within) > .resize-corner,
+.show-guides .cover-product-frame > .resize-corner {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The reference preset preserves the printed page's generous top margin. */
+.brochure-interior.layout-tv8 .brochure-products {
+  inset: 7.3% 2.25% 1.8%;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  row-gap: 5cqw;
+  column-gap: 2.4cqw;
+}
+.brochure-interior.layout-tv8.with-footer .brochure-products {
+  bottom: 6.5%;
+}
+.brochure-interior.layout-tv8:not(.custom-card-layout)
+  .brochure-products
+  > article {
+  grid-column: span 2;
+}
+.brochure-interior.layout-tv8:not(.custom-card-layout)
+  .brochure-products
+  > article:nth-child(4),
+.brochure-interior.layout-tv8:not(.custom-card-layout)
+  .brochure-products
+  > article:nth-child(5) {
+  grid-column: span 3;
+}
+.brochure-interior.layout-feature3 .brochure-products {
+  inset: 5% 2.25% 5.8%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  row-gap: 4cqw;
+}
+.brochure-interior.layout-feature3:not(.custom-card-layout)
+  .brochure-products
+  > article:first-child {
+  grid-column: 1 / -1;
+}
+.brochure-footer-element .reference-offer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: flex-start;
+  gap: 0.3cqw 0.6cqw;
+  background: transparent;
+  margin: 0 2.25%;
+  width: 95.5%;
+  padding: 0.8cqw 0 0;
+  border-top: 0.15cqw dotted currentColor;
+}
+.reference-offer-footer .brochure-footer-payment {
+  order: -1;
+  text-align: left;
+}
+.reference-offer-footer .brochure-footer-dates {
+  font-weight: 700;
+}
+.cs-screen-editor-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.75fr);
+}
+.cs-screen-editor-preview {
+  background: var(--np-raised, #edf2f6);
+}
+.cs-screen-editor-preview:not(.adjusting) .cs-screen-editor-overlay {
+  border: 0;
+  box-shadow: none;
+  cursor: default;
+}
+.cs-screen-editor-preview:not(.adjusting)
+  .cs-screen-editor-overlay
+  > .resize-corner {
+  opacity: 0;
+  pointer-events: none;
+}
+.cs-tv-scope-prompt {
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid var(--np-accent, #4385b6);
+  border-radius: 16px;
+  background: var(--np-raised, #f1f7fb);
+  color: var(--np-text, #23435e);
+}
+.cs-tv-scope-prompt h3 {
+  margin: 0 0 7px;
+  font-size: 18px;
+}
+.cs-tv-scope-prompt p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--np-muted, #607c91);
+}
+.cs-tv-scope-previews {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cs-tv-scope-preview {
+  margin: 0;
+  width: 130px;
+}
+.cs-tv-scope-preview > div {
+  position: relative;
+}
+.cs-tv-scope-preview > div > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cs-tv-scope-preview span {
+  position: absolute;
+  display: block;
+  background: #000;
+  overflow: hidden;
+}
+.cs-tv-scope-preview span > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cs-tv-scope-preview figcaption {
+  margin-top: 7px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--np-muted, #607c91);
+}
+.cs-tv-scope-more {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--np-muted, #607c91);
+}
+.cs-tv-scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+@media (max-width: 700px) {
+  .cs-screen-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .cs-tv-scope-prompt {
+    padding: 14px;
+  }
+  .cs-tv-scope-preview {
+    width: 100px;
+  }
+}
+.cs-reference-preset {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0 16px;
+  border: 1px solid var(--studio-border, #bcd2e3);
+  border-radius: 12px;
+  background: var(--studio-surface, #f4f8fc);
+  color: var(--studio-text, #244c70);
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+}
+.cs-reference-preset svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.cs-reference-preset span {
+  display: grid;
+  gap: 5px;
+}
+.cs-reference-preset small {
+  font-size: 11px;
+  color: var(--studio-secondary, #698296);
+  font-weight: 400;
+}
+.reference-offer-footer .brochure-footer-payment,
+.reference-offer-footer .brochure-footer-dates {
+  padding: 0;
+  overflow-wrap: normal;
+}
+.brochure-page.reference-ready-preset::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/cover-backgrounds/neptun-reference-pattern.svg") center /
+    100% 100%;
+}
+.brochure-interior.custom-card-layout.layout-tv8 .brochure-products {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.brochure-interior.custom-card-layout.layout-feature3 .brochure-products {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.brochure-page.reference-ready-preset
+  .cover-featured-product
+  .brochure-specs[data-detail-layout="strip"] {
+  justify-content: center;
+}

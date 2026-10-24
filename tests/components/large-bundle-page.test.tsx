@@ -349,9 +349,14 @@ it("keeps all member images editable and moves/resizes shared regions and member
   );
   expect(edit).toHaveBeenLastCalledWith(offer);
   fireEvent.click(view.container.querySelector(".brochure-price")!);
+  expect(view.container.querySelector(".cs-inline-price-editor")).toBeTruthy();
+  fireEvent.keyDown(view.container.querySelector(".brochure-price")!, {
+    key: "Enter",
+  });
   expect(editPrice).toHaveBeenLastCalledWith(offer);
-  fireEvent.click(
+  fireEvent.keyDown(
     view.container.querySelector(".brochure-red-reference-saving")!,
+    { key: "Enter" },
   );
   expect(editSaving).toHaveBeenLastCalledWith(offer);
 

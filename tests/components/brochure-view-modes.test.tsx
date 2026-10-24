@@ -92,7 +92,10 @@ it("returns from the full-screen preview to editing using its visible button or 
     modes.getByRole("button", { name: "Edit brochure" }),
   );
   fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
-  fireEvent.keyDown(window, { key: "Escape" });
+  fireEvent(
+    view.getByRole("dialog", { name: "Brochure preview" }),
+    new Event("cancel", { bubbles: true, cancelable: true }),
+  );
   expect(
     view.container.querySelector(".cs-page-preview.edit-view"),
   ).toBeTruthy();

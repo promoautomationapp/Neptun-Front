@@ -153,7 +153,12 @@ function ThreadMessage({
   return (
     <div className="cs-pin-message">
       <div>
-        <strong>{message.authorEmail}</strong>
+        <span className="cs-pin-author">
+          <span className="cs-comment-avatar" aria-hidden="true">
+            {(message.authorEmail || "?").slice(0, 2).toUpperCase()}
+          </span>
+          <strong>{message.authorEmail}</strong>
+        </span>
         <time dateTime={message.createdAt}>
           {new Date(message.createdAt ?? Number.NaN).toLocaleString()}
         </time>
@@ -200,6 +205,20 @@ export function BrochureComments({
   }, [focusedCommentId, focusExists, pageIndex]);
   const active = comments.find((item) => item.id === activeId);
   const point = active?.position || pending;
+  useEffect(() => {
+    if (!point) return;
+    const dismiss = (event: KeyboardEvent) => {
+      if (
+        event.key === "Escape" &&
+        !(event.target as Element)?.closest?.(".cs-mention-suggestions")
+      ) {
+        setPending(null);
+        setActiveId(null);
+      }
+    };
+    document.addEventListener("keydown", dismiss);
+    return () => document.removeEventListener("keydown", dismiss);
+  }, [point]);
   const close = () => {
     setPending(null);
     setActiveId(null);
@@ -260,6 +279,8 @@ export function BrochureComments({
       {point && (
         <section
           className="cs-comment-popover"
+          role="dialog"
+          aria-label={t(active ? "Comment thread" : "Add a comment here")}
           style={
             point.x > 55
               ? {
@@ -291,6 +312,11 @@ export function BrochureComments({
               ×
             </button>
           </header>
+          {active && (
+            <span className={`cs-comment-status ${active.fixed ? "" : "open"}`}>
+              {t(active.fixed ? "Resolved" : "Open")}
+            </span>
+          )}
           {active && (
             <div className="cs-pin-thread">
               <ThreadMessage message={active} />

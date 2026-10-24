@@ -1,3 +1,8 @@
+import {
+  CornerHandles,
+  resizeFromCorner,
+  type ResizeCorner,
+} from "./resizeCorners";
 import type { Artwork, Box, Campaign, Product } from "../../domain/models";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { effectiveProductArtworks } from "./productArtwork";
@@ -180,12 +185,14 @@ export function bundleScreenAnnotationPlacement(
     return {
       inches,
       type: "television",
-      style: { ...televisionAnnotationBaseBox({
-        left: photoBox.left + screen.x * photoBox.width,
-        top: photoBox.top + screen.y * photoBox.height,
-        width: screen.width * photoBox.width,
-        height: screen.height * photoBox.height,
-      }) },
+      style: {
+        ...televisionAnnotationBaseBox({
+          left: photoBox.left + screen.x * photoBox.width,
+          top: photoBox.top + screen.y * photoBox.height,
+          width: screen.width * photoBox.width,
+          height: screen.height * photoBox.height,
+        }),
+      },
     };
   }
   const visible = visibleImageBounds(image);
@@ -313,6 +320,8 @@ function ArtworkPhoto({
           draggable={false}
           referrerPolicy="no-referrer"
           style={{
+            objectFit: member.screenArtwork.fit || "contain",
+            background: "#000",
             left: `${screen.x}%`,
             top: `${screen.y}%`,
             width: `${screen.width}%`,
@@ -386,6 +395,7 @@ interface ArtworkGesture {
   index: number;
   key: string | number;
   kind: "move" | "resize";
+  corner?: ResizeCorner;
   parent: DOMRect;
   original: ArtworkPosition;
   pointerId: number;
@@ -496,12 +506,16 @@ export function ProductArtworkLayer({
     event.currentTarget.setPointerCapture(event.pointerId);
     const key = artwork.id ?? index;
     setSelected(key);
-    layerRef.current?.closest(".cs-page-preview")?.classList.add("dragging-guides");
+    layerRef.current
+      ?.closest(".cs-page-preview")
+      ?.classList.add("dragging-guides");
     gesture.current = {
       artwork,
       index,
       key,
       kind,
+      corner: (event.currentTarget.dataset.resizeCorner ||
+        "bottom-right") as ResizeCorner,
       parent,
       original,
       pointerId: event.pointerId,
@@ -538,27 +552,22 @@ export function ProductArtworkLayer({
         ),
       };
     } else {
-      const delta = (dx + aspect * dy) / (1 + aspect * aspect);
-      const maximum = Math.max(
-        0.1,
-        Math.min(
-          100 - original.x,
-          ((100 - original.y) * parent.height) /
-            parent.width /
-            Math.max(aspect, 0.001),
-        ),
-      );
-      const width = clamp(
-        original.width + (delta / parent.width) * 100,
-        Math.min(1, maximum),
-        maximum,
+      const height =
+        original.height ??
+        (original.width * parent.width * aspect) / parent.height;
+      const resized = resizeFromCorner(
+        { ...original, height },
+        (dx / parent.width) * 100,
+        (dy / parent.height) * 100,
+        action.corner,
+        { lockAspect: true, minWidth: 1, maxWidth: 100, maxHeight: 100 },
       );
       next = {
         ...original,
-        width,
-        ...(original.height != null
-          ? { height: (original.height * width) / original.width }
-          : {}),
+        x: resized.x,
+        y: resized.y,
+        width: resized.width,
+        ...(original.height != null ? { height: resized.height } : {}),
       };
     }
     action.next = { ...action.artwork, ...next, relativeTo: "product" };
@@ -570,7 +579,9 @@ export function ProductArtworkLayer({
     if (!action || event.pointerId !== action.pointerId) return;
     event.stopPropagation();
     gesture.current = null;
-    layerRef.current?.closest(".cs-page-preview")?.classList.remove("dragging-guides");
+    layerRef.current
+      ?.closest(".cs-page-preview")
+      ?.classList.remove("dragging-guides");
     setDraft(null);
     if (!cancelled && action.next) {
       const next = action.next;
@@ -681,17 +692,11 @@ export function ProductArtworkLayer({
             />
             {canEdit && (
               <div className="product-artwork-chrome" data-export-hide="true">
-                <button
-                  type="button"
+                <CornerHandles
+                  label={`${t("Artwork")}: ${label}`}
                   className="product-artwork-resize"
-                  aria-label={`${t("Resize artwork")}: ${label}`}
-                  title={t("Drag to resize artwork")}
-                  onPointerDown={(event) =>
-                    start(event, artwork, index, "resize")
-                  }
-                >
-                  ↘
-                </button>
+                  onStart={(event) => start(event, artwork, index, "resize")}
+                />
                 <button
                   type="button"
                   className="product-artwork-remove"

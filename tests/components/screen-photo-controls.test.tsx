@@ -39,6 +39,54 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("asks whether to use a wallpaper on one TV or all TVs before saving", () => {
+  const onSave = vi.fn();
+  const onClose = vi.fn();
+  const view = render(
+    <ScreenImageEditor
+      product={product}
+      tvCount={3}
+      televisions={[product, { ...product, code: "TV-2" }]}
+      onSave={onSave}
+      onClose={onClose}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
+  expect(onSave).not.toHaveBeenCalled();
+  expect(
+    view.getByRole("heading", {
+      name: "Add this image to all TVs in the brochure?",
+    }),
+  ).toBeTruthy();
+  expect(view.container.querySelectorAll(".cs-tv-scope-preview")).toHaveLength(
+    2,
+  );
+  fireEvent.click(view.getByRole("button", { name: "All TVs (3)" }));
+  expect(onSave).toHaveBeenCalledWith(
+    expect.objectContaining({ image: "/wallpaper.jpg", fit: "contain" }),
+    "all",
+  );
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+it("lets a user go back from the scope choice or restore only this TV", () => {
+  const onSave = vi.fn();
+  const view = render(
+    <ScreenImageEditor
+      product={product}
+      tvCount={3}
+      onSave={onSave}
+      onClose={vi.fn()}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
+  fireEvent.click(view.getByRole("button", { name: "Back" }));
+  expect(onSave).not.toHaveBeenCalled();
+  fireEvent.click(view.getByRole("button", { name: "Use original screen" }));
+  fireEvent.click(view.getByRole("button", { name: "Only this TV" }));
+  expect(onSave).toHaveBeenCalledWith(null, "one");
+});
+
 it("refits a stale saved box when the replacement photo loads, then stamps manual changes for that photo", () => {
   const onSave = vi.fn();
   const view = render(
@@ -66,11 +114,12 @@ it("refits a stale saved box when the replacement photo loads, then stamps manua
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
   expect(onSave).toHaveBeenCalledWith(
     expect.objectContaining({
-      box: expect.objectContaining({ x: 0.1 }),
+      box: expect.objectContaining({ width: 0.92, height: 0.75 }),
       detectedFor: image.src,
     }),
     "one",
   );
+  expect(onSave.mock.calls[0]![0].box.x).toBeCloseTo(0.08);
 });
 
 it("keeps an unchanged legacy box on photo load", () => {

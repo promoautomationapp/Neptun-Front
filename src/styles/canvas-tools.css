@@ -1,0 +1,76 @@
+.cs-canvas-tools {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--np-border, #d5e1e9);
+  border-radius: 12px;
+  background: var(--np-surface, #fff);
+  box-shadow: 0 3px 10px #102e4808;
+}
+.cs-canvas-tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--np-muted, #536a7a);
+  font:
+    600 12px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.cs-canvas-tools button:hover {
+  background: var(--np-raised, #f0f5f8);
+  color: var(--np-text, #1d3c57);
+}
+.cs-canvas-tools button[aria-pressed="true"] {
+  background: var(--np-selected, #e7f3fb);
+  border-color: var(--np-accent, #2d8ccb);
+  color: var(--np-accent, #126ca6);
+}
+.cs-canvas-tools button:focus-visible {
+  outline: 3px solid var(--np-accent, #2d8ccb);
+  outline-offset: 2px;
+}
+.cs-canvas-tools button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.cs-canvas-tools kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font:
+    500 10px/1 "DM Sans",
+    Arial,
+    sans-serif;
+  opacity: 0.55;
+}
+@media (max-width: 520px) {
+  .cs-canvas-tools {
+    gap: 2px;
+    padding: 4px;
+  }
+  .cs-canvas-tools button {
+    gap: 5px;
+    padding: 7px;
+  }
+  .cs-canvas-tools kbd {
+    display: none;
+  }
+}

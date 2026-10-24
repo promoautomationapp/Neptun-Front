@@ -1,3 +1,9 @@
+import { EditorIcon } from "./EditorIcon";
+import {
+  CornerHandles,
+  resizeFromCorner,
+  type ResizeCorner,
+} from "./resizeCorners";
 import React from "react";
 import type { Product } from "../../domain/models";
 import { t } from "./i18n";
@@ -15,6 +21,7 @@ type DetailPlacement = ReturnType<typeof detailBlockPlacement>;
 type DetailGestureKind = "move" | "resize";
 interface DetailGesture {
   kind: DetailGestureKind;
+  corner?: ResizeCorner;
   startX: number;
   startY: number;
   original: DetailPlacement;
@@ -59,8 +66,12 @@ export function ProductDetailBlock({
   const saved = product.detailBlockPlacements?.[detailKey];
   const detailStyle = product.detailBlockStyles?.[detailKey];
   const defaultFilled = className.split(/\s+/).includes("detail-filled");
-  const filled = detailStyle === "filled" || (detailStyle !== "outline" && defaultFilled);
-  const visualClassName = className.split(/\s+/).filter((name) => name !== "detail-filled").join(" ");
+  const filled =
+    detailStyle === "filled" || (detailStyle !== "outline" && defaultFilled);
+  const visualClassName = className
+    .split(/\s+/)
+    .filter((name) => name !== "detail-filled")
+    .join(" ");
   const [placement, setPlacement] = React.useState(() =>
     detailBlockPlacement(saved),
   );
@@ -69,6 +80,14 @@ export function ProductDetailBlock({
   const [draftText, setDraftText] = React.useState(editText);
   const gesture = React.useRef<DetailGesture | null>(null);
   const blockRef = React.useRef<HTMLSpanElement>(null);
+  const clickTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const moved = React.useRef(false);
+  React.useEffect(
+    () => () => {
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+    },
+    [],
+  );
   const productRef = React.useRef(product);
   productRef.current = product;
   React.useEffect(
@@ -83,10 +102,20 @@ export function ProductDetailBlock({
     setEditing(false);
   }
   function toggleFill(event: React.MouseEvent<HTMLSpanElement>) {
-    if (!onChange || (event.target as HTMLElement).closest("button,input")) return;
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    if (onEdit && !(event.target as Element).closest("button,input")) {
+      event.stopPropagation();
+      onEdit(detailKey);
+      return;
+    }
+    if (!onChange || (event.target as HTMLElement).closest("button,input"))
+      return;
     event.preventDefault();
     event.stopPropagation();
-    onChange("detailBlockStyles", { ...(productRef.current.detailBlockStyles || {}), [String(detailKey)]: filled ? "outline" : "filled" });
+    onChange("detailBlockStyles", {
+      ...(productRef.current.detailBlockStyles || {}),
+      [String(detailKey)]: filled ? "outline" : "filled",
+    });
   }
 
   function commit(next: DetailPlacement) {
@@ -117,6 +146,8 @@ export function ProductDetailBlock({
     const parent = block.parentElement.getBoundingClientRect();
     gesture.current = {
       kind,
+      corner: (event.currentTarget.dataset.resizeCorner ||
+        "bottom-right") as ResizeCorner,
       startX: event.clientX,
       startY: event.clientY,
       original: placement,
@@ -136,6 +167,7 @@ export function ProductDetailBlock({
           ((cardRect.bottom - rect.bottom) / pageRect.width) * 100,
       },
     };
+    moved.current = true;
     setDragging(true);
     block.closest(".cs-page-preview")?.classList.add("dragging-guides");
   }
@@ -151,7 +183,8 @@ export function ProductDetailBlock({
     event.stopPropagation();
     const dx = event.clientX - action.startX;
     const dy = event.clientY - action.startY;
-    if (action.kind === "move" && !action.changed && Math.hypot(dx, dy) < 3) return;
+    if (action.kind === "move" && !action.changed && Math.hypot(dx, dy) < 3)
+      return;
     action.next =
       action.kind === "move"
         ? {
@@ -167,19 +200,34 @@ export function ProductDetailBlock({
               action.limits.bottom,
             ),
           }
-        : {
-            ...action.original,
-            width: clamp(
-              action.baseWidth + (dx / action.parentWidth) * 100,
-              5,
-              150,
-            ),
-            height: clamp(
-              action.baseHeight + (dy / action.pageWidth) * 100,
-              0.5,
-              100,
-            ),
-          };
+        : (() => {
+            const frame = {
+              x: (action.original.x * action.pageWidth) / action.parentWidth,
+              y: (action.original.y * action.pageWidth) / action.parentWidth,
+              width: action.baseWidth,
+              height:
+                (action.baseHeight * action.pageWidth) / action.parentWidth,
+            };
+            const next = resizeFromCorner(
+              frame,
+              (dx / action.parentWidth) * 100,
+              (dy / action.parentWidth) * 100,
+              action.corner,
+              {
+                minWidth: 5,
+                minHeight: (0.5 * action.pageWidth) / action.parentWidth,
+                maxWidth: 150,
+                maxHeight: (100 * action.pageWidth) / action.parentWidth,
+              },
+            );
+            return {
+              ...action.original,
+              x: (next.x * action.parentWidth) / action.pageWidth,
+              y: (next.y * action.parentWidth) / action.pageWidth,
+              width: next.width,
+              height: (next.height * action.parentWidth) / action.pageWidth,
+            };
+          })();
     action.changed = Math.hypot(dx, dy) > 2;
     setPlacement(action.next);
   }
@@ -193,7 +241,10 @@ export function ProductDetailBlock({
     event.stopPropagation();
     gesture.current = null;
     setDragging(false);
-    blockRef.current?.closest(".cs-page-preview")?.classList.remove("dragging-guides");
+    blockRef.current
+      ?.closest(".cs-page-preview")
+      ?.classList.remove("dragging-guides");
+    moved.current = Boolean(action.changed);
     if (action.changed) commit(action.next);
     else setPlacement(action.original);
   }
@@ -203,7 +254,9 @@ export function ProductDetailBlock({
     setPlacement(gesture.current.original);
     gesture.current = null;
     setDragging(false);
-    blockRef.current?.closest(".cs-page-preview")?.classList.remove("dragging-guides");
+    blockRef.current
+      ?.closest(".cs-page-preview")
+      ?.classList.remove("dragging-guides");
   }
   function keyboard(
     event: React.KeyboardEvent<HTMLButtonElement>,
@@ -279,7 +332,38 @@ export function ProductDetailBlock({
       style={{ ...style, ...detailBlockStyle(placement) }}
       data-detail-key={String(detailKey)}
       onDoubleClick={toggleFill}
-      onPointerDown={onChange ? (event) => { if (!(event.target as Element).closest("button,input,textarea,select,.product-detail-block-tools")) begin(event, "move"); } : undefined}
+      onClick={(event) => {
+        if (
+          (event.target as Element).closest(
+            "button,input,textarea,.product-detail-block-tools",
+          )
+        )
+          return;
+        if (moved.current) {
+          moved.current = false;
+          return;
+        }
+        if (onSaveText) {
+          event.stopPropagation();
+          if (clickTimer.current) clearTimeout(clickTimer.current);
+          clickTimer.current = setTimeout(() => {
+            setDraftText(editText);
+            setEditing(true);
+          }, 220);
+        }
+      }}
+      onPointerDown={
+        onChange
+          ? (event) => {
+              if (
+                !(event.target as Element).closest(
+                  "button,input,textarea,select,.product-detail-block-tools",
+                )
+              )
+                begin(event, "move");
+            }
+          : undefined
+      }
       onPointerMove={onChange ? move : undefined}
       onPointerUp={onChange ? end : undefined}
       onPointerCancel={onChange ? cancel : undefined}
@@ -293,7 +377,27 @@ export function ProductDetailBlock({
           onPointerDown={(event) => event.stopPropagation()}
         >
           {draggable && onDragStart && (
-            <button type="button" draggable className="detail-block-reorder" title={t("Drag to reorder details")} aria-label={`${t("Reorder")} ${label}`} onDragStart={(event) => { event.stopPropagation(); onDragStart(event as unknown as React.DragEvent<HTMLSpanElement>); }} onDragEnd={(event) => { event.stopPropagation(); onDragEnd?.(event as unknown as React.DragEvent<HTMLSpanElement>); }}>⠿</button>
+            <button
+              type="button"
+              draggable
+              className="detail-block-reorder"
+              title={t("Drag to reorder details")}
+              aria-label={`${t("Reorder")} ${label}`}
+              onDragStart={(event) => {
+                event.stopPropagation();
+                onDragStart(
+                  event as unknown as React.DragEvent<HTMLSpanElement>,
+                );
+              }}
+              onDragEnd={(event) => {
+                event.stopPropagation();
+                onDragEnd?.(
+                  event as unknown as React.DragEvent<HTMLSpanElement>,
+                );
+              }}
+            >
+              <EditorIcon name="drag" />
+            </button>
           )}
           {onChange && (
             <button
@@ -303,7 +407,7 @@ export function ProductDetailBlock({
               aria-label={`${t("Move")} ${label}`}
               {...handleProps("move")}
             >
-              ✥
+              <EditorIcon name="move" />
             </button>
           )}
           {(onEdit || onSaveText) && (
@@ -314,11 +418,13 @@ export function ProductDetailBlock({
               aria-label={`${t("Edit this detail")} ${label}`}
               onClick={(event) => {
                 event.stopPropagation();
-                if (onSaveText) { setDraftText(editText); setEditing(true); }
-                else onEdit?.(detailKey);
+                if (onSaveText) {
+                  setDraftText(editText);
+                  setEditing(true);
+                } else onEdit?.(detailKey);
               }}
             >
-              ✎
+              <EditorIcon name="edit" />
             </button>
           )}
           {onRemove && (
@@ -332,27 +438,74 @@ export function ProductDetailBlock({
                 onRemove(detailKey);
               }}
             >
-              ×
+              <EditorIcon name="trash" />
             </button>
           )}
           {onChange && (
             <button
               type="button"
-              className="detail-block-resize"
-              title={t("Drag to resize detail block")}
-              aria-label={`${t("Resize")} ${label}`}
-              {...handleProps("resize")}
+              className="detail-block-fill"
+              title={t("Change block background")}
+              aria-label={t("Change block background")}
+              onClick={(event) => {
+                event.stopPropagation();
+                onChange("detailBlockStyles", {
+                  ...productRef.current.detailBlockStyles,
+                  [String(detailKey)]: filled ? "outline" : "filled",
+                });
+              }}
             >
-              ↘
+              {t("Fill")}
             </button>
           )}
         </i>
       )}
-      {editing && <span className="detail-block-inline-editor" data-export-hide="true" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
-        <input autoFocus value={draftText} aria-label={t("Edit this detail")} onChange={(event) => setDraftText(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); saveText(); } else if (event.key === "Escape") { event.preventDefault(); setEditing(false); } }} />
-        <button type="button" onClick={saveText} aria-label={t("Save detail")}>✓</button>
-        <button type="button" onClick={() => setEditing(false)} aria-label={t("Cancel")}>×</button>
-      </span>}
+      {onChange && (
+        <CornerHandles
+          label={label}
+          className="detail-block-resize"
+          onKeyDown={(event) => keyboard(event, "resize")}
+          onStart={(event) => begin(event, "resize")}
+        />
+      )}
+      {editing && (
+        <span
+          className="detail-block-inline-editor"
+          data-export-hide="true"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <input
+            autoFocus
+            value={draftText}
+            aria-label={t("Edit this detail")}
+            onChange={(event) => setDraftText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveText();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                setEditing(false);
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={saveText}
+            aria-label={t("Save detail")}
+          >
+            ✓
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            aria-label={t("Cancel")}
+          >
+            ×
+          </button>
+        </span>
+      )}
     </span>
   );
 }

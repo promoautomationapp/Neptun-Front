@@ -8,7 +8,24 @@ import type {
 } from "../features/settings/settings.schema";
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-export interface PageLayout {
+export interface PageDecorationDefaults {
+  showHeader?: boolean;
+  showOnlineLogo?: boolean;
+  showFooterLogo?: boolean;
+  showFooterLine?: boolean;
+  footerLineColor?: string;
+  footerLogoColor?: string;
+  headerColor?: string;
+  headerTextColor?: string;
+}
+export interface BrochurePresetDefinition {
+  id: string;
+  name: string;
+  design: Partial<Campaign>;
+}
+export interface PageLayout extends PageDecorationDefaults {
+  headerText?: string;
+  footerNumber?: string;
   showFooter?: boolean;
   showFooterPageNumber?: boolean;
   spacing?: Record<string, JsonValue>;
@@ -38,7 +55,13 @@ export interface Settings {
   offerStyle?: string;
   savingMode?: string;
   brochure?: BrochureDefaults;
-  customFormats?: Array<{ id: string; name: string; width: number; height: number; visible: boolean }>;
+  customFormats?: Array<{
+    id: string;
+    name: string;
+    width: number;
+    height: number;
+    visible: boolean;
+  }>;
   productDesign?: ProductDesignDefaults;
   logoLibrary?: LogoAsset[];
   logoRules?: LogoRule[];
@@ -51,14 +74,33 @@ export interface Settings {
   categorySavingModes?: Record<string, CategorySavingRule>;
   campaignTypes?: CampaignType[];
   defaultCampaignTypeId?: string;
+  brochurePresets?: BrochurePresetDefinition[];
+  defaultBrochurePresetId?: string;
 }
 export type CampaignMutator = (draft: Campaign) => void;
+export interface BrochureFooterDesign {
+  style?: "bar" | "reference";
+  visible?: boolean;
+  dateText?: string;
+  bottom?: number;
+  height?: number;
+  dateWidth?: number;
+  dateSize?: number;
+  paymentSize?: number;
+  from?: string;
+  to?: string;
+}
 export interface Campaign {
+  brochurePresetId?: string;
+  coverBrandTagline?: string;
+  brochureVisualStyle?: "current" | "october";
+  pageDecorationDefaults?: PageDecorationDefaults;
+  brochureFooter?: BrochureFooterDesign;
   disabledAt?: string | null;
   disabledBy?: string | null;
   campaignLogo?: string;
   logoRules?: LogoRule[];
-  logoRuleDefaults?: {cover: string; pages: string};
+  logoRuleDefaults?: { cover: string; pages: string };
   productDesign?: ProductDesignDefaults;
   campaignAssets?: Record<
     string,
@@ -122,7 +164,12 @@ export interface Campaign {
 
   version?: number;
   brochureFormat?: string;
-  brochureFormatSnapshot?: { id: string; name: string; width: number; height: number };
+  brochureFormatSnapshot?: {
+    id: string;
+    name: string;
+    width: number;
+    height: number;
+  };
   aiReviewedFields?: Record<string, string>;
   aiReviewedTextSnapshot?: string;
   brandAssets?: Record<string, string>;
@@ -300,10 +347,15 @@ export interface BrochureImportWarning {
 }
 
 export interface Product {
+  brochureCode?: string;
   /** Imported offers remain editable even when their code is absent from the catalog. */
   catalogMissing?: boolean;
   missingCatalogCodes?: string[];
-  excelSource?: { row: number; cells: Record<string, string>; placeholderName?: string };
+  excelSource?: {
+    row: number;
+    cells: Record<string, string>;
+    placeholderName?: string;
+  };
   imageSearch?: ProductImageSearch;
   bundleCodes?: string[];
   bundleProducts?: Product[];

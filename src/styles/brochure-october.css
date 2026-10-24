@@ -1,0 +1,607 @@
+/* October reference: native 1080 × 1350 artwork coordinates. */
+.brochure-page.brochure-october {
+  --october-blue: #003870;
+  --october-ribbon: #007dc5;
+  font-family: SkolaSans, Arial, sans-serif;
+}
+.brochure-page.brochure-interior.brochure-october .brochure-products {
+  inset: 11.5% 3.6% 8.7%;
+  column-gap: 3cqw;
+  row-gap: 6.5cqw;
+}
+.brochure-page.brochure-interior.brochure-october.layout-grid6portrait
+  .brochure-products {
+  top: 7.3%;
+  row-gap: 3.5cqw;
+}
+.brochure-page.brochure-interior.brochure-october.layout-pair2
+  .brochure-products {
+  grid-template-columns: minmax(0, 1fr);
+}
+.brochure-page.brochure-interior.brochure-october.layout-pair2
+  .brochure-products
+  > .brochure-product {
+  width: 57.2%;
+  justify-self: center;
+}
+.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-product-image-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-product-bottom {
+  flex: none;
+  min-height: 9.5cqw;
+  height: 9.5cqw;
+  align-items: flex-end;
+  gap: 0;
+}
+.brochure-page.brochure-october
+  .brochure-product-bottom
+  > .brochure-price.reference-price-card {
+  flex: 0 0 17.965cqw;
+  width: 17.965cqw;
+  max-width: 48%;
+}
+.brochure-page.brochure-october .brochure-product-copy {
+  font:
+    300 1.44cqw/1.18 SkolaSans,
+    Arial,
+    sans-serif;
+  padding: 0;
+  text-transform: none;
+  color: inherit;
+}
+.brochure-page.brochure-october
+  .brochure-product-copy
+  :is([data-product-name], .brochure-warranty-line) {
+  font:
+    300 1.44cqw/1.18 SkolaSans,
+    Arial,
+    sans-serif;
+  opacity: 1;
+  white-space: normal;
+}
+.brochure-page.brochure-october .brochure-product-code {
+  display: none;
+}
+.brochure-page.brochure-october .brochure-brand-mark {
+  height: 3.1cqw;
+  max-width: 100%;
+  margin-bottom: 0.35cqw;
+}
+.brochure-page.brochure-october .brochure-brand-mark img {
+  height: 100%;
+  max-height: 3.1cqw;
+  object-fit: contain;
+  object-position: left bottom;
+}
+.brochure-page.brochure-october .brochure-brand-mark strong {
+  font-size: 2.6cqw;
+  line-height: 1;
+}
+.brochure-page.brochure-october .brochure-product-name-divider {
+  display: none;
+}
+.brochure-page.brochure-october .brochure-product.blue-reference-offer,
+.brochure-page.brochure-october .brochure-product {
+  --detail-copy-size: 0.970275cqw;
+  --detail-copy-long-size: 0.84cqw;
+  --detail-metric-size: 1.1cqw;
+  --detail-number-size: 1.1cqw;
+  --detail-label-size: 0.97cqw;
+  --detail-text-weight: 300;
+}
+.brochure-page.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-specs[data-detail-layout="strip"] {
+  height: 3.67cqw;
+  flex: none;
+  padding: 0;
+  gap: 1.1cqw;
+  order: 1;
+  margin: 0;
+  align-items: center;
+}
+.brochure-page.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block {
+  width: 9.73cqw;
+  height: 3.67cqw;
+  min-height: 0;
+  max-width: none;
+  aspect-ratio: auto;
+  border: 0.085cqw solid #003970;
+  border-radius: 0.46cqw;
+  background: transparent;
+  padding: 0.3cqw;
+}
+.brochure-page.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block.detail-filled {
+  background: transparent;
+  color: inherit;
+}
+.brochure-page.brochure-october
+  .brochure-product.details-left
+  > .brochure-specs {
+  width: 21%;
+  top: 17%;
+  height: 48%;
+  gap: 1.45cqw;
+}
+.brochure-page.brochure-october
+  .brochure-product.details-left
+  > .brochure-specs
+  > .product-detail-block {
+  width: 100%;
+  min-height: 3.42cqw;
+  height: 3.42cqw;
+  flex: none;
+  border: 0.08cqw solid #003970;
+  border-radius: 0.45cqw;
+  font-size: 1.1cqw;
+}
+.brochure-page.brochure-october
+  .brochure-product.details-left
+  .brochure-product-image-wrap {
+  flex: 1 1 auto;
+  height: calc(100% - 9.5cqw);
+}
+.brochure-page.brochure-october
+  .brochure-product.details-left
+  > .brochure-product-bottom {
+  flex: none;
+  min-height: 9.5cqw;
+  height: 9.5cqw;
+}
+.brochure-page.brochure-october .brochure-specs .brochure-warranty {
+  display: none !important;
+}
+.brochure-page.brochure-october .october-decoration {
+  position: absolute;
+  z-index: 8;
+}
+.october-decoration > .campaign-asset-artwork {
+  display: block;
+  height: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.october-decoration > .campaign-asset-artwork > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.october-category-header {
+  left: 0;
+  top: 2.704%;
+  width: 41.111%;
+  height: 2%;
+}
+.october-category-ribbon {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 0 2cqw 2cqw 0;
+  padding-left: 7.4cqw;
+  box-sizing: border-box;
+}
+.october-category-ribbon > span {
+  display: block;
+  font:
+    500 1.667cqw/1 SkolaSans,
+    Arial,
+    sans-serif;
+  text-transform: uppercase;
+  min-width: 0;
+  white-space: nowrap;
+}
+.october-online-logo {
+  left: 82.4%;
+  top: 1.1%;
+  width: 14.9%;
+  height: 8.4%;
+}
+.october-apple-header {
+  left: 3.6%;
+  top: 2.7%;
+  width: 16%;
+  height: 4.7%;
+}
+.october-footer-logo {
+  left: 3.6%;
+  bottom: 2.46%;
+  width: 12.23%;
+  height: 2.1%;
+}
+.october-footer-logo .neptun-wordmark {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.october-footer-logo .neptun-wordmark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.october-footer-line {
+  left: 17.93%;
+  bottom: 2.7%;
+  width: 74.8%;
+  height: 0.075%;
+}
+.october-footer-rule {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 1px;
+}
+.october-footer-number {
+  right: 3.3%;
+  bottom: 2.7%;
+  width: 3%;
+  height: 2.6%;
+}
+.october-page-number {
+  display: block;
+  font:
+    400 2.685cqw/1 SkolaSans,
+    Arial,
+    sans-serif;
+  text-align: right;
+}
+.cs-page-decoration-controls {
+  display: grid;
+  gap: 12px;
+  font-size: 12px;
+}
+.cs-page-decoration-controls > label {
+  display: grid;
+  gap: 6px;
+}
+.cs-page-decoration-controls > .cs-decoration-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cs-page-decoration-controls input:not([type="checkbox"]) {
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 7px;
+  padding: 8px;
+  color: var(--np-text, #264a6a);
+  background: var(--np-surface, #fff);
+}
+.brochure-page.brochure-october.cover-editable-elements .october-cover-photo {
+  z-index: 1;
+}
+.october-cover-photo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.october-cover-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  color: white;
+  background: transparent;
+  font:
+    600 2.4cqw/1.3 SkolaSans,
+    Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.october-cover-upload svg {
+  width: 3cqw;
+  height: 3cqw;
+}
+.brochure-october .cover-element-logo {
+  z-index: 8 !important;
+}
+.brochure-october .cover-element-band {
+  z-index: 3 !important;
+}
+.brochure-page.brochure-october.cover-with-uuu .cover-element-band > img {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  object-fit: fill;
+}
+.brochure-october .october-cover-body {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 55.7%;
+  background: inherit;
+  pointer-events: none;
+}
+.brochure-october .october-cover-ribbon {
+  z-index: 2 !important;
+}
+.brochure-october .cover-element-october-hajde,
+.brochure-october .cover-element-message {
+  z-index: 8 !important;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-element-message
+  p {
+  font-family: SkolaSans, Arial, sans-serif;
+  font-size: calc(4.42cqw * var(--cover-text-scale, 1)) !important;
+  font-weight: 900;
+  font-style: italic;
+  transform: rotate(-2.75deg);
+  white-space: nowrap;
+  text-align: left;
+}
+.brochure-page.brochure-october .cover-product-frame > .brochure-product {
+  color: white;
+}
+.brochure-page.brochure-october
+  .cover-product-frame
+  .brochure-specs
+  .product-detail-block {
+  color: white;
+  border-color: white !important;
+}
+.brochure-page.brochure-october .cover-product-frame .brochure-brand-mark {
+  filter: brightness(0) invert(1);
+}
+.brochure-page.brochure-october
+  .cover-product-frame
+  .brochure-product-bottom
+  > .brochure-price.reference-price-card {
+  width: 17.4cqw;
+  flex-basis: 17.4cqw;
+}
+.brochure-page.brochure-october .cover-element-october-awards .brochure-awards {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.brochure-page.brochure-october .cover-element-october-awards .award-badge {
+  width: 8.2cqw;
+  height: 8.2cqw;
+}
+.brochure-page.brochure-october .cover-element-october-awards .award-combined {
+  width: 17.1cqw;
+  height: auto;
+}
+.brochure-page.brochure-october.stores-reference-page .stores-heading {
+  font-size: 3.24cqw;
+  background: #007dc5;
+}
+.brochure-page.brochure-october.stores-reference-page .store-spot {
+  color: #173967;
+}
+.brochure-page.brochure-october.stores-reference-page .store-spot strong {
+  font-family: SkolaSans, Arial, sans-serif;
+  font-size: 1.574cqw;
+  font-weight: 900;
+}
+.brochure-page.brochure-october.stores-reference-page .store-spot :is(b, span) {
+  font-family: SkolaSans, Arial, sans-serif;
+  font-size: 1.574cqw;
+  line-height: 1.16;
+  font-weight: 500;
+}
+@font-face {
+  font-family: OctoberCera;
+  src: url("/brochure-presets/october/CeraPro-Bold.otf") format("opentype");
+  font-weight: 900;
+  font-display: swap;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-element-message
+  p {
+  font-family: OctoberCera, SkolaSans, Arial, sans-serif;
+}
+.brochure-page.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block {
+  max-width: none;
+  width: min(
+    9.73cqw,
+    calc(
+      (100% - 8cqw - (var(--detail-strip-columns, 3) - 1) * 1.1cqw) /
+        var(--detail-strip-columns, 3)
+    )
+  );
+}
+.brochure-october
+  .brochure-product[data-apple-product="true"]
+  .brochure-product-copy {
+  position: relative;
+}
+.brochure-october
+  .brochure-product[data-apple-product="true"]
+  .brochure-colors {
+  position: absolute;
+  bottom: calc(100% + 4.1cqw);
+  left: 0;
+}
+.brochure-page > .brochure-floating-artworks {
+  z-index: auto;
+}
+.cs-text-placement-mode {
+  cursor: crosshair;
+  outline: 2px solid var(--np-accent, #4384b7);
+  outline-offset: 3px;
+}
+.cs-text-placement-mode .brochure-page * {
+  cursor: crosshair !important;
+}
+
+/* Source artwork uses a plain regular-price band and unruled product copy. */
+.brochure-page.brochure-october .reference-regular-price-text {
+  font-weight: 400;
+}
+.brochure-page.brochure-october .brochure-product-bottom {
+  border-bottom: 0 !important;
+}
+.brochure-page.brochure-october .brochure-product-copy,
+.brochure-page.brochure-october .brochure-product-copy > :is(span, small) {
+  color: inherit;
+}
+.brochure-page.brochure-october.brochure-interior .brochure-product {
+  color: #333636;
+}
+.brochure-page.brochure-october .october-cover-ribbon > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.brochure-page.brochure-october .october-category-ribbon > span {
+  min-width: 2ch;
+  min-height: 1em;
+}
+.brochure-page.brochure-october .cover-element-brand-tagline {
+  z-index: 8;
+  font:
+    italic 500 1.78cqw/1.1 SkolaSans,
+    Arial,
+    sans-serif;
+  color: #fff;
+  white-space: nowrap;
+}
+.brochure-page.brochure-october .cover-element-logo > img {
+  height: 100%;
+}
+.brochure-page.brochure-october
+  .cover-element-october-awards
+  .campaign-asset-artwork {
+  width: 48%;
+  height: 100%;
+}
+.brochure-page.brochure-october .cover-element-october-awards .award-badge {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.brochure-page.brochure-october
+  .cover-element-october-awards
+  .brochure-awards
+  > * {
+  width: 48%;
+  height: 100%;
+}
+
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-content:has(.free-cover-products) {
+  z-index: 5;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product.details-left
+  > .brochure-specs:is(:not([style]), [style=""]) {
+  width: 21%;
+  height: 48%;
+  top: 23%;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product:not(.details-left)
+  > .brochure-specs {
+  height: 3.67cqw;
+  min-height: 0;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  .brochure-product-copy {
+  padding-bottom: 0;
+}
+.brochure-page.brochure-october.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product
+  > .brochure-product-bottom {
+  height: 9.5cqw;
+  min-height: 9.5cqw;
+}
+.brochure-page.brochure-october .brochure-product-image {
+  filter: none;
+}
+.brochure-page.brochure-october
+  .brochure-product-copy
+  > :is([data-product-name], .brochure-warranty-line) {
+  color: inherit;
+}
+.brochure-page.brochure-october
+  .brochure-product-copy
+  > .brochure-brand-artwork {
+  margin-bottom: 0.4cqw;
+}
+
+.brochure-page.brochure-october.cover-editable-elements .cover-product-frame {
+  z-index: 6;
+}
+.brochure-page.brochure-october.brochure-interior.has-background-readability
+  .brochure-product-copy {
+  color: #333636;
+}
+.brochure-page.brochure-october.brochure-interior
+  .brochure-product:not(.details-left)
+  > .brochure-specs
+  > .product-detail-block
+  > :is(b.detail-number, b.detail-metric) {
+  font-size: var(--detail-copy-size);
+}
+.brochure-page.brochure-october
+  .brochure-product[data-apple-product="true"]
+  > .brochure-specs
+  > .detail-memory
+  > b {
+  font-weight: 300;
+}
+/* TV photographs keep their inch-based ratios while using the larger reference box. */
+.brochure-page.brochure-october
+  .brochure-product.has-tv-inch-ribbon
+  .brochure-product-image {
+  width: 96%;
+  max-width: 96%;
+  height: 96%;
+  max-height: 96%;
+}
+.brochure-page.brochure-october.brochure-interior.layout-pair2
+  .brochure-products
+  > .brochure-product {
+  width: 63.5%;
+}
+.brochure-page.brochure-october.layout-pair2 .brochure-product-image {
+  width: 74.5%;
+  max-width: 74.5%;
+  height: 74.5%;
+  max-height: 74.5%;
+}
+.brochure-page.brochure-october.layout-pair2
+  .brochure-product-bottom
+  > .brochure-price {
+  margin-right: 4cqw;
+}
+
+.brochure-page.brochure-october .cover-element-band.october-native-band > img {
+  clip-path: inset(0 0 25%);
+}

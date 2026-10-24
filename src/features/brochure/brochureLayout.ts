@@ -1,7 +1,29 @@
 import type { Campaign, Product } from "../../domain/models";
-import { isMacBook } from "./productTypes";
+import {
+  appleProductFamily,
+  isBrochureAccessory,
+  isMacBook,
+} from "./productTypes";
+import { isTelevision } from "./tvSpecs";
+import { categorySegments } from "../settings/categoryHierarchy";
 
 export const BROCHURE_LAYOUTS = [
+  {
+    id: "feature3",
+    name: "Three offers · one above two",
+    detail: "One featured offer above two products",
+    capacity: 3,
+    columns: 2,
+    rows: 2,
+  },
+  {
+    id: "tv8",
+    name: "Eight TVs · 3–2–3",
+    detail: "Three TVs above, two larger TVs in the middle, three below",
+    capacity: 8,
+    columns: 6,
+    rows: 3,
+  },
   {
     id: "grid6portrait",
     name: "Six offers · 2 × 3 grid",
@@ -42,10 +64,21 @@ export const BROCHURE_LAYOUTS = [
     columns: 2,
     rows: 2,
   },
+  {
+    id: "pair2",
+    name: "Two offers · one above one",
+    detail: "One centered column and two rows",
+    capacity: 2,
+    columns: 1,
+    rows: 2,
+  },
 ];
 
 const canonicalLayout = (layout: string) =>
   ["grid4", "duo", "feature"].includes(layout) ? "duo4" : layout;
+const isOctoberLayout = (campaign: Partial<Campaign>) =>
+  campaign.brochureVisualStyle === "october" ||
+  campaign.brochurePresetId === "neptun-october";
 
 export function layoutGrid(layout: string) {
   const option = BROCHURE_LAYOUTS.find(
@@ -82,12 +115,29 @@ export function productPageLayout(
   const manual = campaign.pages?.[pageIndex]?.layout;
   if (manual) return manual;
   if (
+    isOctoberLayout(campaign) &&
+    automaticProductLayout(campaign, pageIndex)
+  ) {
+    const run = consecutiveOctoberProducts(products);
+    const family = run[0] ? appleProductFamily(run[0]) : null;
+    if ((family === "macbook" || family === "ipad") && run.length <= 2)
+      return "pair2";
+    return run[0] && isBrochureAccessory(run[0]) ? "grid6portrait" : "duo4";
+  }
+  if (
+    automaticProductLayout(campaign, pageIndex) &&
+    (!campaign.layout || campaign.layout === "feature3") &&
+    products[0] &&
+    isTelevision(products[0])
+  )
+    return "tv8";
+  if (
     automaticProductLayout(campaign, pageIndex) &&
     products[0] &&
     isMacBook(products[0])
   )
     return "duo4";
-  return campaign.layout || "grid6portrait";
+  return campaign.layout || "feature3";
 }
 
 export function productPageChunk(
@@ -98,11 +148,19 @@ export function productPageChunk(
   const layout = productPageLayout(campaign, products, pageIndex);
   let run = products;
   if (automaticProductLayout(campaign, pageIndex) && products.length) {
-    const firstIsMacBook = isMacBook(products[0]);
-    const boundary = products.findIndex(
-      (item) => isMacBook(item) !== firstIsMacBook,
-    );
-    if (boundary > 0) run = products.slice(0, boundary);
+    if (isOctoberLayout(campaign)) run = consecutiveOctoberProducts(products);
+    else {
+      const kind = (product: Product) =>
+        isMacBook(product)
+          ? "macbook"
+          : (!campaign.layout || campaign.layout === "feature3") &&
+              isTelevision(product)
+            ? "tv"
+            : "other";
+      const firstKind = kind(products[0]!);
+      const boundary = products.findIndex((item) => kind(item) !== firstKind);
+      if (boundary > 0) run = products.slice(0, boundary);
+    }
   }
   const count = run.length
     ? fittingProductCount(run, layout, layoutCapacity(layout))
@@ -110,7 +168,65 @@ export function productPageChunk(
   return { layout, products: run.slice(0, count) };
 }
 
-export function cardSize(product: Partial<Product>, layout: string) {
+function octoberProductGroup(product: Product) {
+  const family = appleProductFamily(product);
+  if (family) return `apple-${family}`;
+  return isBrochureAccessory(product) ? "accessory" : "ordinary";
+}
+
+function consecutiveOctoberProducts(products: Product[]) {
+  if (!products.length) return products;
+  const group = octoberProductGroup(products[0]!);
+  const boundary = products.findIndex(
+    (product) => octoberProductGroup(product) !== group,
+  );
+  return boundary < 0 ? products : products.slice(0, boundary);
+}
+
+const normalizedCategory = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase();
+const cleanCategory = (value: string | undefined) =>
+  categorySegments(value || "")
+    .at(-1)
+    ?.replace(/\s+/g, " ")
+    .trim() || "";
+
+/** Keep a mixed page's ribbon empty instead of guessing its category. */
+export function pageCategoryLabel(products: Product[]) {
+  if (!products.length) return "";
+  const categories = products.map((product) => {
+    const path = categorySegments(product.categoryPath || "");
+    return {
+      category: cleanCategory(product.category) || path[0] || "",
+      subcategory:
+        cleanCategory(product.subcategory) ||
+        (path.length > 1 ? path.at(-1)! : ""),
+    };
+  });
+  for (const key of ["subcategory", "category"] as const) {
+    const first = categories[0]![key];
+    if (
+      first &&
+      categories.every(
+        (category) =>
+          normalizedCategory(category[key]) === normalizedCategory(first),
+      )
+    )
+      return first;
+  }
+  return "";
+}
+
+export function cardSize(
+  product: Partial<Product>,
+  layout: string,
+  index?: number,
+) {
   const { columns, rows } = layoutGrid(layout);
   return {
     width: Math.max(
@@ -119,7 +235,15 @@ export function cardSize(product: Partial<Product>, layout: string) {
         columns,
         Math.round(
           Number(product?.brochureCardSize?.width) ||
-            ((product.bundleProducts?.length || 0) >= 3 ? columns : 1),
+            ((product.bundleProducts?.length || 0) >= 3
+              ? columns
+              : layout === "tv8"
+                ? index === 3 || index === 4
+                  ? 3
+                  : 2
+                : layout === "feature3" && index === 0
+                  ? 2
+                  : 1),
         ),
       ),
     ),
@@ -140,13 +264,36 @@ function placeProductGrid(
   layout: string,
   limit = products.length,
 ) {
+  if (
+    (layout === "feature3" || layout === "tv8") &&
+    !products.some(
+      (product) =>
+        product.brochureCardSize || (product.bundleProducts?.length || 0) >= 3,
+    )
+  ) {
+    const count = Math.min(products.length, limit, layoutCapacity(layout));
+    return {
+      count,
+      occupiedRows:
+        layout === "feature3"
+          ? count <= 1
+            ? 1
+            : 2
+          : count <= 3
+            ? 1
+            : count <= 5
+              ? 2
+              : 3,
+    };
+  }
   const { columns, rows } = layoutGrid(layout);
   const cells = Array.from({ length: rows }, () =>
     Array.from({ length: columns }, () => false),
   );
-  let count = 0, occupiedRows = 0;
-  for (const product of products.slice(0, limit)) {
-    const size = cardSize(product, layout);
+  let count = 0,
+    occupiedRows = 0;
+  for (const [index, product] of products.slice(0, limit).entries()) {
+    const size = cardSize(product, layout, index);
     let slot = null;
     for (let y = 0; y <= rows - size.height && !slot; y++) {
       for (let x = 0; x <= columns - size.width; x++) {
@@ -171,7 +318,7 @@ function placeProductGrid(
     count++;
     occupiedRows = Math.max(occupiedRows, slot.y + size.height);
   }
-  return {count, occupiedRows};
+  return { count, occupiedRows };
 }
 
 export function orderedStoreIndexes(
@@ -200,5 +347,17 @@ export function moveStore(order: number[], from: number, to: number) {
   return next;
 }
 
-export function fittingProductCount(products: Product[], layout: string, limit = products.length) { return Math.max(1, placeProductGrid(products, layout, limit).count); }
-export function occupiedProductRows(products: Product[], layout: string, limit = products.length) { return Math.max(1, placeProductGrid(products, layout, limit).occupiedRows); }
+export function fittingProductCount(
+  products: Product[],
+  layout: string,
+  limit = products.length,
+) {
+  return Math.max(1, placeProductGrid(products, layout, limit).count);
+}
+export function occupiedProductRows(
+  products: Product[],
+  layout: string,
+  limit = products.length,
+) {
+  return Math.max(1, placeProductGrid(products, layout, limit).occupiedRows);
+}

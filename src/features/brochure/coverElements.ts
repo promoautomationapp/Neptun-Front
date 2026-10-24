@@ -2,6 +2,7 @@ import { coverMessageVisible } from "./coverPresentation";
 import type { Campaign, Placement } from "../../domain/models";
 import { coverProducts } from "./campaignPages";
 import { productPageChunk } from "./brochureLayout";
+import { isOctoberBrochure } from "./octoberDesign";
 type CoverPlacement = Placement & { x: number; y: number; width: number };
 export const COVER_ELEMENT_DEFAULTS: Record<string, CoverPlacement> = {
   logo: { x: 27, y: 4, width: 46 },
@@ -20,7 +21,10 @@ export const COVER_GRADIENT_REGIONS: Record<
   bottom: { x: 0, y: 50, width: 100, height: 50 },
 };
 export function coverElementPlacement(
-  campaign: Pick<Campaign, "coverElementPlacements" | "showCoverBand" | "showCoverHeadline">,
+  campaign: Pick<
+    Campaign,
+    "coverElementPlacements" | "showCoverBand" | "showCoverHeadline"
+  >,
   kind: string,
 ): CoverPlacement {
   return {
@@ -48,15 +52,34 @@ export function coverProductPlacement(
   index: number,
   count: number,
 ) {
+  if (isOctoberBrochure(campaign))
+    return { x: 3.85 + (index % 2) * 48, y: 56.8, width: 44.5, height: 35.2 };
   const belowBand = campaign.showCoverBand === true;
   const messageAboveProducts = !belowBand && coverMessageVisible(campaign);
   const selectedCode = !belowBand && campaign.coverBannerProductCode;
-  const heroY = messageAboveProducts ? (campaign.showCoverHeadline === false ? 24 : 34) : campaign.showCoverHeadline === false ? 18 : 26;
+  const heroY = messageAboveProducts
+    ? campaign.showCoverHeadline === false
+      ? 24
+      : 34
+    : campaign.showCoverHeadline === false
+      ? 18
+      : 26;
   const heroHeight = 64 - heroY;
   const covers = selectedCode ? coverProducts(campaign) : [];
   const featuredIndex = covers.findIndex(
     (item) => String(item.code) === String(selectedCode),
   );
+  if (
+    campaign.brochureFooter?.style === "reference" &&
+    !belowBand &&
+    count >= 3 &&
+    (featuredIndex >= 0 || campaign.coverProductLayout === "hero")
+  ) {
+    const main = featuredIndex >= 0 ? featuredIndex : 0;
+    if (index === main) return { x: 2.25, y: 12, width: 95.5, height: 38 };
+    const secondary = index > main ? index - 1 : index;
+    return { x: 2.25 + secondary * 49, y: 54, width: 46.5, height: 38 };
+  }
   if (featuredIndex >= 0) {
     if (index === featuredIndex)
       return { x: 4, y: heroY, width: 92, height: heroHeight };

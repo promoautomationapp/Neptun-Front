@@ -1,12 +1,186 @@
 const translations: Record<string, string> = {
+  "Brand tagline": "Slogani i markës",
+  "Show cover footer": "Shfaq shiritin në fund të kopertinës",
+  "Category header and page footer": "Titulli i kategorisë dhe fundi i faqes",
+  "These are the starting choices for this design. Every page can override its category text, logo, line and page number.":
+    "Këto janë zgjedhjet fillestare të këtij dizajni. Në çdo faqe mund të ndryshoni veçmas titullin e kategorisë, logon, vijën dhe numrin e faqes.",
+  "Show blue category header": "Shfaq shiritin blu të kategorisë",
+  "Show online shopping logo": "Shfaq logon për blerje online",
+  "Show NEPTUN footer logo": "Shfaq logon NEPTUN në fund të faqes",
+  "Show footer line": "Shfaq vijën në fund të faqes",
+  "Category header color": "Ngjyra e shiritit të kategorisë",
+  "Category text color": "Ngjyra e titullit të kategorisë",
+  "Footer logo color": "Ngjyra e logos në fund të faqes",
+  "Canvas tools": "Mjetet e faqes",
+  Pointer: "Përzgjedhje",
+  "Add text anywhere": "Shto tekst kudo në faqe",
+  "Comment anywhere": "Lër koment kudo në faqe",
+  Text: "Tekst",
+  "Your text": "Teksti juaj",
+  "Category heading": "Titulli i kategorisë",
+  "Category ribbon": "Shiriti i kategorisë",
+  "Category / Apple heading": "Titulli i kategorisë / Apple",
+  "Apple Authorised Reseller": "Rishitës i autorizuar i Apple",
+  "Buy online and in store": "Blini online dhe në dyqan",
+  "Buy online and in store logo": "Logoja për blerje online dhe në dyqan",
+  "NEPTUN footer logo": "Logoja NEPTUN në fund të faqes",
+  "Footer logo": "Logoja në fund të faqes",
+  "Footer line": "Vija në fund të faqes",
+  "Page number": "Numri i faqes",
+  "Show page footer": "Shfaq elementet në fund të faqes",
+  "Show page number": "Shfaq numrin e faqes",
+  "Ribbon color": "Ngjyra e shiritit",
+  "Ribbon text color": "Ngjyra e tekstit në shirit",
+  "Footer line color": "Ngjyra e vijës në fund të faqes",
+  "Brochure designs": "Dizajnet e broshurës",
+  "Choose a brochure design": "Zgjidh dizajnin e broshurës",
+  "Everything remains editable.": "Gjithçka mund të ndryshohet.",
+  "Preview design": "Shiko dizajnin",
+  "Editable brochure design": "Dizajn i ndryshueshëm i broshurës",
+  "Preview page": "Faqja në parapamje",
+  "Product page": "Faqja e produkteve",
+  "Stores page": "Faqja e dyqaneve",
+  "Sample products illustrate the design. Upload your own cover photograph and edit every element in your brochure.":
+    "Produktet shembull tregojnë si duket dizajni. Ngarkoni foton tuaj të kopertinës dhe ndryshoni çdo element të broshurës.",
+  "Use this design": "Përdor këtë dizajn",
+  "Brochure presets": "Modelet e gatshme të broshurës",
+  "Keep ready brochure designs for the team. New brochures receive an independent copy; saved brochures keep their own edits.":
+    "Ruani dizajne të gatshme për ekipin. Çdo broshurë e re merr kopjen e vet; broshurat e ruajtura i ruajnë ndryshimet e tyre.",
+  "Design name": "Emri i dizajnit",
+  "Brochure preset name": "Emri i modelit të broshurës",
+  "Automatically select this design for new brochures":
+    "Zgjidh automatikisht këtë dizajn për broshurat e reja",
+  "The design open here is updated when you use Save settings. Cover photographs are supplied separately for each brochure.":
+    "Dizajni i hapur këtu përditësohet kur ruani cilësimet. Fotoja e kopertinës ngarkohet veçmas për çdo broshurë.",
+  "The design open here is updated when you use":
+    "Dizajni i hapur këtu përditësohet kur përdorni",
+  ". Cover photographs are supplied separately for each brochure.":
+    ". Fotoja e kopertinës ngarkohet veçmas për çdo broshurë.",
+  "Update design from current settings":
+    "Përditëso dizajnin me cilësimet aktuale",
+  "Duplicate design": "Krijo një kopje të dizajnit",
+  "Reset original design": "Rikthe dizajnin fillestar",
+  "Delete design": "Fshi dizajnin",
+  "Delete this design": "Fshi këtë dizajn",
+  "Existing brochures keep their design.":
+    "Broshurat ekzistuese e ruajnë dizajnin e tyre.",
+  "Save current settings as a new design":
+    "Ruaj cilësimet aktuale si dizajn të ri",
+  "New design from scratch": "Krijo dizajn nga fillimi",
+  "Untitled design": "Dizajn pa emër",
+  copy: "kopje",
+  "Design loaded. Edit its colors, images, prices and layout in the other settings sections, then save settings to update this design.":
+    "Dizajni u hap. Ndryshoni ngjyrat, imazhet, çmimet dhe renditjen te seksionet e tjera të cilësimeve. Pastaj ruani cilësimet për ta përditësuar dizajnin.",
+  "A separate copy is ready to edit. Save settings when you finish.":
+    "Kopja e re është gati për ndryshime. Ruani cilësimet kur të përfundoni.",
+  "A blank design is ready. Set its background, logos, pricing and layout, then save settings.":
+    "Dizajni bosh është gati. Zgjidhni sfondin, logot, pamjen e çmimeve dhe renditjen. Pastaj ruani cilësimet.",
+  "Current settings added to this design. Save settings to share it with the team.":
+    "Cilësimet aktuale u shtuan te ky dizajn. Ruani cilësimet që dizajni të jetë në dispozicion të ekipit.",
+  "Original design restored. Save settings to keep it.":
+    "Dizajni fillestar u rikthye. Ruani cilësimet për ta mbajtur.",
+  "Design removed from the library. Save settings to keep this change.":
+    "Dizajni u hoq nga modelet e gatshme. Ruani cilësimet për ta mbajtur këtë ndryshim.",
+  "Page heading & pagination": "Titulli dhe numërimi i faqeve",
+  "NEPTUN footer": "Shiriti i poshtëm NEPTUN",
+  "Show the NEPTUN wordmark and line on this product page.":
+    "Shfaq logon NEPTUN dhe vijën në fund të kësaj faqeje të produkteve.",
+  "Turn off for only the NEPTUN logo and line.":
+    "Çaktivizojeni për të shfaqur vetëm logon NEPTUN dhe vijën.",
+  "Apply footer choice to all product pages":
+    "Zbato këtë zgjedhje në fund të të gjitha faqeve të produkteve",
+  "Cover photograph": "Fotoja e kopertinës",
+  "Upload your cover photograph": "Ngarko foton e kopertinës",
+  "Stores heading": "Titulli i faqes së dyqaneve",
+  "Membership note": "Shënimi për anëtarësimin",
+  Format: "Formati",
+  "Upload a new logo": "Ngarko një logo të re",
+  "Store fields & contact visibility":
+    "Fushat e dyqaneve dhe kontaktet e dukshme",
+  "Discard your unsaved Settings changes?":
+    "Të hiqen ndryshimet e paruajtura te cilësimet?",
+  "Team & access": "Ekipi dhe qasja",
+  "Profile & security": "Profili dhe siguria",
+  "Click anywhere on the page to add text.":
+    "Klikoni kudo në faqe për të shtuar tekst.",
+  "Click anywhere on this page to add text.":
+    "Klikoni kudo në këtë faqe për të shtuar tekst.",
+  "Neptun Blue": "Neptun Blue",
+  "Neptun Classic": "Neptun Classic",
+  "Screen picture": "Figura e ekranit",
+  "Replace page image": "Zëvendëso imazhin në faqe",
+  "bottom-right": "poshtë djathtas",
+  "bottom-left": "poshtë majtas",
+  "top-right": "lart djathtas",
+  "top-left": "lart majtas",
+  Fill: "Mbushje",
+  "Change block background": "Ndrysho sfondin e bllokut",
+  "Move to another page": "Lëviz në një faqe tjetër",
+  "Choose a catalog photo or upload your own. Double-click the image in the brochure anytime to change it again.":
+    "Zgjidh një foto nga katalogu ose ngarko foton tënde. Kliko dy herë imazhin në broshurë për ta ndryshuar përsëri.",
+  "Click text or prices to edit them here. Double-click an image to replace it, or drop a new image onto it. Double-click savings to switch € and %. Drag handles to move items.":
+    "Kliko tekstin ose çmimin për ta ndryshuar këtu. Kliko dy herë një imazh për ta zëvendësuar, ose lësho një imazh të ri mbi të. Kliko dy herë kursimin për të kaluar nga € në %. Përdor dorezat për të lëvizur elementet.",
+  "Drop a picture onto the TV preview to change its wallpaper.":
+    "Lësho një imazh mbi parapamjen e TV-së për të ndryshuar figurën e ekranit.",
+  "Change TV screen image": "Ndrysho imazhin e ekranit të TV-së",
+  "Keep the TV frame and add a wallpaper inside the screen.":
+    "Ruaj kornizën e TV-së dhe shto një imazh brenda ekranit.",
+  "Change the picture inside this TV":
+    "Ndrysho figurën brenda këtij televizori",
+  "Campaign message": "Mesazhi i fushatës",
+  "Product code in brochure": "Kodi në broshurë",
+  Discount: "Zbritje",
+  "Confirm price above regular price": "Konfirmo çmimin mbi çmimin e rregullt",
+  "Edit price here": "Ndrysho çmimin këtu",
+  "AI assistant": "Asistenti AI",
+  "Check text & photos": "Kontrollo tekstet dhe fotot",
+  "Review wording and product images":
+    "Rishiko tekstet dhe imazhet e produkteve",
+  "Fix a product cutout": "Përmirëso foton e produktit",
+  "Choose one image to prepare again":
+    "Zgjidh një foto për ta përgatitur përsëri",
+  "Design tools": "Mjetet e dizajnit",
+  "Close design tools": "Mbyll mjetet e dizajnit",
+  "Click brochure text or images to edit. Use Design tools for layout and colors.":
+    "Klikoni tekstet ose imazhet për t’i ndryshuar. Përdorni Mjetet e dizajnit për renditjen dhe ngjyrat.",
+  "Brochure preview": "Parapamja e broshurës",
+  "Brochure pages": "Faqet e broshurës",
+  "Use ← → to browse pages": "Përdorni ← → për të ndërruar faqet",
+  "Page navigation": "Lëvizja nëpër faqe",
+  "Previous page": "Faqja e mëparshme",
+  "Next page": "Faqja tjetër",
+  "Orange footer": "Shiriti portokalli",
+  "Show orange footer": "Shfaq shiritin portokalli",
+  "Brochure dates text": "Teksti i datave të broshurës",
+  "Automatic brochure dates": "Datat automatike të broshurës",
+  "Distance from bottom (px)": "Largësia nga fundi (px)",
+  "Footer height (%)": "Lartësia e shiritit (%)",
+  "Dates area (%)": "Hapësira e datave (%)",
+  "Dates text size": "Madhësia e tekstit të datave",
+  "Payment text size": "Madhësia e tekstit të kësteve",
+  "Orange color": "Ngjyra portokalli",
+  "End color": "Ngjyra në fund",
+  "Reset footer": "Rikthe shiritin fillestar",
+  "Portrait images stay centered with black space on either side.":
+    "Imazhet vertikale qëndrojnë në qendër me hapësirë të zezë anash.",
+  "Screen size": "Madhësia e ekranit",
+  "Photo size": "Madhësia e fotos",
+  "Dismiss notification": "Mbyll njoftimin",
+  "Filter comments": "Filtro komentet",
+  "Open comments": "Të hapura",
+  "No comments match this filter.": "Nuk ka komente për këtë filtër.",
+  "Comment thread": "Biseda e komentit",
   "Back to editing": "Kthehu te redaktimi",
-  "Brochure fonts could not be loaded. Please retry the download.": "Fontet e broshurës nuk u ngarkuan. Provoni përsëri shkarkimin.",
+  "Brochure fonts could not be loaded. Please retry the download.":
+    "Fontet e broshurës nuk u ngarkuan. Provoni përsëri shkarkimin.",
   "No social media posts.": "Nuk ka postime në rrjete sociale.",
   "＋ New post": "＋ Postim i ri",
   "Saved posts": "Postimet e ruajtura",
   "Loading posts…": "Po ngarkohen postimet…",
-  "Could not load social posts. Please try again.": "Postimet nuk u ngarkuan. Provoni përsëri.",
-  "Could not upload the file. Please try again.": "Skedari nuk u ngarkua. Provoni përsëri.",
+  "Could not load social posts. Please try again.":
+    "Postimet nuk u ngarkuan. Provoni përsëri.",
+  "Could not upload the file. Please try again.":
+    "Skedari nuk u ngarkua. Provoni përsëri.",
   "Switch to dark mode": "Aktivizo pamjen e errët",
   "Switch to light mode": "Aktivizo pamjen e çelët",
   "Dark mode": "Pamja e errët",
@@ -381,6 +555,27 @@ const translations: Record<string, string> = {
   "Story · 1080 × 1920 (9:16)": "Story · 1080 × 1920 (9:16)",
   "A4 landscape · 297 × 210 mm": "A4 horizontal · 297 × 210 mm",
   "A3 landscape · 420 × 297 mm": "A3 horizontal · 420 × 297 mm",
+  "Add this image to all TVs in the brochure?":
+    "Ta vendosim këtë imazh në të gjithë TV-të e broshurës?",
+  "Restore the original screens?": "Të rikthehen ekranet origjinale?",
+  "Each TV keeps its own screen frame and proportions.":
+    "Çdo TV ruan kornizën dhe përmasat e ekranit të vet.",
+  "Only this TV": "Vetëm ky TV",
+  TVs: "TV",
+  "Brochure footer": "Fundfaqja e broshurës",
+  "Footer style": "Stili i fundfaqes",
+  "Reference · payment and dates": "Modeli referencë · këstet dhe datat",
+  "Orange gradient bar": "Shiriti portokalli me gradient",
+  "Show brochure footer": "Shfaq fundfaqen e broshurës",
+  "Three offers · one above two": "Tre produkte · një sipër dhe dy poshtë",
+  "One featured offer above two products":
+    "Një produkt kryesor sipër dy produkteve",
+  "Eight TVs · 3–2–3": "Tetë TV · 3–2–3",
+  "Three TVs above, two larger TVs in the middle, three below":
+    "Tre TV sipër, dy TV më të mëdhenj në mes, tre poshtë",
+  "Use reference brochure preset": "Përdor modelin referencë të broshurës",
+  "One above two · TV pages 3–2–3":
+    "Një sipër dhe dy poshtë · faqet me TV 3–2–3",
   "TV wallpaper": "Pamja e ekranit të TV-së",
   "Choose a wallpaper for this TV or every TV in the brochure.":
     "Zgjidhni një pamje për këtë TV ose çdo TV në broshurë.",
