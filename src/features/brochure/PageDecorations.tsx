@@ -113,6 +113,7 @@ export function PageDecorations({
               "NEPTUN footer logo",
               <NeptunWordmark
                 campaign={campaign}
+                color={config.footerLogoColor || "#003870"}
                 backgroundColor={
                   page.backgroundColor ||
                   campaign.productBackgroundColor ||
@@ -238,6 +239,16 @@ export function PageDecorationControls({
           value={config.footerLineColor || "#003870"}
           onChange={(event) =>
             onChange({ footerLineColor: event.target.value })
+          }
+        />
+      </label>
+      <label>
+        {t("Footer logo color")}
+        <input
+          type="color"
+          value={config.footerLogoColor || "#003870"}
+          onChange={(event) =>
+            onChange({ footerLogoColor: event.target.value })
           }
         />
       </label>

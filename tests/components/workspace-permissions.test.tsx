@@ -115,7 +115,7 @@ it("hides forbidden areas and disable actions without making forbidden catalog r
   const nav = within(view.container.querySelector("nav")!);
   expect(nav.queryByRole("button", { name: "Product catalog" })).toBeNull();
   expect(nav.queryByRole("button", { name: "Social posts" })).toBeNull();
-  expect(view.queryByRole("button", { name: /Disable campaign:/ })).toBeNull();
+  expect(view.queryByRole("button", { name: /Delete campaign:/ })).toBeNull();
   expect(view.queryByRole("button", { name: /Catalog details/ })).toBeNull();
   expect(
     api.mock.calls.some(([input]) =>

@@ -124,9 +124,16 @@
 .brochure-page.brochure-october
   .brochure-product:not(.details-left)
   > .brochure-specs[data-detail-layout="strip"]
-  > .product-detail-block.detail-filled {
+  > .product-detail-block.detail-filled:not(.detail-style-filled) {
   background: transparent;
   color: inherit;
+}
+.brochure-page.brochure-october
+  .brochure-product:not(.details-left)
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block.detail-style-filled {
+  background: #fff;
+  color: #1c4075;
 }
 .brochure-page.brochure-october
   .brochure-product.details-left
@@ -466,7 +473,7 @@
 .brochure-page.brochure-october .brochure-product-copy > :is(span, small) {
   color: inherit;
 }
-.brochure-page.brochure-october.brochure-interior .brochure-product {
+.brochure-page.brochure-october.brochure-interior.light .brochure-product {
   color: #333636;
 }
 .brochure-page.brochure-october .october-cover-ribbon > svg {
@@ -559,6 +566,10 @@
   z-index: 6;
 }
 .brochure-page.brochure-october.brochure-interior.has-background-readability
+  .brochure-product-copy {
+  color: var(--brochure-foreground, inherit);
+}
+.brochure-page.brochure-october.brochure-interior.has-background-readability.light
   .brochure-product-copy {
   color: #333636;
 }

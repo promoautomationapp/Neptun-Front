@@ -214,6 +214,16 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
         .availableBrochurePresets(settings.resolveSettings(null))
         .find((preset) => preset.id === "neptun-october")!,
     );
+    value.pages = { 0: { backgroundColor: "#14263d" } };
+    const television = value.products.find(
+      (product) => product.code === "tv-0",
+    )!;
+    television.brochureDetails = [
+      { key: "resolution", text: "4K UHD" },
+      { key: "processor", text: "Quad Core Processor" },
+      { key: "hdr", text: "HDR10" },
+    ];
+    television.detailBlockStyles = { resolution: "filled" };
     return JSON.stringify(value);
   }, JSON.stringify(campaign));
   campaign = JSON.parse(seeded) as Campaign;
@@ -279,6 +289,25 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
   const pages = page.locator(".cs-pages-sidebar > button");
   await pages.nth(1).click();
   await expect(paper.locator(".brochure-product")).toHaveCount(4);
+  const customPage = paper.locator(".brochure-interior.brochure-october");
+  await expect(customPage).not.toHaveClass(/\blight\b/);
+  const customInk = await customPage.evaluate((node) => {
+    const styles = (selector: string) =>
+      getComputedStyle(node.querySelector(selector)!);
+    const filled = styles('[data-detail-key="resolution"]');
+    return {
+      copy: styles(".brochure-product-copy").color,
+      name: styles("[data-product-name]").color,
+      filled: { background: filled.backgroundColor, color: filled.color },
+      outline: styles('[data-detail-key="processor"]').backgroundColor,
+    };
+  });
+  expect(customInk).toEqual({
+    copy: "rgb(255, 255, 255)",
+    name: "rgb(255, 255, 255)",
+    filled: { background: "rgb(255, 255, 255)", color: "rgb(28, 64, 117)" },
+    outline: "rgba(0, 0, 0, 0)",
+  });
   await page.getByRole("button", { name: "Design tools", exact: true }).click();
   await page
     .getByRole("tab", { name: "Background & cover", exact: true })
@@ -295,6 +324,12 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
     .click();
   await pages.nth(2).click();
   await expect(paper.locator(".october-footer-rule")).toHaveCount(1);
+  expect(
+    await paper
+      .locator(".brochure-product-copy")
+      .first()
+      .evaluate((node) => getComputedStyle(node).color),
+  ).toBe("rgb(51, 54, 54)");
   await expect(paper.locator(".october-apple-header")).toHaveCount(1);
   await expect(paper.locator(".october-category-ribbon")).toHaveCount(0);
   await pages.nth(3).click();

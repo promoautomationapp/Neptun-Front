@@ -544,7 +544,7 @@ export function CampaignLibrary({
                 onChange={(value: string) => setFilter("visibility", value)}
                 options={[
                   { value: "active", label: t("Active brochures") },
-                  { value: "disabled", label: t("Disabled brochures") },
+                  { value: "disabled", label: t("Deleted brochures") },
                   { value: "all", label: t("All brochures") },
                 ]}
               />
@@ -662,7 +662,7 @@ export function CampaignLibrary({
                 >
                   {t(
                     item.disabledAt
-                      ? "Disabled"
+                      ? "Deleted"
                       : campaignValidity(item, now) === "expired"
                         ? "Expired"
                         : reviewStatusLabel(item.status),
@@ -710,7 +710,7 @@ export function CampaignLibrary({
                 {item.disabledAt ? (
                   <>
                     <p className="cs-disabled-note">
-                      {t("Only superadmins can view disabled brochures.")}
+                      {t("Only superadmins can view deleted brochures.")}
                     </p>
                     {canManageDisabled && onRestore && (
                       <button
@@ -721,7 +721,7 @@ export function CampaignLibrary({
                         aria-label={`${t("Restore campaign")}: ${item.name}`}
                       >
                         <NavIcon name="refresh" />
-                        {t(restoringId === item.id ? "Enabling…" : "Enable")}
+                        {t(restoringId === item.id ? "Restoring…" : "Restore")}
                       </button>
                     )}
                   </>
@@ -741,10 +741,10 @@ export function CampaignLibrary({
                         type="button"
                         className="cs-card-utility cs-card-delete"
                         onClick={() => onDelete(item)}
-                        aria-label={`${t("Disable campaign")}: ${item.name}`}
+                        aria-label={`${t("Delete campaign")}: ${item.name}`}
                       >
-                        <NavIcon name="archive" />
-                        {t("Disable")}
+                        <NavIcon name="trash" />
+                        {t("Delete")}
                       </button>
                     )}
                     <button
@@ -4367,7 +4367,7 @@ export default function App({
       const fresh = await getCampaign(target.campaignId, request.signal);
       if (request.signal.aborted) return;
       if (fresh.disabledAt) {
-        setToast(t("This brochure is disabled."));
+        setToast(t("This brochure has been deleted."));
         return;
       }
       const thread = reviewCommentsForLayout(fresh).find(
@@ -4792,7 +4792,7 @@ export default function App({
       );
       if (activeId === deleteTarget.id) setActiveId(null);
       setDeleteTarget(null);
-      setToast(t("Campaign disabled."));
+      setToast(t("Campaign deleted."));
     } catch (error) {
       setToast(errorMessage(error));
     } finally {
@@ -4807,7 +4807,7 @@ export default function App({
       setCampaigns((current) =>
         current.map((value) => (value.id === restored.id ? restored : value)),
       );
-      setToast(t("Campaign enabled."));
+      setToast(t("Campaign restored."));
     } catch (error) {
       setToast(errorMessage(error));
     } finally {
@@ -5582,22 +5582,25 @@ export default function App({
       </main>
       {deleteTarget && (
         <Modal
-          title={t("Disable campaign")}
-          kicker={t("DISABLE CAMPAIGN")}
+          title={t("Delete campaign")}
+          kicker={t("CONFIRM DELETION")}
           onClose={() => {
             if (!deleteBusy) setDeleteTarget(null);
           }}
         >
           <div className="cs-delete-dialog">
             <div className="cs-delete-icon">
-              <NavIcon name="archive" size={25} />
+              <NavIcon name="trash" size={25} />
             </div>
             <strong>{deleteTarget.name}</strong>
-            <p>
-              {t(
-                "The brochure and its comments will be kept. Only superadmins can see and restore it while it is disabled.",
-              )}
-            </p>
+            <p>{t("This brochure will be removed from your campaigns.")}</p>
+            {user?.role === "superadmin" && (
+              <p>
+                {t(
+                  "You can restore this brochure from Deleted brochures if it was removed by mistake.",
+                )}
+              </p>
+            )}
             <div className="cs-delete-actions">
               <Button
                 onClick={() => setDeleteTarget(null)}
@@ -5611,8 +5614,8 @@ export default function App({
                 disabled={deleteBusy}
                 onClick={confirmDeleteCampaign}
               >
-                <NavIcon name="archive" size={16} />
-                {deleteBusy ? t("Disabling…") : t("Disable campaign")}
+                <NavIcon name="trash" size={16} />
+                {deleteBusy ? t("Deleting…") : t("Delete campaign")}
               </button>
             </div>
           </div>

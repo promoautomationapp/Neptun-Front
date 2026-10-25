@@ -168,9 +168,12 @@ it("uses transparent native asset files and respects page-specific hiding and cu
     />,
   );
   expect(view.queryByAltText("Buy online and in store")).toBeNull();
-  expect(view.getByAltText("NEPTUN").getAttribute("src")).toBe(
-    OCTOBER_ASSETS.neptun,
+  const footerSource = decodeURIComponent(
+    view.getByAltText("NEPTUN").getAttribute("src")!,
   );
+  expect(footerSource).toMatch(/^data:image\/svg\+xml/);
+  expect(footerSource).toContain('fill="#003870"');
+  expect(footerSource).toContain('fill="#ed4024"');
   const number = view.getByRole("textbox", { name: "Page number" });
   expect(number.textContent).toBe("A2");
   number.textContent = "Custom";
@@ -244,4 +247,18 @@ it("offers exactly the original red price design and the PDF blue design while k
       "button",
     ),
   ).toHaveLength(2);
+});
+
+it("recolors the native footer logo while preserving its orange underline", () => {
+  const products = [product("color")];
+  const value = campaign(products);
+  value.pageDecorationDefaults = { footerLogoColor: "#9a32b4" };
+  const result = render(
+    <PageDecorations campaign={value} page={page(products)} />,
+  );
+  const logo = result.container.querySelector(".october-footer-logo img")!;
+  const source = decodeURIComponent(logo.getAttribute("src")!);
+  expect(source).toContain('fill="#9a32b4"');
+  expect(source).toContain('fill="#ed4024"');
+  expect(source).not.toContain('fill="#003d78"');
 });

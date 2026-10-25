@@ -965,7 +965,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
       setPosts((all) => disabled ? all.map((item) => item.id === disabled.id ? disabled : item) : all.filter((item) => item.id !== post.id));
       setActiveId(null);
       setConfirmDelete(false);
-      setMessage(t("Post disabled."));
+      setMessage(t("Post deleted."));
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
@@ -978,7 +978,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
     try {
       const restored = await restorePost(item);
       setPosts((all) => all.map((value) => value.id === restored.id ? restored : value));
-      setMessage(t("Post enabled."));
+      setMessage(t("Post restored."));
     } catch (error) { setMessage(errorMessage(error)); }
     finally { setBusy(""); }
   }
@@ -1237,21 +1237,21 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
           <div className="social-library-toolbar">
             <h2>{t("Saved posts")}</h2>
             <span>{visiblePosts.length} posts</span>
-            {canManageDisabled && <StudioSelect label={t("Post visibility")} value={postVisibility} onChange={setPostVisibility} options={[{value:"active",label:t("Active posts")},{value:"disabled",label:t("Disabled posts")},{value:"all",label:t("All posts")}]} />}
+            {canManageDisabled && <StudioSelect label={t("Post visibility")} value={postVisibility} onChange={setPostVisibility} options={[{value:"active",label:t("Active posts")},{value:"disabled",label:t("Deleted posts")},{value:"all",label:t("All posts")}]} />}
           </div>
           {!visiblePosts.length && (
             <div className="social-library-empty" role="status">
-              {postVisibility === "disabled" ? t("No disabled posts.") : t("No social media posts.")}
+              {postVisibility === "disabled" ? t("No deleted posts.") : t("No social media posts.")}
             </div>
           )}
           <div className="social-post-cards">
             {visiblePosts.map((item) => item.disabledAt ? (
               <article className="social-disabled-card" key={item.id}>
-                <span className="social-disabled-badge">{t("Disabled")}</span>
+                <span className="social-disabled-badge">{t("Deleted")}</span>
                 <div className="social-card-preview" style={{background:cssBackground(item.background)}}><img src={imageSource(item.products?.[0]?.image)} alt="" /></div>
                 <strong>{item.name}</strong>
-                <small>{t("Only superadmins can see this disabled post.")}</small>
-                <button className="social-restore" type="button" disabled={Boolean(busy)} onClick={() => enablePost(item)}><NavIcon name="refresh" size={17} />{t(busy === `restore:${item.id}` ? "Enabling…" : "Enable post")}</button>
+                <small>{t("Only superadmins can see this deleted post.")}</small>
+                <button className="social-restore" type="button" disabled={Boolean(busy)} onClick={() => enablePost(item)}><NavIcon name="refresh" size={17} />{t(busy === `restore:${item.id}` ? "Restoring…" : "Restore post")}</button>
               </article>
             ) : (
               <button
@@ -1306,7 +1306,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
               onClick={() => setConfirmDelete(true)}
               disabled={Boolean(busy)}
             >
-              <NavIcon name="archive" size={17} />{t("Disable")}
+              <NavIcon name="trash" size={17} />{t("Delete")}
             </button>
           </div>
           <div className="social-editor-grid">
@@ -2260,20 +2260,21 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
             className="social-confirm-modal"
             role="dialog"
             aria-modal="true"
-            aria-label={t("Disable social post")}
+            aria-label={t("Delete social post")}
           >
-            <div className="social-confirm-icon"><NavIcon name="archive" size={28} /></div>
-            <h2>{t("Disable this post?")}</h2>
+            <div className="social-confirm-icon"><NavIcon name="trash" size={28} /></div>
+            <h2>{t("Delete this post?")}</h2>
             <p>
-              <strong>{post.name}</strong><br />{t("The post is kept and can only be viewed and enabled by a superadmin.")}
+              <strong>{post.name}</strong><br />{t("This post will be removed from your posts.")}
             </p>
+            {canManageDisabled && <p>{t("You can restore this post from Deleted posts if it was removed by mistake.")}</p>}
             <div>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
                 disabled={Boolean(busy)}
               >
-                Keep post
+                {t("Keep post")}
               </button>
               <button
                 type="button"
@@ -2281,7 +2282,7 @@ export function SocialStudio({ catalog, campaigns, seed, onSeedUsed, settings, c
                 onClick={deleteActive}
                 disabled={Boolean(busy)}
               >
-                {t(busy === "delete" ? "Disabling…" : "Disable post")}
+                {t(busy === "delete" ? "Deleting…" : "Delete post")}
               </button>
             </div>
           </section>

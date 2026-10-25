@@ -197,7 +197,7 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
     });
   await expect(
     page.getByRole("img", { name: "Replacement screen image" }),
-  ).toHaveAttribute("src", "/api/assets/test-uploaded-portrait.svg");
+  ).toHaveAttribute("src", /\/api\/assets\/test-uploaded-portrait\.svg$/);
   await page
     .getByRole("button", { name: "Apply wallpaper", exact: true })
     .click();

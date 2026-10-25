@@ -141,7 +141,7 @@ it("keeps the search inside compact filters and separates readable card actions"
     }),
   );
   fireEvent.click(
-    within(card).getByRole("button", { name: "Disable campaign: Autumn sale" }),
+    within(card).getByRole("button", { name: "Delete campaign: Autumn sale" }),
   );
   fireEvent.click(
     within(card).getByRole("button", { name: "Open campaign: Autumn sale" }),

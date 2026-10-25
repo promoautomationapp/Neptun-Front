@@ -136,7 +136,7 @@ it("saves simple custom switches and searched category branches, then can reset 
   details.open = true;
   fireEvent(details, new Event("toggle"));
   fireEvent.click(view.getByRole("radio", { name: "Custom access" }));
-  fireEvent.click(view.getByRole("switch", { name: "Disable brochures" }));
+  fireEvent.click(view.getByRole("switch", { name: "Delete brochures" }));
   fireEvent.click(view.getByRole("switch", { name: "View social posts" }));
   fireEvent.click(view.getByRole("radio", { name: "Selected branches" }));
   expect(

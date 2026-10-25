@@ -1,4 +1,52 @@
 const translations: Record<string, string> = {
+  "You can restore this post from Deleted posts if it was removed by mistake.":
+    "Nëse postimi është fshirë gabimisht, mund ta riktheni nga Postimet e fshira.",
+
+  "This post will be removed from your posts.":
+    "Ky postim do të hiqet nga postimet tuaja.",
+
+  "Keep post": "Mbaje postimin",
+
+  "Post restored.": "Postimi u rikthye.",
+
+  "Post deleted.": "Postimi u fshi.",
+
+  "Restore post": "Rikthe postimin",
+
+  "Only superadmins can see this deleted post.":
+    "Vetëm superadminët mund ta shohin këtë postim të fshirë.",
+
+  "No deleted posts.": "Nuk ka postime të fshira.",
+
+  "Deleted posts": "Postimet e fshira",
+
+  "Delete post": "Fshij postimin",
+
+  "Delete this post?": "Ta fshijmë këtë postim?",
+
+  "Delete social post": "Fshij postimin në rrjete sociale",
+
+  "You can restore this brochure from Deleted brochures if it was removed by mistake.":
+    "Nëse broshura është fshirë gabimisht, mund ta riktheni nga Broshurat e fshira.",
+
+  "This brochure will be removed from your campaigns.":
+    "Kjo broshurë do të hiqet nga fushatat tuaja.",
+
+  "This brochure has been deleted.": "Kjo broshurë është fshirë.",
+
+  "Campaign restored.": "Fushata u rikthye.",
+
+  "Restoring…": "Duke rikthyer…",
+
+  Restore: "Rikthe",
+
+  "Only superadmins can view deleted brochures.":
+    "Vetëm superadminët mund t’i shohin broshurat e fshira.",
+
+  "Deleted brochures": "Broshurat e fshira",
+
+  Deleted: "E fshirë",
+
   "Brand tagline": "Slogani i markës",
   "Show cover footer": "Shfaq shiritin në fund të kopertinës",
   "Category header and page footer": "Titulli i kategorisë dhe fundi i faqes",
@@ -211,7 +259,7 @@ const translations: Record<string, string> = {
   "Active brochures": "Broshurat aktive",
   "Disabled brochures": "Broshurat e çaktivizuara",
   "All brochures": "Të gjitha broshurat",
-  "Restore campaign": "Aktivizo sërish fushatën",
+  "Restore campaign": "Rikthe fushatën",
   "Campaign disabled.": "Fushata u çaktivizua.",
   "Campaign enabled.": "Fushata u aktivizua.",
   "DISABLE CAMPAIGN": "ÇAKTIVIZO FUSHATËN",
@@ -1346,7 +1394,7 @@ const translations: Record<string, string> = {
   "Campaign backup downloaded.": "Kopja rezervë e fushatës u shkarkua.",
   "Store settings saved for future campaigns.":
     "Cilësimet e dyqaneve u ruajtën për fushatat e ardhshme.",
-  Delete: "Fshi",
+  Delete: "Fshij",
   "This removes its local draft.": "Kjo heq versionin lokal.",
   "This deletes the campaign for both accounts.":
     "Kjo e fshin fushatën për të dy llogaritë.",
@@ -1418,7 +1466,7 @@ const translations: Record<string, string> = {
   "White / gray": "E bardhë / gri",
   "NEPTUN Blue": "NEPTUN Blue",
   "Duplicate campaign": "Dyfisho fushatën",
-  "Delete campaign": "Fshi fushatën",
+  "Delete campaign": "Fshij fushatën",
   "Open campaign": "Hap fushatën",
   "No campaigns match your search": "Asnjë fushatë nuk përputhet me kërkimin",
   "Your first campaign starts here": "Fushata juaj e parë fillon këtu",

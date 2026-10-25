@@ -115,7 +115,9 @@ it("shows a simple empty list for both staff and superadmins without saving or r
 });
 
 it("keeps an unavailable post list distinct from an empty list and offers a working retry", async () => {
-  vi.mocked(getPosts).mockRejectedValueOnce(new Error("Connection interrupted"));
+  vi.mocked(getPosts).mockRejectedValueOnce(
+    new Error("Connection interrupted"),
+  );
   stored = [];
   const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
   await view.findByRole("alert");
@@ -334,7 +336,7 @@ it("saves edit-mode dimensions, guide visibility and product grid while preservi
   expect(requestAi).not.toHaveBeenCalled();
 });
 
-it("hides disabled posts from workspace users and lets only superadmins enable them", async () => {
+it("hides deleted posts from workspace users and lets only superadmins restore them", async () => {
   setLanguage("en");
   stored = [
     {
@@ -362,18 +364,18 @@ it("hides disabled posts from workspace users and lets only superadmins enable t
   fireEvent.click(
     admin.getByRole("button", { name: "Post visibility: Active posts" }),
   );
-  fireEvent.click(admin.getByRole("option", { name: "Disabled posts" }));
+  fireEvent.click(admin.getByRole("option", { name: "Deleted posts" }));
   expect(admin.getByText("Disabled social sample")).toBeTruthy();
   expect(
     admin.queryByRole("button", { name: /Disabled social sample/ }),
   ).toBeNull();
-  fireEvent.click(admin.getByRole("button", { name: "Enable post" }));
-  await admin.findByText("Post enabled.");
+  fireEvent.click(admin.getByRole("button", { name: "Restore post" }));
+  await admin.findByText("Post restored.");
   expect(restorePost).toHaveBeenCalledOnce();
   expect(savePost).not.toHaveBeenCalled();
   expect(requestAi).not.toHaveBeenCalled();
   fireEvent.click(
-    admin.getByRole("button", { name: "Post visibility: Disabled posts" }),
+    admin.getByRole("button", { name: "Post visibility: Deleted posts" }),
   );
   fireEvent.click(admin.getByRole("option", { name: "Active posts" }));
   expect(
@@ -381,16 +383,16 @@ it("hides disabled posts from workspace users and lets only superadmins enable t
   ).toBeTruthy();
 });
 
-it("saves the latest edits before disabling an existing post", async () => {
+it("saves the latest edits before deleting an existing post", async () => {
   setLanguage("en");
   const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
   await open(view);
   fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
     target: { value: "Latest saved name" },
   });
-  fireEvent.click(view.getByRole("button", { name: "Disable" }));
-  fireEvent.click(view.getByRole("button", { name: "Disable post" }));
-  await view.findByText("Post disabled.");
+  fireEvent.click(view.getByRole("button", { name: "Delete" }));
+  fireEvent.click(view.getByRole("button", { name: "Delete post" }));
+  await view.findByText("Post deleted.");
   expect(savePost).toHaveBeenCalledWith(
     expect.objectContaining({ name: "Latest saved name" }),
   );
@@ -400,7 +402,7 @@ it("saves the latest edits before disabling an existing post", async () => {
   expect(view.queryByRole("textbox", { name: "Post name" })).toBeNull();
   expect(requestAi).not.toHaveBeenCalled();
 });
-it("saves a new draft before disabling it rather than dropping an unsaved post", async () => {
+it("saves a new draft before deleting it rather than dropping an unsaved post", async () => {
   setLanguage("en");
   const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
   await view.findByRole("button", { name: /Social QA/ });
@@ -408,12 +410,62 @@ it("saves a new draft before disabling it rather than dropping an unsaved post",
   fireEvent.change(view.getByRole("textbox", { name: "Post name" }), {
     target: { value: "New draft to keep" },
   });
-  fireEvent.click(view.getByRole("button", { name: "Disable" }));
-  fireEvent.click(view.getByRole("button", { name: "Disable post" }));
-  await view.findByText("Post disabled.");
+  fireEvent.click(view.getByRole("button", { name: "Delete" }));
+  fireEvent.click(view.getByRole("button", { name: "Delete post" }));
+  await view.findByText("Post deleted.");
   expect(stored.some((item) => item.name === "New draft to keep")).toBe(true);
   expect(vi.mocked(savePost).mock.invocationCallOrder[0]).toBeLessThan(
     vi.mocked(removePost).mock.invocationCallOrder[0]!,
   );
   expect(requestAi).not.toHaveBeenCalled();
+});
+
+it.each([false, true])(
+  "uses clear deletion wording with recovery instructions only for superadmins (canManageDisabled=%s)",
+  async (canManageDisabled) => {
+    const view = render(
+      <SocialStudio
+        catalog={[]}
+        campaigns={[]}
+        canManageDisabled={canManageDisabled}
+      />,
+    );
+    await open(view);
+    fireEvent.click(view.getByRole("button", { name: "Delete" }));
+    const dialog = view.getByRole("dialog", { name: "Delete social post" });
+    expect(dialog.textContent).toContain(
+      "This post will be removed from your posts.",
+    );
+    const recovery =
+      "You can restore this post from Deleted posts if it was removed by mistake.";
+    if (canManageDisabled) expect(dialog.textContent).toContain(recovery);
+    else {
+      expect(dialog.textContent).not.toMatch(/superadmin|restor|recover/i);
+      expect(dialog.textContent).not.toContain(recovery);
+      expect(
+        view.queryByRole("button", { name: /Post visibility/ }),
+      ).toBeNull();
+    }
+    expect(view.getByRole("button", { name: "Keep post" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Delete post" })).toBeTruthy();
+    expect(removePost).not.toHaveBeenCalled();
+    expect(savePost).not.toHaveBeenCalled();
+  },
+);
+
+it("uses Fshij for the Albanian delete action without exposing recovery instructions to ordinary users", async () => {
+  setLanguage("sq");
+  const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+  await open(view);
+  fireEvent.click(view.getByRole("button", { name: "Fshij" }));
+  const dialog = view.getByRole("dialog", {
+    name: "Fshij postimin në rrjete sociale",
+  });
+  expect(dialog.textContent).toContain(
+    "Ky postim do të hiqet nga postimet tuaja.",
+  );
+  expect(dialog.textContent).not.toMatch(/superadmin|rikth|recover|restor/i);
+  fireEvent.click(view.getByRole("button", { name: "Fshij postimin" }));
+  await view.findByText("Postimi u fshi.");
+  expect(removePost).toHaveBeenCalledOnce();
 });

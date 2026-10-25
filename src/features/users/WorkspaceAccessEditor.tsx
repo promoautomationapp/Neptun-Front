@@ -159,7 +159,7 @@ export function WorkspaceAccessEditor({
         <p className="na-access-help">
           {custom
             ? "Choose what this colleague can use in the workspace."
-            : "Staff and PMs can use the catalog, social posts, and disable brochures. Their role still determines editing and review actions."}
+            : "Staff and PMs can use the catalog, social posts, and delete brochures. Their role still determines editing and review actions."}
         </p>
         {custom && (
           <>
@@ -168,8 +168,8 @@ export function WorkspaceAccessEditor({
                 [
                   [
                     "canDisableBrochures",
-                    "Disable brochures",
-                    "Allow this person to disable a brochure without deleting its work.",
+                    "Delete brochures",
+                    "Allow this person to delete brochures from campaigns.",
                   ],
                   [
                     "canViewSocialPosts",
