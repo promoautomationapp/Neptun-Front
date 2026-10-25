@@ -1,3 +1,4 @@
+import { confirmDialog } from "../../components/dialogs";
 import { ActionMenu } from "../brochure/ActionMenu";
 import { BrochurePreview } from "../brochure/BrochurePreview";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
@@ -41,7 +42,6 @@ import {
   type CampaignFilters,
 } from "../campaigns/campaignFilters";
 import { CampaignActivityStatus } from "../brochure/CampaignActivityStatus";
-import { hasUnsavedCampaignChanges } from "../brochure/campaignSaveStatus";
 import {
   applyPreparedProductPhoto,
   createProductImagePreparationQueue,
@@ -3994,21 +3994,49 @@ export default function App({
 
   const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsBusy, setSettingsBusy] = useState(false);
-  function canLeaveSettings() {
-    return (
-      !settingsBusy &&
-      (!settingsDirty ||
-        window.confirm(t("Discard your unsaved Settings changes?")))
-    );
+  const settingsDraftKey = user
+    ? `neptun-settings-draft:${user.organizationId}:${user.id}`
+    : undefined;
+  const leaveSettingsRequest = useRef<Promise<boolean> | null>(null);
+  async function canLeaveSettings() {
+    if (settingsBusy) return false;
+    if (!settingsDirty) return true;
+    if (leaveSettingsRequest.current) return leaveSettingsRequest.current;
+    const request = confirmDialog({
+      title: t("Unsaved settings"),
+      message: t(
+        "You have unsaved changes in Settings. Discard them and leave?",
+      ),
+      confirmLabel: t("Discard changes"),
+      cancelLabel: t("Keep editing"),
+      danger: true,
+    })
+      .then((accepted) => {
+        if (accepted && settingsDraftKey) {
+          try {
+            sessionStorage.removeItem(settingsDraftKey);
+          } catch {
+            /* Storage may be unavailable. */
+          }
+        }
+        return accepted;
+      })
+      .finally(() => {
+        leaveSettingsRequest.current = null;
+      });
+    leaveSettingsRequest.current = request;
+    return request;
   }
-  function setSection(next: string) {
+  async function setSection(next: string) {
     if (
       (next === "catalog" && !access.canViewCatalog) ||
       (next === "social" && !access.canViewSocialPosts)
     )
       return;
-    if (next === section || section !== "stores" || canLeaveSettings())
-      setSectionValue(next);
+    if (next === section) return true;
+    if (section === "stores" && !(await canLeaveSettings())) return false;
+    setSectionValue(next);
+    return true;
   }
   const [socialSeed, setSocialSeed] = useState<SocialSeed | null>(null);
   const activeEditorRef = useRef({ activeId, section });
@@ -4090,16 +4118,6 @@ export default function App({
   const [pendingPrintId, setPendingPrintId] = useState<string | null>(null);
   const [exportId, setExportId] = useState<string | null>(null);
   const [exportPage, setExportPage] = useState(0);
-  useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => {
-      if (hasPendingSaves() || hasUnsavedCampaignChanges()) {
-        event.preventDefault();
-        event.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, []);
   React.useLayoutEffect(() => {
     if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
   }, [section, activeId]);
@@ -4359,7 +4377,7 @@ export default function App({
       "id" | "campaignId" | "pageIndex" | "commentId"
     >,
   ) {
-    if (section === "stores" && !canLeaveSettings()) return;
+    if (section === "stores" && !(await canLeaveSettings())) return;
     notificationRequest.current?.abort();
     const request = new AbortController();
     notificationRequest.current = request;
@@ -4985,8 +5003,8 @@ export default function App({
               key={id}
               type="button"
               className={section === id ? "active" : ""}
-              onClick={() => {
-                setSection(id);
+              onClick={async () => {
+                if (!(await setSection(id))) return;
                 setActiveId(null);
                 setMobileMenuOpen(false);
               }}
@@ -4998,20 +5016,19 @@ export default function App({
         </nav>
         <SidebarAccount
           user={user}
-          onProfile={() => {
-            if (section === "stores" && !canLeaveSettings()) return;
-            setSection("profile");
+          onProfile={async () => {
+            if (!(await setSection("profile"))) return;
             setActiveId(null);
             setMobileMenuOpen(false);
           }}
           onSignOut={async () => {
-            if (section === "stores" && !canLeaveSettings()) return;
+            if (section === "stores" && !(await canLeaveSettings())) return;
             await logout();
             setUser(null);
             onAuthChange?.(null);
             setCampaigns([]);
             setActiveId(null);
-            setSection("campaigns");
+            setSectionValue("campaigns");
           }}
         />
       </aside>
@@ -5314,6 +5331,7 @@ export default function App({
           <SettingsPage
             canViewCatalog={access.canViewCatalog}
             initialSnapshot={settingsSnapshot}
+            draftKey={settingsDraftKey}
             onSnapshotChange={setSettingsSnapshot}
             previewProducts={catalog}
             onSaved={setSettings}

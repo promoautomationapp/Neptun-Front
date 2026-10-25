@@ -10,6 +10,7 @@ import type { CategoryFacet } from "./OffersTab";
 import { t } from "../brochure/i18n";
 export function SettingsPage({
   initialSnapshot,
+  draftKey,
   onSnapshotChange,
   onSaved,
   onDirtyChange,
@@ -18,6 +19,7 @@ export function SettingsPage({
   canViewCatalog = true,
 }: {
   initialSnapshot?: SettingsSnapshot | null;
+  draftKey?: string;
   onSnapshotChange?: (snapshot: SettingsSnapshot) => void;
   onSaved?: (settings: WorkspaceSettings) => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -125,6 +127,8 @@ export function SettingsPage({
     <SettingsEditor
       previewProducts={previewProducts}
       initial={snapshot.settings}
+      draftKey={draftKey}
+      draftVersion={snapshot.version}
       onDirtyChange={onDirtyChange}
       onBusyChange={onBusyChange}
       facets={facets}

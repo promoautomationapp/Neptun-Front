@@ -1,4 +1,19 @@
 const translations: Record<string, string> = {
+  "Their work will be kept.": "Puna e tyre do të ruhet.",
+  "Disable access for": "Të çaktivizohet qasja për",
+  "Cancel the invitation for": "Të anulohet ftesa për",
+  "Keep access": "Mbaje qasjen",
+  "Disable access": "Çaktivizo qasjen",
+  "Cancel invitation": "Anulo ftesën",
+  "Disable user access?": "Të çaktivizohet qasja e përdoruesit?",
+  "Cancel invitation?": "Të anulohet ftesa?",
+  "Unsaved settings restored on this browser.":
+    "Cilësimet e paruajtura u rikthyen në këtë shfletues.",
+  "Keep editing": "Vazhdo redaktimin",
+  "Discard changes": "Hidh poshtë ndryshimet",
+  "You have unsaved changes in Settings. Discard them and leave?":
+    "Keni ndryshime të paruajtura te Cilësimet. T’i hidhni poshtë dhe të largoheni?",
+  "Unsaved settings": "Cilësime të paruajtura",
   "You can restore this post from Deleted posts if it was removed by mistake.":
     "Nëse postimi është fshirë gabimisht, mund ta riktheni nga Postimet e fshira.",
 

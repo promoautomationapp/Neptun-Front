@@ -74,8 +74,71 @@ export interface SettingsTabProps {
   draft: WorkspaceSettings;
   update: (change: (next: WorkspaceSettings) => void) => void;
 }
+
+interface SettingsDraftBinding {
+  key?: string;
+  version?: number;
+  initial: string;
+}
+
+function recoverSettingsDraft(
+  initial: WorkspaceSettings,
+  key?: string,
+  version?: number,
+) {
+  const fresh = {
+    draft: structuredClone(initial),
+    selectedPresetId: initial.defaultBrochurePresetId,
+    restored: false,
+  };
+  if (!key) return fresh;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(key) || "null");
+    if (
+      saved?.schemaVersion !== 1 ||
+      saved.baseline !== JSON.stringify(initial) ||
+      saved.version !== version
+    )
+      return fresh;
+    const parsed = workspaceSettingsSchema.safeParse(saved.draft);
+    if (!parsed.success || JSON.stringify(parsed.data) === saved.baseline)
+      return fresh;
+    return {
+      draft: parsed.data,
+      selectedPresetId:
+        typeof saved.selectedPresetId === "string"
+          ? saved.selectedPresetId
+          : parsed.data.defaultBrochurePresetId,
+      restored: true,
+    };
+  } catch {
+    // Private browsing, a full storage quota or an invalid local record must
+    // never prevent editing the server's saved settings.
+    return fresh;
+  }
+}
+
+function clearSettingsDraft(key?: string, binding?: SettingsDraftBinding) {
+  if (!key) return;
+  try {
+    if (binding) {
+      const saved = JSON.parse(sessionStorage.getItem(key) || "null");
+      if (
+        saved?.baseline !== binding.initial ||
+        saved.version !== binding.version
+      )
+        return;
+    }
+    sessionStorage.removeItem(key);
+  } catch {
+    // Local recovery is optional when browser storage is unavailable.
+  }
+}
+
 export function SettingsEditor({
   initial,
+  draftKey,
+  draftVersion,
   onSave,
   onReload,
   facets = [],
@@ -86,6 +149,9 @@ export function SettingsEditor({
   previewProducts = [],
 }: {
   initial: WorkspaceSettings;
+  /** A session-storage key scoped to the signed-in organization and user. */
+  draftKey?: string;
+  draftVersion?: number;
   onSave: (value: WorkspaceSettings) => Promise<WorkspaceSettings>;
   onReload?: () => void;
   facets?: CategoryFacet[];
@@ -95,11 +161,23 @@ export function SettingsEditor({
   onBusyChange?: (busy: boolean) => void;
   previewProducts?: Product[];
 }) {
-  const [draft, setDraft] = useState(() => structuredClone(initial));
+  const [recovery] = useState(() =>
+    recoverSettingsDraft(initial, draftKey, draftVersion),
+  );
+  const [draft, setDraft] = useState(recovery.draft);
   const [selectedPresetId, setSelectedPresetId] = useState(
-    initial.defaultBrochurePresetId,
+    recovery.selectedPresetId,
   );
   const [baseline, setBaseline] = useState(() => JSON.stringify(initial));
+  const [draftBinding, setDraftBinding] = useState<SettingsDraftBinding>(
+    () => ({
+      key: draftKey,
+      version: draftVersion,
+      initial: JSON.stringify(initial),
+    }),
+  );
+  const currentDraftKey = useRef(draftKey);
+  currentDraftKey.current = draftKey;
   const [tab, setTab] = useState<TabId>("design");
   const [area, setArea] = useState<SettingsArea>("cover");
   const visibleTabs = tabs.filter((item) =>
@@ -123,7 +201,9 @@ export function SettingsEditor({
   const [saving, setSaving] = useState(false);
   const [uploads, setUploads] = useState(0);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(() =>
+    recovery.restored ? t("Unsaved settings restored on this browser.") : "",
+  );
   const rootId = useId();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dirty = JSON.stringify(draft) !== baseline;
@@ -141,20 +221,64 @@ export function SettingsEditor({
     [onDirtyChange, onBusyChange],
   );
   useEffect(() => {
-    setDraft(structuredClone(initial));
-    setSelectedPresetId(initial.defaultBrochurePresetId);
-    setBaseline(JSON.stringify(initial));
+    const initialSnapshot = JSON.stringify(initial);
+    if (
+      draftBinding.key === draftKey &&
+      draftBinding.version === draftVersion &&
+      draftBinding.initial === initialSnapshot
+    )
+      return;
+    const recovered = recoverSettingsDraft(initial, draftKey, draftVersion);
+    setDraft(recovered.draft);
+    setSelectedPresetId(recovered.selectedPresetId);
+    setBaseline(initialSnapshot);
+    setDraftBinding({
+      key: draftKey,
+      version: draftVersion,
+      initial: initialSnapshot,
+    });
     setError("");
-  }, [initial]);
+    setMessage(
+      recovered.restored ? t("Unsaved settings restored on this browser.") : "",
+    );
+  }, [initial, draftKey, draftVersion, draftBinding]);
   useEffect(() => {
-    if (!dirty && !saving && uploads === 0) return;
-    const handler = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty, saving, uploads]);
+    if (
+      !draftKey ||
+      draftBinding.key !== draftKey ||
+      draftBinding.version !== draftVersion ||
+      draftBinding.initial !== JSON.stringify(initial)
+    )
+      return;
+    if (!dirty) {
+      clearSettingsDraft(draftKey, draftBinding);
+      return;
+    }
+    try {
+      sessionStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          schemaVersion: 1,
+          version: draftVersion,
+          baseline,
+          selectedPresetId,
+          draft,
+        }),
+      );
+    } catch {
+      // Uploaded artwork can exceed the browser's local storage quota. The
+      // live draft and normal explicit save flow remain available.
+    }
+  }, [
+    draft,
+    selectedPresetId,
+    baseline,
+    dirty,
+    draftKey,
+    draftVersion,
+    draftBinding,
+    initial,
+  ]);
   const update = useCallback((change: (next: WorkspaceSettings) => void) => {
     setDraft((current) => {
       const next = structuredClone(current);
@@ -169,6 +293,7 @@ export function SettingsEditor({
     [],
   );
   async function save() {
+    const savingDraftKey = draftKey;
     const validDraft = workspaceSettingsSchema.safeParse(draft);
     if (!validDraft.success) {
       setError(
@@ -207,10 +332,13 @@ export function SettingsEditor({
     setMessage("");
     try {
       const saved = await onSave(parsed.data);
+      clearSettingsDraft(savingDraftKey);
+      if (currentDraftKey.current !== savingDraftKey) return;
       setDraft(structuredClone(saved));
       setBaseline(JSON.stringify(saved));
       setMessage("Settings saved. New brochures will use these defaults.");
     } catch (cause: unknown) {
+      if (currentDraftKey.current !== savingDraftKey) return;
       setError(
         cause instanceof Error
           ? cause.message
@@ -257,6 +385,7 @@ export function SettingsEditor({
               type="button"
               disabled={saving || uploads > 0}
               onClick={() => {
+                clearSettingsDraft(draftKey);
                 setDraft(structuredClone(initial));
                 setBaseline(JSON.stringify(initial));
                 setError("");
@@ -275,7 +404,10 @@ export function SettingsEditor({
             <button
               type="button"
               disabled={saving || uploads > 0}
-              onClick={onReload}
+              onClick={() => {
+                clearSettingsDraft(draftKey);
+                onReload();
+              }}
             >
               Reload saved settings and discard this draft
             </button>

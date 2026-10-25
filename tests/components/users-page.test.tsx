@@ -1,6 +1,12 @@
 import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { UsersPage } from "../../src/features/users/UsersPage";
 import type { User } from "../../src/features/auth/auth.api";
@@ -288,10 +294,7 @@ it("offers a new invitation, rather than restoring unverified cancelled accounts
 });
 
 it("cancels an invitation through the backend instead of deleting the user", async () => {
-  vi.stubGlobal(
-    "confirm",
-    vi.fn(() => true),
-  );
+  setLanguage("en");
   const api = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
     init?.method === "PATCH"
       ? response({
@@ -307,6 +310,16 @@ it("cancels an invitation through the backend instead of deleting the user", asy
   fireEvent.click(
     await view.findByRole("button", { name: "Cancel invitation" }),
   );
+  const dialog = await view.findByRole("dialog", {
+    name: "Cancel invitation?",
+  });
+  expect(dialog.textContent).toContain("staff@example.test");
+  expect(api.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(
+    false,
+  );
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Cancel invitation" }),
+  );
   await view.findByText("Invitation cancelled.");
   expect(
     JSON.parse(
@@ -318,6 +331,30 @@ it("cancels an invitation through the backend instead of deleting the user", asy
   expect(api.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(
     false,
   );
+});
+
+it("keeps a colleague active when the in-app access confirmation is cancelled", async () => {
+  setLanguage("en");
+  const native = vi.fn();
+  vi.stubGlobal("confirm", native);
+  const api = vi.fn(async () =>
+    response({ users: [staff], emailConfigured: true }),
+  );
+  vi.stubGlobal("fetch", api);
+  const view = render(<UsersPage currentUser={admin} />);
+  fireEvent.click(await view.findByRole("button", { name: "Disable" }));
+  const dialog = await view.findByRole("dialog", {
+    name: "Disable user access?",
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Keep access" }));
+  await waitFor(() =>
+    expect(
+      view.queryByRole("dialog", { name: "Disable user access?" }),
+    ).toBeNull(),
+  );
+  expect(api.mock.calls).toHaveLength(1);
+  expect(native).not.toHaveBeenCalled();
+  expect(view.getByText("Team Staff")).toBeTruthy();
 });
 
 it("explains that changing a pending role needs a new invitation", async () => {

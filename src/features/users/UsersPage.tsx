@@ -1,4 +1,6 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
+import { confirmDialog } from "../../components/dialogs";
 import { useEffect, useMemo, useState } from "react";
 import {
   inviteUser,
@@ -578,16 +580,33 @@ export function UsersPage({
                               <button
                                 type="button"
                                 disabled={!!busy}
-                                onClick={() => {
+                                onClick={async () => {
                                   if (
                                     user.status !== "disabled" &&
-                                    !window.confirm(
-                                      (user.status === "invited"
-                                        ? "Cancel the invitation for "
-                                        : "Disable access for ") +
+                                    !(await confirmDialog({
+                                      title: t(
+                                        user.status === "invited"
+                                          ? "Cancel invitation?"
+                                          : "Disable user access?",
+                                      ),
+                                      message:
+                                        t(
+                                          user.status === "invited"
+                                            ? "Cancel the invitation for"
+                                            : "Disable access for",
+                                        ) +
+                                        " " +
                                         user.email +
-                                        "? Their work will be kept.",
-                                    )
+                                        "? " +
+                                        t("Their work will be kept."),
+                                      confirmLabel: t(
+                                        user.status === "invited"
+                                          ? "Cancel invitation"
+                                          : "Disable access",
+                                      ),
+                                      cancelLabel: t("Keep access"),
+                                      danger: true,
+                                    }))
                                   )
                                     return;
                                   void perform(

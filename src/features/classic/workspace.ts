@@ -1,3 +1,4 @@
+import { confirmDialog, promptDialog } from "../../components/dialogs";
 import { apiFetch as fetch } from "../../api/client";
 import type { SpreadsheetWorkbook } from "../../shared/spreadsheet";
 
@@ -458,12 +459,25 @@ export function mountWorkspace() {
       token = "";
     }
     if (!token) {
+      const albanian = window.neptunLanguage?.get() === "sq";
       token =
-        window.prompt(
-          "Enter the shared workspace access code from your platform administrator. Campaigns will be shared with teammates using the same code.",
-        ) ?? "";
+        (
+          await promptDialog({
+            title: albanian
+              ? "Lidh hapësirën e përbashkët"
+              : "Connect shared workspace",
+            message: albanian
+              ? "Vendosni kodin e qasjes nga administratori i platformës. Fushatat do të ndahen me kolegët që përdorin të njëjtin kod."
+              : "Enter the shared workspace access code from your platform administrator. Campaigns will be shared with teammates using the same code.",
+            label: albanian
+              ? "Kodi i qasjes në hapësirën e përbashkët"
+              : "Shared workspace access code",
+            confirmLabel: albanian ? "Lidh" : "Connect",
+            cancelLabel: albanian ? "Anulo" : "Cancel",
+            sensitive: true,
+          })
+        )?.trim() ?? "";
       if (!token) return;
-      token = token.trim();
     }
     try {
       note("Connecting to shared campaign storage…");
@@ -1262,20 +1276,27 @@ export function mountWorkspace() {
       );
     tbody.querySelectorAll<HTMLElement>("[data-remove]").forEach(
       (b) =>
-        (b.onclick = () => {
-          const p = activeCampaign().products.find(
-            (p) => p.id === b.dataset.remove,
-          );
+        (b.onclick = async () => {
+          const campaign = activeCampaign();
+          const p = campaign.products.find((p) => p.id === b.dataset.remove);
           if (!p) return;
-          const label = p.name || p.code || "this product",
-            prompt =
-              window.neptunLanguage?.get() === "sq"
-                ? `Ta hiqni ${label} nga kjo fushatë?`
-                : `Remove ${label} from this campaign?`;
-          if (!confirm(prompt)) return;
-          activeCampaign().products = activeCampaign().products.filter(
-            (x) => x.id !== p.id,
-          );
+          const campaignId = campaign.id;
+          const productId = p.id;
+          const albanian = window.neptunLanguage?.get() === "sq";
+          const label =
+            p.name || p.code || (albanian ? "këtë produkt" : "this product");
+          const accepted = await confirmDialog({
+            title: albanian ? "Hiq produktin" : "Remove product",
+            message: albanian
+              ? `Ta hiqni ${label} nga kjo fushatë?`
+              : `Remove ${label} from this campaign?`,
+            confirmLabel: albanian ? "Hiq" : "Remove",
+            cancelLabel: albanian ? "Mbaje produktin" : "Keep product",
+            danger: true,
+          });
+          // Another campaign may have opened while the asynchronous dialog was shown.
+          if (!accepted || current?.id !== campaignId) return;
+          current.products = current.products.filter((x) => x.id !== productId);
           persist();
           renderProducts();
         }),
