@@ -38,7 +38,21 @@ export function ActionMenu({
       className={`cs-brochure-actions-menu ${className}`}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary aria-expanded={open}>{label}</summary>
+      <summary aria-expanded={open}>
+        {label}
+        <svg
+          className="cs-action-menu-chevron"
+          width="14"
+          height="14"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
+          <path d="m5 7.5 5 5 5-5" />
+        </svg>
+      </summary>
       <div
         onClick={(event) => {
           if (

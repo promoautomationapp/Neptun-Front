@@ -1,0 +1,146 @@
+.cs-cover-logo-picker {
+  color: var(--np-text, #24455e);
+}
+.cs-cover-logo-picker > p {
+  margin: 0 0 18px;
+  color: var(--np-muted, #718498);
+  font-size: 13px;
+}
+.cs-cover-logo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(210px, 1fr);
+  gap: 24px;
+}
+.cs-cover-logo-library {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.cs-cover-logo-library-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.cs-cover-logo-library-head > span {
+  font-size: 11px;
+  color: var(--np-muted, #718498);
+}
+.cs-cover-logo-library > input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--np-border, #cfdee8);
+  border-radius: 8px;
+  background: var(--np-surface, #fff);
+  color: inherit;
+}
+.cs-cover-logo-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  max-height: 340px;
+  overflow: auto;
+  padding: 2px;
+}
+.cs-cover-logo-choices button {
+  display: grid;
+  grid-template-rows: 76px auto;
+  align-content: start;
+  padding: 7px;
+  gap: 7px;
+  border: 1px solid var(--np-border, #dce5ed);
+  border-radius: 9px;
+  background: var(--np-surface, #fff);
+  color: inherit;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.cs-cover-logo-choices button[aria-pressed="true"] {
+  border-color: var(--np-accent, #2679b5);
+  box-shadow: 0 0 0 1px var(--np-accent, #2679b5);
+}
+.cs-cover-logo-choices button > span:last-child {
+  overflow-wrap: anywhere;
+}
+.cs-cover-logo-thumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 6px;
+  background: #e9edf2;
+}
+.cs-cover-logo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cs-cover-logo-library > small {
+  color: var(--np-muted, #718498);
+  font-size: 10px;
+}
+.cs-cover-logo-preview {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--np-border, #dce5ed);
+  background: var(--np-raised, #f7fafc);
+}
+.cs-cover-logo-preview > strong {
+  font-size: 13px;
+}
+.cs-cover-logo-preview figure {
+  margin: 0;
+  min-width: 0;
+}
+.cs-cover-logo-preview figure > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: 20px;
+  border-radius: 8px;
+}
+.cs-cover-logo-preview-light {
+  background: #fff;
+  border: 1px solid #e2e8ef;
+}
+.cs-cover-logo-preview-dark {
+  background: #173b63;
+}
+.cs-cover-logo-preview img {
+  display: block;
+  width: 100%;
+  height: 70px;
+  object-fit: contain;
+}
+.cs-cover-logo-preview figcaption {
+  margin-top: 6px;
+  color: var(--np-muted, #718498);
+  font-size: 11px;
+}
+@media (max-width: 620px) {
+  .cs-cover-logo-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .cs-cover-logo-preview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .cs-cover-logo-preview > strong {
+    grid-column: 1 / -1;
+  }
+  .cs-cover-logo-preview figure > div {
+    min-height: 85px;
+    padding: 12px;
+  }
+  .cs-cover-logo-preview img {
+    height: 50px;
+  }
+}

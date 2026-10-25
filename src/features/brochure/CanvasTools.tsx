@@ -7,6 +7,7 @@ export interface CanvasToolsProps {
   activeTool: CanvasTool;
   onSelect: (tool: CanvasTool) => void;
   disabled?: boolean;
+  commentCount?: number;
 }
 const tools = [
   { id: "pointer", label: "Pointer", caption: "Pointer", shortcut: "V" },
@@ -23,6 +24,7 @@ export function CanvasTools({
   activeTool,
   onSelect,
   disabled,
+  commentCount = 0,
 }: CanvasToolsProps) {
   useEffect(() => {
     if (disabled) return;
@@ -58,7 +60,11 @@ export function CanvasTools({
           key={tool.id}
           type="button"
           disabled={disabled}
-          aria-label={t(tool.label)}
+          aria-label={
+            tool.id === "comment"
+              ? `${t(tool.label)}${commentCount ? ` · ${commentCount}` : ""}`
+              : t(tool.label)
+          }
           aria-pressed={activeTool === tool.id}
           aria-keyshortcuts={tool.shortcut}
           title={`${t(tool.label)} · ${tool.shortcut}`}
@@ -84,6 +90,9 @@ export function CanvasTools({
             )}
           </svg>
           <span>{t(tool.caption)}</span>
+          {tool.id === "comment" && commentCount > 0 && (
+            <span className="cs-canvas-comment-count">{commentCount}</span>
+          )}
           <kbd aria-hidden="true">{tool.shortcut}</kbd>
         </button>
       ))}

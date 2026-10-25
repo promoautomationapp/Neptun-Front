@@ -4,6 +4,7 @@ import {
 } from "./BrochurePresetPicker";
 import { availableBrochurePresets } from "./brochurePresets";
 import type { BrochurePreset } from "./brochurePresets";
+import { BrochureImportNotices } from "./BrochureImportNotices";
 import { FileUpload } from "../../components/FileUpload";
 import { Modal } from "../../components/Modal";
 import { SearchableSelect } from "../../components/SearchableSelect";
@@ -1110,19 +1111,11 @@ export function ImportSales({
                 </span>
               </label>
             )}
-          {isBrochureImport && brochureAnalysis.warnings.length > 0 && (
-            <div className="cs-import-position-warnings">
-              <strong>{t("Check these shared positions")}</strong>
-              {brochureAnalysis.warnings.map((warning) => (
-                <p key={`${warning.position}-${warning.row}`}>
-                  {warning.position} · {warning.name} ({warning.code}) —{" "}
-                  {warning.message ||
-                    t(
-                      "Different products have the same order. Both will be shown in sequence.",
-                    )}
-                </p>
-              ))}
-            </div>
+          {isBrochureImport && (
+            <BrochureImportNotices
+              warnings={brochureAnalysis.warnings}
+              products={brochureAnalysis.products}
+            />
           )}
           {ready.some((product: Product) => product.catalogMissing) && (
             <p className="cs-import-missing-info" role="status">

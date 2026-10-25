@@ -1,4 +1,32 @@
 const translations: Record<string, string> = {
+  Images: "Imazhe",
+  "Editing help": "Si të redaktoni",
+  "Expand navigation": "Zgjero menynë",
+  "Collapse navigation": "Zvogëlo menynë",
+  Backup: "Kopje rezervë",
+  "Replace or refine image": "Zëvendëso ose përmirëso imazhin",
+  "Upload or create image": "Ngarko ose krijo imazh",
+  "Choose a saved logo or image": "Zgjidhni një logo ose imazh të ruajtur",
+  "Click an image to add it, or drag it onto the page. Move and resize it after adding.":
+    "Klikoni një imazh për ta shtuar ose tërhiqeni në faqe. Më pas mund ta lëvizni dhe t’ia ndryshoni madhësinë.",
+  "Add saved image": "Shto imazhin e ruajtur",
+  "Import notes": "Shënime nga importimi",
+  "Shared Excel order": "Renditje e përbashkët në Excel",
+  "Check Set positions in Excel": "Kontrolloni pozicionet e setit në Excel",
+  "Import note": "Shënim nga importimi",
+  "These offers share a brochure position. They were kept as separate cards in Excel row order.":
+    "Këto oferta kanë të njëjtin pozicion në Excel. Të gjitha u ruajtën si karta më vete, sipas renditjes së rreshtave në Excel.",
+  "Excel position": "Pozicioni në Excel",
+  page: "faqja",
+  order: "renditja",
+  "Keep this if intended. To change the order, give each offer a different Brochure position in Excel, or move the cards in the brochure.":
+    "Nëse kjo është e qëllimshme, nuk duhet të ndryshoni asgjë. Për renditje tjetër, vendosni pozicione të ndryshme në kolonën Brochure position në Excel ose lëvizni kartat në broshurë.",
+  "The rows of this Set have different brochure positions. The first position was used.":
+    "Rreshtat e këtij seti kanë pozicione të ndryshme në broshurë. U përdor pozicioni i parë.",
+  "Give every row in the Set the same Brochure position in Excel to keep its products together.":
+    "Vendosni të njëjtin Brochure position në Excel për çdo rresht të setit, që produktet e tij të qëndrojnë së bashku.",
+  "Excel rows": "Rreshtat në Excel",
+
   "Their work will be kept.": "Puna e tyre do të ruhet.",
   "Disable access for": "Të çaktivizohet qasja për",
   "Cancel the invitation for": "Të anulohet ftesa për",
@@ -327,7 +355,9 @@ const translations: Record<string, string> = {
   "Signing out…": "Duke dalë…",
   "Could not sign out. Please try again.":
     "Dalja nuk u krye. Ju lutemi provoni përsëri.",
-  Expired: "Ka përfunduar",
+  Expired: "Afati i ofertës ka skaduar",
+  "Offer period ended": "Afati i ofertës ka skaduar",
+  "Workflow status": "Statusi i punës",
   Search: "Kërko",
   "Choose an option": "Zgjidh një opsion",
   "Search options": "Kërko në opsione",

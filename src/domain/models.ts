@@ -339,6 +339,11 @@ export interface ProductImageSearch {
 }
 
 export interface BrochureImportWarning {
+  kind?: "shared-order" | "set-position-conflict";
+  severity?: "info" | "warning";
+  relatedRows?: number[];
+  relatedCodes?: string[];
+  positions?: string[];
   position?: string;
   row: number;
   code: string;

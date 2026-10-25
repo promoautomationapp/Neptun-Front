@@ -829,6 +829,7 @@ export interface BrochurePageProps extends ProductEditingProps {
   onArtworkChange?: PageArtworkProps["onChange"];
   onArtworkRemove?: PageArtworkProps["onRemove"];
   onReplaceCoverLogo?: (file: File) => void;
+  onChooseCoverLogo?: () => void;
   onReplaceCoverPhoto?: (file: File) => void;
   onReplaceCoverArtwork?: (key: string, file: File) => void;
   onPageDecorationChange?: PageDecorationChange;
@@ -2399,6 +2400,7 @@ function CoverPageContent({
   onArtworkRemove,
   onCampaignAssetChange,
   onReplaceCoverLogo,
+  onChooseCoverLogo,
   onReplaceCoverPhoto,
   onReplaceCoverArtwork,
   onCoverTextChange,
@@ -2605,6 +2607,7 @@ function CoverPageContent({
               : undefined
           }
           onReplaceFile={onReplaceCoverLogo}
+          onChooseImage={onChooseCoverLogo}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >

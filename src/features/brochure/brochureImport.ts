@@ -1,4 +1,4 @@
-import type { Product } from "../../domain/models";
+import type { BrochureImportWarning, Product } from "../../domain/models";
 import { catalogByCode, importCode } from "./importAnalysis";
 import { normalize, parsePrice } from "./utils";
 import { isBundleOffer } from "./productBundles";
@@ -52,13 +52,7 @@ interface BrochureIssue {
   name: string;
   reason: string;
 }
-interface BrochureWarning {
-  position?: string;
-  row: number;
-  code: string;
-  name: string;
-  message: string;
-}
+type BrochureWarning = BrochureImportWarning;
 
 const COLOR_WORDS: [string, string][] = [
   ["space black", "#30343a"],
@@ -357,6 +351,12 @@ export function analyzeBrochureRows(
       const position = positions[0]?.position ?? null;
       if (positions.some((entry) => entry.position.label !== position?.label))
         warnings.push({
+          kind: "set-position-conflict",
+          severity: "warning",
+          relatedRows: positions.map((entry) => entry.row),
+          positions: [
+            ...new Set(positions.map((entry) => entry.position.label)),
+          ],
           position: position?.label,
           row: rowNumber,
           code: product.code,
@@ -403,22 +403,40 @@ export function analyzeBrochureRows(
     const code = String(row?.[columns.codeCol] ?? "").trim();
     const sheetName = String(row?.[columns.nameCol] ?? "").trim();
     let sourceHash = 2166136261;
-    for (const character of JSON.stringify([sheetName || [rowNumber,position?.label,row[columns.detailsCol]],row[columns.brandCol]])) sourceHash = Math.imul(sourceHash ^ character.charCodeAt(0),16777619);
+    for (const character of JSON.stringify([
+      sheetName || [rowNumber, position?.label, row[columns.detailsCol]],
+      row[columns.brandCol],
+    ]))
+      sourceHash = Math.imul(sourceHash ^ character.charCodeAt(0), 16777619);
     const importedCode = code || `EXCEL-${(sourceHash >>> 0).toString(36)}`;
     if (!code && !sheetName && !position) {
       ignored++;
       return;
     }
     const keepIncomplete = (catalogProduct: Product | null = null) => {
-      const product = excelRowProduct(row, importedCode, catalogProduct, columns, rowNumber);
+      const product = excelRowProduct(
+        row,
+        importedCode,
+        catalogProduct,
+        columns,
+        rowNumber,
+      );
       if (!product) return;
       const placeholderName = `Excel row ${rowNumber}`;
       if (!sheetName && !catalogProduct) {
         product.name = placeholderName;
         product.excelSource = { ...product.excelSource!, placeholderName };
       }
-      incompleteProducts.push({ ...product, source: "import", sale: parsePrice(row[columns.priceCol]) > 0 ? String(parsePrice(row[columns.priceCol])) : "",
-        ...(position ? { brochurePage: position.page, brochureOrder: position.order } : {}),
+      incompleteProducts.push({
+        ...product,
+        source: "import",
+        sale:
+          parsePrice(row[columns.priceCol]) > 0
+            ? String(parsePrice(row[columns.priceCol]))
+            : "",
+        ...(position
+          ? { brochurePage: position.page, brochureOrder: position.order }
+          : {}),
       });
     };
     if (!code && !sheetName && position) {
@@ -452,7 +470,13 @@ export function analyzeBrochureRows(
         : null);
     const importedProduct = resolved.bundle
       ? catalogProduct
-      : excelRowProduct(row, importedCode, catalogProduct || null, columns, rowNumber);
+      : excelRowProduct(
+          row,
+          importedCode,
+          catalogProduct || null,
+          columns,
+          rowNumber,
+        );
     if (!importedProduct) {
       if (position || code)
         skipped.push({
@@ -512,6 +536,8 @@ export function analyzeBrochureRows(
       a.row - b.row,
   );
   const groups = new Map<string, Product[]>();
+  const positionRows = new Map<string, number[]>();
+  const sharedOrderNotices = new Map<string, BrochureWarning>();
   const products: Product[] = [];
   for (const entry of entries) {
     const key = entry.position?.label || `row-${entry.row}`;
@@ -551,14 +577,29 @@ export function analyzeBrochureRows(
       if (!parent.image && entry.product.image)
         parent.image = entry.product.image;
     } else {
-      if (atPosition.length && entry.position)
-        warnings.push({
+      const rowsAtPosition = positionRows.get(key) || [];
+      if (atPosition.length && entry.position) {
+        // The position is a sorting hint, not a fixed canvas cell. Equal values
+        // keep separate offers in source-row order and are valid brochure data.
+        const notice = sharedOrderNotices.get(key) || {
+          kind: "shared-order" as const,
+          severity: "info" as const,
           position: key,
           row: entry.row,
           code: entry.product.code,
           name: entry.product.name,
-          message: `Check brochure position ${key}: different products share this order.`,
-        });
+          message:
+            "These offers share a brochure position. They were kept as separate cards in Excel row order.",
+        };
+        notice.relatedRows = [...rowsAtPosition, entry.row];
+        notice.relatedCodes = [
+          ...atPosition.map((product) => product.code),
+          entry.product.code,
+        ];
+        sharedOrderNotices.set(key, notice);
+      }
+      rowsAtPosition.push(entry.row);
+      positionRows.set(key, rowsAtPosition);
       atPosition.push(entry.product);
       products.push(entry.product);
       groups.set(key, atPosition);
@@ -567,7 +608,7 @@ export function analyzeBrochureRows(
   return {
     products,
     incompleteProducts,
-    warnings,
+    warnings: [...warnings, ...sharedOrderNotices.values()],
     skipped,
     ignored,
     matchedRows: entries.reduce((sum, entry) => sum + entry.sourceRows, 0),

@@ -69,6 +69,8 @@ export function SidebarAccount({
         type="button"
         className="np-account-logout"
         disabled={busy}
+        aria-label={t(busy ? "Signing out…" : "Sign out")}
+        title={t("Sign out")}
         onClick={() => void signOut()}
       >
         <svg
@@ -80,7 +82,9 @@ export function SidebarAccount({
         >
           <path d="M8 3H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4M7 10h10m-4-4 4 4-4 4" />
         </svg>
-        {t(busy ? "Signing out…" : "Sign out")}
+        <span className="np-account-logout-label">
+          {t(busy ? "Signing out…" : "Sign out")}
+        </span>
       </button>
       {failed && (
         <p className="np-account-error" role="alert">

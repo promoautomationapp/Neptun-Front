@@ -107,6 +107,56 @@ it("ignores an obsolete saved type and format instead of silently returning no c
   );
 });
 
+it.each([
+  ["en", "In review", "Offer period ended", "Status", "Filters"],
+  ["sq", "Në shqyrtim", "Afati i ofertës ka skaduar", "Statusi", "Filtrat"],
+] as const)(
+  "separates workflow and offer expiry on %s cards and filters",
+  (language, workflow, expiry, statusLabel, filtersLabel) => {
+    setLanguage(language);
+    const view = render(
+      <CampaignLibrary
+        {...props}
+        campaigns={[
+          {
+            ...campaigns[0]!,
+            startDate: "2000-10-15",
+            endDate: "2000-10-20",
+          },
+          {
+            ...campaigns[1]!,
+            startDate: "2999-11-01",
+            endDate: "2999-11-10",
+          },
+        ]}
+      />,
+    );
+    const card = view.container.querySelector(
+      ".cs-campaign-card",
+    ) as HTMLElement;
+    expect(within(card).getByText(workflow)).toBeTruthy();
+    expect(within(card).getByText(expiry)).toBeTruthy();
+    expect(card.querySelector(".cs-campaign-status")?.textContent).toBe(
+      workflow,
+    );
+    fireEvent.click(view.getByRole("button", { name: filtersLabel }));
+    fireEvent.click(view.getByRole("button", { name: statusLabel }));
+    fireEvent.click(view.getByRole("option", { name: expiry }));
+    expect(view.container.querySelectorAll(".cs-campaign-card")).toHaveLength(
+      1,
+    );
+    expect(view.getByText("Autumn sale", { selector: "strong" })).toBeTruthy();
+    expect(view.queryByText("Winter sale", { selector: "strong" })).toBeNull();
+    expect(
+      view.container.querySelector(".cs-campaign-status")?.textContent,
+    ).toBe(workflow);
+    expect(
+      JSON.parse(localStorage.getItem("neptun-campaign-filters") || "{}")
+        .status,
+    ).toBe("expired");
+  },
+);
+
 it("keeps the search inside compact filters and separates readable card actions", () => {
   const onDuplicate = vi.fn(),
     onDelete = vi.fn(),

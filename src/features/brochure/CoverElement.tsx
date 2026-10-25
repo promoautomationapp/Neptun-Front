@@ -34,6 +34,7 @@ export interface CoverElementProps {
   onChange?: (kind: string, placement: CoverPlacement) => void;
   onHide?: (kind: string) => void;
   onReplaceFile?: (file: File) => void;
+  onChooseImage?: () => void;
   children?: React.ReactNode;
   style?: React.CSSProperties;
   className?: string;
@@ -45,6 +46,7 @@ export function CoverElement({
   onChange,
   onHide,
   onReplaceFile,
+  onChooseImage,
   children,
   style,
   className = "",
@@ -260,10 +262,11 @@ export function CoverElement({
         } as React.CSSProperties
       }
       onDoubleClick={
-        onReplaceFile
+        onChooseImage || onReplaceFile
           ? (event) => {
               event.stopPropagation();
-              upload.current?.click();
+              if (onChooseImage) onChooseImage();
+              else upload.current?.click();
             }
           : undefined
       }

@@ -1,6 +1,9 @@
 import { confirmDialog } from "../../components/dialogs";
 import { ActionMenu } from "../brochure/ActionMenu";
 import { BrochurePreview } from "../brochure/BrochurePreview";
+import { BrochureImportNotices } from "../brochure/BrochureImportNotices";
+import { BrochurePageNavigator } from "../brochure/BrochurePageNavigator";
+import "../../styles/brochure-editor-chrome.css";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
 import { EditorIcon } from "../brochure/EditorIcon";
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
@@ -24,10 +27,8 @@ import type { WorkspaceNotification } from "../notifications/notifications.api";
 import { StudioPageBoundary } from "./StudioPageBoundary";
 import { NavIcon } from "./NavIcon";
 import { catalogFacets } from "../products/products.api";
-import {
-  campaignValidity,
-  useCampaignClock,
-} from "../campaigns/campaignValidity";
+import { useCampaignClock } from "../campaigns/campaignValidity";
+import { CampaignStatus } from "../campaigns/CampaignStatus";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import {
   ReusableImages,
@@ -102,7 +103,7 @@ import {
   recordTextReview,
 } from "../brochure/AiReview";
 import { BrochureExport } from "../brochure/BrochureExport";
-import { ReviewPanel, REVIEW_STATUS } from "../brochure/ReviewPanel";
+import { ReviewPanel } from "../brochure/ReviewPanel";
 import { BrochureComments } from "../brochure/BrochureComments";
 import {
   brochurePageCount,
@@ -336,12 +337,6 @@ type BrochureCssStyle = React.CSSProperties & {
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
-function reviewStatusLabel(status: string | undefined): string {
-  return (
-    Object.entries(REVIEW_STATUS).find(([key]) => key === status)?.[1] ||
-    "In progress"
-  );
-}
 function brochureAspectStyle(aspect: string | number): BrochureCssStyle {
   return { "--brochure-page-aspect": aspect };
 }
@@ -560,7 +555,7 @@ export function CampaignLibrary({
                 { value: "in_review", label: t("In review") },
                 { value: "changes_requested", label: t("Changes requested") },
                 { value: "completed", label: t("Completed") },
-                { value: "expired", label: t("Expired") },
+                { value: "expired", label: t("Offer period ended") },
               ]}
             />
             <FilterSelect
@@ -657,17 +652,7 @@ export function CampaignLibrary({
                 <span className="cs-campaign-type">
                   {t(item.type || "Campaign")}
                 </span>
-                <span
-                  className={`cs-campaign-status status-${item.disabledAt ? "disabled" : campaignValidity(item, now) === "expired" ? "expired" : item.status || "in_progress"}`}
-                >
-                  {t(
-                    item.disabledAt
-                      ? "Deleted"
-                      : campaignValidity(item, now) === "expired"
-                        ? "Expired"
-                        : reviewStatusLabel(item.status),
-                  )}
-                </span>
+                <CampaignStatus campaign={item} now={now} surface="library" />
               </div>
               <button
                 className="cs-campaign-cover"
@@ -2160,12 +2145,6 @@ export function BrochureEditor({
     setShowSettings(false);
   }, [notificationTarget?.id, campaign.id]);
 
-  const importWarnings = (campaign.brochureImportWarnings || []).map(
-    (warning) =>
-      typeof warning === "string"
-        ? { position: undefined, row: 0, code: "", name: "", message: warning }
-        : warning,
-  );
   function updateProduct(
     code: string,
     field: keyof Product | Partial<Product>,
@@ -2762,7 +2741,10 @@ export function BrochureEditor({
           </p>
         </div>
         <div className="cs-actions cs-brochure-header-actions">
-          <Button onClick={onImportProducts}>{t("Upload products")}</Button>
+          <Button onClick={onImportProducts}>
+            <NavIcon name="catalog" size={17} />
+            {t("Upload products")}
+          </Button>
           <ActionMenu
             label={
               <>
@@ -2794,9 +2776,29 @@ export function BrochureEditor({
               </span>
             </button>
           </ActionMenu>
-          <ActionMenu label={t("More actions")}>
+          <ActionMenu
+            label={
+              <>
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <circle cx="4" cy="10" r="1.5" />
+                  <circle cx="10" cy="10" r="1.5" />
+                  <circle cx="16" cy="10" r="1.5" />
+                </svg>
+                {t("More actions")}
+              </>
+            }
+          >
             {canUseCatalog && (
-              <Button onClick={onAddProducts}>{t("＋ Add products")}</Button>
+              <Button onClick={onAddProducts}>
+                <NavIcon name="plus" size={16} />
+                {t("Add products")}
+              </Button>
             )}
             {canMakeSocial && (
               <Button
@@ -2808,11 +2810,12 @@ export function BrochureEditor({
                   )
                 }
               >
-                ＋ {t("Create social post")}
+                <NavIcon name="social" size={16} /> {t("Create social post")}
               </Button>
             )}
             {canEditCanvas && (
               <Button onClick={() => setShowGuides((value) => !value)}>
+                <NavIcon name="filter" size={16} />
                 {t(showGuides ? "Hide guides" : "Show guides")}
               </Button>
             )}
@@ -2825,9 +2828,13 @@ export function BrochureEditor({
                 onToast(t("Campaign backup downloaded."));
               }}
             >
-              {t("↓ Backup")}
+              <NavIcon name="download" size={16} />
+              {t("Backup")}
             </Button>
-            <Button onClick={onPrint}>{t("Print")}</Button>
+            <Button onClick={onPrint}>
+              <EditorIcon name="screen" />
+              {t("Print")}
+            </Button>
           </ActionMenu>
           <Button
             tone="primary"
@@ -2837,83 +2844,10 @@ export function BrochureEditor({
               )
             }
           >
-            {t("↓ Download brochure")}
+            <NavIcon name="download" size={17} />
+            {t("Download brochure")}
           </Button>
         </div>
-      </div>
-      <div className="cs-brochure-toolbar">
-        <CanvasTools
-          activeTool={commentMode ? "comment" : textMode ? "text" : "pointer"}
-          onSelect={chooseCanvasTool}
-          disabled={previewMode}
-        />
-        <div
-          className="cs-brochure-view-modes"
-          role="group"
-          aria-label={t("Brochure view")}
-        >
-          <button
-            type="button"
-            aria-pressed={canEditCanvas}
-            ref={editModeButton}
-            onClick={() => {
-              setPreviewMode(false);
-              setCommentMode(false);
-              setTextMode(false);
-              setShowSettings(false);
-            }}
-          >
-            <NavIcon name="edit" size={17} />
-            {t("Edit brochure")}
-          </button>
-          <button
-            type="button"
-            aria-pressed={previewMode}
-            onClick={() => {
-              setSelected((current) => Math.min(current, lastPreviewPage));
-              setPreviewMode(true);
-              setTextMode(false);
-              setCommentMode(false);
-              setShowSettings(false);
-            }}
-          >
-            <NavIcon name="eye" size={17} />
-            {t("Preview only")}
-          </button>
-          <button
-            type="button"
-            aria-pressed={commentMode}
-            onClick={() => {
-              setCommentMode(true);
-              setTextMode(false);
-              setPreviewMode(false);
-              setShowSettings(false);
-            }}
-          >
-            <NavIcon name="social" size={17} />
-            {t("Comments")}
-            <span>
-              {
-                (campaign.reviewComments || []).filter((item) => !item.fixed)
-                  .length
-              }
-            </span>
-          </button>
-        </div>
-        <button
-          type="button"
-          className={`cs-button secondary ${showSettings ? "cs-settings-active" : ""}`}
-          aria-expanded={showSettings}
-          aria-controls="brochure-page-settings"
-          onClick={() => {
-            setShowSettings(!showSettings);
-            setCommentMode(false);
-            setPreviewMode(false);
-          }}
-        >
-          <NavIcon name="edit" size={17} />
-          {t(showSettings ? "Close design tools" : "Design tools")}
-        </button>
       </div>
       {previewMode && (
         <BrochurePreview
@@ -2931,172 +2865,130 @@ export function BrochureEditor({
       <div
         className={`cs-brochure-workspace ${showSettings || commentMode ? "" : "settings-hidden"}`}
       >
-        <aside className="cs-pages-sidebar">
-          <span className="cs-label">
-            {t("PAGES")} · {brochurePageCount(campaign, pages.length)}
-          </span>
-          <button
-            className={`${selected === -1 ? "active" : ""} ${overPage === -1 ? "cs-page-drop-target" : ""}`}
-            type="button"
-            onClick={() => setSelected(-1)}
-            onDragOver={(event) => {
-              if (draggingCode) {
-                event.preventDefault();
-                setOverPage(-1);
-              }
-            }}
-            onDragLeave={() => setOverPage(null)}
-            onDrop={(event) => pageDrop(-1, event)}
-          >
-            <span>01</span>
-            <strong>{t("Cover")}</strong>
-          </button>
-          {pages.map((item) => (
-            <button
-              key={item.index}
-              className={`${selected === item.index ? "active" : ""} ${overPage === item.index ? "cs-page-drop-target" : ""}`}
-              type="button"
-              onClick={() => setSelected(item.index)}
-              onDragOver={(event) => {
-                if (draggingCode) {
-                  event.preventDefault();
-                  setOverPage(item.index);
-                }
-              }}
-              onDragLeave={() => setOverPage(null)}
-              onDrop={(event) => pageDrop(item.index, event)}
-            >
-              <span>{String(item.index + 2).padStart(2, "0")}</span>
-              <strong>
-                {t("Page")} {item.index + 2}
-              </strong>
-              <small>
-                {item.products.length} {t("products")}
-              </small>
-            </button>
-          ))}
-          <button
-            className={selected === pages.length ? "active" : ""}
-            type="button"
-            onClick={() => setSelected(pages.length)}
-          >
-            <span>
-              {hasStoresPage ? String(pages.length + 2).padStart(2, "0") : "—"}
-            </span>
-            <strong>{t("Stores & details")}</strong>
-            {!hasStoresPage && <small>{t("Not included")}</small>}
-          </button>
-        </aside>
+        <BrochurePageNavigator
+          campaign={campaign}
+          pages={pages}
+          selected={selected}
+          onSelect={setSelected}
+          draggingCode={draggingCode}
+          overPage={overPage}
+          onOverPage={setOverPage}
+          onDropPage={pageDrop}
+        />
         <div
           className={`cs-page-preview ${canEditCanvas ? "edit-view" : "view-only"} ${commentMode ? "comment-view" : ""} ${canEditCanvas && showGuides ? "show-guides" : ""}`}
         >
-          <div className="cs-preview-top">
-            <div className="cs-preview-title">
-              <span className="cs-eyebrow">
-                {t(canEditCanvas ? "EDIT BROCHURE" : "LIVE PREVIEW")}
-              </span>
-              <strong>{title}</strong>
-            </div>
-            <div className="cs-preview-actions">
-              <span className="cs-preview-format">{t(pageFormat.label)}</span>
-              {canEditCanvas && (
-                <>
-                  {selected === -1 && (
-                    <CoverImageControls
-                      campaign={campaign}
-                      onUpdate={onUpdate}
-                    />
-                  )}
-                  {selected === -1 && (
-                    <FileUpload
-                      accept="image/*"
-                      aria-label={t("Change cover logo")}
-                      onChange={(event) => {
-                        void replaceCoverLogo(event.target.files?.[0]);
-                        event.target.value = "";
-                      }}
-                    >
-                      {t("Change cover logo")}
-                    </FileUpload>
-                  )}
+          <div className="cs-canvas-meta">
+            <strong>{title}</strong>
+            <CampaignActivityStatus
+              campaignId={campaign.id}
+              mode={canEditCanvas ? "edit" : "preview"}
+              pageLabel={title}
+              compact
+            />
+          </div>
+          <div className="cs-canvas-dock">
+            <CanvasTools
+              activeTool={
+                commentMode ? "comment" : textMode ? "text" : "pointer"
+              }
+              onSelect={chooseCanvasTool}
+              disabled={previewMode}
+              commentCount={
+                (campaign.reviewComments || []).filter((item) => !item.fixed)
+                  .length
+              }
+            />
+            {canEditCanvas && (
+              <ActionMenu
+                label={
+                  <>
+                    <EditorIcon name="image" />
+                    {t("Images")}
+                  </>
+                }
+                className="cs-canvas-images"
+              >
+                {selected === -1 && (
+                  <CoverImageControls campaign={campaign} onUpdate={onUpdate} />
+                )}
+                {selected === -1 && (
                   <FileUpload
                     accept="image/*"
-                    aria-label={t("Add image to page")}
+                    aria-label={t("Change cover logo")}
                     onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void addPageArtwork(file);
+                      void replaceCoverLogo(event.target.files?.[0]);
                       event.target.value = "";
                     }}
                   >
-                    {t(
-                      selected === -1
-                        ? "Add campaign logo / image"
-                        : "Add image to page",
-                    )}
+                    {t("Change cover logo")}
                   </FileUpload>
-                </>
-              )}
-              <div
-                className="cs-inline-page-navigation"
-                role="group"
-                aria-label={t("Page navigation")}
-              >
-                <button
-                  type="button"
-                  disabled={selected === -1}
-                  onClick={() => setSelected(selected - 1)}
-                  aria-label={t("Previous page")}
+                )}
+                <FileUpload
+                  accept="image/*"
+                  aria-label={t("Add image to page")}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void addPageArtwork(file);
+                    event.target.value = "";
+                  }}
                 >
-                  ←
-                </button>
-                <span>
-                  {Math.min(selected, lastPreviewPage) + 2} /{" "}
-                  {brochurePageCount(campaign, pages.length)}
-                </span>
-                <button
-                  type="button"
-                  disabled={selected >= lastPreviewPage}
-                  onClick={() => setSelected(selected + 1)}
-                  aria-label={t("Next page")}
-                >
-                  →
-                </button>
-              </div>
-            </div>
-          </div>
-          {canEditCanvas && (
-            <ReusableImages settings={settings} onAdd={addSavedPageArtwork} />
-          )}
-          <CampaignActivityStatus
-            campaignId={campaign.id}
-            mode={canEditCanvas ? "edit" : "preview"}
-            pageLabel={title}
-          />
-          {canEditCanvas && (
-            <p className="cs-preview-edit-hint">
-              {t(
-                "Click text or prices to edit them here. Double-click an image to replace it, or drop a new image onto it. Double-click savings to switch € and %. Drag handles to move items.",
-              )}
-            </p>
-          )}
-          {importWarnings
-            .filter(
-              (warning) =>
-                Number(String(warning.position).split(".")[0]) === selected + 2,
-            )
-            .map((warning) => (
-              <p
-                key={`${warning.position}-${warning.code}`}
-                className="cs-import-page-warning"
-                role="status"
-              >
-                ⚠ {t("Check brochure position")} {warning.position}:{" "}
-                {warning.name} ({warning.code}).{" "}
+                  {t("Add image to page")}
+                </FileUpload>
+                <ReusableImages
+                  settings={settings}
+                  onAdd={addSavedPageArtwork}
+                />
+              </ActionMenu>
+            )}
+            <span className="cs-canvas-dock-divider" aria-hidden="true" />
+            <button
+              type="button"
+              className="cs-canvas-preview-button"
+              ref={editModeButton}
+              onClick={() => {
+                setSelected((current) => Math.min(current, lastPreviewPage));
+                setPreviewMode(true);
+                setTextMode(false);
+                setCommentMode(false);
+                setShowSettings(false);
+              }}
+            >
+              <NavIcon name="eye" size={18} />
+              {t("Preview only")}
+            </button>
+            <button
+              type="button"
+              className="cs-canvas-design-button"
+              aria-expanded={showSettings}
+              aria-controls="brochure-page-settings"
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setCommentMode(false);
+                setTextMode(false);
+                setPreviewMode(false);
+              }}
+            >
+              <NavIcon name="stores" size={18} />
+              {t(showSettings ? "Close design tools" : "Design tools")}
+            </button>
+            <ActionMenu
+              label={<span aria-label={t("Editing help")}>?</span>}
+              className="cs-canvas-help"
+            >
+              <strong>{t("Editing help")}</strong>
+              <p>
                 {t(
-                  "Different products share this order and appear in sequence.",
+                  "Click text or prices to edit them here. Double-click an image to replace it, or drop a new image onto it. Double-click savings to switch € and %. Drag handles to move items.",
                 )}
               </p>
-            ))}
+              <small>{t(pageFormat.label)}</small>
+              <BrochureImportNotices
+                warnings={campaign.brochureImportWarnings}
+                products={campaign.products}
+              />
+            </ActionMenu>
+          </div>
           {commentMode && (
             <p className="cs-preview-edit-hint">
               {t(
@@ -3913,6 +3805,7 @@ export default function App({
     );
   }, []);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [editorMenuExpanded, setEditorMenuExpanded] = useState(false);
   function changeLanguage(next: string) {
     setLanguage(next);
     setLocale(next);
@@ -4961,7 +4854,10 @@ export default function App({
       </div>
     );
   return (
-    <div className="campaign-app" {...interactionHandlers}>
+    <div
+      className={`campaign-app ${section === "editor" && !editorMenuExpanded ? "cs-navigation-compact" : ""}`}
+      {...interactionHandlers}
+    >
       <aside className={`cs-sidebar ${mobileMenuOpen ? "menu-open" : ""}`}>
         <div className="cs-sidebar-brand">
           <img src={logo} alt="NEPTUN" />
@@ -4977,6 +4873,24 @@ export default function App({
         >
           <NavIcon name={mobileMenuOpen ? "close" : "menu"} />
         </button>
+        {section === "editor" && (
+          <button
+            type="button"
+            className="cs-navigation-size-toggle"
+            aria-expanded={editorMenuExpanded}
+            aria-controls="studio-navigation"
+            aria-label={t(
+              editorMenuExpanded ? "Collapse navigation" : "Expand navigation",
+            )}
+            title={t(
+              editorMenuExpanded ? "Collapse navigation" : "Expand navigation",
+            )}
+            onClick={() => setEditorMenuExpanded((value) => !value)}
+          >
+            <NavIcon name="menu" size={19} />
+            <span>{t("Collapse navigation")}</span>
+          </button>
+        )}
         <nav className="cs-sidebar-nav" id="studio-navigation">
           {(
             [
@@ -5002,7 +4916,13 @@ export default function App({
             <button
               key={id}
               type="button"
-              className={section === id ? "active" : ""}
+              className={
+                section === id || (section === "editor" && id === "campaigns")
+                  ? "active"
+                  : ""
+              }
+              aria-label={t(label)}
+              title={t(label)}
               onClick={async () => {
                 if (!(await setSection(id))) return;
                 setActiveId(null);
@@ -5010,7 +4930,7 @@ export default function App({
               }}
             >
               <NavIcon name={id} />
-              {t(label)}
+              <span className="cs-sidebar-nav-label">{t(label)}</span>
             </button>
           ))}
         </nav>
@@ -5422,25 +5342,7 @@ export default function App({
                   </button>
                 )}
                 <div className="cs-editor-progress">
-                  <span
-                    className={`status-${campaignValidity(campaign, campaignNow) === "expired" ? "expired" : campaign.status || "in_progress"} ${
-                      (campaign.status || "in_progress") === "completed"
-                        ? "completed"
-                        : "progress"
-                    }`}
-                  >
-                    {t(
-                      campaignValidity(campaign, campaignNow) === "expired"
-                        ? "Expired"
-                        : reviewStatusLabel(campaign.status),
-                    )}
-                    {campaignValidity(campaign, campaignNow) === "expired" && (
-                      <span className="cs-expired-workflow">
-                        {" "}
-                        · {t(reviewStatusLabel(campaign.status))}
-                      </span>
-                    )}
-                  </span>
+                  <CampaignStatus campaign={campaign} now={campaignNow} />
                   {(user.role === "staff" || canManageUsers(user)) &&
                     ["in_progress", "changes_requested"].includes(
                       campaign.status || "in_progress",

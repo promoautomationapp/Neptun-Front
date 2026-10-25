@@ -12,4 +12,3 @@
 /* Dialogs stay above sticky editor controls and canvas handles. */
 .cs-modal-backdrop { z-index: 1000; }
 .cs-status.status-expired, .status-expired { background: #eef1f5; color: #62758a; border-color: #d4dee6; }
-.cs-expired-workflow { font-size: .85em; font-weight: 500; }
