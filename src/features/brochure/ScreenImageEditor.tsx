@@ -6,7 +6,16 @@ import {
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { LifestyleImageEditor } from "./LifestyleImageEditor";
-import type { Box, Product, ScreenArtwork } from "../../domain/models";
+import type {
+  Box,
+  Product,
+  ScreenArtwork,
+  Settings,
+} from "../../domain/models";
+import { resolveAsset } from "../../api/client";
+import { SavedImageChoices } from "./SavedImageChoices";
+import { EditorIcon } from "./EditorIcon";
+import "../../styles/image-editor-options.css";
 import React, { useRef, useState } from "react";
 import { Button, Modal } from "./Modals";
 import { readImage } from "./utils";
@@ -28,6 +37,7 @@ const clamp = (number: number, minimum: number, maximum: number) =>
 
 interface ScreenImageEditorProps {
   product: Product;
+  settings?: Settings;
   tvCount?: number;
   televisions?: Product[];
   onSave: (artwork: ScreenArtwork | null, scope: "one" | "all") => void;
@@ -44,12 +54,24 @@ interface ScreenGesture {
 }
 export function ScreenImageEditor({
   product,
+  settings,
   tvCount = 1,
   televisions = [],
   onSave,
   onClose,
 }: ScreenImageEditorProps) {
   const [lifestyleOpen, setLifestyleOpen] = useState(false);
+  const [browsing, setBrowsing] = useState(false);
+  const wallpapers = [
+    ...new Map(
+      [product, ...televisions].flatMap((tv) => {
+        const image = tv.screenArtwork?.image;
+        return typeof image === "string" && image
+          ? [[image, { tv, image }] as const]
+          : [];
+      }),
+    ).values(),
+  ];
   const [fit, setFit] = useState<"contain" | "cover">(
     product.screenArtwork?.fit || "contain",
   );
@@ -194,6 +216,7 @@ export function ScreenImageEditor({
       <div className="cs-screen-editor">
         {lifestyleOpen && (
           <LifestyleImageEditor
+            initialMode="ai"
             context="tv"
             source={screen}
             products={[product]}
@@ -208,6 +231,95 @@ export function ScreenImageEditor({
               : "Upload a picture for the display. The product photograph and frame stay in place. You can keep the original screen by removing this picture.",
           )}
         </p>
+        <div
+          className="cs-screen-source-options"
+          role="group"
+          aria-label={t("Screen image source")}
+        >
+          <button
+            type="button"
+            aria-expanded={browsing}
+            onClick={() => setBrowsing((current) => !current)}
+          >
+            <EditorIcon name="image" />
+            {t("Existing images")}
+          </button>
+          <FileUpload
+            accept="image/*"
+            aria-label={t("Upload screen picture")}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              return choose(file);
+            }}
+          >
+            {t("Upload screen picture")}
+          </FileUpload>
+          {television && (
+            <button type="button" onClick={() => setLifestyleOpen(true)}>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                aria-hidden="true"
+              >
+                <path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z" />
+              </svg>
+              {t("Create / refine wallpaper with AI")}
+            </button>
+          )}
+        </div>
+        {browsing && (
+          <section className="cs-screen-existing-images">
+            <h3>{t("Wallpapers in this brochure")}</h3>
+            {wallpapers.length ? (
+              <div className="cs-editor-saved-image-grid cs-editor-wallpaper-grid">
+                {wallpapers.map(({ tv, image }) => (
+                  <button
+                    type="button"
+                    key={image}
+                    aria-label={`${t("Use wallpaper")}: ${tv.brand || "TV"} ${tv.code}`}
+                    aria-pressed={screen === image}
+                    onClick={() => {
+                      setScreen(image);
+                      setError("");
+                    }}
+                  >
+                    <img src={resolveAsset(image)} alt="" draggable={false} />
+                    <span>
+                      {tv.brand || "TV"} · {tv.code}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p>
+                {t(
+                  "No saved wallpapers yet. Upload an image or create one with AI.",
+                )}
+              </p>
+            )}
+            <details className="cs-screen-workspace-images">
+              <summary>{t("Workspace logos and images")}</summary>
+              <p>
+                {t(
+                  "Choose saved artwork if you want to use it inside the screen.",
+                )}
+              </p>
+              <SavedImageChoices
+                settings={settings}
+                selected={screen}
+                onSelect={(asset) => {
+                  setScreen(asset.url);
+                  setError("");
+                }}
+              />
+            </details>
+          </section>
+        )}
         <div className="cs-screen-editor-grid">
           <div
             className={`cs-screen-editor-preview ${adjusting ? "adjusting" : ""}`}
@@ -254,7 +366,7 @@ export function ScreenImageEditor({
               >
                 <img
                   style={{ objectFit: fit, background: "#000" }}
-                  src={screen}
+                  src={resolveAsset(screen)}
                   alt={t("Replacement screen image")}
                   draggable={false}
                 />
@@ -279,21 +391,6 @@ export function ScreenImageEditor({
                 <option value="cover">{t("Fill screen")}</option>
               </SearchableSelect>
             </label>
-            {television && (
-              <Button onClick={() => setLifestyleOpen(true)}>
-                {t("Create / refine wallpaper with AI")}
-              </Button>
-            )}
-            <FileUpload
-              accept="image/*"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                return choose(file);
-              }}
-            >
-              {t("Upload screen picture")}
-            </FileUpload>
             <p className="cs-screen-fit-help">
               {t("Drop a picture onto the TV preview to change its wallpaper.")}
             </p>

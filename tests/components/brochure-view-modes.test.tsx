@@ -57,18 +57,11 @@ afterEach(() => {
 });
 it("switches between editing, a clean preview and a dedicated comment view", () => {
   const view = render(<BrochureEditor {...props} />);
-  const modes = within(view.getByRole("group", { name: "Brochure view" }));
+  const modes = within(view.container.querySelector(".cs-canvas-dock")!);
   expect(
-    modes
-      .getByRole("button", { name: "Edit brochure" })
-      .getAttribute("aria-pressed"),
+    modes.getByRole("button", { name: "Pointer" }).getAttribute("aria-pressed"),
   ).toBe("true");
-  fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
-  expect(
-    view.container.querySelector(".cs-page-preview.view-only"),
-  ).toBeTruthy();
-  expect(view.container.querySelector(".cs-comment-layer")).toBeNull();
-  fireEvent.click(modes.getByRole("button", { name: /Comments/ }));
+  fireEvent.click(modes.getByRole("button", { name: /Comment anywhere/ }));
   expect(view.container.querySelector(".cs-comment-layer")).toBeTruthy();
   expect(
     view.getByRole("region", { name: "Page review comments" }),
@@ -82,14 +75,14 @@ it("switches between editing, a clean preview and a dedicated comment view", () 
 });
 it("returns from the full-screen preview to editing using its visible button or Escape", () => {
   const view = render(<BrochureEditor {...props} />);
-  const modes = within(view.getByRole("group", { name: "Brochure view" }));
+  const modes = within(view.container.querySelector(".cs-canvas-dock")!);
   fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
   fireEvent.click(view.getByRole("button", { name: "Back to editing" }));
   expect(
     view.container.querySelector(".cs-page-preview.edit-view"),
   ).toBeTruthy();
   expect(document.activeElement).toBe(
-    modes.getByRole("button", { name: "Edit brochure" }),
+    modes.getByRole("button", { name: "Preview only" }),
   );
   fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
   fireEvent(
@@ -114,8 +107,8 @@ it("opens the notification thread in comment mode on the intended brochure page"
     />,
   );
   expect(
-    within(view.getByRole("group", { name: "Brochure view" }))
-      .getByRole("button", { name: /Comments/ })
+    within(view.getByRole("toolbar", { name: "Canvas tools" }))
+      .getByRole("button", { name: /Comment anywhere/ })
       .getAttribute("aria-pressed"),
   ).toBe("true");
   expect(view.container.querySelector(".cs-comment-popover")).toBeTruthy();

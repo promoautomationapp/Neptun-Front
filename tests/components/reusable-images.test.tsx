@@ -1,6 +1,6 @@
 import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   REUSABLE_IMAGE_TYPE,
   ReusableImages,
@@ -9,6 +9,8 @@ import {
 } from "../../src/features/settings/ReusableImages";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
 import { logoRuleDefaults } from "../../src/features/settings/logoLibraryData";
+import { setLanguage } from "../../src/features/brochure/i18n";
+beforeEach(() => setLanguage("en"));
 const image = "/api/assets/00000000-0000-4000-8000-000000000111";
 afterEach(cleanup);
 it("offers saved campaign logos and hides only removed built-ins while deduplicating by source", () => {

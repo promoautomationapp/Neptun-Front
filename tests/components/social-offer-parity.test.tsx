@@ -107,6 +107,8 @@ it("edits the shared brand artwork without sending its tool click to the product
   expect(
     view.getByLabelText("Replace brand logo: Beko appliance"),
   ).toBeTruthy();
+  fireEvent.focus(brand!);
+  fireEvent.click(view.getByRole("button", { name: "More actions" }));
   fireEvent.click(
     view.getByRole("button", { name: "Remove detail block: __brand" }),
   );

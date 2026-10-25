@@ -1873,7 +1873,7 @@ function StandardProductCard({
             label={
               <>
                 <EditorIcon name="edit" />
-                {t("Edit product")}
+                <span className="cs-product-tools-label">{t("Edit product")}</span>
               </>
             }
           >

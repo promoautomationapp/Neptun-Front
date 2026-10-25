@@ -214,7 +214,7 @@ it("opens and reopens the exact notification page and thread without replacing t
   expect(view.container.querySelector(".cs-sidebar")).toBe(sidebar);
   expect(view.container.querySelector(".cs-topbar")).toBe(topbar);
 
-  fireEvent.click(view.getByRole("button", { name: /^01\s*Cover/ }));
+  fireEvent.click(view.getByRole("button", { name: "Cover" }));
   await waitFor(() =>
     expect(
       view.container.querySelector('[data-review-comment-id="product-thread"]'),

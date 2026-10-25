@@ -2,7 +2,11 @@ import { isTelevision } from "./tvSpecs";
 import { requestAi } from "../ai/ai.api";
 import { FileUpload } from "../../components/FileUpload";
 import { imageOrientation } from "../ai/image-inspection";
-import type { Product } from "../../domain/models";
+import type { Product, Settings } from "../../domain/models";
+import { resolveAsset } from "../../api/client";
+import { SavedImageChoices } from "./SavedImageChoices";
+import { EditorIcon } from "./EditorIcon";
+import "../../styles/image-editor-options.css";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Modal } from "./Modals";
@@ -23,6 +27,7 @@ import {
 
 export function ProductImageEditor({
   product,
+  settings,
   catalogProduct,
   backgroundContext,
   onSave,
@@ -32,6 +37,7 @@ export function ProductImageEditor({
   canResumeSearch = false,
 }: {
   product: Product;
+  settings?: Settings;
   catalogProduct?: Product;
   backgroundContext?: unknown;
   onSave: (changes: Partial<Product>) => void;
@@ -75,6 +81,9 @@ export function ProductImageEditor({
     [product, photoProduct, foundSource],
   );
   const [source, setSource] = useState(choices[0] || product.image || "");
+  const [sourceMode, setSourceMode] = useState<"catalog" | "saved" | "upload">(
+    choices.length ? "catalog" : "upload",
+  );
   const [kind, setKind] = useState(
     foundSource && !product.aiOriginalImage
       ? "search"
@@ -155,6 +164,7 @@ export function ProductImageEditor({
     try {
       setSource(await readImage(file));
       setKind("upload");
+      setSourceMode("upload");
       setCutout(true);
     } catch {
       setError(t("Could not read this image."));
@@ -244,7 +254,10 @@ export function ProductImageEditor({
           product={product}
           onFindImage={onFindImage}
           canResumeSearch={canResumeSearch}
-          onUploadImage={() => uploadInput.current?.click()}
+          onUploadImage={() => {
+            setSourceMode("upload");
+            uploadInput.current?.click();
+          }}
         />
         <p>
           {t(
@@ -252,57 +265,129 @@ export function ProductImageEditor({
           )}
         </p>
         {isTelevision(product) && onEditScreen && (
-          <div className="cs-tv-image-choice">
-            <strong>{t("Change the picture inside this TV")}</strong>
-            <p>
-              {t("Keep the TV frame and add a wallpaper inside the screen.")}
-            </p>
-            <Button onClick={onEditScreen}>
-              {t("Change TV screen image")}
-            </Button>
-          </div>
+          <button
+            type="button"
+            className="cs-tv-screen-option"
+            aria-label={t("Change TV screen image")}
+            onClick={onEditScreen}
+          >
+            <EditorIcon name="screen" />
+            <span>
+              <strong>{t("Change the picture inside this TV")}</strong>
+              <small>
+                {t("Keep the TV frame and add a wallpaper inside the screen.")}
+              </small>
+            </span>
+            <span aria-hidden="true">→</span>
+          </button>
         )}
         <div className="cs-image-drop-hint">
           {t("Drop an image here or choose a photo below")}
         </div>
         <div className="cs-image-editor-grid">
           <div>
-            <strong>{t("Available product photos")}</strong>
-            {catalogPhotos.loading && (
-              <p role="status">{t("Loading product photos…")}</p>
-            )}
-            {catalogPhotos.error && (
-              <p role="alert">
-                {t("Could not load product photos.")}{" "}
-                <Button onClick={catalogPhotos.retry}>{t("Retry")}</Button>
-              </p>
-            )}
-            <div className="cs-image-choices">
-              {choices.map((choice, index) => (
+            <div
+              className="cs-image-source-tabs"
+              role="group"
+              aria-label={t("Product image source")}
+            >
+              {(
+                [
+                  ["catalog", "Product photos"],
+                  ["saved", "Saved images"],
+                  ["upload", "Upload image"],
+                ] as const
+              ).map(([mode, label]) => (
                 <button
-                  key={`${choice}-${index}`}
                   type="button"
-                  className={
-                    source === choice && kind === "catalog" ? "selected" : ""
-                  }
-                  onClick={() => {
-                    setSource(choice);
-                    setKind(choice === foundSource ? "search" : "catalog");
-                    setCutout(!unknownProduct && choice !== foundSource);
-                  }}
-                  aria-label={`${t("Product photo")} ${index + 1}`}
-                  aria-pressed={source === choice && kind === "catalog"}
+                  key={mode}
+                  aria-pressed={sourceMode === mode}
+                  onClick={() => setSourceMode(mode)}
                 >
-                  <img src={choice} alt="" referrerPolicy="no-referrer" />
+                  {mode === "catalog" ? (
+                    <EditorIcon name="image" />
+                  ) : (
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      {mode === "saved" ? (
+                        <>
+                          <rect x="3" y="3" width="7" height="7" rx="1" />
+                          <rect x="14" y="3" width="7" height="7" rx="1" />
+                          <rect x="3" y="14" width="7" height="7" rx="1" />
+                          <rect x="14" y="14" width="7" height="7" rx="1" />
+                        </>
+                      ) : (
+                        <path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5" />
+                      )}
+                    </svg>
+                  )}
+                  {t(label)}
                 </button>
               ))}
-              {!choices.length && (
-                <span>
-                  {t("No catalog photos available. Upload one below.")}
-                </span>
-              )}
             </div>
-            <div className="cs-image-upload">
+            <div hidden={sourceMode !== "catalog"}>
+              <strong>{t("Available product photos")}</strong>
+              {catalogPhotos.loading && (
+                <p role="status">{t("Loading product photos…")}</p>
+              )}
+              {catalogPhotos.error && (
+                <p role="alert">
+                  {t("Could not load product photos.")}{" "}
+                  <Button onClick={catalogPhotos.retry}>{t("Retry")}</Button>
+                </p>
+              )}
+              <div className="cs-image-choices">
+                {choices.map((choice, index) => (
+                  <button
+                    key={`${choice}-${index}`}
+                    type="button"
+                    className={source === choice ? "selected" : ""}
+                    onClick={() => {
+                      setSource(choice);
+                      setKind(choice === foundSource ? "search" : "catalog");
+                      setCutout(!unknownProduct && choice !== foundSource);
+                    }}
+                    aria-label={`${t("Product photo")} ${index + 1}`}
+                    aria-pressed={source === choice}
+                  >
+                    <img
+                      src={resolveAsset(choice)}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                    />
+                  </button>
+                ))}
+                {!choices.length && (
+                  <span>
+                    {t("No catalog photos available. Upload one below.")}
+                  </span>
+                )}
+              </div>
+            </div>
+            {sourceMode === "saved" && (
+              <section className="cs-editor-saved-images">
+                <p>{t("Saved logos and images from your workspace.")}</p>
+                <SavedImageChoices
+                  settings={settings}
+                  selected={source}
+                  onSelect={(asset) => {
+                    setSource(asset.url);
+                    setKind("library");
+                    setCutout(false);
+                  }}
+                />
+              </section>
+            )}
+            <div className="cs-image-upload" hidden={sourceMode !== "upload"}>
               <span>{t("Upload another image")}</span>
               <FileUpload
                 inputRef={uploadInput}
@@ -338,7 +423,7 @@ export function ProductImageEditor({
             <div className="cs-image-preview">
               {prepared || source ? (
                 <img
-                  src={prepared || source}
+                  src={resolveAsset(prepared || source)}
                   alt={product.name}
                   referrerPolicy="no-referrer"
                 />

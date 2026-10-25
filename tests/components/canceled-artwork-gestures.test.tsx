@@ -154,6 +154,7 @@ it("restores a resized detail block on lost capture without adding an undo step"
   const item = view.container.querySelector<HTMLElement>(
     ".product-detail-block",
   )!;
+  fireEvent.focus(item);
   const handle =
     view.container.querySelector<HTMLElement>(
       '[data-resize-corner="bottom-right"]',

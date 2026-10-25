@@ -2,6 +2,7 @@ import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { Product } from "../../src/domain/models";
+import { setLanguage } from "../../src/features/brochure/i18n";
 import { SocialProductDetails } from "../../src/features/social/SocialProductDetails";
 
 const product: Product = {
@@ -15,6 +16,7 @@ const product: Product = {
 };
 
 beforeEach(() => {
+  setLanguage("en");
   vi.stubGlobal("PointerEvent", MouseEvent);
   vi.stubGlobal("ResizeObserver", undefined);
   Object.defineProperty(Element.prototype, "setPointerCapture", {
@@ -87,10 +89,13 @@ it("saves inline text without losing stable row keys, placements or fill choices
       change={change}
     />,
   );
+  fireEvent.focus(
+    view.container.querySelector('[data-detail-key="capacity"]')!,
+  );
   fireEvent.click(
-    view.container.querySelector(
-      '[data-detail-key="capacity"] .detail-block-edit',
-    )!,
+    view.getByRole("button", {
+      name: "Edit this detail Detail block: capacity",
+    }),
   );
   const input = view.getByRole("textbox");
   expect((input as HTMLInputElement).value).toBe("8 KG");
@@ -179,10 +184,12 @@ it("reorders rows through the drag handle while the saved edits follow each stab
     getData: (type: string) => transfer.get(type) || "",
     types: ["application/x-social-detail"],
   };
+  fireEvent.focus(
+    view.container.querySelector('[data-detail-key="capacity"]')!,
+  );
+  fireEvent.click(view.getByRole("button", { name: "More actions" }));
   fireEvent.dragStart(
-    view.container.querySelector(
-      '[data-detail-key="capacity"] .detail-block-reorder',
-    )!,
+    view.getByRole("button", { name: "Reorder Detail block: capacity" }),
     { dataTransfer },
   );
   fireEvent.drop(view.container.querySelector('[data-detail-key="motor"]')!, {
@@ -257,10 +264,12 @@ it("keeps the red warranty as a removable square and leaves the blue warranty to
   expect(
     view.container.querySelector(".social-warranty-label")?.textContent,
   ).toBe("GARANCION");
+  fireEvent.focus(
+    view.container.querySelector('[data-detail-key="__warranty"]')!,
+  );
+  fireEvent.click(view.getByRole("button", { name: "More actions" }));
   fireEvent.click(
-    view.container.querySelector(
-      '[data-detail-key="__warranty"] .detail-block-remove',
-    )!,
+    view.getByRole("button", { name: "Remove detail block: __warranty" }),
   );
   expect(change).toHaveBeenLastCalledWith({ hideWarranty: true });
   view.rerender(<SocialProductDetails product={product} reference="blue" />);

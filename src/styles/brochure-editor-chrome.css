@@ -50,6 +50,29 @@
   margin-left: auto;
   transition: transform 0.15s;
 }
+.campaign-app .cs-editor-section .cs-product-tools > summary {
+  width: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 6px;
+  justify-content: center;
+  gap: 0;
+  border-radius: 8px;
+}
+.cs-product-tools > summary .cs-action-menu-chevron {
+  display: none;
+}
+.cs-product-tools-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.cs-product-tools[open] {
+  z-index: 75;
+}
 .cs-brochure-actions-menu[open] > summary .cs-action-menu-chevron {
   transform: rotate(180deg);
 }
@@ -257,7 +280,7 @@
   flex-wrap: wrap;
   gap: 6px 16px;
   width: 100%;
-  max-width: 860px;
+  max-width: 760px;
   margin: 0 auto 8px;
   color: var(--chrome-text);
 }
@@ -291,7 +314,7 @@
   align-items: center;
   gap: 3px;
   flex-wrap: wrap;
-  max-width: 860px;
+  max-width: 760px;
   margin: 0 auto 12px;
   padding: 5px;
   border: 1px solid var(--chrome-border);
@@ -439,6 +462,9 @@
   color: #c5d8e9;
   font-size: 10px;
 }
+.campaign-app .cs-sidebar-brand .cs-sidebar-brand-mark {
+  display: none;
+}
 @media (min-width: 851px) {
   .campaign-app.cs-navigation-compact > .cs-sidebar {
     width: 72px;
@@ -454,6 +480,17 @@
   }
   .campaign-app.cs-navigation-compact .cs-sidebar-brand img {
     width: 46px;
+  }
+  .campaign-app.cs-navigation-compact
+    .cs-sidebar-brand
+    > img:not(.cs-sidebar-brand-mark) {
+    display: none;
+  }
+  .campaign-app.cs-navigation-compact .cs-sidebar-brand .cs-sidebar-brand-mark {
+    display: block;
+    width: 36px;
+    height: 36px;
+    margin: auto;
   }
   .campaign-app.cs-navigation-compact .cs-sidebar-brand > span,
   .campaign-app.cs-navigation-compact .cs-navigation-size-toggle > span,

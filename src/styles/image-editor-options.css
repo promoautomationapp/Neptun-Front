@@ -1,0 +1,181 @@
+.cs-image-source-tabs,
+.cs-screen-source-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.cs-image-source-tabs > button,
+.cs-screen-source-options > button,
+.cs-screen-source-options .np-upload-button {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 9px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #254b67);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.cs-screen-source-options > .np-upload-control {
+  flex: 1 1 auto;
+}
+.cs-screen-source-options .np-upload-button {
+  width: 100%;
+}
+.cs-image-source-tabs > button[aria-pressed="true"],
+.cs-screen-source-options > button[aria-expanded="true"],
+.cs-image-source-tabs > button:hover,
+.cs-screen-source-options > button:hover,
+.cs-screen-source-options .np-upload-button:hover {
+  background: var(--np-selected, #e9f3fb);
+  border-color: var(--np-accent, #4384b7);
+}
+.cs-image-source-tabs > button > svg,
+.cs-screen-source-options > button > svg {
+  flex: none;
+  width: 17px;
+  height: 17px;
+}
+.cs-image-editor .cs-image-upload[hidden] {
+  display: none;
+}
+.cs-editor-saved-images > p,
+.cs-screen-existing-images p {
+  color: var(--np-muted, #6a8094);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cs-editor-saved-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 3px;
+}
+.cs-editor-saved-image-grid > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 9px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #254b67);
+  cursor: pointer;
+}
+.cs-editor-saved-image-grid > button:is(:hover, [aria-pressed="true"]) {
+  border-color: var(--np-accent, #4384b7);
+  background: var(--np-selected, #e9f3fb);
+}
+.cs-editor-saved-image-grid img {
+  display: block;
+  width: 100%;
+  height: 64px;
+  object-fit: contain;
+}
+.cs-editor-saved-image-grid span {
+  font-size: 10px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.cs-screen-existing-images {
+  margin-bottom: 18px;
+  padding: 15px;
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 12px;
+  background: var(--np-raised, #f3f7fb);
+}
+.cs-screen-existing-images h3 {
+  margin: 0 0 12px;
+  color: var(--np-text, #254b67);
+  font-size: 13px;
+}
+.cs-screen-existing-images .cs-editor-wallpaper-grid {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+.cs-screen-workspace-images {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--np-border, #cfdeea);
+}
+.cs-screen-workspace-images > summary {
+  color: var(--np-text, #254b67);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cs-image-editor .cs-tv-screen-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 12px;
+  background: var(--np-selected, #e9f3fb);
+  color: var(--np-text, #254b67);
+  text-align: left;
+  cursor: pointer;
+}
+.cs-tv-screen-option > svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--np-accent, #4384b7);
+}
+.cs-tv-screen-option > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+}
+.cs-tv-screen-option strong {
+  color: var(--np-text, #254b67);
+  font-size: 13px;
+}
+.cs-tv-screen-option small {
+  color: var(--np-muted, #6a8094);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.cs-image-source-tabs > button:focus-visible,
+.cs-screen-source-options button:focus-visible,
+.cs-editor-saved-image-grid > button:focus-visible,
+.cs-tv-screen-option:focus-visible {
+  outline: 2px solid var(--np-accent, #4384b7);
+  outline-offset: 2px;
+}
+.cs-screen-editor-controls > label,
+.cs-image-editor .cs-image-editor-grid strong {
+  color: var(--np-text, #254b67);
+}
+.cs-screen-editor-controls .cs-screen-fit-options {
+  border-color: var(--np-border, #cfdeea);
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #254b67);
+}
+.cs-screen-fit-options > summary {
+  color: var(--np-text, #254b67);
+}
+.cs-screen-fit-options > summary:focus-visible {
+  outline: 2px solid var(--np-accent, #4384b7);
+  outline-offset: 2px;
+}
+@media (max-width: 550px) {
+  .cs-editor-saved-image-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

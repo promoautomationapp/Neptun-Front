@@ -118,9 +118,9 @@ export function BrochurePageNavigator({
                     ),
                   );
           onSelect(next);
-          strip.current
-            ?.querySelectorAll<HTMLButtonElement>("button")
-            [next + 1]?.focus();
+          const buttons =
+            strip.current?.querySelectorAll<HTMLButtonElement>("button");
+          buttons?.item(next + 1)?.focus();
         }}
       >
         {entries.map((entry) => {
@@ -151,7 +151,11 @@ export function BrochurePageNavigator({
                 }
               }}
               onDragLeave={() => onOverPage(null)}
-              onDrop={(event) => onDropPage(entry.index, event)}
+              onDrop={
+                kind === "stores"
+                  ? undefined
+                  : (event) => onDropPage(entry.index, event)
+              }
             >
               <span
                 className="cs-page-miniature"

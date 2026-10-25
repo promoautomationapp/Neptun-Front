@@ -5,6 +5,7 @@ import {
   type ResizeCorner,
 } from "./resizeCorners";
 import React from "react";
+import { createPortal } from "react-dom";
 import type { Product } from "../../domain/models";
 import { t } from "./i18n";
 import {
@@ -62,7 +63,15 @@ export function ProductDetailBlock({
   style,
   ...spanProps
 }: ProductDetailBlockProps) {
-  const { draggable, onDragStart, onDragEnd, ...blockProps } = spanProps;
+  const {
+    draggable,
+    onDragStart,
+    onDragEnd,
+    onFocus,
+    onKeyDown,
+    tabIndex,
+    ...blockProps
+  } = spanProps;
   const saved = product.detailBlockPlacements?.[detailKey];
   const detailStyle = product.detailBlockStyles?.[detailKey];
   const defaultFilled = className.split(/\s+/).includes("detail-filled");
@@ -77,6 +86,15 @@ export function ProductDetailBlock({
   );
   const [dragging, setDragging] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
+  const [selected, setSelected] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuAbove, setMenuAbove] = React.useState(false);
+  const [toolbarPosition, setToolbarPosition] = React.useState({
+    left: 8,
+    top: 8,
+  });
+  const toolsRef = React.useRef<HTMLDivElement>(null);
+  const moreRef = React.useRef<HTMLButtonElement>(null);
   const [draftText, setDraftText] = React.useState(editText);
   const gesture = React.useRef<DetailGesture | null>(null);
   const blockRef = React.useRef<HTMLSpanElement>(null);
@@ -95,6 +113,75 @@ export function ProductDetailBlock({
     [saved, detailKey],
   );
   const editable = Boolean(onChange || onRemove || onEdit || onSaveText);
+  const toolsId = React.useId();
+  React.useEffect(() => {
+    if (!editable) return;
+    const selectTarget = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (
+        blockRef.current?.contains(target) ||
+        toolsRef.current?.contains(target)
+      ) {
+        setSelected(true);
+      } else {
+        setSelected(false);
+        setMenuOpen(false);
+        setEditing(false);
+        if (clickTimer.current) clearTimeout(clickTimer.current);
+      }
+    };
+    document.addEventListener("pointerdown", selectTarget, true);
+    document.addEventListener("focusin", selectTarget, true);
+    return () => {
+      document.removeEventListener("pointerdown", selectTarget, true);
+      document.removeEventListener("focusin", selectTarget, true);
+    };
+  }, [editable]);
+  React.useLayoutEffect(() => {
+    if (!selected) return;
+    const position = () => {
+      const rect = blockRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = toolsRef.current?.offsetWidth || 176;
+      const top = rect.top >= 56 ? rect.top - 46 : rect.bottom + 12;
+      setToolbarPosition({
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+        top,
+      });
+      const menuHeight =
+        toolsRef.current?.querySelector<HTMLElement>(".detail-context-menu")
+          ?.offsetHeight || 132;
+      setMenuAbove(top + 48 + menuHeight > window.innerHeight - 8);
+    };
+    position();
+    window.addEventListener("resize", position);
+    document.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      document.removeEventListener("scroll", position, true);
+    };
+  }, [selected, editing, placement, menuOpen]);
+
+  function editDetail() {
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    setMenuOpen(false);
+    if (editing) {
+      blockRef.current
+        ?.querySelector<HTMLInputElement>(".detail-block-inline-editor input")
+        ?.focus();
+      return;
+    }
+    if (onSaveText) {
+      setDraftText(editText);
+      setEditing(true);
+    } else onEdit?.(detailKey);
+  }
+  function removeDetail() {
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    setMenuOpen(false);
+    onRemove?.(detailKey);
+  }
 
   function saveText() {
     const value = draftText.trim();
@@ -132,7 +219,8 @@ export function ProductDetailBlock({
     if (!onChange || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    setSelected(true);
+    setMenuOpen(false);
     const block = blockRef.current;
     if (!block) return;
     const page = block.closest(".brochure-page, .social-canvas");
@@ -144,6 +232,8 @@ export function ProductDetailBlock({
     const cardRect = card.getBoundingClientRect();
     const rect = block.getBoundingClientRect();
     const parent = block.parentElement.getBoundingClientRect();
+    if (pageRect.width <= 0 || parent.width <= 0) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     gesture.current = {
       kind,
       corner: (event.currentTarget.dataset.resizeCorner ||
@@ -275,7 +365,7 @@ export function ProductDetailBlock({
     if (kind === "resize") {
       if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
         const parent = block.parentElement?.getBoundingClientRect();
-        if (!parent) return;
+        if (!parent || parent.width <= 0) return;
         const baseWidth =
           placement.width ??
           (block.getBoundingClientRect().width / parent.width) * 100;
@@ -289,7 +379,7 @@ export function ProductDetailBlock({
         });
       } else {
         const page = block.closest(".brochure-page, .social-canvas");
-        if (!page) return;
+        if (!page || page.getBoundingClientRect().width <= 0) return;
         const baseHeight =
           placement.height ??
           (block.getBoundingClientRect().height /
@@ -328,9 +418,55 @@ export function ProductDetailBlock({
     <span
       {...blockProps}
       ref={blockRef}
-      className={`product-detail-block ${editable ? "editable" : ""} ${dragging ? "moving" : ""} ${filled ? "detail-filled detail-style-filled" : detailStyle === "outline" ? "detail-style-outline" : ""} ${visualClassName}`}
+      className={`product-detail-block ${editable ? "editable" : ""} ${dragging ? "moving" : ""} ${selected ? "detail-selected" : ""} ${filled ? "detail-filled detail-style-filled" : detailStyle === "outline" ? "detail-style-outline" : ""} ${visualClassName}`}
       style={{ ...style, ...detailBlockStyle(placement) }}
       data-detail-key={String(detailKey)}
+      tabIndex={editable ? (tabIndex ?? 0) : tabIndex}
+      role={editable ? "group" : blockProps.role}
+      aria-label={editable ? label : blockProps["aria-label"]}
+      onFocus={(event) => {
+        if (editable) setSelected(true);
+        onFocus?.(event);
+      }}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (
+          event.defaultPrevented ||
+          !editable ||
+          event.target !== event.currentTarget
+        )
+          return;
+        if (event.key === "Tab" && !event.shiftKey && selected) {
+          const firstTool =
+            toolsRef.current?.querySelector<HTMLButtonElement>("button");
+          if (firstTool) {
+            event.preventDefault();
+            event.stopPropagation();
+            firstTool.focus();
+          }
+        } else if (
+          (event.key === "F10" && event.shiftKey) ||
+          event.key === "ContextMenu"
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          setMenuOpen(true);
+          moreRef.current?.focus();
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          event.stopPropagation();
+          setSelected(true);
+          editDetail();
+        } else if (event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          setSelected(true);
+        } else if (event.key === "Escape") {
+          event.stopPropagation();
+          setSelected(false);
+          setMenuOpen(false);
+        }
+      }}
       onDoubleClick={toggleFill}
       onClick={(event) => {
         if (
@@ -343,8 +479,11 @@ export function ProductDetailBlock({
           moved.current = false;
           return;
         }
-        if (onSaveText) {
+        if (editable) {
           event.stopPropagation();
+          setSelected(true);
+        }
+        if (onSaveText) {
           if (clickTimer.current) clearTimeout(clickTimer.current);
           clickTimer.current = setTimeout(() => {
             setDraftText(editText);
@@ -370,97 +509,180 @@ export function ProductDetailBlock({
       onLostPointerCapture={onChange ? cancel : undefined}
     >
       {children}
-      {editable && (
-        <i
-          className="product-detail-block-tools"
-          data-export-hide="true"
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          {draggable && onDragStart && (
-            <button
-              type="button"
-              draggable
-              className="detail-block-reorder"
-              title={t("Drag to reorder details")}
-              aria-label={`${t("Reorder")} ${label}`}
-              onDragStart={(event) => {
-                event.stopPropagation();
-                onDragStart(
-                  event as unknown as React.DragEvent<HTMLSpanElement>,
-                );
-              }}
-              onDragEnd={(event) => {
-                event.stopPropagation();
-                onDragEnd?.(
-                  event as unknown as React.DragEvent<HTMLSpanElement>,
-                );
-              }}
-            >
-              <EditorIcon name="drag" />
-            </button>
-          )}
-          {onChange && (
-            <button
-              type="button"
-              className="detail-block-move"
-              title={t("Drag to move detail block")}
-              aria-label={`${t("Move")} ${label}`}
-              {...handleProps("move")}
-            >
-              <EditorIcon name="move" />
-            </button>
-          )}
-          {(onEdit || onSaveText) && (
-            <button
-              type="button"
-              className="detail-block-edit"
-              title={t("Edit this detail")}
-              aria-label={`${t("Edit this detail")} ${label}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (onSaveText) {
-                  setDraftText(editText);
-                  setEditing(true);
-                } else onEdit?.(detailKey);
-              }}
-            >
-              <EditorIcon name="edit" />
-            </button>
-          )}
-          {onRemove && (
-            <button
-              type="button"
-              className="detail-block-remove"
-              title={t("Remove detail block")}
-              aria-label={`${t("Remove detail block")}: ${String(detailKey)}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove(detailKey);
-              }}
-            >
-              <EditorIcon name="trash" />
-            </button>
-          )}
-          {onChange && (
-            <button
-              type="button"
-              className="detail-block-fill"
-              title={t("Change block background")}
-              aria-label={t("Change block background")}
-              onClick={(event) => {
-                event.stopPropagation();
-                onChange("detailBlockStyles", {
-                  ...productRef.current.detailBlockStyles,
-                  [String(detailKey)]: filled ? "outline" : "filled",
-                });
-              }}
-            >
-              {t("Fill")}
-            </button>
-          )}
-        </i>
-      )}
-      {onChange && (
+      {editable &&
+        selected &&
+        createPortal(
+          <div
+            ref={toolsRef}
+            className="product-detail-context-tools"
+            data-menu-above={menuAbove ? "true" : undefined}
+            role="toolbar"
+            aria-label={label}
+            data-export-hide="true"
+            style={toolbarPosition}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              if (clickTimer.current) clearTimeout(clickTimer.current);
+            }}
+            onClick={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              const buttons = Array.from(
+                toolsRef.current?.querySelectorAll<HTMLButtonElement>(
+                  "button",
+                ) || [],
+              );
+              const current = buttons.indexOf(
+                event.target as HTMLButtonElement,
+              );
+              if (event.key === "Tab" && event.shiftKey && current === 0) {
+                event.preventDefault();
+                blockRef.current?.focus();
+              } else if (
+                event.key === "Tab" &&
+                !event.shiftKey &&
+                current === buttons.length - 1
+              ) {
+                const corner =
+                  blockRef.current?.querySelector<HTMLButtonElement>(
+                    ".resize-corner",
+                  );
+                if (corner) {
+                  event.preventDefault();
+                  corner.focus();
+                }
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                if (menuOpen) {
+                  setMenuOpen(false);
+                  moreRef.current?.focus();
+                } else {
+                  blockRef.current?.focus();
+                  setSelected(false);
+                }
+              }
+            }}
+          >
+            {(onEdit || onSaveText) && (
+              <button
+                type="button"
+                className="detail-context-edit"
+                title={t("Edit this detail")}
+                aria-label={`${t("Edit this detail")} ${label}`}
+                onClick={editDetail}
+              >
+                <EditorIcon name="edit" /> <span>{t("Edit")}</span>
+              </button>
+            )}
+            {onChange && (
+              <button
+                type="button"
+                className="detail-context-move"
+                title={t("Drag to move detail block")}
+                aria-label={`${t("Move")} ${label}`}
+                {...handleProps("move")}
+              >
+                <EditorIcon name="move" />
+              </button>
+            )}
+            {(onChange || onRemove || (draggable && onDragStart)) && (
+              <button
+                ref={moreRef}
+                type="button"
+                className="detail-context-more"
+                title={t("More actions")}
+                aria-label={t("More actions")}
+                aria-expanded={menuOpen}
+                aria-controls={toolsId}
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <circle cx="5" cy="12" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="19" cy="12" r="1.8" />
+                </svg>
+              </button>
+            )}
+            {menuOpen && (
+              <div id={toolsId} className="detail-context-menu">
+                {onChange && (
+                  <button
+                    type="button"
+                    title={t("Change block background")}
+                    aria-pressed={filled}
+                    onClick={() => {
+                      onChange("detailBlockStyles", {
+                        ...productRef.current.detailBlockStyles,
+                        [String(detailKey)]: filled ? "outline" : "filled",
+                      });
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path d="m12 3 9 9-9 9-9-9Z" />
+                      <path d="M3 12h18" />
+                    </svg>
+                    <span>{t("Change block background")}</span>
+                  </button>
+                )}
+                {draggable && onDragStart && (
+                  <button
+                    type="button"
+                    draggable
+                    className="detail-context-reorder"
+                    title={t("Drag to reorder details")}
+                    aria-label={`${t("Reorder")} ${label}`}
+                    onDragStart={(event) => {
+                      event.stopPropagation();
+                      onDragStart(
+                        event as unknown as React.DragEvent<HTMLSpanElement>,
+                      );
+                    }}
+                    onDragEnd={(event) => {
+                      event.stopPropagation();
+                      onDragEnd?.(
+                        event as unknown as React.DragEvent<HTMLSpanElement>,
+                      );
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <EditorIcon name="drag" />
+                    <span>{t("Drag to reorder details")}</span>
+                  </button>
+                )}
+                {onRemove && (
+                  <button
+                    type="button"
+                    className="detail-context-remove"
+                    title={t("Remove detail block")}
+                    aria-label={`${t("Remove detail block")}: ${String(detailKey)}`}
+                    onClick={removeDetail}
+                  >
+                    <EditorIcon name="trash" />
+                    <span>{t("Remove detail block")}</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
+      {onChange && selected && !editing && (
         <CornerHandles
           label={label}
           className="detail-block-resize"
@@ -468,7 +690,7 @@ export function ProductDetailBlock({
           onStart={(event) => begin(event, "resize")}
         />
       )}
-      {editing && (
+      {editing && selected && (
         <span
           className="detail-block-inline-editor"
           data-export-hide="true"

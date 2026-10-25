@@ -1,4 +1,50 @@
 const translations: Record<string, string> = {
+  Design: "Dizajni",
+  "Detail block": "Blloku i detajit",
+  "Remove detail block": "Fshij detajin",
+  "Drag to move detail block": "Tërhiqni për të lëvizur detajin",
+
+  "Current image": "Imazhi aktual",
+  "Search images": "Kërko imazhe",
+  "Image preview": "Parapamja e imazhit",
+  "Select image": "Zgjidh imazhin",
+  "Choose a saved image or upload a new one.":
+    "Zgjidhni një imazh të ruajtur ose ngarkoni një të ri.",
+
+  "Product image source": "Burimi i imazhit të produktit",
+  "Saved images": "Imazhet e ruajtura",
+  "Saved logos and images from your workspace.":
+    "Logot dhe imazhet e ruajtura në hapësirën tuaj të punës.",
+  "Screen image source": "Burimi i imazhit të ekranit",
+  "Existing images": "Imazhe ekzistuese",
+  "Wallpapers in this brochure": "Imazhet e ekraneve në këtë broshurë",
+  "Use wallpaper": "Përdor imazhin e ekranit",
+  "No saved wallpapers yet. Upload an image or create one with AI.":
+    "Ende nuk ka imazhe të ruajtura për ekranin. Ngarkoni një imazh ose krijoni një me AI.",
+  "Workspace logos and images": "Logot dhe imazhet e hapësirës së punës",
+  "Choose saved artwork if you want to use it inside the screen.":
+    "Zgjidhni një imazh të ruajtur për ta vendosur brenda ekranit.",
+  "Use saved image": "Përdor imazhin e ruajtur",
+  "Loading product photos…": "Po ngarkohen fotografitë e produktit…",
+  "Could not load product photos.":
+    "Fotografitë e produktit nuk mund të ngarkoheshin.",
+  Retry: "Provo sërish",
+  "Choose image": "Zgjidh imazhin",
+
+  "Saved cover logo": "Logo e ruajtur e kopertinës",
+  "Current logo": "Logoja aktuale",
+  "Choose a saved logo or upload a new one.":
+    "Zgjidhni një logo të ruajtur ose ngarkoni një të re.",
+  "Saved logos": "Logot e ruajtura",
+  "Search logos": "Kërko logo",
+  "Select logo": "Zgjidh logon",
+  "Upload logo": "Ngarko logo",
+  "Logo preview": "Parapamja e logos",
+  "Selected logo": "Logoja e zgjedhur",
+  "Light background": "Sfond i çelët",
+  "Dark background": "Sfond i errët",
+  "Use this logo": "Përdor këtë logo",
+
   Images: "Imazhe",
   "Editing help": "Si të redaktoni",
   "Expand navigation": "Zgjero menynë",

@@ -63,6 +63,8 @@ import {
   PageSettingsGroup as SettingsGroup,
 } from "../brochure/PageSettingsTabs";
 import { CoverImageControls } from "../brochure/CoverImageControls";
+import { CoverLogoPicker } from "../brochure/CoverLogoPicker";
+import { ImagePickerProvider } from "../brochure/ImagePickerProvider";
 import { loadCatalog } from "../products/catalog-loader";
 import { screenArtworkForPhotoChange } from "../brochure/screenGeometry";
 import { BrochureIconControls } from "../settings/BrochureIconControls";
@@ -2055,7 +2057,15 @@ function StorePageControls({
   );
 }
 
-export function BrochureEditor({
+export function BrochureEditor(props: BrochureEditorProps) {
+  return (
+    <ImagePickerProvider settings={props.settings}>
+      <BrochureEditorContent {...props} />
+    </ImagePickerProvider>
+  );
+}
+
+function BrochureEditorContent({
   canMakeSocial = true,
   canUseCatalog = true,
   campaign,
@@ -2098,6 +2108,7 @@ export function BrochureEditor({
   const [commentMode, setCommentMode] = useState(false);
   const [textMode, setTextMode] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
+  const [showLogoPicker, setShowLogoPicker] = useState(false);
   const canEditCanvas = !previewMode && !commentMode;
   const chooseCanvasTool = (tool: CanvasTool) => {
     setTextMode(tool === "text");
@@ -2658,10 +2669,7 @@ export function BrochureEditor({
     });
     setSelected(destination);
   }
-  function pageDrop(
-    destination: number,
-    event: React.DragEvent<HTMLButtonElement>,
-  ) {
+  function pageDrop(destination: number, event: React.DragEvent<HTMLElement>) {
     event.preventDefault();
     const source = draggingCode || event.dataTransfer.getData("text/plain");
     clearDrag();
@@ -2849,6 +2857,24 @@ export function BrochureEditor({
           </Button>
         </div>
       </div>
+      {showLogoPicker && (
+        <CoverLogoPicker
+          settings={settings}
+          currentSource={
+            campaign.coverLogoSource ||
+            campaign.brandAssets?.neptun ||
+            settings.brandAssets?.neptun ||
+            logo
+          }
+          onClose={() => setShowLogoPicker(false)}
+          onSelect={(source) =>
+            onUpdate((draft) => {
+              draft.coverLogoSource = source;
+              draft.showCoverLogo = true;
+            })
+          }
+        />
+      )}
       {previewMode && (
         <BrochurePreview
           campaign={campaign}
@@ -2913,16 +2939,14 @@ export function BrochureEditor({
                   <CoverImageControls campaign={campaign} onUpdate={onUpdate} />
                 )}
                 {selected === -1 && (
-                  <FileUpload
-                    accept="image/*"
-                    aria-label={t("Change cover logo")}
-                    onChange={(event) => {
-                      void replaceCoverLogo(event.target.files?.[0]);
-                      event.target.value = "";
-                    }}
+                  <button
+                    type="button"
+                    className="cs-button secondary"
+                    onClick={() => setShowLogoPicker(true)}
                   >
+                    <EditorIcon name="image" />
                     {t("Change cover logo")}
-                  </FileUpload>
+                  </button>
                 )}
                 <FileUpload
                   accept="image/*"
@@ -2945,6 +2969,8 @@ export function BrochureEditor({
             <button
               type="button"
               className="cs-canvas-preview-button"
+              aria-label={t("Preview only")}
+              title={t("Preview only")}
               ref={editModeButton}
               onClick={() => {
                 setSelected((current) => Math.min(current, lastPreviewPage));
@@ -2955,11 +2981,15 @@ export function BrochureEditor({
               }}
             >
               <NavIcon name="eye" size={18} />
-              {t("Preview only")}
+              {t("Preview")}
             </button>
             <button
               type="button"
               className="cs-canvas-design-button"
+              aria-label={t(
+                showSettings ? "Close design tools" : "Design tools",
+              )}
+              title={t(showSettings ? "Close design tools" : "Design tools")}
               aria-expanded={showSettings}
               aria-controls="brochure-page-settings"
               onClick={() => {
@@ -2970,7 +3000,7 @@ export function BrochureEditor({
               }}
             >
               <NavIcon name="stores" size={18} />
-              {t(showSettings ? "Close design tools" : "Design tools")}
+              {t(showSettings ? "Close design tools" : "Design")}
             </button>
             <ActionMenu
               label={<span aria-label={t("Editing help")}>?</span>}
@@ -3025,6 +3055,9 @@ export function BrochureEditor({
               <CoverPage
                 campaign={campaign}
                 settings={settings}
+                onChooseCoverLogo={
+                  canEditCanvas ? () => setShowLogoPicker(true) : undefined
+                }
                 onReplaceCoverPhoto={
                   canEditCanvas
                     ? (file) => {
@@ -4861,6 +4894,11 @@ export default function App({
       <aside className={`cs-sidebar ${mobileMenuOpen ? "menu-open" : ""}`}>
         <div className="cs-sidebar-brand">
           <img src={logo} alt="NEPTUN" />
+          <img
+            className="cs-sidebar-brand-mark"
+            src="/favicon.svg?v=white-n"
+            alt="NEPTUN"
+          />
           <span>{t("CAMPAIGN STUDIO")}</span>
         </div>
         <button
@@ -5699,6 +5737,7 @@ export default function App({
       )}
       {imageEditCode && campaign && imageEditProduct && (
         <ProductImageEditor
+          settings={settings}
           product={imageEditProduct}
           onEditScreen={() => {
             setImageEditCode(null);
@@ -5768,6 +5807,7 @@ export default function App({
       )}
       {screenEditCode && screenEditProduct && (
         <ScreenImageEditor
+          settings={settings}
           product={screenEditProduct}
           tvCount={campaignTelevisions(campaign).length}
           televisions={campaignTelevisions(campaign)}

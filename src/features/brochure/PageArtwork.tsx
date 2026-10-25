@@ -9,6 +9,7 @@ import type { Artwork, Campaign } from "../../domain/models";
 import "../../styles/page-layers.css";
 import { t } from "./i18n";
 import { EditorIcon } from "./EditorIcon";
+import { useImagePicker } from "./ImagePickerProvider";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -91,6 +92,7 @@ function ArtworkItem({
   const [position, setPosition] = useState(artwork);
   const currentPosition = useRef(artwork);
   const upload = useRef<HTMLInputElement>(null);
+  const chooseImage = useImagePicker();
   const text = useRef<HTMLParagraphElement>(null);
   const isText = artwork.type === "text";
   const isImage = !isText && artwork.type !== "overlay";
@@ -102,7 +104,7 @@ function ArtworkItem({
       return;
     }
     try {
-      onChange(artwork.id, { ...position, image: await readImage(file) });
+      change({ image: await readImage(file) });
       setError("");
     } catch {
       setError(t("Could not read this image."));
@@ -269,7 +271,17 @@ function ArtworkItem({
         onChange && isImage
           ? (event) => {
               event.stopPropagation();
-              upload.current?.click();
+              if (chooseImage) {
+                chooseImage({
+                  source: currentPosition.current.image,
+                  title: t("Replace page image"),
+                  kind: "image",
+                  onSelect: (image) => {
+                    change({ image });
+                    setError("");
+                  },
+                });
+              } else upload.current?.click();
             }
           : undefined
       }
@@ -384,7 +396,7 @@ function ArtworkItem({
         <div className="page-layer-overlay" style={{ background: fill }} />
       ) : (
         <img
-          src={artwork.image}
+          src={position.image}
           style={
             position.height != null
               ? {

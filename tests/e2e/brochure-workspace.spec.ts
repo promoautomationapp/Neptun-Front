@@ -65,12 +65,16 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   const portrait =
     '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="500"><rect width="200" height="500" fill="#f18456"/><circle cx="100" cy="170" r="60" fill="#ffe1b4"/><text x="100" y="330" text-anchor="middle" font-family="Arial" font-size="22">PORTRAIT</text></svg>';
   let aiCalls = 0;
+  let aiWrites = 0;
   await page.addInitScript(() => localStorage.setItem("neptun-language", "en"));
   await page.route(
     (url) => url.pathname.startsWith("/api/"),
     async (route) => {
       const url = new URL(route.request().url());
-      if (url.pathname.includes("/ai")) aiCalls++;
+      if (url.pathname.includes("/ai")) {
+        aiCalls++;
+        if (route.request().method() === "POST") aiWrites++;
+      }
       if (url.pathname === "/api/assets/uploads")
         return route.fulfill({
           json: {
@@ -175,6 +179,51 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   await expect(
     page.getByRole("heading", { name: "Your brochure" }),
   ).toBeVisible();
+  await expect(page.locator(".campaign-app")).toHaveClass(
+    /cs-navigation-compact/,
+  );
+  await page
+    .getByRole("button", { name: "Expand navigation", exact: true })
+    .click();
+  await expect(page.locator(".campaign-app")).not.toHaveClass(
+    /cs-navigation-compact/,
+  );
+  await page
+    .getByRole("button", { name: "Collapse navigation", exact: true })
+    .click();
+  await expect(
+    page
+      .locator(".cs-canvas-dock")
+      .getByRole("toolbar", { name: "Canvas tools" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".cs-preview-top, .cs-brochure-view-modes"),
+  ).toHaveCount(0);
+  await expect(page.locator(".cs-save-indicator")).toContainText(
+    "All changes saved",
+  );
+  await expect(page.getByText("Editing brochure", { exact: true })).toHaveCount(
+    0,
+  );
+  await page.locator(".cs-canvas-images > summary").click();
+  await page.getByRole("button", { name: "Cover image", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Cover image studio" }),
+  ).toBeVisible();
+  await page
+    .getByRole("dialog", { name: "Cover image studio" })
+    .getByRole("button", { name: "Back", exact: true })
+    .click();
+  await page.locator(".cs-preview-paper .cover-element-logo img").dblclick();
+  const logoPicker = page.getByRole("dialog", {
+    name: "Change cover logo",
+    exact: true,
+  });
+  await expect(logoPicker).toBeVisible();
+  await expect(
+    logoPicker.getByRole("region", { name: "Saved logos", exact: true }),
+  ).toBeVisible();
+  await logoPicker.getByRole("button", { name: "Cancel", exact: true }).click();
   const productImage = page
     .locator(".cs-preview-paper .brochure-product-image")
     .first();
@@ -279,6 +328,18 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   );
   await page.getByText("More actions", { exact: true }).click();
   await expect(page.locator(".cs-brochure-actions-menu[open]")).toHaveCount(1);
+  const printAction = page.getByRole("button", { name: "Print", exact: true });
+  expect(
+    await printAction.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return element.contains(
+        document.elementFromPoint(
+          box.x + box.width / 2,
+          box.y + box.height / 2,
+        ),
+      );
+    }),
+  ).toBe(true);
   await page.getByRole("heading", { name: "Your brochure" }).click();
   await expect(page.locator(".cs-brochure-actions-menu[open]")).toHaveCount(0);
   const beforePreviewAi = aiCalls;
@@ -300,6 +361,57 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   expect(aiCalls).toBe(beforePreviewAi);
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await productImage.dblclick();
+  const imageOptions = page.getByRole("dialog", {
+    name: "Change product image",
+  });
+  await imageOptions
+    .getByRole("button", { name: "Saved images", exact: true })
+    .click();
+  await expect(
+    imageOptions.getByRole("button", { name: /Use saved image:/ }).first(),
+  ).toBeVisible();
+  await imageOptions.screenshot({
+    path: "artifacts/product-image-options-dark.png",
+  });
+  await imageOptions
+    .getByRole("button", { name: "Change TV screen image", exact: true })
+    .click();
+  const wallpaperOptions = page.getByRole("dialog", {
+    name: "TV wallpaper",
+    exact: true,
+  });
+  await wallpaperOptions
+    .getByRole("button", { name: "Existing images", exact: true })
+    .click();
+  await expect(
+    wallpaperOptions.getByRole("button", { name: /Use wallpaper:/ }).first(),
+  ).toBeVisible();
+  await wallpaperOptions.screenshot({
+    path: "artifacts/tv-existing-images-dark.png",
+  });
+  const beforeAiOptions = aiWrites;
+  await wallpaperOptions
+    .getByRole("button", {
+      name: "Create / refine wallpaper with AI",
+      exact: true,
+    })
+    .click();
+  const aiOptions = page.getByRole("dialog", {
+    name: "TV wallpaper studio",
+    exact: true,
+  });
+  await expect(
+    aiOptions.getByRole("button", {
+      name: "Create / refine with AI",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(aiWrites).toBe(beforeAiOptions);
+  await aiOptions.getByRole("button", { name: "Back", exact: true }).click();
+  await wallpaperOptions
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
   const pageButton = page.locator(".cs-pages-sidebar button").first();
   expect(
     await pageButton.evaluate((node) => getComputedStyle(node).backgroundColor),
@@ -334,7 +446,7 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
     background: getComputedStyle(node).backgroundColor,
   }));
   expect(styles).toEqual({ fit: "contain", background: "rgb(0, 0, 0)" });
-  await page.getByRole("button", { name: /Comments 1/ }).click();
+  await page.getByRole("button", { name: /Comment anywhere.*1/ }).click();
   await expect(
     page.getByRole("region", { name: "Page review comments" }),
   ).toBeVisible();
@@ -345,9 +457,7 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
     path: "artifacts/brochure-comments-dark.png",
     fullPage: true,
   });
-  await page
-    .getByRole("button", { name: "Edit brochure", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Pointer", exact: true }).click();
   await page.locator(".cs-product-tools summary").first().click();
   await expect(page.locator(".cs-product-tools[open]")).toHaveCount(1);
   await page
@@ -415,5 +525,25 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   expect(
     await preview.evaluate((node) => node.scrollWidth <= node.clientWidth),
   ).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(preview).toHaveCount(0);
+  await page.locator(".cs-editor-section-head").scrollIntoViewIfNeeded();
+  await expect(
+    page.getByRole("toolbar", { name: "Canvas tools" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: "artifacts/brochure-editor-mobile-dark.png" });
+  await page.getByRole("button", { name: "SQ", exact: true }).click();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const dock = page.locator(".cs-canvas-dock");
+  await dock.scrollIntoViewIfNeeded();
+  expect((await dock.boundingBox())!.height).toBeLessThan(58);
+  await page
+    .locator(".cs-editor-section")
+    .screenshot({ path: "artifacts/brochure-editor-albanian-dark.png" });
   expect(failures).toEqual([]);
 });

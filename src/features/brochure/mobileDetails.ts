@@ -25,7 +25,12 @@ export function defaultProductDetailPlacement(
     product.detailPlacement === "bottom"
   )
     return product.detailPlacement;
-  if (isOctoberBrochure(campaign) && isAppleProduct(product)) return "bottom";
+  // The Blue preset's reference layout is based on the device, independently
+  // of inherited workspace placement or the selected price design.
+  if (isOctoberBrochure(campaign))
+    return isMobilePhone(product) && !isAppleProduct(product)
+      ? "left"
+      : "bottom";
   const choice = productDesignFor(campaign).details.placement;
   if (choice !== "automatic") return choice;
   const priceProduct: Product = {

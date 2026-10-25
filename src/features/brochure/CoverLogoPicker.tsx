@@ -13,6 +13,8 @@ import "./cover-logo-picker.css";
 export interface CoverLogoPickerProps {
   settings?: Settings;
   currentSource?: string;
+  title?: string;
+  kind?: "logo" | "image";
   onSelect: (source: string) => void;
   onClose: () => void;
 }
@@ -20,9 +22,16 @@ export interface CoverLogoPickerProps {
 export function CoverLogoPicker({
   settings,
   currentSource = "",
+  title,
+  kind = "logo",
   onSelect,
   onClose,
 }: CoverLogoPickerProps) {
+  const isImage = kind === "image";
+  const libraryLabel = t(isImage ? "Saved images" : "Saved logos");
+  const searchLabel = t(isImage ? "Search images" : "Search logos");
+  const uploadLabel = t(isImage ? "Upload image" : "Upload logo");
+  const previewLabel = t(isImage ? "Image preview" : "Logo preview");
   const assets = useMemo(() => {
     const choices = reusableImages(settings);
     const add = (url: string | undefined, name: string) => {
@@ -31,9 +40,9 @@ export function CoverLogoPicker({
     };
     add(settings?.brandAssets?.neptun, "NEPTUN");
     add(settings?.brochure?.coverLogoSource, t("Saved cover logo"));
-    add(currentSource, t("Current logo"));
+    add(currentSource, t(isImage ? "Current image" : "Current logo"));
     return choices;
-  }, [settings, currentSource]);
+  }, [settings, currentSource, isImage]);
   const [selected, setSelected] = useState(
     currentSource || assets[0]?.url || "",
   );
@@ -80,22 +89,29 @@ export function CoverLogoPicker({
     }
   }
   const modal = (
-    <Modal title={t("Change cover logo")} onClose={onClose} wide>
+    <Modal
+      title={title || t(isImage ? "Change image" : "Change cover logo")}
+      onClose={onClose}
+      wide
+    >
       <div className="cs-cover-logo-picker">
-        <p>{t("Choose a saved logo or upload a new one.")}</p>
+        <p>
+          {t(
+            isImage
+              ? "Choose a saved image or upload a new one."
+              : "Choose a saved logo or upload a new one.",
+          )}
+        </p>
         <div className="cs-cover-logo-layout">
-          <section
-            className="cs-cover-logo-library"
-            aria-label={t("Saved logos")}
-          >
+          <section className="cs-cover-logo-library" aria-label={libraryLabel}>
             <div className="cs-cover-logo-library-head">
-              <strong>{t("Saved logos")}</strong>
+              <strong>{libraryLabel}</strong>
               <span>{choices.length}</span>
             </div>
             <input
               type="search"
-              aria-label={t("Search logos")}
-              placeholder={t("Search logos")}
+              aria-label={searchLabel}
+              placeholder={searchLabel}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -104,7 +120,7 @@ export function CoverLogoPicker({
                 <button
                   key={asset.url}
                   type="button"
-                  aria-label={`${t("Select logo")}: ${asset.name}`}
+                  aria-label={`${t(isImage ? "Select image" : "Select logo")}: ${asset.name}`}
                   aria-pressed={selected === asset.url}
                   onClick={() => {
                     setSelected(asset.url);
@@ -121,26 +137,23 @@ export function CoverLogoPicker({
             </div>
             <FileUpload
               accept="image/*"
-              aria-label={t("Upload logo")}
+              aria-label={uploadLabel}
               busy={busy}
               onChange={(event) => upload(event.target.files?.[0])}
             >
-              {t("Upload logo")}
+              {uploadLabel}
             </FileUpload>
             <small>PNG, JPG, WebP, SVG · 12 MB</small>
           </section>
-          <section
-            className="cs-cover-logo-preview"
-            aria-label={t("Logo preview")}
-          >
-            <strong>{t("Logo preview")}</strong>
+          <section className="cs-cover-logo-preview" aria-label={previewLabel}>
+            <strong>{previewLabel}</strong>
             {(["light", "dark"] as const).map((background) => (
               <figure key={background}>
                 <div className={`cs-cover-logo-preview-${background}`}>
                   {selected && (
                     <img
                       src={resolveAsset(selected)}
-                      alt={t("Selected logo")}
+                      alt={t(isImage ? "Selected image" : "Selected logo")}
                     />
                   )}
                 </div>
@@ -174,7 +187,7 @@ export function CoverLogoPicker({
             onClose();
           }}
         >
-          {t("Use this logo")}
+          {t(isImage ? "Use this image" : "Use this logo")}
         </button>
       </div>
     </Modal>

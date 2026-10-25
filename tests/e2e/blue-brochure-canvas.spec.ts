@@ -308,6 +308,20 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
     filled: { background: "rgb(255, 255, 255)", color: "rgb(28, 64, 117)" },
     outline: "rgba(0, 0, 0, 0)",
   });
+  await paper
+    .locator(".october-footer-logo .campaign-asset-artwork")
+    .dblclick();
+  const footerLogoPicker = page.getByRole("dialog", {
+    name: "Replace image: NEPTUN footer logo",
+    exact: true,
+  });
+  await expect(footerLogoPicker).toBeVisible();
+  await expect(
+    footerLogoPicker.getByRole("region", { name: "Saved logos", exact: true }),
+  ).toBeVisible();
+  await footerLogoPicker
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
   await page.getByRole("button", { name: "Design tools", exact: true }).click();
   await page
     .getByRole("tab", { name: "Background & cover", exact: true })
