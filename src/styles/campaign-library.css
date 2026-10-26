@@ -27,7 +27,10 @@
 }
 .cs-library .cs-campaign-filters {
   margin: 0 0 16px;
-  padding: 12px 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .cs-library-filter-bar {
   display: flex;
@@ -45,16 +48,35 @@
   min-height: 40px;
   padding: 8px 12px;
   box-sizing: border-box;
+  color: var(--np-text, #29445d);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .cs-library-search svg {
   color: #7894ab;
   flex: none;
 }
-.cs-library-search input {
+.cs-library .cs-library-search input {
   width: 100%;
   min-width: 0;
+  height: auto;
   padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
   font-size: 12px;
+  line-height: 1.5;
+}
+.cs-library .cs-library-search:focus-within {
+  border-color: var(--np-accent, #3683ba);
+  box-shadow: 0 0 0 3px #3683ba26;
+}
+.cs-library .cs-library-search:focus-within svg {
+  color: var(--np-accent, #2573a9);
 }
 .cs-library-filter-toggle {
   display: inline-flex;
@@ -105,10 +127,13 @@
 .cs-library .cs-campaign-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  align-items: start;
+  align-items: stretch;
   gap: 20px;
 }
 .cs-library .cs-campaign-card {
+  display: flex;
+  flex-direction: column;
+  container-type: normal;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #dce6ef;
@@ -120,6 +145,8 @@
   position: static;
   padding: 12px 14px 0;
   gap: 7px;
+  align-items: center;
+  align-content: start;
 }
 .cs-library .cs-campaign-badges > span {
   display: inline-flex;
@@ -160,7 +187,8 @@
   color: #5c6877;
 }
 .cs-library .cs-campaign-cover {
-  display: block;
+  display: grid;
+  place-items: center;
   width: 100%;
   padding: 13px 16px;
   background: #fff;
@@ -178,6 +206,7 @@
   box-shadow: 0 3px 12px #163d651a;
 }
 .cs-library .cs-campaign-card-title {
+  grid-template-rows: 1fr auto;
   border: 0;
   padding: 10px 16px 5px;
   gap: 5px;
@@ -192,6 +221,8 @@
 .cs-campaign-card-meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: start;
+  align-content: start;
   gap: 5px 14px;
   padding: 5px 16px 14px;
   color: #687f95;
@@ -201,7 +232,9 @@
 .cs-campaign-card-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-content: end;
   gap: 9px;
+  margin-top: auto;
   padding: 12px 16px 14px;
   border-top: 1px solid #e6edf4;
 }
@@ -259,6 +292,24 @@
   background: #fff3ef;
   border-color: #edc3b9;
 }
+/* Share section heights within each row without clipping names or badges. */
+@supports (grid-template-rows: subgrid) {
+  .cs-library .cs-campaign-card {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+  }
+  .cs-library .cs-campaign-card-actions {
+    margin-top: 0;
+  }
+}
+html[data-theme="dark"] body .cs-library .cs-campaign-filters {
+  background: transparent;
+}
+html[data-theme="dark"] .cs-library .cs-library-search input {
+  background: transparent;
+}
 @media (max-width: 620px) {
   .cs-library .cs-library-heading {
     align-items: center;
@@ -275,9 +326,6 @@
   }
   .cs-library-filter-bar {
     gap: 8px;
-  }
-  .cs-library .cs-campaign-filters {
-    padding: 10px;
   }
   .cs-library-filter-toggle {
     padding: 8px;

@@ -1,19 +1,23 @@
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
-import { Field, Toggle, OrderButtons } from "./components";
+import { Field, Toggle } from "./components";
+import { StoreLocationsList } from "./StoreLocationsList";
+import { t } from "../brochure/i18n";
 import { CONTACT_LABELS, STORE_ELEMENTS, FOOTER_ELEMENTS } from "./options";
-import { moveItem } from "./campaign-defaults";
 import type { SettingsTabProps } from "./SettingsEditor";
 import type { BrochureDefaults } from "./settings.schema";
 export function StoresTab({ draft, update }: SettingsTabProps) {
   const b = draft.brochure;
   return (
     <section className="ns-section">
-      <h2>Stores and contact information</h2>
+      <h2>{t("Store locations")}</h2>
       <p>
-        Store visibility and order apply to new brochures. Each brochure keeps
-        its own store list.
+        {t(
+          "Save settings to use this location order in new brochures. Existing brochures keep their own locations.",
+        )}
       </p>
+      <StoreLocationsList draft={draft} update={update} />
+      <h3>{t("Store display options")}</h3>
       <Field label="Default store information placement">
         <SearchableSelect
           value={b.storesDisplay}
@@ -89,86 +93,6 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           </SettingsGroup>
         ))}
       </SettingsGroup>
-      <h3>Store list</h3>
-      {draft.stores.map((store, index) => {
-        const label = store.name || store.city || `Store ${index + 1}`;
-        return (
-          <SettingsGroup
-            key={store.id || index}
-            title={
-              <>
-                {index + 1}. {label}
-              </>
-            }
-          >
-            <div className="ns-row-actions">
-              <Toggle
-                label={`Show ${label} in new brochures`}
-                checked={store.visible}
-                onChange={(value) =>
-                  update((next) => {
-                    const target = next.stores[index];
-                    if (target) target.visible = value;
-                  })
-                }
-              />
-              <OrderButtons
-                label={label}
-                index={index}
-                count={draft.stores.length}
-                onMove={(from, to) =>
-                  update((next) => {
-                    next.stores = moveItem(next.stores, from, to);
-                  })
-                }
-              />
-              <button
-                type="button"
-                aria-label={`Delete store ${label}`}
-                onClick={() =>
-                  update((next) => {
-                    next.stores.splice(index, 1);
-                  })
-                }
-              >
-                Delete store
-              </button>
-            </div>
-            <div className="ns-grid">
-              {(["city", "name", "address", "phone"] as const).map((field) => (
-                <Field key={field} label={`${label} · ${field}`}>
-                  <input
-                    value={store[field]}
-                    onChange={(event) =>
-                      update((next) => {
-                        const target = next.stores[index];
-                        if (target) target[field] = event.target.value;
-                      })
-                    }
-                  />
-                </Field>
-              ))}
-            </div>
-          </SettingsGroup>
-        );
-      })}
-      <button
-        type="button"
-        onClick={() =>
-          update((next) => {
-            next.stores.push({
-              id: crypto.randomUUID(),
-              city: "",
-              name: "New store",
-              address: "",
-              phone: "",
-              visible: true,
-            });
-          })
-        }
-      >
-        + Add store
-      </button>
       <h3>Contact information and terms</h3>
       <div className="ns-grid">
         {[

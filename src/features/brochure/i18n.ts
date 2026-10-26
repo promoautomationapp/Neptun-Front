@@ -1,4 +1,32 @@
 const translations: Record<string, string> = {
+  Undo: "Zhbëj",
+  Show: "Shfaq",
+  Done: "U krye",
+  Location: "Lokacioni",
+  Locations: "Lokacionet",
+  "New location": "Lokacion i ri",
+  "Add location": "Shto lokacion",
+  "Edit location": "Ndrysho lokacionin",
+  "Delete location": "Fshij lokacionin",
+  "Close location editor": "Mbyll redaktimin e lokacionit",
+  "Save settings to use this location order in new brochures. Existing brochures keep their own locations.":
+    "Ruani cilësimet që kjo renditje të përdoret në broshurat e reja. Broshurat ekzistuese i mbajnë lokacionet e tyre.",
+  "Store display options": "Shfaqja e lokacioneve",
+  "Drag a handle or use the arrows to change the order. Arrow keys also work on a focused handle.":
+    "Tërhiqni dorezën ose përdorni shigjetat për të ndryshuar renditjen. Kur doreza është e përzgjedhur, mund të përdorni edhe shigjetat e tastierës.",
+  Position: "Pozicioni",
+  up: "lart",
+  down: "poshtë",
+  "in new brochures": "në broshurat e reja",
+  "Include in new brochures": "Përfshi në broshurat e reja",
+  "Add an address": "Shtoni adresën",
+  "Location removed from this draft.":
+    "Lokacioni u hoq nga këto ndryshime të paruajtura.",
+  "Removed from this draft": "U hoq nga ndryshimet e paruajtura",
+  "Location restored.": "Lokacioni u rikthye.",
+  "No locations yet. Add a location to get started.":
+    "Ende nuk ka lokacione. Shtoni një lokacion për të filluar.",
+
   Design: "Dizajni",
   "Detail block": "Blloku i detajit",
   "Remove detail block": "Fshij detajin",

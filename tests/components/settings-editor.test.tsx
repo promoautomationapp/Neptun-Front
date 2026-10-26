@@ -6,7 +6,7 @@ import {
 import type * as ApiClient from "../../src/api/client";
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsEditor } from "../../src/features/settings/SettingsEditor";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
 import type { WorkspaceSettings } from "../../src/features/settings/settings.schema";
@@ -15,6 +15,8 @@ vi.mock("../../src/api/client", async (original) => ({
   uploadImage: vi.fn(),
 }));
 import { uploadImage } from "../../src/api/client";
+import { setLanguage } from "../../src/features/brochure/i18n";
+beforeEach(() => setLanguage("en"));
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();

@@ -1,0 +1,303 @@
+.ns-locations {
+  margin: 22px 0 30px;
+}
+.ns-locations-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.ns-locations-heading h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.ns-locations-heading h3 > span {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--np-raised, #edf3f8);
+  color: var(--np-muted, #61778c);
+  font-size: 11px;
+}
+.ns-locations-heading p {
+  margin: 0;
+  max-width: 450px;
+  color: var(--np-muted, #61778c);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.ns-settings .ns-location-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  min-height: 38px;
+  padding: 9px 12px;
+  border: 1px solid var(--np-accent, #1e6ba3);
+  border-radius: 9px;
+  background: #1b6092;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.ns-location-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ns-location {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--np-border, #dce5ed);
+  border-radius: 11px;
+  background: var(--np-surface, #fff);
+}
+.ns-location-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 12px;
+}
+.ns-settings .ns-location-grip {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  min-height: 44px;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--np-muted, #788da0);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.ns-settings .ns-location-grip:hover {
+  background: var(--np-raised, #eef5fa);
+  color: var(--np-accent, #1b6caa);
+}
+.ns-settings .ns-location-grip:active {
+  cursor: grabbing;
+}
+.ns-location-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: var(--np-text, #213f59);
+}
+.ns-location-copy > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ns-location-copy strong {
+  min-width: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.ns-location-number {
+  color: var(--np-muted, #71889a);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.ns-location-address,
+.ns-location-phone {
+  color: var(--np-muted, #61778c);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.ns-location-visible {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 6px;
+  color: var(--np-muted, #61778c);
+  font-size: 10px;
+  cursor: pointer;
+}
+.ns-location-visible input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--np-accent, #2777b0);
+}
+.ns-location-actions,
+.ns-location-order {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ns-location-order {
+  padding-right: 7px;
+  margin-right: 3px;
+  border-right: 1px solid var(--np-border, #dce5ed);
+}
+.ns-settings .ns-location-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 32px;
+  min-height: 34px;
+  padding: 7px;
+  border: 1px solid var(--np-border, #d7e2ec);
+  border-radius: 7px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #355c7d);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ns-settings .ns-location-actions button:hover {
+  background: var(--np-raised, #f0f6fa);
+  border-color: var(--np-accent, #6d9fc3);
+}
+.ns-settings .ns-location-actions .ns-location-edit {
+  margin-right: 3px;
+  padding-inline: 9px;
+  border-color: transparent;
+  background: var(--np-selected, #eaf3fb);
+  color: var(--np-accent, #196b9f);
+}
+.ns-settings .ns-location-actions .ns-location-delete {
+  color: #b94736;
+  border-color: transparent;
+  background: transparent;
+}
+.ns-settings .ns-location-actions .ns-location-delete:hover {
+  background: #fdf0ed;
+}
+.ns-settings .ns-location-actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.ns-location.is-editing {
+  border-color: var(--np-accent, #4993c5);
+}
+.ns-location-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--np-border, #dce5ed);
+  background: var(--np-raised, #f7fafc);
+  border-radius: 0 0 11px 11px;
+}
+.ns-location-fields .ns-field {
+  margin: 0;
+}
+.ns-location.is-dragging {
+  opacity: 0.45;
+  border-style: dashed;
+}
+.ns-location.drop-before::before,
+.ns-location.drop-after::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--np-accent, #258cd0);
+  box-shadow: 0 0 0 3px #258cd018;
+  pointer-events: none;
+}
+.ns-location.drop-before::before {
+  top: -7px;
+}
+.ns-location.drop-after::after {
+  bottom: -7px;
+}
+.ns-location-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--np-selected, #eaf3fb);
+  color: var(--np-text, #355c7d);
+  font-size: 11px;
+}
+.ns-settings .ns-location-undo button {
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--np-accent, #196b9f);
+  font-size: 11px;
+  font-weight: 700;
+}
+.ns-locations-empty {
+  padding: 28px 18px;
+  border: 1px dashed var(--np-border, #d7e2ec);
+  border-radius: 11px;
+  text-align: center;
+  color: var(--np-muted, #61778c);
+  font-size: 12px;
+}
+.ns-location-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-theme="dark"] body .ns-settings .ns-location-add {
+  background: var(--np-selected);
+  color: var(--np-text);
+  border-color: var(--np-accent);
+}
+html[data-theme="dark"]
+  body
+  .ns-settings
+  .ns-location-actions
+  .ns-location-delete {
+  background: transparent;
+  color: #ffb1a5;
+  border-color: transparent;
+}
+html[data-theme="dark"]
+  body
+  .ns-settings
+  .ns-location-actions
+  .ns-location-delete:hover {
+  background: #ffb1a514;
+}
+@media (max-width: 650px) {
+  .ns-locations-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .ns-location-row {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 10px;
+  }
+  .ns-location-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+  .ns-location-grip {
+    grid-row: 1 / 3;
+  }
+  .ns-settings .ns-location-actions button {
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .ns-location-fields {
+    grid-template-columns: 1fr;
+  }
+}

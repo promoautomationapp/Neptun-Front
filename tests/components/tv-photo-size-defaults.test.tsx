@@ -5,7 +5,17 @@ import { afterEach, expect, it, vi } from "vitest";
 import type { Campaign, Product } from "../../src/domain/models";
 import type { BrochurePage } from "../../src/features/brochure/campaignPages";
 import { ProductPage } from "../../src/features/brochure/Brochure";
-import { defaultProductImageScale } from "../../src/features/brochure/tvSpecs";
+import {
+  defaultProductImageScale,
+  isTelevision,
+  tvScreenInches,
+} from "../../src/features/brochure/tvSpecs";
+import { defaultPhotoPlacement } from "../../src/features/settings/product-design-defaults";
+import {
+  availableBrochurePresets,
+  applyBrochurePreset,
+} from "../../src/features/brochure/brochurePresets";
+import { resolveSettings } from "../../src/features/settings/settings.schema";
 import { ProductLayoutControls } from "../../src/features/brochure/ProductLayoutControls";
 import { setLanguage } from "../../src/features/brochure/i18n";
 
@@ -118,4 +128,73 @@ it("keeps saved manual photo sizes and resets back to the inch-based default", (
     "brochureImagePlacement",
     expect.objectContaining({ x: 55, scale: defaultProductImageScale(manual) }),
   );
+});
+
+it.each(["neptun-current", "neptun-october"])(
+  "retains increasing 40/55/65/75-inch defaults in the actual %s preset",
+  (id) => {
+    const products = [40, 55, 65, 75].map(tv);
+    const campaign: Campaign = {
+      id: "preset-tv-sizes",
+      name: "TV sizes",
+      products,
+    };
+    applyBrochurePreset(
+      campaign,
+      availableBrochurePresets(resolveSettings(null)).find(
+        (preset) => preset.id === id,
+      )!,
+    );
+    const scales = products.map(
+      (product) => defaultPhotoPlacement(product, campaign, "bottom").scale,
+    );
+    expect(scales).toEqual([0.755, 0.86, 0.93, 0.943]);
+    expect(
+      scales.every((scale, index) => index === 0 || scale > scales[index - 1]!),
+    ).toBe(true);
+    const manual = {
+      ...products[0]!,
+      brochureImagePlacement: { x: 42, y: 48, scale: 1.2 },
+    };
+    const markup = renderToStaticMarkup(
+      <ProductPage campaign={campaign} page={page([manual])} />,
+    );
+    expect(markup).toContain("scale(1.2)");
+  },
+);
+
+it.each([
+  { subcategory: "Televizorë" },
+  { subcategory: "Televisions" },
+  { category: "TV", subcategory: "OLED" },
+  { subcategory: "LG" },
+])("keeps inch recognition for television catalog category %j", (category) => {
+  const product = { ...tv(75), ...category };
+  expect(isTelevision(product)).toBe(true);
+  expect(tvScreenInches(product)).toBe(75);
+  expect(defaultProductImageScale(product)).toBe(0.943);
+});
+
+it("does not give TV accessories or a neighboring soundbar an inch-based television layout", () => {
+  expect(
+    isTelevision({
+      name: "TV LED 65 inch wall mount",
+      category: "TV",
+      subcategory: "Accessories",
+    }),
+  ).toBe(false);
+  expect(
+    isTelevision({
+      name: "LG Soundbar S40T",
+      category: "TV",
+      subcategory: "Soundbars",
+    }),
+  ).toBe(false);
+  expect(
+    defaultProductImageScale({
+      name: "iPhone 17",
+      brand: "Apple",
+      subcategory: "Smartphone",
+    }),
+  ).toBe(1);
 });

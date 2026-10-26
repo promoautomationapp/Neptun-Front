@@ -1,14 +1,25 @@
 import type { Product } from "../../domain/models";
 import { isAppleProduct } from "./priceDesign";
+import { isBrochureAccessory } from "./productTypes";
 
 export function isTelevision(product: Partial<Product>) {
-  const category = String(product.subcategory || "")
-    .trim()
-    .toUpperCase();
+  if (isBrochureAccessory(product)) return false;
+  const normalize = (value: unknown) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toUpperCase();
+  const subcategory = normalize(product.subcategory);
+  const category = normalize(product.category);
+  const televisionCategory =
+    /^(?:TV|TELEVIZOR(?:E|ET)?|TELEVISIONS?)(?:\s+(?:LED|QLED|OLED|QNED|MINI\s*LED))?$/;
   return (
-    category === "TV" ||
-    (!category &&
-      /^TV\s+(?:LED|QLED|OLED|QNED|MINI\s+LED)\b/i.test(product.name || ""))
+    televisionCategory.test(subcategory) ||
+    (televisionCategory.test(category) &&
+      (!subcategory ||
+        /^(?:LED|QLED|OLED|QNED|MINI\s*LED)$/.test(subcategory))) ||
+    /^TV\s+(?:LED|QLED|OLED|QNED|MINI\s+LED)\b/i.test(product.name || "")
   );
 }
 
