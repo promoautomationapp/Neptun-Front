@@ -9,6 +9,17 @@ import {
   productForPost,
   reorderByCode,
 } from "../../src/features/social/postModel";
+it("starts new and brochure-derived posts without forcing an event badge", () => {
+  expect(createPost().showEventLogo).toBe(false);
+  const fromBrochure = createPost([], {
+    id: "campaign",
+    name: "Offers",
+    products: [],
+    campaignLogo: "/chosen-brochure-logo.png",
+  });
+  expect(fromBrochure.showEventLogo).toBe(false);
+  expect(fromBrochure.eventLogoUpload).toBe("/chosen-brochure-logo.png");
+});
 it("copies a brochure product without losing structured detail keys, image preparation, or editable nested artwork", () => {
   const original: Product = {
     code: "set",

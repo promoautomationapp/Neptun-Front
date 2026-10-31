@@ -1,3 +1,4 @@
+import { t } from "../../src/features/brochure/i18n";
 import { setLanguage } from "../../src/features/brochure/i18n";
 import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
@@ -73,7 +74,7 @@ function fixture(name = "Social QA"): SocialPost {
 function open(view: ReturnType<typeof render>, name = "Social QA") {
   return view
     .findByRole("button", { name: new RegExp(name) })
-    .then((button) => fireEvent.click(button));
+    .then((button) => { fireEvent.click(button); fireEvent.click(view.getByRole("button", {name: t("Designs")})); });
 }
 beforeEach(() => {
   setLanguage("en");

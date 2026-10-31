@@ -9,7 +9,7 @@ import {
   setOfferProduct,
   sharedSetPrice,
 } from "./importRowGroups";
-import type { ImportRow } from "./importRowGroups";
+import type { ImportRow, ImportRowGroup } from "./importRowGroups";
 import { groupImportedPhoneDetails } from "./mobileDetails";
 import {
   excelRowProduct,
@@ -249,6 +249,65 @@ function catalogByName(catalog: Product[]) {
   return byName;
 }
 
+/** A shared page.order means one offer. Color variants remain a single model;
+ * different products become an editable bundle with one shared Excel price. */
+function groupPositionOffers(
+  rows: readonly ImportRow[],
+  columns: BrochureImportColumns,
+  lookup: Map<string, Product>,
+) {
+  const original = groupImportRows(rows, columns.setCol ?? -1);
+  const positions = new Map<string, ImportRowGroup[]>();
+  for (const group of original) {
+    const source = group.sources[0];
+    if (
+      group.set ||
+      !source ||
+      !String(source.row[columns.codeCol] ?? "").trim()
+    )
+      continue;
+    const position = parseBrochurePosition(source.row[columns.positionCol]);
+    if (position)
+      positions.set(position.label, [
+        ...(positions.get(position.label) || []),
+        group,
+      ]);
+  }
+  const replacements = new Map<ImportRowGroup, ImportRowGroup>();
+  const consumed = new Set<ImportRowGroup>();
+  for (const groups of positions.values()) {
+    if (groups.length < 2) continue;
+    // Different descriptions of a repeated source SKU do not make a bundle.
+    const codes = new Set(
+      groups.map((group) => importCode(group.sources[0]!.row[columns.codeCol])),
+    );
+    if (codes.size < 2) continue;
+    const families = new Set(
+      groups.map((group) => {
+        const row = group.sources[0]!.row;
+        const resolved = resolveExcelOffer(
+          String(row[columns.codeCol] ?? ""),
+          row,
+          lookup,
+          columns,
+          group.sources[0]!.index,
+        );
+        return `${normalize(resolved.product?.brand || "")}:${familyName(String(row[columns.nameCol] || resolved.product?.name || row[columns.codeCol] || ""))}`;
+      }),
+    );
+    if (families.size < 2) continue;
+    replacements.set(groups[0]!, {
+      set: true,
+      positionGrouped: true,
+      sources: groups.flatMap((group) => group.sources),
+    });
+    groups.slice(1).forEach((group) => consumed.add(group));
+  }
+  return original
+    .filter((group) => !consumed.has(group))
+    .map((group) => replacements.get(group) || group);
+}
+
 export function analyzeBrochureRows(
   rows: readonly ImportRow[],
   columns: BrochureImportColumns,
@@ -262,14 +321,33 @@ export function analyzeBrochureRows(
   const warnings: BrochureWarning[] = [];
   const incompleteProducts: Product[] = [];
   let ignored = 0;
-  groupImportRows(rows, columns.setCol ?? -1).forEach((group) => {
+  groupPositionOffers(rows, columns, codeLookup).forEach((group) => {
     const first = group.sources[0];
     if (!first) return;
     const { row, index } = first;
     const rowNumber = rowOffset + index;
     if (group.set) {
+      const distinctRegular = new Set(
+        group.sources
+          .map((source) => parsePrice(source.row[columns.regularCol]))
+          .filter((value) => value > 0),
+      );
+      const individualRegular =
+        group.positionGrouped && distinctRegular.size > 1;
+      const sourceCodes = new Set<string>();
+      const memberGroup = group.positionGrouped
+        ? {
+            ...group,
+            sources: group.sources.filter(({ row }) => {
+              const key = importCode(row[columns.codeCol]);
+              if (sourceCodes.has(key)) return false;
+              sourceCodes.add(key);
+              return true;
+            }),
+          }
+        : group;
       const resolved = resolveSetMembers(
-        group,
+        memberGroup,
         columns.codeCol,
         codeLookup,
         rowOffset,
@@ -278,12 +356,16 @@ export function analyzeBrochureRows(
             code,
             source.row,
             codeLookup,
-            { ...columns, regularCol: -1 },
+            {
+              ...columns,
+              regularCol: individualRegular ? columns.regularCol : -1,
+            },
             rowOffset + source.index,
           ),
       );
       const sharedSale = sharedSetPrice(group, columns.priceCol, rowOffset);
       const hasRegular =
+        !individualRegular &&
         columns.regularCol >= 0 &&
         group.sources.some(({ row }) =>
           String(row[columns.regularCol] ?? "").trim(),

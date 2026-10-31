@@ -28,9 +28,9 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          <option value="page">Separate stores page</option>
-          <option value="footer">Bottom of the last product page</option>
-          <option value="none">No store information</option>
+          <option value="page">{t("Separate stores page")}</option>
+          <option value="footer">{t("Bottom of the last product page")}</option>
+          <option value="none">{t("No store information")}</option>
         </SearchableSelect>
       </Field>
       <Toggle
@@ -42,13 +42,13 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           })
         }
       />
-      <SettingsGroup title={<> Information shown for every store </>}>
+      <SettingsGroup title={<> {t("Information shown for every store")} </>}>
         <div className="ns-grid">
           {(["city", "name", "address", "phone", "icon"] as const).map(
             (field) => (
               <Toggle
                 key={field}
-                label={`Show store ${field}`}
+                label={`${t("Show store")} ${t(field)}`}
                 checked={b.storeFields[field]}
                 onChange={(value) =>
                   update((next) => {
@@ -60,7 +60,9 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           )}
         </div>
       </SettingsGroup>
-      <SettingsGroup title="Sections shown on the stores page and compact footer">
+      <SettingsGroup
+        title={t("Sections shown on the stores page and compact footer")}
+      >
         {(
           [
             {
@@ -75,11 +77,11 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
             },
           ] as const
         ).map((group) => (
-          <SettingsGroup key={group.key} title={<> {group.label} </>}>
+          <SettingsGroup key={group.key} title={<> {t(group.label)} </>}>
             {group.items.map((item) => (
               <Toggle
                 key={item.id}
-                label={`${group.label}: ${item.label}`}
+                label={`${t(group.label)}: ${t(item.label)}`}
                 checked={!b[group.key].includes(item.id)}
                 onChange={(value) =>
                   update((next) => {
@@ -93,7 +95,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
           </SettingsGroup>
         ))}
       </SettingsGroup>
-      <h3>Contact information and terms</h3>
+      <h3>{t("Contact information and terms")}</h3>
       <div className="ns-grid">
         {[
           ...new Set([
@@ -126,7 +128,7 @@ export function StoresTab({ draft, update }: SettingsTabProps) {
               )}
             </Field>
             <Toggle
-              label={`Show ${CONTACT_LABELS[field] || field}`}
+              label={`${t("Show")} ${t(CONTACT_LABELS[field] || field)}`}
               checked={b.contactVisibility[field] !== false}
               onChange={(value) =>
                 update((next) => {

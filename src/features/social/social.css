@@ -919,7 +919,7 @@
 }
 .social-brand-footer { position: absolute; z-index: 6; left: 5%; right: 5%; bottom: 2.6%; display: flex; align-items: end; gap: 1.4cqw; height: 3.5%; color: white; }
 .social-brand-footer .neptun-wordmark,.social-brand-footer > img { width: var(--social-footer-logo-width,19%); max-height: 100%; object-fit: contain; object-position: left bottom; }
-.social-brand-footer > span:last-child { flex: 1; border-bottom: .14cqw solid currentColor; margin-bottom: .25cqw; }
+.social-brand-footer > .social-brand-footer-line { flex: 1; border-bottom: .14cqw solid currentColor; margin-bottom: .25cqw; }
 .social-light .social-brand-footer { color: #204575; }
 .social-with-brand-footer .social-offer-grid { bottom: 9%; }
 .social-count-1 .social-offer { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,auto); column-gap: 2cqw; align-items: end; }

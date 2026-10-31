@@ -181,3 +181,42 @@ it("four undo and redo steps recover wallpapers, format, cover and last-page foo
   expect(current).toEqual(completed);
   expect(history.counts(current.id)).toEqual({ undo: 4, redo: 0 });
 });
+
+it("keeps undo and redo available after a server acknowledgement reorders keys and adds default metadata", () => {
+  const history = createCampaignEditHistory();
+  const before = brochure();
+  const edited = { ...before, name: "New offers" };
+  history.record(before, edited);
+  const acknowledged = JSON.parse(
+    JSON.stringify({
+      ...Object.fromEntries(Object.entries(edited).reverse()),
+      showCoverBand: false,
+      coverMessageColor: "#ffffff",
+      coverHeadlineColor: "#ffffff",
+      coverTypeColor: "#ffffff",
+      coverFooterColor: "#ffffff",
+      updatedAt: "2026-10-31T10:00:00Z",
+      updatedBy: "staff@example.test",
+      version: 2,
+      disabledAt: null,
+      disabledBy: null,
+    }),
+  ) as Campaign;
+  history.observe(acknowledged);
+  expect(history.counts(before.id)).toEqual({ undo: 1, redo: 0 });
+  const previous = history.undo(acknowledged);
+  expect(previous?.name).toBe(before.name);
+  const restored = restoreCampaignEdit(previous!, acknowledged);
+  expect(restored.updatedBy).toBe("staff@example.test");
+  expect(restored.version).toBe(2);
+  expect(history.counts(before.id)).toEqual({ undo: 0, redo: 1 });
+  expect(history.redo(restored)?.name).toBe("New offers");
+});
+it("clears local undo history after a different editor changes document content", () => {
+  const history = createCampaignEditHistory();
+  const before = brochure();
+  const edited = { ...before, name: "Edited" };
+  history.record(before, edited);
+  history.observe({ ...edited, name: "Changed by colleague", version: 3 });
+  expect(history.counts(before.id)).toEqual({ undo: 0, redo: 0 });
+});

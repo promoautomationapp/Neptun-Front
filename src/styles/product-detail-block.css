@@ -112,43 +112,57 @@
   }
 }
 .detail-block-inline-editor {
-  position: absolute;
-  z-index: 45;
-  left: 0;
-  top: calc(100% + 0.3cqw);
-  display: flex;
-  gap: 3px;
+  position: fixed;
+  z-index: 1200;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 6px;
   align-items: center;
-  min-width: max(12cqw, 180px);
-  max-width: 32cqw;
-  padding: 4px;
-  background: #fff;
-  border: 1px solid #62b5df;
-  border-radius: 6px;
-  box-shadow: 0 3px 10px #001d3c60;
-  color: #173b5d;
-}
-.detail-block-inline-editor input {
-  flex: 1;
-  min-width: 0;
-  padding: 4px;
-  border: 1px solid #bbd7e9;
-  border-radius: 4px;
+  width: min(330px, calc(100vw - 16px));
+  padding: 10px;
+  background: var(--np-surface, #fff);
+  border: 1px solid var(--np-border, #bbd7e9);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px #102e4926;
+  color: var(--np-text, #173b5d);
   font:
-    700 12px/1.2 Arial,
+    13px/1.5 "DM Sans",
+    Arial,
     sans-serif;
-  color: #173b5d;
+}
+.detail-block-inline-editor textarea {
+  grid-column: 1/-1;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  min-height: 76px;
+  padding: 10px;
+  border: 1px solid var(--np-border, #bbd7e9);
+  border-radius: 8px;
+  font: inherit;
+  background: var(--np-input, var(--np-bg, #f4f8fb));
+  color: inherit;
 }
 .detail-block-inline-editor button {
-  flex: none;
-  border: 0;
-  background: #e5f3fb;
-  color: #15598c;
-  border-radius: 4px;
-  min-width: 20px;
-  height: 22px;
+  grid-column: 2;
+  border: 1px solid var(--np-border, #bbd7e9);
+  background: var(--np-selected, #e5f3fb);
+  color: var(--np-accent, #15598c);
+  border-radius: 7px;
+  min-height: 30px;
+  padding: 4px 10px;
   cursor: pointer;
+  font: inherit;
 }
+.detail-block-inline-editor button + button {
+  grid-column: 3;
+}
+.detail-block-inline-editor small {
+  grid-column: 1/-1;
+  font-size: 10px;
+  color: var(--np-muted, #6c8499);
+}
+
 .brochure-page
   .brochure-product
   .brochure-specs

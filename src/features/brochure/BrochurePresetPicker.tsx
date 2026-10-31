@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type {
   BrochurePresetDefinition,
   Campaign,
@@ -23,13 +23,25 @@ export function PresetThumbnail({
 }: {
   preset: BrochurePresetDefinition;
 }) {
-  if (preset.id === "neptun-october")
-    return <img src="/brochure-presets/october/cover-preview.webp" alt="" />;
   const d = preset.design;
-  const background =
-    d.productBackgroundColor || d.productBackgroundGradient?.from || "#245b89";
-  const price = d.offerStyle === "card" ? "#003870" : "#ef4023";
-  const source = `<svg xmlns="http://www.w3.org/2000/svg" width="216" height="270" viewBox="0 0 216 270"><rect width="216" height="270" fill="${/^#[a-f0-9]{6}$/i.test(background) ? background : "#245b89"}"/><text x="108" y="28" text-anchor="middle" fill="white" font-family="Arial" font-size="20" font-weight="900">NEPTUN</text><path d="M62 34h92" stroke="#ef4023" stroke-width="3"/><g fill="#172d44" stroke="#95b8c8" stroke-width="1.4"><rect x="36" y="54" width="144" height="83"/><rect x="12" y="162" width="88" height="53"/><rect x="116" y="162" width="88" height="53"/></g><g fill="${price}"><rect x="135" y="127" width="46" height="20" rx="2"/><rect x="58" y="209" width="44" height="19" rx="2"/><rect x="162" y="209" width="44" height="19" rx="2"/></g><g fill="white" font-family="Arial" font-weight="700" font-size="12"><text x="142" y="141">299€</text><text x="64" y="223">249€</text><text x="168" y="223">199€</text></g><path d="M10 250h196" stroke="white" stroke-opacity=".4"/></svg>`;
+  const color = (v: string | undefined, fallback: string) =>
+    /^#[a-f0-9]{6}$/i.test(v || "") ? v! : fallback;
+  const from = color(
+    d.coverBackgroundGradient?.from || d.coverBackgroundColor,
+    "#234173",
+  );
+  const to = color(
+    d.coverBackgroundGradient?.to || d.coverBackgroundColor,
+    from,
+  );
+  const grayInside = d.productBackgroundColor === "#e3e3e3";
+  const band = d.showCoverBand === true || d.coverBandVariant === "online";
+  const price = d.offerStyle === "card" ? "#003870" : "#ff4228";
+  const vertical = d.coverBackgroundGradient?.angle === 180;
+  const products = band
+    ? '<rect x="15" y="177" width="80" height="49"/><rect x="121" y="177" width="80" height="49"/>'
+    : '<rect x="30" y="65" width="156" height="78"/><rect x="13" y="169" width="88" height="56"/><rect x="115" y="169" width="88" height="56"/>';
+  const source = `<svg xmlns="http://www.w3.org/2000/svg" width="216" height="270" viewBox="0 0 216 270"><defs><linearGradient id="bg" x2="${vertical ? 0 : 1}" y2="${vertical ? 1 : 0}"><stop stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="216" height="270" fill="url(#bg)"/><text x="108" y="24" text-anchor="middle" fill="white" font-family="Arial" font-size="20" font-weight="900">NEPTUN</text><path d="M62 30h92" stroke="#ff4228" stroke-width="3"/>${band ? `<rect x="9" y="41" width="198" height="78" rx="3" fill="white" fill-opacity=".06" stroke="white" stroke-opacity=".35" stroke-dasharray="3 3"/><path d="m95 91 14-16 14 16" fill="none" stroke="white" stroke-opacity=".6"/><text x="108" y="106" text-anchor="middle" fill="white" font-family="Arial" font-size="7">${t("Your cover image")}</text><path d="M0 131 216 119v42L0 170Z" fill="url(#bg)"/><text x="18" y="148" fill="white" font-family="Arial" font-size="${d.showCoverBand ? 40 : 22}" font-weight="900" font-style="italic">${d.showCoverBand ? "UUU" : "hajde!"}</text><text x="${d.showCoverBand ? 118 : 96}" y="155" fill="${d.coverBandVariant === "online" ? "#ff4228" : "white"}" font-family="Arial" font-size="${d.coverBandVariant === "online" ? 14 : 7}" font-weight="900">${d.coverBandVariant === "online" ? "Blej ONLINE" : "hajde!"}</text>` : '<text x="108" y="48" text-anchor="middle" fill="white" font-family="Arial" font-size="15" font-style="italic" font-weight="900">hajde!</text>'}<g fill="#182c42" stroke="#95b8c8" stroke-width="1">${products}</g><g fill="${price}"><rect x="66" y="222" width="35" height="13" rx="1"/><rect x="168" y="222" width="35" height="13" rx="1"/>${band ? "" : '<rect x="150" y="138" width="36" height="13" rx="1"/>'}</g><rect x="8" y="246" width="200" height="16" rx="2" fill="${grayInside ? "#e3e3e3" : "url(#bg)"}" stroke="white" stroke-opacity=".35"/><text x="108" y="257" text-anchor="middle" fill="${grayInside ? "#343534" : "white"}" font-family="Arial" font-size="7">${t("Inside pages")}</text></svg>`;
   return (
     <img src={`data:image/svg+xml,${encodeURIComponent(source)}`} alt="" />
   );
@@ -40,45 +52,109 @@ export function BrochurePresetPicker({
   value,
   onChange,
   onPreview,
+  compact = false,
 }: {
   presets: readonly BrochurePreset[];
   value: string;
   onChange: (preset: BrochurePreset) => void;
   onPreview: (preset: BrochurePreset) => void;
+  compact?: boolean;
 }) {
+  const [choosing, setChoosing] = useState(false);
+  const changeButton = useRef<HTMLButtonElement>(null);
+  const selected = presets.find((preset) => preset.id === value) ?? presets[0];
+  const closeChoices = () => {
+    setChoosing(false);
+    changeButton.current?.focus({ preventScroll: true });
+  };
+  const cards = (
+    <div className={`cs-preset-cards ${compact ? "cs-preset-gallery" : ""}`}>
+      {presets.map((preset) => (
+        <div
+          key={preset.id}
+          className={`cs-preset-card ${value === preset.id ? "selected" : ""}`}
+        >
+          <button
+            type="button"
+            className="cs-preset-thumb"
+            aria-label={`${t("Preview design")} ${t(preset.name)}`}
+            onClick={() => {
+              setChoosing(false);
+              onPreview(preset);
+            }}
+          >
+            <PresetThumbnail preset={preset} />
+            <span>{t("View details")}</span>
+          </button>
+          <button
+            type="button"
+            className="cs-preset-select"
+            aria-pressed={value === preset.id}
+            onClick={() => {
+              onChange(preset);
+              closeChoices();
+            }}
+          >
+            <span className="cs-preset-radio" aria-hidden="true" />
+            {t(preset.name)}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+  if (compact && selected)
+    return (
+      <>
+        <section
+          className="cs-preset-summary"
+          aria-label={t("Brochure designs")}
+        >
+          <div className="cs-preset-summary-thumb" aria-hidden="true">
+            <PresetThumbnail preset={selected} />
+          </div>
+          <div className="cs-preset-summary-name">
+            <small>{t("Selected design")}</small>
+            <strong>{t(selected.name)}</strong>
+          </div>
+          <button
+            ref={changeButton}
+            type="button"
+            className="cs-preset-change"
+            onClick={() => setChoosing(true)}
+          >
+            {t("Change design")}
+          </button>
+        </section>
+        {choosing && (
+          <Modal
+            title={t("Choose a brochure design")}
+            onClose={closeChoices}
+            wide
+          >
+            <p className="cs-preset-gallery-note">
+              {t("Select a design to continue. You can change it later.")}
+            </p>
+            {cards}
+            <div className="cs-modal-actions">
+              <button
+                type="button"
+                className="cs-button secondary"
+                onClick={closeChoices}
+              >
+                {t("Back")}
+              </button>
+            </div>
+          </Modal>
+        )}
+      </>
+    );
   return (
     <section className="cs-preset-picker" aria-label={t("Brochure designs")}>
       <div className="cs-preset-picker-heading">
         <strong>{t("Choose a brochure design")}</strong>
         <small>{t("Everything remains editable.")}</small>
       </div>
-      <div className="cs-preset-cards">
-        {presets.map((preset) => (
-          <div
-            key={preset.id}
-            className={`cs-preset-card ${value === preset.id ? "selected" : ""}`}
-          >
-            <button
-              type="button"
-              className="cs-preset-thumb"
-              aria-label={`${t("Preview design")} ${preset.name}`}
-              onClick={() => onPreview(preset)}
-            >
-              <PresetThumbnail preset={preset} />
-              <span>{t("Preview")}</span>
-            </button>
-            <button
-              type="button"
-              className="cs-preset-select"
-              aria-pressed={value === preset.id}
-              onClick={() => onChange(preset)}
-            >
-              <span className="cs-preset-radio" aria-hidden="true" />
-              {preset.name}
-            </button>
-          </div>
-        ))}
-      </div>
+      {cards}
     </section>
   );
 }
@@ -89,7 +165,7 @@ export function BrochurePresetPreview({
   onClose,
   onUse,
 }: {
-  preset: BrochurePresetDefinition;
+  preset: BrochurePreset;
   settings: Settings;
   onClose: () => void;
   onUse?: () => void;
@@ -101,11 +177,14 @@ export function BrochurePresetPreview({
   const format = resolveBrochureFormat(campaign);
   return (
     <Modal
-      title={`${t("Brochure preview")} · ${preset.name}`}
+      title={`${t("Brochure preview")} · ${t(preset.name)}`}
       kicker={t("Editable brochure design")}
       wide
       onClose={onClose}
     >
+      {preset.description && (
+        <p className="cs-preset-preview-description">{t(preset.description)}</p>
+      )}
       <div
         className="cs-preset-preview-pages"
         role="group"

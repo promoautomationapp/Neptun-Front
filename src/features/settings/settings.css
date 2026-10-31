@@ -738,3 +738,41 @@
   overflow-wrap: anywhere;
   margin-top: 6px;
 }
+
+.ns-category-guidance {
+  margin: 8px 0 0;
+  color: var(--np-muted, #718597);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.ns-category-search .ns-category-collapse + .ns-category-collapse {
+  margin-left: 14px;
+}
+.ns-category-tabs .ns-category-kind {
+  display: inline-block;
+  margin-top: 3px;
+  color: var(--np-muted, #718597);
+  font-size: 10px;
+}
+.ns-category-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.ns-category-breadcrumb button {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--np-text, #23405d);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ns-category-breadcrumb button[aria-current] {
+  color: var(--np-muted, #718597);
+  text-decoration: none;
+}

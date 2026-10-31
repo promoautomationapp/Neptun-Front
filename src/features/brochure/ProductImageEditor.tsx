@@ -34,6 +34,7 @@ export function ProductImageEditor({
   onClose,
   onFindImage,
   onEditScreen,
+  onEditArtwork,
   canResumeSearch = false,
 }: {
   product: Product;
@@ -44,6 +45,7 @@ export function ProductImageEditor({
   onClose: () => void;
   onFindImage?: () => void | Promise<void>;
   onEditScreen?: () => void;
+  onEditArtwork?: () => void;
   canResumeSearch?: boolean;
 }) {
   const catalogPhotos = useCatalogPhotos(catalogProduct);
@@ -264,6 +266,25 @@ export function ProductImageEditor({
             "Choose a catalog photo or upload your own. Double-click the image in the brochure anytime to change it again.",
           )}
         </p>
+        {onEditArtwork && (
+          <button
+            type="button"
+            className="cs-tv-screen-option cs-add-image-layer-option"
+            aria-label={t("Add image layer")}
+            onClick={onEditArtwork}
+          >
+            <EditorIcon name="image" />
+            <span>
+              <strong>{t("Add image layer")}</strong>
+              <small>
+                {t(
+                  "Place another image over this product. Move and resize it without replacing the product photo.",
+                )}
+              </small>
+            </span>
+            <span aria-hidden="true">+</span>
+          </button>
+        )}
         {isTelevision(product) && onEditScreen && (
           <button
             type="button"

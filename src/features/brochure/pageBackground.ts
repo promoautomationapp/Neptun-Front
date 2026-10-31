@@ -177,9 +177,17 @@ export function pageBackgroundReadability(
   kind: string,
   page?: BackgroundPage,
 ) {
-  return backgroundReadability(
-    pageImageBackgroundContext(campaign, kind, page),
-  );
+  const context = pageImageBackgroundContext(campaign, kind, page);
+  if (
+    context.kind === "gradient" &&
+    context.gradient.from.toLowerCase() === "#234173" &&
+    context.gradient.to.toLowerCase() === "#86b3de"
+  )
+    return backgroundReadability({
+      kind: "solid",
+      color: context.gradient.from,
+    });
+  return backgroundReadability(context);
 }
 export function productImageBackgroundContext(
   campaign: Campaign,

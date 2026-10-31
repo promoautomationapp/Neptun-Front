@@ -16,6 +16,7 @@ import type {
 export interface BrochurePreset extends BrochurePresetDefinition {
   builtin?: boolean;
   customized?: boolean;
+  description?: string;
 }
 
 /** Identity, catalog products, dates and review data never enter a design. */
@@ -77,9 +78,10 @@ const blueDesign: Partial<Campaign> = {
   tagline: "Çmimet flasin vetë!",
   coverImage: "",
   coverBackgroundImage: "",
-  coverBackgroundColor: "",
-  coverBackgroundGradient: { from: "#144c83", to: "#70acdc", angle: 90 },
-  productBackgroundColor: "#e3e3e3",
+  coverBandVariant: "uuu",
+  coverBackgroundGradient: null,
+  coverBackgroundColor: "#1b4075",
+  productBackgroundColor: "#1b4075",
   productBackgroundGradient: null,
   productBackgroundImage: "",
   storesBackgroundColor: "#e3e3e3",
@@ -87,7 +89,11 @@ const blueDesign: Partial<Campaign> = {
   storesBackgroundImage: "",
   offerStyle: "card",
   savingMode: "amount",
-  automaticSavings: { enabled: false, amountThreshold: 50 },
+  automaticSavings: {
+    enabled: true,
+    amountThreshold: 30,
+    basis: "offer-price",
+  },
   categoryPathSavingModes: {},
   categorySavingModes: {},
   pricePalette: {
@@ -109,25 +115,115 @@ const blueDesign: Partial<Campaign> = {
     showOnlineLogo: true,
     showFooterLogo: true,
     showFooterLine: true,
-    footerLineColor: "#003870",
-    footerLogoColor: "#003870",
+    footerLineColor: "#ffffff",
+    footerLogoColor: "#ffffff",
     headerColor: "#007dc5",
     headerTextColor: "#ffffff",
   },
 };
 
+const verticalGradient = { from: "#234173", to: "#86b3de", angle: 180 };
+const horizontalGradient = { ...verticalGradient, angle: 90 };
+const classicGradient: Partial<Campaign> = {
+  ...currentDesign,
+  brochureVisualStyle: "current",
+  coverTemplate: "blueClean",
+  coverProductLayout: "hero",
+  coverBandVariant: "hajde",
+  showCoverBand: false,
+  showCoverLogo: true,
+  showCoverMessage: true,
+  showCoverHeadline: false,
+  coverLogoSource: "/brochure-presets/october/neptun-cover.svg",
+  coverBrandTagline: "Jeto më mirë, çdo ditë.",
+  tagline: "Çmimet flasin vetë!",
+  coverTextColorOverrides: {
+    coverMessageColor: true,
+    coverHeadlineColor: true,
+    coverTypeColor: true,
+  },
+  coverMessageColor: "#ffffff",
+  brandAssets: blueDesign.brandAssets,
+  coverImage: "",
+  coverBackgroundImage: "",
+  coverBackgroundColor: "",
+  coverBackgroundGradient: verticalGradient,
+  productBackgroundColor: "#e3e3e3",
+  productBackgroundGradient: null,
+  productBackgroundImage: "",
+  storesBackgroundColor: "#e3e3e3",
+  storesBackgroundGradient: null,
+  storesBackgroundImage: "",
+  brochureFooter: { style: "reference", visible: true },
+  showInteriorFooter: true,
+};
 export const builtInBrochurePresets: readonly BrochurePreset[] = [
   {
     id: "neptun-current",
-    name: "Neptun Classic",
+    name: "Featured Product Collection",
+    description: "Vertical gradient cover · three products · gray inside pages",
     builtin: true,
-    design: { ...currentDesign, brochureVisualStyle: "current" },
+    design: classicGradient,
   },
   {
     id: "neptun-october",
-    name: "Neptun Blue",
+    name: "UUU · Brand Edition",
+    description: "UUU cover · solid Neptun blue inside pages",
     builtin: true,
     design: { ...currentDesign, ...blueDesign },
+  },
+  {
+    id: "neptun-uuu-gray",
+    name: "UUU · Catalogue Edition",
+    description: "Horizontal gradient cover · gray inside pages",
+    builtin: true,
+    design: {
+      ...currentDesign,
+      ...blueDesign,
+      coverBackgroundColor: "",
+      coverBackgroundGradient: horizontalGradient,
+      productBackgroundColor: "#e3e3e3",
+      pageDecorationDefaults: {
+        ...blueDesign.pageDecorationDefaults,
+        footerLineColor: "#003870",
+        footerLogoColor: "#003870",
+      },
+    },
+  },
+  {
+    id: "neptun-gradient-all",
+    name: "Unified Collection",
+    description:
+      "Three cover products · the same vertical gradient on every page",
+    builtin: true,
+    design: {
+      ...classicGradient,
+      productBackgroundColor: "",
+      productBackgroundGradient: verticalGradient,
+      storesBackgroundColor: "",
+      storesBackgroundGradient: verticalGradient,
+    },
+  },
+  {
+    id: "neptun-online",
+    name: "Hajde! · Online Offers",
+    description: "Hajde! and Blej ONLINE · gray inside pages",
+    builtin: true,
+    design: {
+      ...currentDesign,
+      ...blueDesign,
+      showCoverBand: false,
+      coverBandVariant: "online",
+      tagline: "Blej ONLINE",
+      coverBackgroundColor: "",
+      coverBackgroundGradient: horizontalGradient,
+      productBackgroundColor: "#e3e3e3",
+      pageDecorationDefaults: {
+        ...blueDesign.pageDecorationDefaults,
+        footerLineColor: "#003870",
+        footerLogoColor: "#003870",
+      },
+    },
   },
 ];
 
@@ -140,28 +236,42 @@ export function availableBrochurePresets(input: Settings): BrochurePreset[] {
   );
   const result = builtInBrochurePresets.map((preset) => {
     const override = overrides.get(preset.id);
-    const design =
-      preset.id === "neptun-current"
-        ? {
-            ...(settings.defaultBrochurePresetId === "neptun-current"
-              ? defaults
-              : currentDesign),
-            brochureVisualStyle: "current" as const,
-          }
-        : {
-            ...defaults,
-            ...blueDesign,
-            brandAssets: {
-              ...defaults.brandAssets,
-              ...blueDesign.brandAssets,
-            },
-          };
+    const design: Partial<Campaign> = {
+      ...defaults,
+      ...preset.design,
+      brandAssets: { ...defaults.brandAssets, ...preset.design.brandAssets },
+    };
+    if (
+      preset.id === "neptun-current" &&
+      settings.defaultBrochurePresetId === preset.id
+    ) {
+      const customized = Object.fromEntries(
+        Object.entries(defaults).filter(
+          ([key, value]) =>
+            JSON.stringify(value) !==
+            JSON.stringify(currentDesign[key as keyof Campaign]),
+        ),
+      );
+      Object.assign(design, customized);
+      if (Object.keys(customized).length) delete design.tagline;
+    }
+    // Manufacturer choices belong to the workspace unless this saved design explicitly overrides them.
+    if (!Object.keys(preset.design.brandLogos || {}).length)
+      design.brandLogos = structuredClone(defaults.brandLogos || {});
     return {
       ...preset,
       customized: Boolean(override),
       // Retire the former generated name while preserving deliberately named team designs.
       name:
-        override?.name === "Neptun October"
+        override &&
+        [
+          "Neptun October",
+          "Neptun Classic",
+          "Neptun Blue",
+          "UUU · Gray pages",
+          "Full gradient",
+          "Hajde · Online",
+        ].includes(override.name)
           ? preset.name
           : (override?.name ?? preset.name),
       design: brochureDesignSnapshot({
@@ -219,6 +329,7 @@ export function applyPresetToSettings(
   const direct = [
     "coverTemplate",
     "coverProductLayout",
+    "coverBandVariant",
     "coverLogoStyle",
     "coverLogoSource",
     "neptunLogoOption",

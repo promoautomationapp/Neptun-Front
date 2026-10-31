@@ -16,10 +16,11 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
   const b = draft.brochure;
   return (
     <section className="ns-section">
-      <h2>Brochure format and layout</h2>
+      <h2>{t("Brochure format and layout")}</h2>
       <p>
-        New brochures start with these choices. Their size and layout can still
-        be changed in the brochure.
+        {t(
+          "New brochures start with these choices. Their size and layout can still be changed in the brochure.",
+        )}
       </p>
       <Field label="Default brochure format">
         <SearchableSelect
@@ -33,24 +34,25 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
         >
           {availableBrochureFormats(draft.customFormats).map((item) => (
             <option key={item.id} value={item.id}>
-              {item.label}
+              {t(item.label)}
             </option>
           ))}
         </SearchableSelect>
       </Field>
-      <SettingsGroup title={<> Custom dimensions </>}>
+      <SettingsGroup title={<> {t("Custom dimensions")} </>}>
         <p>
-          Name your own sizes in pixels. Changing a size affects future
-          brochures; existing brochures retain their saved dimensions.
+          {t(
+            "Name your own sizes in pixels. Changing a size affects future brochures; existing brochures retain their saved dimensions.",
+          )}
         </p>
-        <small>Each side: 64–8192 px. Maximum: 40 megapixels.</small>
+        <small>{t("Each side: 64–8192 px. Maximum: 40 megapixels.")}</small>
         {draft.customFormats.map((item, index) => (
           <SettingsGroup
             key={item.id}
             title={<> {item.name || `Custom size ${index + 1}`} </>}
           >
             <div className="ns-grid">
-              <Field label={`Custom size ${index + 1} name`}>
+              <Field label={`${t("Custom size")} ${index + 1} ${t("name")}`}>
                 <input
                   maxLength={120}
                   value={item.name}
@@ -62,7 +64,9 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
                   }
                 />
               </Field>
-              <Field label={`Custom size ${index + 1} width (px)`}>
+              <Field
+                label={`${t("Custom size")} ${index + 1} ${t("width (px)")}`}
+              >
                 <input
                   type="number"
                   min={64}
@@ -77,7 +81,9 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
                   }
                 />
               </Field>
-              <Field label={`Custom size ${index + 1} height (px)`}>
+              <Field
+                label={`${t("Custom size")} ${index + 1} ${t("height (px)")}`}
+              >
                 <input
                   type="number"
                   min={64}
@@ -95,7 +101,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             </div>
             <div className="ns-row-actions">
               <Toggle
-                label={`Show ${item.name} when choosing brochure size`}
+                label={`${t("Show")} ${item.name} ${t("when choosing brochure size")}`}
                 checked={item.visible}
                 onChange={(visible) =>
                   update((next) => {
@@ -117,13 +123,13 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
                   }
                 >
                   {b.format === item.id
-                    ? "Default size"
-                    : `Use ${item.name} as default`}
+                    ? t("Default size")
+                    : `${t("Use")} ${item.name} ${t("as default")}`}
                 </button>
               )}
               <button
                 type="button"
-                aria-label={`Delete custom size ${item.name}`}
+                aria-label={`${t("Delete custom size")} ${item.name}`}
                 onClick={() =>
                   update((next) => {
                     next.customFormats.splice(index, 1);
@@ -132,7 +138,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
                   })
                 }
               >
-                Delete size
+                {t("Delete size")}
               </button>
             </div>
           </SettingsGroup>
@@ -161,7 +167,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          + Add custom dimensions
+          {t("+ Add custom dimensions")}
         </button>
       </SettingsGroup>
       <Field label="Default products per page">
@@ -175,17 +181,17 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
           }
         >
           <option value="feature3">
-            Three offers · one above two (default)
+            {t("Three offers · one above two (default)")}
           </option>
-          <option value="tv8">Eight TVs · 3–2–3</option>
-          <option value="grid6portrait">Six offers · 2 × 3</option>
-          <option value="grid6">Six offers · 3 × 2</option>
+          <option value="tv8">{t("Eight TVs · 3–2–3")}</option>
+          <option value="grid6portrait">{t("Six offers · 2 × 3")}</option>
+          <option value="grid6">{t("Six offers · 3 × 2")}</option>
           <option value="classic8">
-            Eight offers · 3 × 3 with one open slot
+            {t("Eight offers · 3 × 3 with one open slot")}
           </option>
-          <option value="grid9">Nine offers · 3 × 3</option>
-          <option value="duo4">Four offers · two columns</option>
-          <option value="pair2">Two offers · one above the other</option>
+          <option value="grid9">{t("Nine offers · 3 × 3")}</option>
+          <option value="duo4">{t("Four offers · two columns")}</option>
+          <option value="pair2">{t("Two offers · one above the other")}</option>
         </SearchableSelect>
       </Field>
       <Toggle
@@ -239,7 +245,7 @@ export function DesignTab({
     });
   return (
     <section className="ns-section">
-      <h2>{pageArea === "cover" ? "Cover and colors" : "Page colors"}</h2>
+      <h2>{t(pageArea === "cover" ? "Cover and colors" : "Page colors")}</h2>
       <div hidden={pageArea !== "cover"}>
         <Field label="Default cover style">
           <SearchableSelect
@@ -250,7 +256,7 @@ export function DesignTab({
           >
             {COVER_OPTIONS.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.label}
+                {t(item.label)}
               </option>
             ))}
           </SearchableSelect>
@@ -265,7 +271,7 @@ export function DesignTab({
               onClick={() => selectTemplate(item.id)}
             >
               <img src={resolveAsset(item.image)} alt="" />
-              {item.label}
+              {t(item.label)}
             </button>
           ))}
         </div>
@@ -279,9 +285,11 @@ export function DesignTab({
               })
             }
           >
-            <option value="pair">Pairs</option>
-            <option value="hero">One large product above the others</option>
-            <option value="row">Row</option>
+            <option value="pair">{t("Pairs")}</option>
+            <option value="hero">
+              {t("One large product above the others")}
+            </option>
+            <option value="row">{t("Row")}</option>
           </SearchableSelect>
         </Field>
         <div className="ns-grid">
@@ -323,7 +331,7 @@ export function DesignTab({
             })
           }
         />
-        <SettingsGroup title={<> Cover text colors </>}>
+        <SettingsGroup title={<> {t("Cover text colors")} </>}>
           <div className="ns-grid">
             {(
               [
@@ -333,7 +341,7 @@ export function DesignTab({
                 ["coverFooterColor", "Cover footer"],
               ] as const
             ).map(([key, label]) => (
-              <Field key={key} label={`${label} color`}>
+              <Field key={key} label={`${t(label)} ${t("color")}`}>
                 <input
                   type="color"
                   value={b[key] || "#ffffff"}
@@ -420,8 +428,8 @@ export function DesignTab({
                 ? "Stores page background"
                 : "Product pages background";
           return (
-            <SettingsGroup key={key} title={<> {label} </>}>
-              <Field label={`${label} type`}>
+            <SettingsGroup key={key} title={<> {t(label)} </>}>
+              <Field label={`${t(label)} ${t("type")}`}>
                 <SearchableSelect
                   value={
                     background.image
@@ -450,12 +458,14 @@ export function DesignTab({
                     })
                   }
                 >
-                  <option value="automatic">Follow brochure theme</option>
-                  <option value="solid">Solid color</option>
-                  <option value="gradient">Gradient</option>
+                  <option value="automatic">
+                    {t("Follow brochure theme")}
+                  </option>
+                  <option value="solid">{t("Solid color")}</option>
+                  <option value="gradient">{t("Gradient")}</option>
                   {background.image && (
                     <option value="image" disabled>
-                      Selected background image
+                      {t("Selected background image")}
                     </option>
                   )}
                 </SearchableSelect>
@@ -465,8 +475,8 @@ export function DesignTab({
                   <button
                     type="button"
                     key={preset.color}
-                    aria-label={`${label}: ${preset.label}`}
-                    title={preset.label}
+                    aria-label={`${t(label)}: ${t(preset.label)}`}
+                    title={t(preset.label)}
                     style={{ background: preset.color }}
                     onClick={() =>
                       update((next) => {
@@ -481,7 +491,7 @@ export function DesignTab({
                   />
                 ))}
               </div>
-              <Field label={`${label} color`}>
+              <Field label={`${t(label)} ${t("color")}`}>
                 <input
                   type="color"
                   value={background.color || "#1c4075"}
@@ -496,7 +506,7 @@ export function DesignTab({
               </Field>
               {background.gradient && (
                 <div className="ns-grid">
-                  <Field label={`${label} gradient start`}>
+                  <Field label={`${t(label)} ${t("gradient start")}`}>
                     <input
                       type="color"
                       value={background.gradient.from}
@@ -509,7 +519,7 @@ export function DesignTab({
                       }
                     />
                   </Field>
-                  <Field label={`${label} gradient end`}>
+                  <Field label={`${t(label)} ${t("gradient end")}`}>
                     <input
                       type="color"
                       value={background.gradient.to}
@@ -521,7 +531,7 @@ export function DesignTab({
                       }
                     />
                   </Field>
-                  <Field label={`${label} gradient angle`}>
+                  <Field label={`${t(label)} ${t("gradient angle")}`}>
                     <input
                       type="number"
                       min={0}
@@ -539,7 +549,7 @@ export function DesignTab({
                   </Field>
                 </div>
               )}
-              <p>Choose a default photo in the Background images tab.</p>
+              <p>{t("Choose a default photo in the Background images tab.")}</p>
             </SettingsGroup>
           );
         })}

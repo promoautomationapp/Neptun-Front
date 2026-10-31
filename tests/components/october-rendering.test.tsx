@@ -172,7 +172,7 @@ it("uses transparent native asset files and respects page-specific hiding and cu
     view.getByAltText("NEPTUN").getAttribute("src")!,
   );
   expect(footerSource).toMatch(/^data:image\/svg\+xml/);
-  expect(footerSource).toContain('fill="#003870"');
+  expect(footerSource).toContain('fill="#ffffff"');
   expect(footerSource).toContain('fill="#ed4024"');
   const number = view.getByRole("textbox", { name: "Page number" });
   expect(number.textContent).toBe("A2");

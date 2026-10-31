@@ -26,6 +26,9 @@ const labels = {
   mention: ["You were mentioned", "Ju përmendën"],
   review_comment: ["New review comment", "Koment i ri në shqyrtim"],
   review_reply: ["New reply", "Përgjigje e re"],
+  review_resolved: ["Comment resolved", "Komenti u zgjidh"],
+  review_completed: ["Brochure completed", "Broshura u përfundua"],
+  review_reopened: ["Brochure reopened", "Broshura u rihap"],
 } as const;
 interface BellProps {
   onOpen: (notification: WorkspaceNotification) => void | Promise<void>;
@@ -396,7 +399,7 @@ export function NotificationBell({ onOpen, enabled = true }: BellProps) {
                           { dateStyle: "short", timeStyle: "short" },
                         )}
                       </time>
-                      {item.pageIndex !== null
+                      {item.documentKind !== "post" && item.pageIndex !== null
                         ? ` · ${text("Page", "Faqja")} ${item.pageIndex + 1}`
                         : ""}
                     </small>

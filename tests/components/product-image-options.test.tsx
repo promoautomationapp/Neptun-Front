@@ -163,3 +163,25 @@ it("opens the AI wallpaper tools directly without starting a generation", async 
   expect(api.generate).not.toHaveBeenCalled();
   expect(api.prepare).not.toHaveBeenCalled();
 });
+
+it("opens additive image layers without replacing the product photo or requesting AI", () => {
+  const save = vi.fn(),
+    close = vi.fn(),
+    artwork = vi.fn();
+  const original = structuredClone(tv);
+  const view = render(
+    <ProductImageEditor
+      product={tv}
+      onSave={save}
+      onClose={close}
+      onEditArtwork={artwork}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Add image layer" }));
+  expect(artwork).toHaveBeenCalledOnce();
+  expect(save).not.toHaveBeenCalled();
+  expect(close).not.toHaveBeenCalled();
+  expect(api.prepare).not.toHaveBeenCalled();
+  expect(api.generate).not.toHaveBeenCalled();
+  expect(tv).toEqual(original);
+});

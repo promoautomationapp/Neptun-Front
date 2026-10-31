@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { Field, Toggle, OrderButtons, AssetPicker } from "./components";
@@ -6,10 +7,11 @@ import type { SettingsTabProps } from "./SettingsEditor";
 export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
   return (
     <section className="ns-section">
-      <h2>Campaign types</h2>
+      <h2>{t("Campaign types")}</h2>
       <p>
-        Manage Black Friday, Happy Hour and other campaign types shown when
-        creating a brochure. Hiding or deleting a type keeps existing brochures.
+        {t(
+          "Manage Black Friday, Happy Hour and other campaign types shown when creating a brochure. Hiding or deleting a type keeps existing brochures.",
+        )}
       </p>
       <Field label="Default campaign type">
         <SearchableSelect
@@ -20,7 +22,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          <option value="">No default — custom campaign</option>
+          <option value="">{t("No default — custom campaign")}</option>
           {draft.campaignTypes
             .filter((item) => item.visible)
             .map((item) => (
@@ -41,7 +43,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
         >
           <div className="ns-row-actions">
             <Toggle
-              label={`Show ${item.name} when creating brochures`}
+              label={`${t("Show")} ${item.name} ${t("when creating brochures")}`}
               checked={item.visible}
               onChange={(value) =>
                 update((next) => {
@@ -63,7 +65,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
             />
             <button
               type="button"
-              aria-label={`Delete campaign type ${item.name}`}
+              aria-label={`${t("Delete campaign type")} ${item.name}`}
               onClick={() =>
                 update((next) => {
                   next.campaignTypes.splice(index, 1);
@@ -71,7 +73,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
                 })
               }
             >
-              Delete type
+              {t("Delete type")}
             </button>
             {item.visible && (
               <button
@@ -83,14 +85,16 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
                   })
                 }
               >
-                {draft.defaultCampaignTypeId === item.id
-                  ? "Default"
-                  : "Use as default"}
+                {t(
+                  draft.defaultCampaignTypeId === item.id
+                    ? "Default"
+                    : "Use as default",
+                )}
               </button>
             )}
           </div>
           <AssetPicker
-            label={`${item.name} default campaign logo`}
+            label={`${item.name} ${t("default campaign logo")}`}
             value={item.logo || ""}
             library={draft.logoLibrary}
             onUpload={(asset) =>
@@ -106,7 +110,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
             emptyLabel="No default campaign logo"
           />
           <div className="ns-grid">
-            <Field label={`${item.name} type name`}>
+            <Field label={`${item.name} ${t("type name")}`}>
               <input
                 value={item.name}
                 onChange={(event) =>
@@ -117,7 +121,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
                 }
               />
             </Field>
-            <Field label={`${item.name} default cover message`}>
+            <Field label={`${item.name} ${t("default cover message")}`}>
               <input
                 value={item.tagline}
                 onChange={(event) =>
@@ -154,7 +158,7 @@ export function CampaignTypesTab({ draft, update }: SettingsTabProps) {
           })
         }
       >
-        + Add campaign type
+        {t("+ Add campaign type")}
       </button>
     </section>
   );

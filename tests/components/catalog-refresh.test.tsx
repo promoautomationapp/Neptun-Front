@@ -165,14 +165,64 @@ it("hides update time in the local Campaign version and reports launch failures 
   );
   fireEvent.click(view.getByRole("button", { name: /Fetch products again/ }));
   await waitFor(() =>
-    expect(view.getByRole("alert").textContent).toBe("Retry later"),
+    expect(view.getByRole("alert").textContent).toBe(
+      "Could not start the catalog update. Please try again.",
+    ),
   );
   expect(view.queryByText("Last updated")).toBeNull();
   expect(
     view
-      .getByRole("button", { name: /Fetch products again/ })
+      .getByRole("button", { name: /Try update again/ })
       .getAttribute("disabled"),
   ).toBeNull();
+});
+
+it("explains incomplete updates in Albanian without exposing raw crawler errors", async () => {
+  setLanguage("sq");
+  const technical =
+    "Refresh was incomplete (2 category failures). Missing products were not marked. Tosterë: Neptun repeated a listing page; catalog completeness cannot be confirmed.";
+  vi.mocked(apiFetch).mockImplementation(() =>
+    response({
+      status: "failed",
+      lastSuccessfulAt: "2026-10-28T02:01:00Z",
+      completedAt: "2026-10-31T02:06:00Z",
+      error: technical,
+    }),
+  );
+  const view = render(<CatalogRefreshControl onUpdated={vi.fn()} />);
+  await act(async () => {});
+  fireEvent.click(
+    view.getByRole("button", {
+      name: "Shiko detajet e përditësimit të katalogut",
+    }),
+  );
+  expect(view.getByRole("status").textContent).toBe(
+    "Përditësimi nuk u përfundua",
+  );
+  expect(view.getByRole("alert").textContent).toContain(
+    "Produktet e ruajtura mbeten në dispozicion",
+  );
+  expect(view.queryByText(technical)).toBeNull();
+  expect(view.getByRole("dialog").textContent).not.toContain(
+    "category failures",
+  );
+  expect(view.getByRole("dialog").textContent).toContain("çdo 3 ditë");
+  const date = view.container.ownerDocument.querySelector(
+    ".cs-catalog-last-update dd",
+  )?.textContent;
+  expect(date).toContain("28 tetor");
+  expect(date).toContain("03:01");
+  expect(view.getByText("Përpjekja e fundit")).toBeTruthy();
+  expect(
+    view.container.ownerDocument.querySelectorAll(
+      ".cs-catalog-last-update dd",
+    )[1]?.textContent,
+  ).toContain("31 tetor");
+  expect(
+    view
+      .getByRole("button", { name: /Provo përditësimin sërish/ })
+      .hasAttribute("disabled"),
+  ).toBe(false);
 });
 
 it("opening details never starts an update and a running update stays accessible", async () => {

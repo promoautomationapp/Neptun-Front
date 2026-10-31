@@ -1,3 +1,5 @@
+import { setLanguage } from "../../src/features/brochure/i18n";
+import { beforeEach } from "vitest";
 import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -81,10 +83,13 @@ it("keeps automatic percentage savings enabled and saves overrides at the exact 
   fireEvent.click(view.getByRole("button", { name: "Save settings" }));
   expect(save.mock.calls[0]?.[0].automaticSavings).toEqual({
     enabled: true,
-    amountThreshold: 50,
+    amountThreshold: 30,
+    basis: "offer-price",
   });
   expect(save.mock.calls[0]?.[0].categoryPathSavingModes).toEqual({
     IT: "percentage",
     "IT > KOMPJUTERË > AKSESORË": "amount",
   });
 });
+
+beforeEach(() => setLanguage("en"));

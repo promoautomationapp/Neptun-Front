@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { FileUpload } from "../../components/FileUpload";
 import {
@@ -53,9 +54,9 @@ export function Field({
           : undefined
       }
     >
-      <span id={`${id}-label`}>{label}</span>
+      <span id={`${id}-label`}>{t(label)}</span>
       {control}
-      {hint && <small id={`${id}-hint`}>{hint}</small>}
+      {hint && <small id={`${id}-hint`}>{t(hint)}</small>}
     </label>
   );
 }
@@ -75,7 +76,7 @@ export function Toggle({
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />
-      <span>{label}</span>
+      <span>{t(label)}</span>
     </label>
   );
 }
@@ -94,7 +95,7 @@ export function OrderButtons({
     <div className="ns-order">
       <button
         type="button"
-        aria-label={`Move ${label} up`}
+        aria-label={`${t("Move")} ${label} ${t("up")}`}
         disabled={index === 0}
         onClick={() => onMove(index, index - 1)}
       >
@@ -102,7 +103,7 @@ export function OrderButtons({
       </button>
       <button
         type="button"
-        aria-label={`Move ${label} down`}
+        aria-label={`${t("Move")} ${label} ${t("down")}`}
         disabled={index === count - 1}
         onClick={() => onMove(index, index + 1)}
       >
@@ -141,8 +142,10 @@ export function AssetPicker({
           value={value}
           onChange={(event) => onChange(event.target.value)}
         >
-          <option value="">{emptyLabel}</option>
-          {value && !known && <option value={value}>Selected artwork</option>}
+          <option value="">{t(emptyLabel)}</option>
+          {value && !known && (
+            <option value={value}>{t("Selected artwork")}</option>
+          )}
           {library.map((item) => (
             <option key={item.id} value={item.url}>
               {item.name}
@@ -154,14 +157,14 @@ export function AssetPicker({
         <img
           className="ns-artwork-preview"
           src={resolveAsset(value || defaultImage)}
-          alt={`${label} preview`}
+          alt={`${t(label)} ${t("preview")}`}
         />
       )}
-      {!value && !defaultImage && <small>{defaultHint}</small>}
+      {!value && !defaultImage && <small>{t(defaultHint)}</small>}
       <FileUpload
         accept="image/png,image/jpeg,image/webp,image/gif"
         busy={busy}
-        aria-label={`Upload ${label}`}
+        aria-label={`${t("Upload")} ${t(label)}`}
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = "";
@@ -191,13 +194,14 @@ export function AssetPicker({
             });
         }}
       >
-        Upload new image
+        {t("Upload new image")}
       </FileUpload>
       <small>
-        PNG, JPEG, WebP or GIF, up to 12 MB. Uploading selects it as the
-        default; Save settings applies the choice.
+        {t(
+          "PNG, JPEG, WebP or GIF, up to 12 MB. Uploading selects it as the default; Save settings applies the choice.",
+        )}
       </small>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
     </div>
   );
 }
@@ -219,7 +223,7 @@ export function SettingsGroup({
       className={`ns-settings-group ${className}`}
       open={defaultOpen || undefined}
     >
-      <summary>{title}</summary>
+      <summary>{typeof title === "string" ? t(title) : title}</summary>
       <fieldset className="ns-settings-group-body">{children}</fieldset>
     </details>
   );

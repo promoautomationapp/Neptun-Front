@@ -6,6 +6,7 @@ import { coverProducts } from "./campaignPages";
 import { includesStoresPage } from "./storesSelection";
 import { pageBackgroundColor } from "./pageBackground";
 import { t } from "./i18n";
+import { revealPageThumbnail } from "./BrochurePagination";
 
 /** Lightweight page thumbnails keep navigation fast even in long brochures. */
 export function BrochurePageNavigator({
@@ -39,10 +40,7 @@ export function BrochurePageNavigator({
     { index: pages.length, label: t("Stores & details"), products: [] },
   ];
   useEffect(() => {
-    strip.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({
-      block: "nearest",
-      inline: "nearest",
-    });
+    revealPageThumbnail(strip.current);
   }, [selected]);
   return (
     <div className="cs-page-navigator">

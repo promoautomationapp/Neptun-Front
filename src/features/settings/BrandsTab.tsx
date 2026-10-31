@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { getCatalogBrands } from "../../api/catalogBrands";
 import type { CatalogBrand } from "../../api/catalogBrands";
@@ -15,7 +16,7 @@ function BrandImage({ source, name }: { source: string; name: string }) {
   return source && failedSource !== source ? (
     <img
       src={resolveAsset(source)}
-      alt={name + " website logo"}
+      alt={`${name} ${t("website logo")}`}
       loading="lazy"
       onError={() => setFailedSource(source)}
     />
@@ -107,11 +108,11 @@ export function BrandsTab({
     <section className="ns-section ns-brands-section">
       <div className="ns-brands-heading">
         <div>
-          <h2>Brands</h2>
+          <h2>{t("Brands")}</h2>
           <p>
-            Browse brand images from Neptun and choose the logos used in new
-            brochures. Your uploaded and saved logo choices stay in place when
-            the catalog is refreshed.
+            {t(
+              "Browse brand images from Neptun and choose the logos used in new brochures. Your uploaded and saved logo choices stay in place when the catalog is refreshed.",
+            )}
           </p>
         </div>
         <button
@@ -119,25 +120,27 @@ export function BrandsTab({
           disabled={loading}
           onClick={() => setRevision((value) => value + 1)}
         >
-          {loading ? "Loading brands…" : "Refresh brand images"}
+          {t(loading ? "Loading brands…" : "Refresh brand images")}
         </button>
       </div>
       {error && (
         <p className="ns-brands-status" role="alert">
-          {error} Current brochure logos and saved choices are still available.
+          {t(error)}{" "}
+          {t("Current brochure logos and saved choices are still available.")}
         </p>
       )}
       {!loading && sourceBrands.length === 0 && !error && (
         <p className="ns-brands-status" role="status">
-          Website brand images will appear after the next product fetch. You can
-          already upload logos or use the current brochure artwork.
+          {t(
+            "Website brand images will appear after the next product fetch. You can already upload logos or use the current brochure artwork.",
+          )}
         </p>
       )}
       <Field label="Search brands">
         <input
           type="search"
           value={query}
-          placeholder="For example, Apple, Samsung, or Beko"
+          placeholder={t("For example, Apple, Samsung, or Beko")}
           onChange={(event) => {
             setQuery(event.target.value);
             setShown(PAGE_SIZE);
@@ -146,12 +149,16 @@ export function BrandsTab({
       </Field>
       <p className="ns-brand-count" role="status">
         {filtered.length
-          ? "Showing " +
+          ? t("Showing") +
+            " " +
             Math.min(shown, filtered.length) +
-            " of " +
+            " " +
+            t("of") +
+            " " +
             filtered.length +
-            " brands"
-          : "No matching brands."}
+            " " +
+            t("brands")
+          : t("No matching brands.")}
       </p>
       <div className="ns-brand-gallery">
         {filtered.slice(0, shown).map((brand) => {
@@ -163,7 +170,7 @@ export function BrandsTab({
               key={brand}
               className={currentBrand === brand ? "selected" : ""}
               aria-pressed={currentBrand === brand}
-              aria-label={"Choose " + brand + " brand"}
+              aria-label={`${t("Choose")} ${brand} ${t("brand")}`}
               onClick={() => setSelected(brand)}
             >
               <span className="ns-brand-thumb">
@@ -174,13 +181,15 @@ export function BrandsTab({
               </span>
               <strong>{brand}</strong>
               <small>
-                {chosen
-                  ? draft.brandLogos[brand]
-                    ? "Custom brochure logo"
-                    : "Logo hidden"
-                  : website
-                    ? "From Neptun website"
-                    : "Current brochure artwork"}
+                {t(
+                  chosen
+                    ? draft.brandLogos[brand]
+                      ? "Custom brochure logo"
+                      : "Logo hidden"
+                    : website
+                      ? "From Neptun website"
+                      : "Current brochure artwork",
+                )}
               </small>
             </button>
           );
@@ -191,15 +200,17 @@ export function BrandsTab({
           type="button"
           onClick={() => setShown((value) => value + PAGE_SIZE)}
         >
-          Show more brands
+          {t("Show more brands")}
         </button>
       )}
       {currentBrand && (
         <fieldset className="ns-brand-editor">
-          <legend>{currentBrand} · brochure logo</legend>
+          <legend>
+            {currentBrand} {t("· brochure logo")}
+          </legend>
           <div className="ns-brand-comparison">
             <div>
-              <span>Neptun website image</span>
+              <span>{t("Neptun website image")}</span>
               <div className="ns-brand-source-preview">
                 <BrandImage
                   source={source?.image || source?.sourceImageUrl || ""}
@@ -208,8 +219,9 @@ export function BrandsTab({
               </div>
               {!source?.image && source?.sourceImageUrl && (
                 <small>
-                  The website image is being saved to the catalog. Refresh this
-                  view once the fetch is complete.
+                  {t(
+                    "The website image is being saved to the catalog. Refresh this view once the fetch is complete.",
+                  )}
                 </small>
               )}
               {source?.image && (
@@ -221,12 +233,12 @@ export function BrandsTab({
                     })
                   }
                 >
-                  Use website image for {currentBrand}
+                  {t("Use website image for")} {currentBrand}
                 </button>
               )}
             </div>
             <div>
-              <span>Logo in new brochures</span>
+              <span>{t("Logo in new brochures")}</span>
               <div
                 className="ns-brand-brochure-preview"
                 style={{
@@ -239,7 +251,7 @@ export function BrandsTab({
                 ) : brandLogoFor(draft, currentBrand) ? (
                   <img
                     src={resolveAsset(brandLogoFor(draft, currentBrand))}
-                    alt={currentBrand + " brochure logo"}
+                    alt={`${currentBrand} ${t("brochure logo")}`}
                     style={{ filter: readability.brandFilter }}
                   />
                 ) : (
@@ -247,11 +259,13 @@ export function BrandsTab({
                 )}
               </div>
               <small>
-                {hidden
-                  ? "Hidden logo: the brand name will appear as text."
-                  : hasOverride
-                    ? "Your selected logo overrides the current brochure artwork."
-                    : "Current brochure artwork. Website refreshes do not replace it."}
+                {t(
+                  hidden
+                    ? "Hidden logo: the brand name will appear as text."
+                    : hasOverride
+                      ? "Your selected logo overrides the current brochure artwork."
+                      : "Current brochure artwork. Website refreshes do not replace it.",
+                )}
               </small>
             </div>
           </div>
@@ -294,12 +308,13 @@ export function BrandsTab({
                 })
               }
             >
-              Restore current {currentBrand} logo
+              {t("Restore current")} {currentBrand} {t("logo")}
             </button>
           )}
           <p className="ns-brand-editor-note">
-            Saving applies this choice to new brochures. Existing brochures keep
-            their own editable logos.
+            {t(
+              "Saving applies this choice to new brochures. Existing brochures keep their own editable logos.",
+            )}
           </p>
         </fieldset>
       )}

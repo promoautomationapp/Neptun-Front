@@ -86,3 +86,31 @@ it("retains brochure edits and does not replace an edited name with fetched cata
   expect(imageEdit).toHaveBeenCalledOnce();
   expect(view.getByText("Details shown in brochure")).toBeTruthy();
 });
+
+it("opens and focuses the product artwork controls from Add image layer", async () => {
+  const product = {
+    code: "P1",
+    name: "Saved photo",
+    image: "/main-photo.png",
+    productArtworks: [],
+  };
+  const change = vi.fn();
+  const view = render(
+    <Details
+      product={product}
+      onProductChange={change}
+      onClose={vi.fn()}
+      canLoadCatalogPhotos={false}
+      focusDetailKey="__artwork"
+    />,
+  );
+  const section = view.container.querySelector<HTMLDetailsElement>(
+    "[data-product-artwork-editor]",
+  )!;
+  await waitFor(() => expect(section.open).toBe(true));
+  const upload = section.querySelector(".np-upload-button")!;
+  expect(document.activeElement).toBe(upload);
+  expect(catalogByCodes).not.toHaveBeenCalled();
+  expect(change).not.toHaveBeenCalled();
+  expect(product.image).toBe("/main-photo.png");
+});

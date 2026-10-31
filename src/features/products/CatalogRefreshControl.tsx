@@ -9,6 +9,7 @@ interface RefreshStatus {
   status: "idle" | "queued" | "running" | "completed" | "failed";
   runId?: string | null;
   lastSuccessfulAt?: string | null;
+  startedAt?: string | null;
   completedAt?: string | null;
   processed?: number;
   total?: number;
@@ -94,12 +95,10 @@ export function CatalogRefreshControl({
               ? 15000
               : 60000,
         );
-      } catch (cause) {
+      } catch {
         if (controller.signal.aborted) return;
         setError(
-          cause instanceof Error
-            ? cause.message
-            : "Could not check catalog updates.",
+          "Could not check catalog updates. Your saved products are still available.",
         );
         timer = setTimeout(poll, 30000);
       }
@@ -121,36 +120,46 @@ export function CatalogRefreshControl({
     setStartError("");
     try {
       setStatus(await refreshRequest("POST"));
-    } catch (cause) {
-      setStartError(
-        cause instanceof Error ? cause.message : "Could not start the update.",
-      );
+    } catch {
+      setStartError("Could not start the catalog update. Please try again.");
     } finally {
       setStarting(false);
       pollNow.current();
     }
   }
-  const updated = status?.lastSuccessfulAt;
-  const time =
-    updated && !Number.isNaN(Date.parse(updated))
+  const formatTime = (value?: string | null) =>
+    value && !Number.isNaN(Date.parse(value))
       ? new Intl.DateTimeFormat(getLanguage() === "sq" ? "sq-AL" : "en-GB", {
           day: "numeric",
-          month: "short",
+          month: "long",
           hour: "2-digit",
           minute: "2-digit",
-        }).format(new Date(updated))
+          hourCycle: "h23",
+          timeZone: "Europe/Belgrade",
+        }).format(new Date(value))
       : t("Not synced yet");
-  const failure =
+  const lastAttempt =
+    status?.status === "failed" ? status.completedAt || status.startedAt : null;
+  const failure = t(
     startError ||
-    error ||
-    (status?.status === "failed"
-      ? status.error || t("Update failed. Existing products are kept.")
-      : "");
+      error ||
+      (status?.status === "failed"
+        ? "The update could not read every product category. Your saved products are still available. Try updating again."
+        : ""),
+  );
   const progress = busy
     ? status?.total
       ? `${status.processed || 0}/${status.total} ${t("products")}`
       : t("Starting update…")
-    : t(status?.status === "completed" ? "Up to date" : "Not synced yet");
+    : t(
+        error
+          ? "Update status unavailable"
+          : status?.status === "failed"
+            ? "Update incomplete"
+            : status?.status === "completed"
+              ? "Up to date"
+              : "Not synced yet",
+      );
   const percent = status?.total
     ? Math.min(100, Math.max(0, ((status.processed || 0) / status.total) * 100))
     : undefined;
@@ -207,13 +216,19 @@ export function CatalogRefreshControl({
               </div>
               <p>
                 {t(
-                  "Updates run once daily at 03:00. You can also start an update here.",
+                  "Automatic updates run every 3 days at 03:00. You can update the catalog at any time.",
                 )}
               </p>
               {showLastUpdated && (
                 <dl className="cs-catalog-last-update">
-                  <dt>{t("Last updated")}</dt>
-                  <dd>{time}</dd>
+                  <dt>{t("Last complete update")}</dt>
+                  <dd>{formatTime(status?.lastSuccessfulAt)}</dd>
+                  {lastAttempt && (
+                    <>
+                      <dt>{t("Last attempt")}</dt>
+                      <dd>{formatTime(lastAttempt)}</dd>
+                    </>
+                  )}
                 </dl>
               )}
               <div
@@ -276,7 +291,13 @@ export function CatalogRefreshControl({
                 aria-busy={busy}
               >
                 <NavIcon name="refresh" size={17} />
-                {t(busy ? "Updating catalog…" : "Fetch products again")}
+                {t(
+                  busy
+                    ? "Updating catalog…"
+                    : failure
+                      ? "Try update again"
+                      : "Fetch products again",
+                )}
               </button>
             </div>
           </Modal>,

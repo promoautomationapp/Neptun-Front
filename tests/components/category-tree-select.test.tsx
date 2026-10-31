@@ -197,3 +197,67 @@ it("filters manual product and brand choices by full branch, including descendan
   expect(view.getByText("Computer HDMI cable")).toBeTruthy();
   expect(view.queryByText("Computer adapter")).toBeNull();
 });
+
+it("makes the selected hierarchy explicit, separates expanding from choosing, and keeps historical saved paths", () => {
+  const change = vi.fn(),
+    path = vi.fn();
+  const view = render(
+    <CategoryTreeSelect
+      catalog={catalog}
+      category="Discontinued"
+      subcategory="Old adapters"
+      categoryPath="Discontinued > Accessories > Old adapters"
+      onChange={change}
+      onPathChange={path}
+    />,
+  );
+  const trigger = view.getByRole("button", { name: "Category & subcategory" });
+  expect(trigger.textContent).toContain("Old adapters");
+  fireEvent.click(trigger);
+  expect(view.getByLabelText("Selected category path").textContent).toBe(
+    "SelectedDiscontinued › Accessories › Old adapters",
+  );
+  expect(
+    view
+      .getByRole("button", {
+        name: "Discontinued > Accessories > Old adapters · 0 products",
+      })
+      .getAttribute("aria-pressed"),
+  ).toBe("true");
+  fireEvent.click(view.getByRole("button", { name: "Expand all" }));
+  const computers = view.getByRole("button", {
+    name: "Computers · 3 products",
+  });
+  expect(computers.textContent).toContain("Category");
+  expect(
+    view.getByRole("button", { name: "Computers > Accessories · 3 products" })
+      .textContent,
+  ).toContain("Subcategory");
+  expect(change).not.toHaveBeenCalled();
+  fireEvent.click(view.getByRole("button", { name: "Collapse all" }));
+  expect(
+    view.queryByRole("button", {
+      name: "Computers > Accessories · 3 products",
+    }),
+  ).toBeNull();
+  fireEvent.keyDown(computers, { key: "ArrowRight" });
+  expect(
+    view.getByRole("button", { name: "Computers > Accessories · 3 products" }),
+  ).toBeTruthy();
+  fireEvent.change(view.getByRole("searchbox"), { target: { value: "HDMI" } });
+  fireEvent.click(view.getByRole("button", { name: "Clear search" }));
+  expect((view.getByRole("searchbox") as HTMLInputElement).value).toBe("");
+  expect(document.activeElement).toBe(view.getByRole("searchbox"));
+  fireEvent.change(view.getByRole("searchbox"), {
+    target: { value: "Old adapters" },
+  });
+  fireEvent.click(
+    view.getByRole("button", {
+      name: "Discontinued > Accessories > Old adapters · 0 products",
+    }),
+  );
+  expect(change).toHaveBeenCalledWith("Discontinued", "Old adapters");
+  expect(path).toHaveBeenCalledWith(
+    "Discontinued > Accessories > Old adapters",
+  );
+});

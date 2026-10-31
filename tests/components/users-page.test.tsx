@@ -7,7 +7,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { UsersPage } from "../../src/features/users/UsersPage";
 import type { User } from "../../src/features/auth/auth.api";
 import { userSchema } from "../../src/features/auth/auth.api";
@@ -403,4 +403,115 @@ it("lets Promo superadmins view protected support accounts and invite every Nept
   expect(
     view.getByText(/Existing users do not repeat this process/),
   ).toBeTruthy();
+});
+
+beforeEach(() => setLanguage("en"));
+
+it("opens invitation and edit forms as accessible dialogs, focuses the form and cancels without changing staff", async () => {
+  const api = vi.fn(async () =>
+    response({ users: [staff], emailConfigured: true }),
+  );
+  vi.stubGlobal("fetch", api);
+  const view = render(<UsersPage currentUser={admin} />);
+  const invite = await view.findByRole("button", { name: "＋ Invite a user" });
+  await waitFor(() =>
+    expect((invite as HTMLButtonElement).disabled).toBe(false),
+  );
+  invite.focus();
+  fireEvent.click(invite);
+  const dialog = view.getByRole("dialog", { name: "Invite a colleague" });
+  expect(dialog.getAttribute("aria-modal")).toBe("true");
+  const name = within(dialog).getByRole("textbox", { name: "Full name" });
+  expect(document.activeElement).toBe(name);
+  fireEvent.change(name, { target: { value: "Unsaved colleague" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(view.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(invite);
+  const edit = view.getByRole("button", { name: "Edit" });
+  edit.focus();
+  fireEvent.click(edit);
+  const editor = view.getByRole("dialog", { name: "Edit user" });
+  expect(
+    (
+      within(editor).getByRole("textbox", {
+        name: "Full name",
+      }) as HTMLInputElement
+    ).value,
+  ).toBe("Team Staff");
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(view.queryByRole("dialog")).toBeNull();
+  expect(document.activeElement).toBe(edit);
+  expect(api.mock.calls).toHaveLength(1);
+  expect(view.container.querySelector(".na-edit-card")).toBeNull();
+});
+
+it("keeps a failed update and its error inside the staff dialog and prevents closing during save", async () => {
+  let fail: (value: Response) => void = () => {};
+  const api = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
+    init?.method === "PATCH"
+      ? new Promise<Response>((resolve) => {
+          fail = resolve;
+        })
+      : response({ users: [staff], emailConfigured: true }),
+  );
+  vi.stubGlobal("fetch", api);
+  const view = render(<UsersPage currentUser={admin} />);
+  fireEvent.click(await view.findByRole("button", { name: "Edit" }));
+  const dialog = view.getByRole("dialog", { name: "Edit user" });
+  fireEvent.change(within(dialog).getByRole("textbox", { name: "Full name" }), {
+    target: { value: "Keep this change" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Save user" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+  expect(view.getByRole("dialog", { name: "Edit user" })).toBeTruthy();
+  expect(
+    (
+      within(dialog).getByRole("button", {
+        name: "Cancel",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(true);
+  fail(
+    new Response(JSON.stringify({ error: "Cannot save colleague now" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  await waitFor(() =>
+    expect(within(dialog).getByRole("alert").textContent).toContain(
+      "Cannot save colleague now",
+    ),
+  );
+  expect(
+    (
+      within(dialog).getByRole("textbox", {
+        name: "Full name",
+      }) as HTMLInputElement
+    ).value,
+  ).toBe("Keep this change");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(view.queryByRole("dialog")).toBeNull();
+});
+
+it("localizes the staff dialog in Albanian while preserving the colleague name and email", async () => {
+  setLanguage("sq");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => response({ users: [staff], emailConfigured: true })),
+  );
+  const view = render(<UsersPage currentUser={admin} />);
+  fireEvent.click(await view.findByRole("button", { name: "Redakto" }));
+  const dialog = view.getByRole("dialog", { name: "Redakto përdoruesin" });
+  expect(
+    (
+      within(dialog).getByRole("textbox", {
+        name: "Emri i plotë",
+      }) as HTMLInputElement
+    ).value,
+  ).toBe("Team Staff");
+  expect(within(dialog).getByText("staff@example.test")).toBeTruthy();
+  expect(
+    within(dialog).getByRole("button", { name: "Ruaj përdoruesin" }),
+  ).toBeTruthy();
+  expect(within(dialog).getByText("Qasja në hapësirën e punës")).toBeTruthy();
 });

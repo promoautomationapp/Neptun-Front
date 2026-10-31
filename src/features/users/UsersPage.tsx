@@ -1,7 +1,8 @@
-import { t } from "../brochure/i18n";
+import { getLanguage, t } from "../brochure/i18n";
+import { TeamMemberDialog } from "./TeamMemberDialog";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { confirmDialog } from "../../components/dialogs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   inviteUser,
   listUsers,
@@ -48,7 +49,7 @@ function lastSeen(value?: string | null) {
   const date = new Date(value);
   return Number.isNaN(date.valueOf())
     ? "—"
-    : date.toLocaleString(undefined, {
+    : date.toLocaleString(getLanguage() === "sq" ? "sq-AL" : "en-GB", {
         dateStyle: "medium",
         timeStyle: "short",
       });
@@ -61,6 +62,7 @@ export function UsersPage({
   currentUser: User;
   onMembersChanged?: () => void;
 }) {
+  const formId = useId();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(false);
@@ -125,8 +127,10 @@ export function UsersPage({
   if (!canManageUsers(currentUser))
     return (
       <section className="na-users-page">
-        <h1>Team access</h1>
-        <p>Only admins can manage users. Contact your team admin for help.</p>
+        <h1>{t("Team access")}</h1>
+        <p>
+          {t("Only admins can manage users. Contact your team admin for help.")}
+        </p>
       </section>
     );
   function replaceUser(user: ManagedUser) {
@@ -162,11 +166,12 @@ export function UsersPage({
     <section className="na-users-page">
       <header className="na-page-heading">
         <div>
-          <span className="cs-eyebrow">TEAM & ACCESS</span>
-          <h1>Manage your team</h1>
+          <span className="cs-eyebrow">{t("TEAM & ACCESS")}</span>
+          <h1>{t("Manage your team")}</h1>
           <p>
-            Invite Neptun admins, staff, and PMs to the brochure workspace.
-            Existing accounts keep their current password access.
+            {t(
+              "Invite Neptun admins, staff, and PMs to the brochure workspace. Existing accounts keep their current password access.",
+            )}
           </p>
         </div>
         <button
@@ -179,7 +184,7 @@ export function UsersPage({
             setError("");
           }}
         >
-          ＋ Invite a user
+          {t("＋ Invite a user")}
         </button>
       </header>
       <div className="na-team-summary">
@@ -187,13 +192,13 @@ export function UsersPage({
           <strong>
             {users.filter((user) => user.status === "active").length}
           </strong>
-          <span>Active users</span>
+          <span>{t("Active users")}</span>
         </div>
         <div>
           <strong>
             {users.filter((user) => user.status === "invited").length}
           </strong>
-          <span>Pending invitations</span>
+          <span>{t("Pending invitations")}</span>
         </div>
         <div>
           <strong>
@@ -206,39 +211,49 @@ export function UsersPage({
             }
           </strong>
           <span>
-            {currentUser.role === "superadmin"
-              ? "Support superadmins"
-              : "Administrators"}
+            {t(
+              currentUser.role === "superadmin"
+                ? "Support superadmins"
+                : "Administrators",
+            )}
           </span>
         </div>
       </div>
       {!emailConfigured && loaded && (
         <p className="na-alert warning" role="status">
-          New invitations are unavailable until email delivery is connected.
-          Existing accounts can still sign in with their current passwords; they
-          do not need another email verification.
+          {t(
+            "New invitations are unavailable until email delivery is connected. Existing accounts can still sign in with their current passwords; they do not need another email verification.",
+          )}
         </p>
       )}
-      {error && (
+      {error && !inviting && !editing && (
         <p className="na-alert error" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {notice && (
         <p className="na-alert success" role="status">
-          {notice}
+          {t(notice)}
         </p>
       )}
       {inviting && (
-        <div className="na-edit-card">
-          <h2>Invite a colleague</h2>
-          <p>
-            Choose their role and enter a working email address. They receive an
-            invitation, choose their own password, then verify the code sent to
-            that address to activate access. Existing users do not repeat this
-            process.
+        <TeamMemberDialog
+          title={t("Invite a colleague")}
+          busy={!!busy}
+          onClose={() => setInviting(false)}
+        >
+          {error && (
+            <p className="na-alert error" role="alert">
+              {t(error)}
+            </p>
+          )}
+          <p className="na-member-dialog-description">
+            {t(
+              "Choose their role and enter a working email address. They receive an invitation, choose their own password, then verify the code sent to that address to activate access. Existing users do not repeat this process.",
+            )}
           </p>
           <form
+            id={`${formId}-invite`}
             className="na-form na-user-form"
             onSubmit={(event) => {
               event.preventDefault();
@@ -267,7 +282,7 @@ export function UsersPage({
             }}
           >
             <label>
-              Full name
+              {t("Full name")}
               <input
                 value={inviteName}
                 required
@@ -278,7 +293,7 @@ export function UsersPage({
               />
             </label>
             <label>
-              Work email
+              {t("Work email")}
               <input
                 type="email"
                 value={inviteEmail}
@@ -290,9 +305,9 @@ export function UsersPage({
               />
             </label>
             <label>
-              Role
+              {t("Role")}
               <SearchableSelect
-                aria-label="Invitation role"
+                aria-label={t("Invitation role")}
                 value={inviteRole}
                 disabled={!!busy}
                 onChange={(event) => {
@@ -304,12 +319,14 @@ export function UsersPage({
               >
                 {roles.map((item) => (
                   <option key={item.value} value={item.value}>
-                    {item.label}
+                    {t(item.label)}
                   </option>
                 ))}
               </SearchableSelect>
               <small className="na-field-help">
-                {roles.find((item) => item.value === inviteRole)?.description}
+                {t(
+                  roles.find((item) => item.value === inviteRole)?.description,
+                )}
               </small>
             </label>
             <WorkspaceAccessEditor
@@ -318,35 +335,45 @@ export function UsersPage({
               onChange={setInviteAccess}
               disabled={!!busy}
             />
-            <div className="na-form-actions">
-              <button
-                className="cs-button"
-                type="button"
-                disabled={!!busy}
-                onClick={() => setInviting(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="cs-button primary"
-                type="submit"
-                disabled={
-                  !!busy ||
-                  !emailConfigured ||
-                  !!workspaceAccessError(inviteAccess)
-                }
-              >
-                {busy === "invite" ? "Sending invitation…" : "Send invitation"}
-              </button>
-            </div>
           </form>
-        </div>
+          <div className="na-form-actions">
+            <button
+              className="cs-button"
+              type="button"
+              disabled={!!busy}
+              onClick={() => setInviting(false)}
+            >
+              {t("Cancel")}
+            </button>
+            <button
+              className="cs-button primary"
+              type="submit"
+              form={`${formId}-invite`}
+              disabled={
+                !!busy ||
+                !emailConfigured ||
+                !!workspaceAccessError(inviteAccess)
+              }
+            >
+              {t(busy === "invite" ? "Sending invitation…" : "Send invitation")}
+            </button>
+          </div>
+        </TeamMemberDialog>
       )}
       {editing && (
-        <div className="na-edit-card">
-          <h2>Edit user</h2>
-          <p>{editing.email}</p>
+        <TeamMemberDialog
+          title={t("Edit user")}
+          description={editing.email}
+          busy={!!busy}
+          onClose={() => setEditing(null)}
+        >
+          {error && (
+            <p className="na-alert error" role="alert">
+              {t(error)}
+            </p>
+          )}
           <form
+            id={`${formId}-edit`}
             className="na-form na-user-form"
             onSubmit={(event) => {
               event.preventDefault();
@@ -373,7 +400,7 @@ export function UsersPage({
             }}
           >
             <label>
-              Full name
+              {t("Full name")}
               <input
                 value={editName}
                 required
@@ -383,9 +410,9 @@ export function UsersPage({
               />
             </label>
             <label>
-              Role
+              {t("Role")}
               <SearchableSelect
-                aria-label="User role"
+                aria-label={t("User role")}
                 value={editRole}
                 disabled={!!busy || editing.id === currentUser.id}
                 onChange={(event) => {
@@ -397,14 +424,17 @@ export function UsersPage({
               >
                 {roles.map((item) => (
                   <option key={item.value} value={item.value}>
-                    {item.label}
+                    {t(item.label)}
                   </option>
                 ))}
               </SearchableSelect>
               <small className="na-field-help">
-                {editing.id === currentUser.id
-                  ? "Another admin can change your role."
-                  : roles.find((item) => item.value === editRole)?.description}
+                {t(
+                  editing.id === currentUser.id
+                    ? "Another admin can change your role."
+                    : roles.find((item) => item.value === editRole)
+                        ?.description,
+                )}
               </small>
             </label>
             <WorkspaceAccessEditor
@@ -414,64 +444,65 @@ export function UsersPage({
               onChange={setEditAccess}
               disabled={!!busy}
             />
-            <div className="na-form-actions">
-              <button
-                className="cs-button"
-                type="button"
-                disabled={!!busy}
-                onClick={() => setEditing(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="cs-button primary"
-                type="submit"
-                disabled={!!busy || !!workspaceAccessError(editAccess)}
-              >
-                {busy === editing.id ? "Saving…" : "Save user"}
-              </button>
-            </div>
           </form>
-        </div>
+          <div className="na-form-actions">
+            <button
+              className="cs-button"
+              type="button"
+              disabled={!!busy}
+              onClick={() => setEditing(null)}
+            >
+              {t("Cancel")}
+            </button>
+            <button
+              className="cs-button primary"
+              type="submit"
+              form={`${formId}-edit`}
+              disabled={!!busy || !!workspaceAccessError(editAccess)}
+            >
+              {t(busy === editing.id ? "Saving…" : "Save user")}
+            </button>
+          </div>
+        </TeamMemberDialog>
       )}
       <div className="na-table-card">
         <div className="na-user-filters">
           <label>
-            Find a user
+            {t("Find a user")}
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Name or email"
+              placeholder={t("Name or email")}
             />
           </label>
           <label>
-            Role
+            {t("Role")}
             <SearchableSelect
               value={role}
               onChange={(event) => setRole(event.target.value)}
             >
-              <option value="all">All roles</option>
+              <option value="all">{t("All roles")}</option>
               {roles.map((item) => (
                 <option key={item.value} value={item.value}>
-                  {item.label}
+                  {t(item.label)}
                 </option>
               ))}
               {currentUser.role === "superadmin" && (
-                <option value="superadmin">Support superadmin</option>
+                <option value="superadmin">{t("Support superadmin")}</option>
               )}
             </SearchableSelect>
           </label>
           <label>
-            Status
+            {t("Status")}
             <SearchableSelect
               value={status}
               onChange={(event) => setStatus(event.target.value)}
             >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="invited">Invited</option>
-              <option value="disabled">Disabled</option>
+              <option value="all">{t("All statuses")}</option>
+              <option value="active">{t("Active")}</option>
+              <option value="invited">{t("Invited")}</option>
+              <option value="disabled">{t("Disabled")}</option>
             </SearchableSelect>
           </label>
           <button
@@ -480,26 +511,26 @@ export function UsersPage({
             disabled={!!busy}
             onClick={() => setRevision((value) => value + 1)}
           >
-            Refresh list
+            {t("Refresh list")}
           </button>
         </div>
         {!loaded ? (
           <p className="na-empty" role="status">
-            Loading your team…
+            {t("Loading your team…")}
           </p>
         ) : (
           <div className="na-table-scroll">
             <table className="na-users-table">
               <caption>
-                {matches.length} {matches.length === 1 ? "user" : "users"}
+                {matches.length} {t(matches.length === 1 ? "user" : "users")}
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">User</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Last sign in</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col">{t("User")}</th>
+                  <th scope="col">{t("Role")}</th>
+                  <th scope="col">{t("Status")}</th>
+                  <th scope="col">{t("Last sign in")}</th>
+                  <th scope="col">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -507,45 +538,52 @@ export function UsersPage({
                   <tr key={user.id}>
                     <td>
                       <strong>
-                        {user.name || "Team member"}
+                        {user.name || t("Team member")}
                         {user.id === currentUser.id && (
-                          <span className="na-you">You</span>
+                          <span className="na-you">{t("You")}</span>
                         )}
                       </strong>
                       <span>{user.email}</span>
                       {user.isSupport && (
-                        <small>Support account · here to help your team</small>
+                        <small>
+                          {t("Support account · here to help your team")}
+                        </small>
                       )}
                     </td>
                     <td>
-                      {roleLabel(user.role)}
+                      {t(roleLabel(user.role))}
                       {user.access?.mode === "custom" &&
                         user.role !== "admin" &&
                         user.role !== "superadmin" && (
                           <small className="na-user-access-badge">
-                            Custom access
+                            {t("Custom access")}
                           </small>
                         )}
                     </td>
                     <td>
                       <span className={"na-status " + user.status}>
-                        {user.status === "invited"
-                          ? "Invitation pending"
-                          : user.status === "disabled"
-                            ? "Disabled"
-                            : "Active"}
+                        {t(
+                          user.status === "invited"
+                            ? "Invitation pending"
+                            : user.status === "disabled"
+                              ? "Disabled"
+                              : "Active",
+                        )}
                       </span>
                     </td>
-                    <td>{lastSeen(user.lastLoginAt)}</td>
+                    <td>{t(lastSeen(user.lastLoginAt))}</td>
                     <td>
                       {user.isSupport || user.role === "superadmin" ? (
-                        <span className="na-protected">Support account</span>
+                        <span className="na-protected">
+                          {t("Support account")}
+                        </span>
                       ) : (
                         <div className="na-row-actions">
                           <button
                             type="button"
                             disabled={!!busy}
                             onClick={() => {
+                              setError("");
                               setEditing(user);
                               setEditName(user.name);
                               setEditRole(user.role as EditableRole);
@@ -553,7 +591,7 @@ export function UsersPage({
                               setInviting(false);
                             }}
                           >
-                            Edit
+                            {t("Edit")}
                           </button>
                           {(user.status === "invited" ||
                             (user.status === "disabled" &&
@@ -569,9 +607,11 @@ export function UsersPage({
                                 )
                               }
                             >
-                              {user.status === "disabled"
-                                ? "Invite again"
-                                : "Resend invite"}
+                              {t(
+                                user.status === "disabled"
+                                  ? "Invite again"
+                                  : "Resend invite",
+                              )}
                             </button>
                           )}
                           {user.id !== currentUser.id &&
@@ -626,11 +666,13 @@ export function UsersPage({
                                   );
                                 }}
                               >
-                                {user.status === "disabled"
-                                  ? "Restore access"
-                                  : user.status === "invited"
-                                    ? "Cancel invitation"
-                                    : "Disable"}
+                                {t(
+                                  user.status === "disabled"
+                                    ? "Restore access"
+                                    : user.status === "invited"
+                                      ? "Cancel invitation"
+                                      : "Disable",
+                                )}
                               </button>
                             )}
                         </div>
@@ -641,9 +683,11 @@ export function UsersPage({
                 {matches.length === 0 && (
                   <tr>
                     <td colSpan={5} className="na-empty">
-                      {users.length
-                        ? "No users match these filters."
-                        : "No users found. Refresh the list or invite a colleague."}
+                      {t(
+                        users.length
+                          ? "No users match these filters."
+                          : "No users found. Refresh the list or invite a colleague.",
+                      )}
                     </td>
                   </tr>
                 )}
@@ -654,8 +698,9 @@ export function UsersPage({
       </div>
       {currentUser.role === "superadmin" && (
         <p className="na-support-note">
-          Support accounts are visible only to Promo Automation superadmins and
-          are managed separately from the Neptun team.
+          {t(
+            "Support accounts are visible only to Promo Automation superadmins and are managed separately from the Neptun team.",
+          )}
         </p>
       )}
     </section>

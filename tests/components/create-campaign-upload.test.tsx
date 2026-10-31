@@ -62,7 +62,11 @@ it("imports a real CSV before creation and preserves setup when returning from i
   );
   if (!input) throw new Error("Campaign setup must show its file input.");
   expect(view.getByRole("dialog", { name: "Create a campaign" })).toBeTruthy();
-  expect(input.compareDocumentPosition(view.getByRole("group", { name: "Campaign duration" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(
+    input.compareDocumentPosition(
+      view.getByRole("group", { name: "Campaign duration" }),
+    ) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   fireEvent.change(input, { target: { files: [file] } });
   const add = await waitFor(() =>
     view.getByRole("button", { name: /^Add 1 product/ }),
@@ -72,7 +76,7 @@ it("imports a real CSV before creation and preserves setup when returning from i
   expect(view.getByText("1 product ready")).toBeTruthy();
   fireEvent.click(view.getByText("Customize design (optional)"));
   const message = view.getByLabelText("Cover message");
-  expect((message as HTMLInputElement).value).toBe("");
+  expect((message as HTMLInputElement).value).toBe("Çmimet flasin vetë!");
   expect(
     (
       view.getByRole("checkbox", {
@@ -84,8 +88,8 @@ it("imports a real CSV before creation and preserves setup when returning from i
   expect(create).toHaveBeenCalledWith(
     expect.objectContaining({
       name: "Uploaded TVs",
-      tagline: "",
-      showCoverMessage: false,
+      tagline: "Çmimet flasin vetë!",
+      showCoverMessage: true,
       showCoverBand: false,
       products: [
         expect.objectContaining({

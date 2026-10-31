@@ -1,3 +1,5 @@
+import { beforeEach as setEnglishBeforeTest } from "vitest";
+import { setLanguage } from "../../src/features/brochure/i18n";
 import { selectSetting } from "../helpers/settings-sections";
 import { useState } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -140,3 +142,5 @@ it("includes saved brands missing from the catalog and limits the initial row co
     view.getByRole("checkbox", { name: "Hide SAVED BRAND logo" }),
   ).toBeTruthy();
 });
+
+setEnglishBeforeTest(() => setLanguage("en"));

@@ -2,6 +2,19 @@ import { categorySegments, productCategoryPath } from "./categoryHierarchy";
 import type { Campaign, Product } from "../../domain/models";
 
 const modes = new Set(["amount", "percentage"]);
+export function keepsAmountSavings(
+  product: Partial<Product> | null | undefined,
+): boolean {
+  const words = `${productCategoryPath(product || {})} ${product?.name || ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return (
+    /\b(?:aparat\w*\s+(?:per\s+)?kaf\w*|makin\w*\s+(?:per\s+)?kaf\w*|coffee\s+(?:machine|maker)\w*|espresso|fshes\w*|vacuum)\b/.test(
+      words,
+    ) || Boolean(product?.bundleProducts?.some(keepsAmountSavings))
+  );
+}
 export function resolvedSavingsMode(
   campaign: Partial<Campaign> | null | undefined,
   product?: Partial<Product> | null,
@@ -37,7 +50,12 @@ export function resolvedSavingsMode(
     (a, b) => b.depth - a.depth || b.priority - a.priority,
   )[0];
   if (match) return match.mode;
-  if (campaign?.automaticSavings?.enabled) {
+  const automatic = campaign?.automaticSavings ?? {
+    enabled: true,
+    amountThreshold: 30,
+    basis: "offer-price",
+  };
+  if (automatic.enabled) {
     const regular = Number(String(product?.regular ?? "").replace(",", "."));
     const sale = Number(String(product?.sale ?? "").replace(",", "."));
     if (
@@ -46,7 +64,11 @@ export function resolvedSavingsMode(
       regular > sale &&
       sale >= 0
     ) {
-      return regular - sale < campaign.automaticSavings.amountThreshold
+      // Unversioned saved rules measured the discount itself. Keep explicitly
+      // saved custom rules, while new defaults compare the actual offer price.
+      const offerPrice = automatic.basis === "offer-price";
+      if (offerPrice && keepsAmountSavings(product)) return "amount";
+      return (offerPrice ? sale : regular - sale) < automatic.amountThreshold
         ? "percentage"
         : "amount";
     }

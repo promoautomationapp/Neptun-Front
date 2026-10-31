@@ -204,6 +204,10 @@ export function SettingsEditor({
   const [message, setMessage] = useState(() =>
     recovery.restored ? t("Unsaved settings restored on this browser.") : "",
   );
+  const lastSaved = useRef<{
+    key: string | undefined;
+    snapshot: string;
+  } | null>(null);
   const rootId = useId();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dirty = JSON.stringify(draft) !== baseline;
@@ -239,7 +243,13 @@ export function SettingsEditor({
     });
     setError("");
     setMessage(
-      recovered.restored ? t("Unsaved settings restored on this browser.") : "",
+      recovered.restored
+        ? t("Unsaved settings restored on this browser.")
+        : lastSaved.current &&
+            lastSaved.current.key === draftKey &&
+            lastSaved.current.snapshot === initialSnapshot
+          ? "Settings saved. New brochures will use these defaults."
+          : "",
     );
   }, [initial, draftKey, draftVersion, draftBinding]);
   useEffect(() => {
@@ -334,6 +344,10 @@ export function SettingsEditor({
       const saved = await onSave(parsed.data);
       clearSettingsDraft(savingDraftKey);
       if (currentDraftKey.current !== savingDraftKey) return;
+      lastSaved.current = {
+        key: savingDraftKey,
+        snapshot: JSON.stringify(saved),
+      };
       setDraft(structuredClone(saved));
       setBaseline(JSON.stringify(saved));
       setMessage("Settings saved. New brochures will use these defaults.");
@@ -354,21 +368,24 @@ export function SettingsEditor({
       <header>
         <div>
           <span className="ns-kicker">NEPTUN · WORKSPACE</span>
-          <h1>Settings</h1>
+          <h1>{t("Settings")}</h1>
           <p>
-            Choose the starting defaults for new brochures. Every brochure can
-            be edited separately.
+            {t(
+              "Choose the starting defaults for new brochures. Every brochure can be edited separately.",
+            )}
           </p>
         </div>
         <div className="ns-save-actions">
           <span role="status">
-            {saving
-              ? "Saving…"
-              : uploads
-                ? "Uploading artwork…"
-                : dirty
-                  ? "Unsaved changes"
-                  : "All changes saved"}
+            {t(
+              saving
+                ? "Saving…"
+                : uploads
+                  ? "Uploading artwork…"
+                  : dirty
+                    ? "Unsaved changes"
+                    : "All changes saved",
+            )}
           </span>
           <button
             className="cs-button primary"
@@ -378,7 +395,7 @@ export function SettingsEditor({
               void save();
             }}
           >
-            {saving ? "Saving…" : "Save settings"}
+            {t(saving ? "Saving…" : "Save settings")}
           </button>
           {dirty && (
             <button
@@ -392,14 +409,14 @@ export function SettingsEditor({
                 setMessage("Changes discarded.");
               }}
             >
-              Discard changes
+              {t("Discard changes")}
             </button>
           )}
         </div>
       </header>
       {error && (
         <div role="alert" className="ns-error">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {onReload && (
             <button
               type="button"
@@ -409,19 +426,19 @@ export function SettingsEditor({
                 onReload();
               }}
             >
-              Reload saved settings and discard this draft
+              {t("Reload saved settings and discard this draft")}
             </button>
           )}
         </div>
       )}
       {message && (
         <p role="status" className="ns-success">
-          {message}
+          {t(message)}
         </p>
       )}
       <div
         role="tablist"
-        aria-label="Settings page areas"
+        aria-label={t("Settings page areas")}
         className="ns-page-areas"
       >
         {areas.map((group) => (
@@ -443,11 +460,15 @@ export function SettingsEditor({
               );
             }}
           >
-            {group.id === "presets" ? t(group.label) : group.label}
+            {t(group.label)}
           </button>
         ))}
       </div>
-      <div role="tablist" aria-label="Settings sections" className="ns-tabs">
+      <div
+        role="tablist"
+        aria-label={t("Settings sections")}
+        className="ns-tabs"
+      >
         {visibleTabs.map((item, index) => (
           <button
             type="button"
@@ -483,11 +504,11 @@ export function SettingsEditor({
               }
             }}
           >
-            {item.id === "design" && area !== "cover"
-              ? "Page colors"
-              : item.id === "presets"
-                ? t(item.label)
-                : item.label}
+            {t(
+              item.id === "design" && area !== "cover"
+                ? "Page colors"
+                : item.label,
+            )}
           </button>
         ))}
       </div>

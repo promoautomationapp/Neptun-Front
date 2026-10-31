@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SettingsGroup } from "./components";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Field, Toggle } from "./components";
@@ -6,6 +7,7 @@ import type { SettingsTabProps } from "./SettingsEditor";
 import { categoryNodes, type CategoryFacet } from "./categoryHierarchy";
 import { resolvedSavingsMode } from "./savingsPolicy";
 import { matchesSearch } from "../brochure/searchText";
+import { SearchableSelect } from "../../components/SearchableSelect";
 
 export function CategoryDefaultsTab({
   draft,
@@ -46,7 +48,10 @@ export function CategoryDefaultsTab({
   const matches = new Set<string>();
   if (searching) {
     for (const node of nodes.filter((item) =>
-      matchesSearch(item.path, query),
+      matchesSearch(
+        `${item.path} ${item.path.split(" > ").map(t).join(" > ")}`,
+        query,
+      ),
     )) {
       const parts = node.path.split(" > ");
       parts.forEach((_, index) =>
@@ -104,17 +109,17 @@ export function CategoryDefaultsTab({
   }
   return (
     <section className="ns-section">
-      <h2>Category and subcategory defaults</h2>
+      <h2>{t("Category and subcategory defaults")}</h2>
       <p>
-        Open a main category to see its subcategories. Smaller offers use
-        Zbritje (%) automatically. Category choices override their parent;
-        product edits take priority.
+        {t(
+          "Offers below €30 use Zbritje (%) by default. Coffee machines and vacuum cleaners keep Kurseni (€). Category choices override their parent; product edits take priority.",
+        )}
       </p>
       <SettingsGroup
-        title={<> Automatic savings for small and large offers </>}
+        title={<> {t("Automatic savings for small and large offers")} </>}
       >
         <Toggle
-          label="Use percentage for small savings and euros for larger savings"
+          label="Choose savings labels automatically"
           checked={draft.automaticSavings.enabled}
           onChange={(enabled) =>
             update((next) => {
@@ -122,9 +127,31 @@ export function CategoryDefaultsTab({
             })
           }
         />
+        <Field label="Apply the threshold to">
+          <SearchableSelect
+            value={draft.automaticSavings.basis}
+            onChange={(event) =>
+              update((next) => {
+                next.automaticSavings.basis = event.target
+                  .value as typeof next.automaticSavings.basis;
+              })
+            }
+          >
+            <option value="offer-price">{t("Offer price")}</option>
+            <option value="savings-amount">{t("Amount saved")}</option>
+          </SearchableSelect>
+        </Field>
         <Field
-          label="Show saved euros from this amount"
-          hint="Below this amount, show Zbritje (%). At or above it, show Kurseni (€), unless a category or product overrides it."
+          label={
+            draft.automaticSavings.basis === "offer-price"
+              ? "Offer price threshold (€)"
+              : "Show saved euros from this amount"
+          }
+          hint={
+            draft.automaticSavings.basis === "offer-price"
+              ? "Below this offer price, show Zbritje (%). Coffee machines and vacuum cleaners keep Kurseni (€). Product and category choices take priority."
+              : "Below this amount, show Zbritje (%). At or above it, show Kurseni (€), unless a category or product overrides it."
+          }
         >
           <input
             type="number"
@@ -143,29 +170,30 @@ export function CategoryDefaultsTab({
         </Field>
         <div
           className="ns-savings-examples"
-          aria-label="Automatic savings examples"
+          aria-label={t("Automatic savings examples")}
         >
           <div>
-            <small>€10 saved</small>
-            <strong>{example(50, 40)}</strong>
-            <span>€50 → €40</span>
+            <small>{t("Lower offer price")}</small>
+            <strong>{example(39, 29)}</strong>
+            <span>€39 → €29</span>
           </div>
           <div>
-            <small>€100 saved</small>
-            <strong>{example(499, 399)}</strong>
-            <span>€499 → €399</span>
+            <small>{t("At or above the threshold")}</small>
+            <strong>{example(50, 30)}</strong>
+            <span>€50 → €30</span>
           </div>
         </div>
       </SettingsGroup>
       {facetsError && (
         <p role="alert">
-          {facetsError} Saved category choices remain available.
+          {t(facetsError)} {t("Saved category choices remain available.")}
         </p>
       )}
       {!nodes.length && (
         <p>
-          No catalog categories yet. Fetch products from neptun-ks.com to load
-          the hierarchy.
+          {t(
+            "No catalog categories yet. Fetch products from neptun-ks.com to load the hierarchy.",
+          )}
         </p>
       )}
       <div className="ns-category-workspace">
@@ -178,6 +206,29 @@ export function CategoryDefaultsTab({
                 onChange={(event) => setQuery(event.target.value)}
               />
             </Field>
+            <p className="ns-category-guidance">
+              {t(
+                "Choose a category, then open its subcategories to narrow the rule.",
+              )}
+            </p>
+            {query && (
+              <button
+                type="button"
+                className="ns-category-collapse"
+                onClick={() => setQuery("")}
+              >
+                {t("Clear search")}
+              </button>
+            )}
+            {!searching && (
+              <button
+                type="button"
+                className="ns-category-collapse"
+                onClick={() => setExpanded(new Set(parents))}
+              >
+                {t("Expand all")}
+              </button>
+            )}
             {expanded.size > 0 && !searching && (
               <button
                 type="button"
@@ -187,14 +238,14 @@ export function CategoryDefaultsTab({
                   setSelection(selected?.path.split(" > ")[0] || "");
                 }}
               >
-                Collapse all
+                {t("Collapse all")}
               </button>
             )}
           </div>
           <div
             className="ns-category-tabs"
             role="tree"
-            aria-label="Categories and subcategories"
+            aria-label={t("Categories and subcategories")}
           >
             {visible.map((node, index) => (
               <button
@@ -202,7 +253,7 @@ export function CategoryDefaultsTab({
                 role="treeitem"
                 key={node.path}
                 id={`${id}-${nodes.indexOf(node)}`}
-                aria-label={node.label}
+                aria-label={t(node.label)}
                 aria-describedby={`${id}-${nodes.indexOf(node)}-hint`}
                 aria-controls={`${id}-panel`}
                 aria-selected={selected?.path === node.path}
@@ -290,19 +341,24 @@ export function CategoryDefaultsTab({
                   <path d="m7 4 6 6-6 6" />
                 </svg>
                 <span className="ns-category-label">
-                  <span>{node.label}</span>
+                  <span>{t(node.label)}</span>
+                  <span className="ns-category-kind">
+                    {t(node.depth ? "Subcategory" : "Category")}
+                  </span>
                   <small id={`${id}-${nodes.indexOf(node)}-hint`}>
-                    {draft.categoryPathSavingModes[node.path] === "percentage"
-                      ? "Zbritje (%)"
-                      : draft.categoryPathSavingModes[node.path] === "amount"
-                        ? "Kurseni (€)"
-                        : "Inherited / automatic"}
+                    {t(
+                      draft.categoryPathSavingModes[node.path] === "percentage"
+                        ? "Zbritje (%)"
+                        : draft.categoryPathSavingModes[node.path] === "amount"
+                          ? "Kurseni (€)"
+                          : "Inherited / automatic",
+                    )}
                   </small>
                 </span>
               </button>
             ))}
             {!visible.length && nodes.length > 0 && (
-              <p>No matching categories.</p>
+              <p>{t("No matching categories.")}</p>
             )}
           </div>
         </div>
@@ -313,18 +369,53 @@ export function CategoryDefaultsTab({
             id={`${id}-panel`}
             aria-labelledby={`${id}-${nodes.indexOf(selected)}`}
           >
-            <small>{selected.parent || "Main category"}</small>
-            <h3>{selected.label}</h3>
+            <small>{t(selected.depth ? "Subcategory" : "Main category")}</small>
+            <nav
+              className="ns-category-breadcrumb"
+              aria-label={t("Selected category path")}
+            >
+              {selectedParts.map((part, depth) => {
+                const path = selectedParts.slice(0, depth + 1).join(" > ");
+                return (
+                  <span key={path}>
+                    {depth > 0 && <span aria-hidden="true"> › </span>}
+                    <button
+                      type="button"
+                      aria-current={
+                        path === selected.path ? "location" : undefined
+                      }
+                      onClick={() => {
+                        setSelection(path);
+                        setExpanded(
+                          (current) =>
+                            new Set([
+                              ...current,
+                              ...selectedParts
+                                .slice(0, depth)
+                                .map((_, index) =>
+                                  selectedParts.slice(0, index + 1).join(" > "),
+                                ),
+                            ]),
+                        );
+                      }}
+                    >
+                      {t(part)}
+                    </button>
+                  </span>
+                );
+              })}
+            </nav>
+            <h3>{t(selected.label)}</h3>
             <SavingSelect
-              label={`${selected.path.replaceAll(" > ", " / ")} savings default`}
+              label={`${selectedParts.map(t).join(" / ")} ${t("savings default")}`}
               inherit
               value={value}
               onChange={choose}
             />
             <p>
-              Choose a fixed display here or inherit the parent and automatic
-              savings rule. The brochure preview shows products from this branch
-              when available.
+              {t(
+                "Choose a fixed display here or inherit the parent and automatic savings rule. The brochure preview shows products from this branch when available.",
+              )}
             </p>
           </div>
         )}

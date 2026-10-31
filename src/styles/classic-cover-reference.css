@@ -1,0 +1,126 @@
+/* The Classic cover is a wide hero above two offers. These physical page
+   units do not affect Blue pages or any saved content-region placement. */
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"] {
+  --detail-copy-size: 1.005cqw;
+  --detail-copy-long-size: 0.75cqw;
+  --detail-metric-size: 1.38cqw;
+  --detail-number-size: 1.5cqw;
+  --detail-label-size: 0.79cqw;
+  --detail-strip-gap: 0.65cqw;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom
+  > .brochure-price {
+  flex: 0 0 19.1cqw;
+  width: 19.1cqw;
+  max-width: 48%;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom
+  > .brochure-product-copy {
+  padding-bottom: 0.45cqw;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs[data-detail-layout="strip"] {
+  height: auto;
+  min-height: 0;
+  padding-top: 0.8cqw;
+  margin-top: -3.6cqw;
+  gap: 0.65cqw;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block {
+  width: min(
+    5.6cqw,
+    calc(
+      (100% - (var(--detail-strip-columns, 6) - 1) * 0.65cqw) /
+        var(--detail-strip-columns, 6)
+    )
+  );
+  height: auto;
+  max-width: 5.6cqw;
+  aspect-ratio: 1;
+  padding: 0.28cqw;
+  border-radius: 0.35cqw;
+}
+.brochure-page.classic-reference-cover
+  .cover-featured-product
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs[data-detail-layout="strip"] {
+  justify-content: center;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs
+  > .brochure-warranty
+  > b.detail-warranty-count {
+  font-size: 3.15cqw;
+  line-height: 1;
+}
+.brochure-page.classic-reference-cover
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs
+  > .brochure-warranty
+  > small {
+  font-size: 0.62cqw;
+  line-height: 1.05;
+}
+
+/* One flowing sentence matches the printed footer and wraps naturally only
+   when the user supplies longer copy or enlarges either editable text field. */
+.brochure-page .brochure-footer-element .reference-offer-footer {
+  display: block;
+  padding-top: 0.8cqw;
+  line-height: 1.25;
+  font-family: inherit;
+  font-weight: 400;
+  text-align: left;
+}
+.brochure-page
+  .brochure-footer-element
+  .reference-offer-footer
+  > :is(.brochure-footer-dates, .brochure-footer-payment) {
+  display: inline;
+  font-weight: 400;
+  line-height: inherit;
+}
+.brochure-page .brochure-footer-element .reference-offer-footer strong {
+  font-weight: 900;
+}
+
+/* The installment tab occupies only the right side of a secondary card.
+   Keep its badges below the same baseline without touching that tab. */
+.brochure-page.classic-reference-cover
+  .cover-product-frame:not(.cover-featured-product)
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block {
+  width: min(
+    5.2cqw,
+    calc(
+      (100% - (var(--detail-strip-columns, 6) - 1) * 0.65cqw) /
+        var(--detail-strip-columns, 6)
+    )
+  );
+  max-width: 5.2cqw;
+}
+/* Printed SKUs remain available and clear of the lower badge row. */
+.brochure-page.classic-reference-cover
+  .cover-product-frame:not(.cover-featured-product)
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs[data-detail-layout="strip"] {
+  padding-top: 1.6cqw;
+}

@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { useContext, useState } from "react";
@@ -79,21 +80,21 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
   }
   return (
     <>
-      <h3>Your logo library</h3>
+      <h3>{t("Your logo library")}</h3>
       <p>
-        Choose the cover or page default below. Previews show each logo on light
-        and dark backgrounds. Replacing a logo changes future brochures; saved
-        brochures keep their images.
+        {t(
+          "Choose the cover or page default below. Previews show each logo on light and dark backgrounds. Replacing a logo changes future brochures; saved brochures keep their images.",
+        )}
       </p>
       <FileUpload
-        aria-label="Add logo to library"
+        aria-label={t("Add logo to library")}
         accept="image/png,image/jpeg,image/webp,image/gif"
         busy={busy}
         onChange={(event) => upload(event.target.files?.[0])}
       >
-        Add logo
+        {t("Add logo")}
       </FileUpload>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       <div className="ns-logo-library">
         {unique.map((item) => (
           <article className="ns-logo-card" key={item.id}>
@@ -101,20 +102,20 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
               <span>
                 <img
                   src={resolveAsset(item.url)}
-                  alt={`${item.name} on light`}
+                  alt={`${item.name} ${t("on light")}`}
                 />
               </span>
               <span>
                 <img
                   src={resolveAsset(item.url)}
-                  alt={`${item.name} on dark`}
+                  alt={`${item.name} ${t("on dark")}`}
                 />
               </span>
             </div>
             {item.id.startsWith("builtin-") ? (
               <strong>{item.name}</strong>
             ) : (
-              <Field label={`Logo name: ${item.name}`}>
+              <Field label={`${t("Logo name:")} ${item.name}`}>
                 <input
                   value={item.name}
                   onChange={(event) =>
@@ -129,10 +130,16 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
               </Field>
             )}
             <small>
-              {draft.brochure.coverLogoSource === item.url
-                ? "Cover default"
-                : ""}
-              {draft.brandAssets.neptun === item.url ? " · Page default" : ""}
+              {t(
+                draft.brochure.coverLogoSource === item.url
+                  ? "Cover default"
+                  : "",
+              )}
+              {t(
+                draft.brandAssets.neptun === item.url
+                  ? ` · ${t("Page default")}`
+                  : "",
+              )}
             </small>
             <div className="ns-logo-actions">
               <button
@@ -151,7 +158,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   preview("cover");
                 }}
               >
-                Use for covers
+                {t("Use for covers")}
               </button>
               <button
                 type="button"
@@ -163,10 +170,10 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   preview("products");
                 }}
               >
-                Use inside pages
+                {t("Use inside pages")}
               </button>
               <FileUpload
-                aria-label={`Replace ${item.name}`}
+                aria-label={`${t("Replace")} ${item.name}`}
                 accept="image/png,image/jpeg,image/webp,image/gif"
                 disabled={busy}
                 onChange={(event) => {
@@ -175,17 +182,17 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   void upload(file, item);
                 }}
               >
-                Replace
+                {t("Replace")}
               </FileUpload>
               <button
                 type="button"
                 disabled={selected(item.url)}
-                title={
+                title={t(
                   selected(item.url)
                     ? "Choose another default or remove its color rule first."
-                    : ""
-                }
-                aria-label={`Remove ${item.name} from logo choices`}
+                    : "",
+                )}
+                aria-label={`${t("Remove")} ${item.name} ${t("from logo choices")}`}
                 onClick={() =>
                   update((next) => {
                     if (item.id.startsWith("builtin-"))
@@ -199,7 +206,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   })
                 }
               >
-                Remove choice
+                {t("Remove choice")}
               </button>
             </div>
           </article>
@@ -214,19 +221,19 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          Restore original logo choices
+          {t("Restore original logo choices")}
         </button>
       )}
-      <SettingsGroup title="Choose logos for background colors">
+      <SettingsGroup title={t("Choose logos for background colors")}>
         <p>
-          A matching color uses its assigned logo. Otherwise, a light or dark
-          background rule is used. Without a rule, your chosen default stays in
-          place.
+          {t(
+            "A matching color uses its assigned logo. Otherwise, a light or dark background rule is used. Without a rule, your chosen default stays in place.",
+          )}
         </p>
         {draft.logoRules.map((rule, index) => (
           <div className="ns-logo-rule" key={rule.id}>
             <Toggle
-              label={`Use logo rule ${index + 1}`}
+              label={`${t("Use logo rule")} ${index + 1}`}
               checked={rule.enabled}
               onChange={(enabled) =>
                 update((next) => {
@@ -235,7 +242,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
               }
             />
             <div className="ns-grid">
-              <Field label={`Logo rule ${index + 1} pages`}>
+              <Field label={`${t("Logo rule")} ${index + 1} ${t("pages")}`}>
                 <SearchableSelect
                   value={rule.target}
                   onChange={(event) =>
@@ -245,14 +252,18 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                     })
                   }
                 >
-                  <option value="both">Cover and inside pages</option>
-                  <option value="cover">Cover only</option>
-                  <option value="pages">Inside product pages only</option>
-                  <option value="stores">Stores page only</option>
-                  <option value="footer">Stores footer only</option>
+                  <option value="both">{t("Cover and inside pages")}</option>
+                  <option value="cover">{t("Cover only")}</option>
+                  <option value="pages">
+                    {t("Inside product pages only")}
+                  </option>
+                  <option value="stores">{t("Stores page only")}</option>
+                  <option value="footer">{t("Stores footer only")}</option>
                 </SearchableSelect>
               </Field>
-              <Field label={`Logo rule ${index + 1} background`}>
+              <Field
+                label={`${t("Logo rule")} ${index + 1} ${t("background")}`}
+              >
                 <SearchableSelect
                   value={rule.background}
                   onChange={(event) =>
@@ -267,13 +278,13 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                     })
                   }
                 >
-                  <option value="dark">Dark backgrounds</option>
-                  <option value="light">Light backgrounds</option>
-                  <option value="color">A specific color</option>
+                  <option value="dark">{t("Dark backgrounds")}</option>
+                  <option value="light">{t("Light backgrounds")}</option>
+                  <option value="color">{t("A specific color")}</option>
                 </SearchableSelect>
               </Field>
               {rule.background === "color" && (
-                <Field label={`Logo rule ${index + 1} color`}>
+                <Field label={`${t("Logo rule")} ${index + 1} ${t("color")}`}>
                   <input
                     type="color"
                     value={rule.color || "#1c4075"}
@@ -285,7 +296,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   />
                 </Field>
               )}
-              <Field label={`Logo rule ${index + 1} image`}>
+              <Field label={`${t("Logo rule")} ${index + 1} ${t("image")}`}>
                 <SearchableSelect
                   value={rule.image}
                   onChange={(event) =>
@@ -295,7 +306,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                   }
                 >
                   {!unique.some((item) => item.url === rule.image) && (
-                    <option value={rule.image}>Saved logo</option>
+                    <option value={rule.image}>{t("Saved logo")}</option>
                   )}
                   {unique.map((item) => (
                     <option key={item.id} value={item.url}>
@@ -317,18 +328,18 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
                 padding: 12,
               }}
               src={resolveAsset(rule.image)}
-              alt={`Logo rule ${index + 1} preview`}
+              alt={`${t("Logo rule")} ${index + 1} ${t("preview")}`}
             />
             <button
               type="button"
-              aria-label={`Remove logo rule ${index + 1}`}
+              aria-label={`${t("Remove logo rule")} ${index + 1}`}
               onClick={() =>
                 update((next) => {
                   next.logoRules.splice(index, 1);
                 })
               }
             >
-              Remove rule
+              {t("Remove rule")}
             </button>
           </div>
         ))}
@@ -348,7 +359,7 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
             })
           }
         >
-          + Add color rule
+          {t("+ Add color rule")}
         </button>
       </SettingsGroup>
     </>

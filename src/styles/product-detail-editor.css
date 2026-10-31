@@ -1,0 +1,195 @@
+.cs-product-detail-editor {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.4fr);
+  gap: 26px;
+  align-items: start;
+}
+.cs-detail-preview-column {
+  position: sticky;
+  top: 0;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+.cs-detail-live-preview {
+  padding: 12px;
+  border: 1px solid var(--np-border, #d7e2ed);
+  border-radius: 14px;
+  background: var(--np-bg, #f2f6f9);
+  overflow: hidden;
+}
+.cs-detail-live-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  color: var(--np-text, #203e5b);
+}
+.cs-detail-live-heading strong {
+  font-size: 13px;
+}
+.cs-detail-live-heading small {
+  color: var(--np-muted, #6c8499);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.cs-detail-preview-canvas.brochure-page {
+  width: 760px !important;
+  height: 480px !important;
+  aspect-ratio: auto !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  container-type: inline-size;
+  position: relative;
+}
+.cs-detail-preview-canvas > .brochure-product {
+  position: absolute !important;
+  left: 14px !important;
+  top: 14px !important;
+  width: 352px !important;
+  height: 452px !important;
+  margin: 0 !important;
+}
+.cs-detail-main {
+  min-width: 0;
+}
+.cs-product-detail-editor .cs-detail-layout {
+  display: block;
+}
+.cs-detail-photo-gallery {
+  border: 1px solid var(--np-border, #d7e2ed);
+  border-radius: 10px;
+  padding: 10px;
+}
+.cs-detail-photo-gallery summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--np-text, #203e5b);
+}
+.cs-detail-photo-gallery .np-product-gallery {
+  margin-top: 10px;
+}
+.cs-detail-description-edit {
+  width: 100%;
+  min-height: 95px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--np-border, #c8dce9);
+  border-radius: 10px;
+  background: var(--np-input, var(--np-surface, #fff));
+  color: var(--np-text, #203e5b);
+  font:
+    13px/1.6 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-detail-rows {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.cs-detail-rows-heading h4 {
+  margin: 0 0 5px;
+  font-size: 15px;
+  color: var(--np-text, #203e5b);
+}
+.cs-detail-rows-heading p {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.6;
+  color: var(--np-muted, #6c8499);
+}
+.cs-detail-row-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--np-bg, #f4f8fb);
+  border: 1px solid var(--np-border, #d7e2ed);
+  border-radius: 12px;
+}
+.cs-detail-row-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cs-detail-row-heading > span {
+  color: var(--np-muted, #6c8499);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.cs-detail-row-heading > div {
+  display: flex;
+  gap: 4px;
+}
+.cs-detail-row-heading button {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--np-border, #d7e2ed);
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #203e5b);
+  border-radius: 7px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 5px;
+}
+.cs-detail-row-heading button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.cs-detail-row-heading button.cs-detail-row-remove {
+  color: #d04d40;
+  margin-left: 6px;
+}
+.cs-detail-row-card > label {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--np-muted, #6c8499);
+}
+.cs-detail-row-card :is(input, textarea) {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--np-border, #c8dce9);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--np-text, #203e5b);
+  background: var(--np-surface, #fff);
+  font:
+    13px/1.5 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-detail-row-card textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+.cs-detail-row-card .cs-detail-row-style {
+  grid-template-columns: 1fr minmax(140px, 1fr);
+  align-items: center;
+}
+.cs-detail-rows > .cs-button {
+  justify-self: start;
+}
+@media (max-width: 700px) {
+  .cs-product-detail-editor {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .cs-detail-preview-column {
+    position: static;
+  }
+  .cs-detail-live-preview {
+    max-width: 340px;
+    width: 100%;
+    margin: auto;
+  }
+  .cs-detail-preview-column > .cs-button {
+    justify-self: center;
+  }
+  .cs-detail-row-card .cs-detail-row-style {
+    grid-template-columns: 1fr;
+  }
+}

@@ -52,6 +52,11 @@ export function coverProductPlacement(
   index: number,
   count: number,
 ) {
+  if (campaign.coverBandVariant === "hajde" && count >= 3) {
+    return index === 0
+      ? { x: 3, y: 19, width: 94, height: 35 }
+      : { x: 3 + (index - 1) * 49, y: 58, width: 45, height: 34 };
+  }
   if (isOctoberBrochure(campaign))
     return { x: 3.85 + (index % 2) * 48, y: 56.8, width: 44.5, height: 35.2 };
   const belowBand = campaign.showCoverBand === true;

@@ -85,15 +85,16 @@
   font-size: 11px;
 }
 .cs-catalog-last-update {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
   gap: 6px 14px;
   padding-block: 12px;
   border-block: 1px solid #e4edf4;
 }
 .cs-catalog-last-update dd {
   margin: 0;
+  text-align: right;
   font-weight: 700;
   color: #284c6c;
 }

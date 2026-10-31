@@ -276,3 +276,70 @@ it("offers every brand initially and narrows only after a deliberate category ch
   fireEvent.click(view.getByRole("button", { name: "Brand" }));
   expect(view.getAllByRole("option")).toHaveLength(9);
 });
+
+it("explains Gift Card brand scope, labels OTHER clearly and can browse every real catalog brand", () => {
+  const catalog = [
+    {
+      code: "gift",
+      name: "Gift card 100",
+      brand: "OTHER",
+      categoryPath: "GIFT CARD",
+    },
+    { code: "phone", name: "Phone", brand: "SAMSUNG", categoryPath: "PHONES" },
+  ];
+  const change = vi.fn();
+  const selection = {
+    categoryPath: "GIFT CARD",
+    brand: "",
+    availability: "all",
+  };
+  const view = render(
+    <CatalogNavigator
+      products={catalog}
+      selection={selection}
+      onChange={change}
+    />,
+  );
+  expect(view.getByText("Brands in GIFT CARD · 1")).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "Brand" }));
+  expect(view.getByRole("option", { name: "Unspecified brand" })).toBeTruthy();
+  expect(view.queryByRole("option", { name: "SAMSUNG" })).toBeNull();
+  fireEvent.click(view.getByRole("option", { name: "Unspecified brand" }));
+  expect(change).toHaveBeenLastCalledWith({ ...selection, brand: "OTHER" });
+  expect(
+    filterCatalog(catalog, { ...selection, brand: "OTHER" }).map((p) => p.code),
+  ).toEqual(["gift"]);
+  fireEvent.click(view.getByRole("button", { name: "Browse all brands" }));
+  expect(change).toHaveBeenLastCalledWith({
+    categoryPath: "",
+    brand: "",
+    availability: "all",
+  });
+  view.rerender(
+    <CatalogNavigator
+      products={catalog}
+      selection={{ categoryPath: "", brand: "", availability: "all" }}
+      onChange={change}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Brand" }));
+  expect(view.getByRole("option", { name: "SAMSUNG" })).toBeTruthy();
+  expect(catalog[0]?.brand).toBe("OTHER");
+});
+
+it("shows a selected historical brand instead of silently displaying All brands", () => {
+  const view = render(
+    <CatalogNavigator
+      products={products}
+      selection={{
+        categoryPath: "IT > LAPTOP",
+        brand: "Saved custom brand",
+        availability: "all",
+      }}
+      onChange={vi.fn()}
+    />,
+  );
+  expect(view.getByRole("button", { name: "Brand" }).textContent).toContain(
+    "Saved custom brand · No products in this category",
+  );
+});

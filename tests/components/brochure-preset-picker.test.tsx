@@ -26,12 +26,15 @@ it("preselects the current design and snapshots the chosen second design without
       onClose={vi.fn()}
     />,
   );
+  expect(view.getByText("Featured Product Collection")).toBeTruthy();
   expect(
-    view
-      .getByRole("button", { name: "Neptun Classic" })
-      .getAttribute("aria-pressed"),
-  ).toBe("true");
-  fireEvent.click(view.getByRole("button", { name: "Neptun Blue" }));
+    view.queryByRole("button", { name: "UUU · Brand Edition" }),
+  ).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "Change design" }));
+  fireEvent.click(view.getByRole("button", { name: "UUU · Brand Edition" }));
+  expect(
+    view.queryByRole("dialog", { name: "Choose a brochure design" }),
+  ).toBeNull();
   expect(
     view.getByText(
       "Upload the first cover photograph. The NEPTUN logo and blue campaign band stay separate and editable.",
@@ -46,7 +49,7 @@ it("preselects the current design and snapshots the chosen second design without
     coverBackgroundImage: "",
     showCoverBand: true,
     tagline: "Çmimet flasin vetë!",
-    productBackgroundColor: "#e3e3e3",
+    productBackgroundColor: "#1b4075",
   });
 });
 
@@ -59,11 +62,16 @@ it("opens the image preview without choosing it until Use this design is clicked
       onClose={vi.fn()}
     />,
   );
+  fireEvent.click(view.getByRole("button", { name: "Change design" }));
   fireEvent.click(
-    view.getByRole("button", { name: "Preview design Neptun Blue" }),
+    view.getByRole("button", { name: "Preview design UUU · Brand Edition" }),
   );
+  expect(
+    view.queryByRole("dialog", { name: "Choose a brochure design" }),
+  ).toBeNull();
+  expect(view.getByText("Featured Product Collection")).toBeTruthy();
   const preview = view.getByRole("dialog", {
-    name: "Brochure preview · Neptun Blue",
+    name: "Brochure preview · UUU · Brand Edition",
   });
   fireEvent.click(
     within(preview).getByRole("button", { name: "Product page" }),
@@ -72,11 +80,7 @@ it("opens the image preview without choosing it until Use this design is clicked
   fireEvent.click(
     within(preview).getByRole("button", { name: "Use this design" }),
   );
-  expect(
-    view
-      .getByRole("button", { name: "Neptun Blue" })
-      .getAttribute("aria-pressed"),
-  ).toBe("true");
+  expect(view.getByText("UUU · Brand Edition")).toBeTruthy();
 });
 
 it("saves an edited built-in as the team default using the existing settings save flow", async () => {
@@ -86,7 +90,7 @@ it("saves an edited built-in as the team default using the existing settings sav
     <SettingsEditor initial={resolveSettings(null)} onSave={save} />,
   );
   fireEvent.click(view.getByRole("tab", { name: "Brochure designs" }));
-  fireEvent.click(view.getByRole("button", { name: "Neptun Blue" }));
+  fireEvent.click(view.getByRole("button", { name: "UUU · Brand Edition" }));
   fireEvent.change(view.getByLabelText("Brochure preset name"), {
     target: { value: "Team Blue" },
   });
@@ -108,7 +112,7 @@ it("saves an edited built-in as the team default using the existing settings sav
       offerStyle: "card",
       brochureVisualStyle: "october",
       brochureFooter: { visible: false },
-      pageDecorationDefaults: { footerLineColor: "#003870" },
+      pageDecorationDefaults: { footerLineColor: "#ffffff" },
     },
   });
   cleanup();
@@ -116,11 +120,7 @@ it("saves an edited built-in as the team default using the existing settings sav
   const next = render(
     <CreateCampaign settings={saved} onCreate={create} onClose={vi.fn()} />,
   );
-  expect(
-    next
-      .getByRole("button", { name: "Team Blue" })
-      .getAttribute("aria-pressed"),
-  ).toBe("true");
+  expect(next.getByText("Team Blue")).toBeTruthy();
 });
 
 it("duplicates, renames, deletes and creates independent designs from scratch", () => {
@@ -187,7 +187,8 @@ it("reuses the blue design for Happy Hour in November and keeps preview dates cu
         onClose={vi.fn()}
       />,
     );
-    fireEvent.click(view.getByRole("button", { name: "Neptun Blue" }));
+    fireEvent.click(view.getByRole("button", { name: "Change design" }));
+    fireEvent.click(view.getByRole("button", { name: "UUU · Brand Edition" }));
     fireEvent.click(view.getByRole("button", { name: "Campaign type" }));
     fireEvent.click(view.getByRole("option", { name: "Happy Hour" }));
     fireEvent.click(view.getByRole("button", { name: "Create campaign →" }));
@@ -206,4 +207,52 @@ it("reuses the blue design for Happy Hour in November and keeps preview dates cu
   } finally {
     vi.useRealTimers();
   }
+});
+
+it("creates a brochure with the preselected design without opening design options", () => {
+  setLanguage("en");
+  const create = vi.fn();
+  const view = render(
+    <CreateCampaign
+      settings={resolveSettings(null)}
+      onCreate={create}
+      onClose={vi.fn()}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Create campaign →" }));
+  expect(create.mock.calls[0]![0].brochurePresetId).toBe("neptun-current");
+});
+
+it("localizes the compact choice, all five names and the separate details in Albanian", () => {
+  setLanguage("sq");
+  const view = render(
+    <CreateCampaign
+      settings={resolveSettings(null)}
+      onCreate={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(view.getByText("Koleksioni me produkt të veçuar")).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "Ndrysho dizajnin" }));
+  const choices = view.getByRole("dialog", {
+    name: "Zgjidh dizajnin e broshurës",
+  });
+  for (const name of [
+    "Koleksioni me produkt të veçuar",
+    "UUU · Edicioni i markës",
+    "UUU · Edicioni i katalogut",
+    "Koleksioni i unifikuar",
+    "Hajde! · Oferta online",
+  ])
+    expect(within(choices).getByRole("button", { name })).toBeTruthy();
+  fireEvent.click(
+    within(choices).getByRole("button", {
+      name: "Shiko dizajnin UUU · Edicioni i markës",
+    }),
+  );
+  expect(
+    view.getByRole("dialog", {
+      name: "Parapamja e broshurës · UUU · Edicioni i markës",
+    }),
+  ).toBeTruthy();
 });

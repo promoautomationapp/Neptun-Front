@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import { ICON_ROLES } from "./options";
@@ -12,10 +13,11 @@ export function BrochureIconControls({
   const library = campaign.storesSnapshot?.logoLibrary ?? [];
   return (
     <details className="cs-store-elements-options">
-      <summary>Icons for this brochure</summary>
+      <summary>{t("Icons for this brochure")}</summary>
       <p className="cs-control-help">
-        These choices apply only to this brochure. Individual product artwork
-        edits take priority.
+        {t(
+          "These choices apply only to this brochure. Individual product artwork edits take priority.",
+        )}
       </p>
       {ICON_ROLES.map((role) => (
         <div key={role.id}>
@@ -33,10 +35,10 @@ export function BrochureIconControls({
                 })
               }
             />
-            {role.label}
+            {t(role.label)}
           </label>
           <SearchableSelect
-            aria-label={`${role.label} artwork for this brochure`}
+            aria-label={`${t(role.label)} ${t("artwork for this brochure")}`}
             value={campaign.iconDefaults?.[role.id]?.image || ""}
             onChange={(event) =>
               onUpdate((draft) => {
@@ -48,13 +50,13 @@ export function BrochureIconControls({
               })
             }
           >
-            <option value="">Current built-in icon</option>
+            <option value="">{t("Current built-in icon")}</option>
             {campaign.iconDefaults?.[role.id]?.image &&
               !library.some(
                 (item) => item.url === campaign.iconDefaults?.[role.id]?.image,
               ) && (
                 <option value={campaign.iconDefaults[role.id]?.image}>
-                  Selected artwork
+                  {t("Selected artwork")}
                 </option>
               )}
             {library.map((item) => (

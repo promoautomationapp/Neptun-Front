@@ -69,7 +69,11 @@ export interface Settings {
   brandAssets?: Record<string, string>;
   brandLogos?: Record<string, string>;
   iconDefaults?: Record<string, IconDefault>;
-  automaticSavings?: { enabled: boolean; amountThreshold: number };
+  automaticSavings?: {
+    enabled: boolean;
+    amountThreshold: number;
+    basis?: "offer-price" | "savings-amount";
+  };
   categoryPathSavingModes?: Record<string, "amount" | "percentage">;
   categorySavingModes?: Record<string, CategorySavingRule>;
   campaignTypes?: CampaignType[];
@@ -91,6 +95,7 @@ export interface BrochureFooterDesign {
   to?: string;
 }
 export interface Campaign {
+  updatedBy?: string;
   brochurePresetId?: string;
   coverBrandTagline?: string;
   brochureVisualStyle?: "current" | "october";
@@ -138,7 +143,11 @@ export interface Campaign {
   coverFooterColor?: string;
   coverGradientRegion?: string;
   storeOrder?: number[];
-  automaticSavings?: { enabled: boolean; amountThreshold: number };
+  automaticSavings?: {
+    enabled: boolean;
+    amountThreshold: number;
+    basis?: "offer-price" | "savings-amount";
+  };
   categoryPathSavingModes?: Record<string, "amount" | "percentage">;
   categorySavingModes?: Record<string, CategorySavingRule>;
   storePositions?: Record<string, Placement>;
@@ -202,6 +211,7 @@ export interface Campaign {
   savingMode?: string;
   selectedStoreIndexes?: number[];
   showCoverBand?: boolean;
+  coverBandVariant?: "uuu" | "hajde" | "online";
   showCoverHeadline?: boolean;
   showCoverLogo?: boolean;
   showOnlineStore?: boolean;
@@ -267,6 +277,7 @@ export interface CampaignStoresSnapshotStoresItem {
 }
 
 export interface SocialPost {
+  notificationLanguage?: "sq" | "en";
   disabledAt?: string | null;
   disabledBy?: string | null;
   showGrid?: boolean;
@@ -308,6 +319,7 @@ export interface SocialPost {
   showInches?: boolean;
   showInstallments?: boolean;
   showNeptunLogo?: boolean;
+  showLogoFooterLine?: boolean;
   showPrice?: boolean;
   showRegular?: boolean;
   showSaving?: boolean;

@@ -17,6 +17,7 @@ import { tvInchesEmbedded } from "./imageReview";
 import { EditableScreenAnnotation } from "./EditableScreenAnnotation";
 import {
   phoneAnnotationBaseBox,
+  otherScreenAnnotationBaseBox,
   televisionAnnotationBaseBox,
   usesPhoneCornerAnnotation,
   type ScreenAnnotationPlacement,
@@ -215,8 +216,7 @@ export function bundleScreenAnnotationPlacement(
     inches,
     type: "other",
     style: {
-      top: Math.max(1, visiblePhoto.top - (pageWidth / visualScale) * 0.044),
-      right: Math.max(1, width - visiblePhoto.left - visiblePhoto.width),
+      ...otherScreenAnnotationBaseBox(visiblePhoto, pageWidth / visualScale),
     },
   };
 }

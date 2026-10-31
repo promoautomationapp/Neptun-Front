@@ -36,12 +36,21 @@ export function resolveScreenAnnotationPlacement(
   type: ScreenAnnotationType,
   saved?: ScreenAnnotationPlacement,
 ): ResolvedScreenAnnotationPlacement {
-  const manual = saved && (Number.isFinite(saved.x) || Number.isFinite(saved.y) || Number.isFinite(saved.scale) && Number(saved.scale) > 0);
+  const manual =
+    saved &&
+    (Number.isFinite(saved.x) ||
+      Number.isFinite(saved.y) ||
+      (Number.isFinite(saved.scale) && Number(saved.scale) > 0));
   saved ||= {};
   const television = type === "television" || type === "phone";
   return {
     ...saved,
-    ...(type === "television" ? {textPosition: saved.textPosition || (manual ? "original" : "balanced")} : {}),
+    ...(type === "television"
+      ? {
+          textPosition:
+            saved.textPosition || (manual ? "original" : "balanced"),
+        }
+      : {}),
     x: Number.isFinite(saved.x) ? saved.x! : television ? -canonicalInset : 0,
     y: Number.isFinite(saved.y) ? saved.y! : television ? canonicalInset : 0,
     scale:
@@ -95,6 +104,23 @@ export function phoneAnnotationBaseBox(photo: AnnotationBox): AnnotationBox {
     top: photo.top,
     width: side,
     height: side,
+  };
+}
+
+/** Keep the tablet/laptop guide beside the visible photo, including cutout margins.
+ * The vertical arrow is at x=33.3869 in the native 67.1693-wide artwork. */
+export function otherScreenAnnotationBaseBox(
+  photo: AnnotationBox,
+  pageWidth: number,
+): AnnotationBox {
+  const width = pageWidth * 0.079519;
+  const gap = (pageWidth * 2) / SCREEN_ANNOTATION_CANONICAL_WIDTH;
+  return {
+    left:
+      photo.left + photo.width + gap - width * (33.3868950515 / 67.1693479534),
+    top: photo.top - gap * 2 - width * (30.1451137381 / 67.1693479534),
+    width,
+    height: width * (34.9477117807 / 67.1693479534),
   };
 }
 

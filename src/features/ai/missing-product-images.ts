@@ -16,6 +16,12 @@ export interface MissingImageTarget {
     brand: string;
     category: string;
     details: string[];
+    model?: string;
+    ean?: string;
+    subcategory?: string;
+    sourceUrl?: string;
+    variants?: string[];
+    bundle?: boolean;
   };
 }
 
@@ -24,7 +30,51 @@ function imageSource(product: Product): string {
 }
 
 export function productImageSearchParams(product: Product) {
+  const identity = product as Product & {
+    model?: string;
+    ean?: string;
+    color?: string;
+  };
+  const identityCells = Object.entries(product.excelSource?.cells || {}).filter(
+    ([key]) => {
+      const normalized = key.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+      return (
+        !/price|cmim|discount|kursen|zbritje/i.test(normalized) &&
+        /model|mpn|emertim|name|brand|marka|ngjyr|colou?r|memori|storage|capacity|pershkrim|description|spec|ean|barcode/i.test(
+          normalized,
+        )
+      );
+    },
+  );
+  const model = detailPlainText(
+    identity.model ||
+      Object.entries(product.specs || {}).find(([key]) =>
+        /^(?:model|modeli|mpn)$/i.test(key.trim()),
+      )?.[1] ||
+      identityCells.find(([key]) => /model|mpn/i.test(key))?.[1] ||
+      "",
+  ).slice(0, 160);
+  const variants = [
+    ...new Set(
+      [
+        identity.color || "",
+        ...Object.entries(product.specs || {})
+          .filter(([key]) =>
+            /^(?:colou?r|ngjyra|selected variant)$/i.test(key.trim()),
+          )
+          .map(([, value]) => value),
+      ]
+        .map(detailPlainText)
+        .filter(Boolean),
+    ),
+  ].slice(0, 12);
   const details = [
+    ...Object.entries(product.specs || {})
+      .filter(([key]) =>
+        /model|mpn|colou?r|ngjyr|memori|storage|capacity/i.test(key),
+      )
+      .map(([key, value]) => `${key}: ${value}`),
+    ...identityCells.map(([key, value]) => `${key}: ${value}`),
     ...(product.brochureDetails || []).map((row) =>
       typeof row === "string" ? row : row.text,
     ),
@@ -45,6 +95,22 @@ export function productImageSearchParams(product: Product) {
     name: detailPlainText(product.name).slice(0, 600),
     brand: detailPlainText(product.brand).slice(0, 100),
     category: detailPlainText(product.category).slice(0, 100),
+    ...(model ? { model } : {}),
+    ...(identity.ean
+      ? { ean: detailPlainText(identity.ean).slice(0, 40) }
+      : {}),
+    ...(product.subcategory
+      ? { subcategory: detailPlainText(product.subcategory).slice(0, 160) }
+      : {}),
+    ...(product.url && /^https:\/\//i.test(product.url)
+      ? { sourceUrl: product.url.slice(0, 2048) }
+      : {}),
+    ...(variants.length ? { variants } : {}),
+    ...(product.bundleCodes &&
+    product.bundleCodes.length > 1 &&
+    !product.bundleProducts?.length
+      ? { bundle: true }
+      : {}),
     details: [...new Set(details)]
       .slice(0, 30)
       .map((value) => value.slice(0, 600)),
@@ -66,7 +132,10 @@ export function missingImageTargets(
       : [offer];
     return members
       .filter(
-        (member) => member.catalogMissing && member.name !== member.excelSource?.placeholderName && (manual || !imageSource(member)),
+        (member) =>
+          member.catalogMissing &&
+          member.name !== member.excelSource?.placeholderName &&
+          (manual || !imageSource(member)),
       )
       .map((member) => ({
         offerCode: offer.code,
@@ -201,15 +270,37 @@ export async function findMissingProductImages(
   retry = false,
 ): Promise<void> {
   const queue = [...targets];
+  const requests = new Map<string, Promise<ProductImageSearchResult>>();
   await Promise.all(
     Array.from({ length: Math.min(2, queue.length) }, async () => {
       let target: MissingImageTarget | undefined;
       while ((target = queue.shift())) {
         try {
-          const result = await requestAi("ai-find-product-image", {
-            ...target.params,
-            ...(retry ? { retry: true } : {}),
+          const { code, name, brand, model, ean, bundle, variants, details } =
+            target.params;
+          const identity = {
+            code,
+            name,
+            brand,
+            model,
+            ean,
+            bundle,
+            variants,
+            details,
+          };
+          const key = JSON.stringify({
+            ...identity,
+            details: [...identity.details].sort(),
           });
+          let pending = requests.get(key);
+          if (!pending) {
+            pending = requestAi("ai-find-product-image", {
+              ...target.params,
+              ...(retry ? { retry: true } : {}),
+            });
+            requests.set(key, pending);
+          }
+          const result = await pending;
           apply(target, result);
         } catch (error) {
           apply(

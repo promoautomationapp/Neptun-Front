@@ -111,7 +111,7 @@ export function SettingsPage({
   if (error)
     return (
       <div className="ns-settings">
-        <p role="alert">{error}</p>
+        <p role="alert">{t(error)}</p>
         <button type="button" onClick={() => setReload((value) => value + 1)}>
           {t("Try again")}
         </button>

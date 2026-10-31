@@ -46,6 +46,40 @@ it("edits prices in place with an automatic percentage and preserves the origina
   });
 });
 
+it("saves valid prices when keyboard focus leaves for page navigation, keeping cancel and invalid drafts safe", () => {
+  const save = vi.fn(),
+    close = vi.fn();
+  const view = render(
+    <>
+      <InlinePriceEditor product={product} onSave={save} onClose={close} />
+      <button>Next page</button>
+    </>,
+  );
+  const offer = view.getByRole("spinbutton", { name: "New offer price (€)" });
+  fireEvent.change(offer, { target: { value: "450" } });
+  fireEvent.blur(offer, {
+    relatedTarget: view.getByRole("button", { name: "Cancel" }),
+  });
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.blur(offer, {
+    relatedTarget: view.getByRole("button", { name: "Next page" }),
+  });
+  expect(save).toHaveBeenCalledWith({
+    regular: 600,
+    sale: 450,
+    confirmedAboveRegular: false,
+  });
+  expect(close).toHaveBeenCalledOnce();
+  save.mockClear();
+  close.mockClear();
+  fireEvent.change(offer, { target: { value: "-5" } });
+  fireEvent.blur(offer, {
+    relatedTarget: view.getByRole("button", { name: "Next page" }),
+  });
+  expect(save).not.toHaveBeenCalled();
+  expect(close).not.toHaveBeenCalled();
+});
+
 it("double-clicks an image to replace it and a savings badge to switch units without opening a modal", () => {
   vi.useFakeTimers();
   const change = vi.fn(),

@@ -67,18 +67,29 @@ export function MissingCatalogNotice({
   const search = imageSearchState(product);
   if (!missing && hasPhoto && !search) return null;
   const searching = search?.status === "searching";
-  const incomplete = Boolean(product.excelSource?.placeholderName && product.excelSource.placeholderName === product.name);
-  const heading = t(incomplete ? "Incomplete Excel row" : missing ? "Not in catalog" : "Image missing");
+  const incomplete = Boolean(
+    product.excelSource?.placeholderName &&
+    product.excelSource.placeholderName === product.name,
+  );
+  const heading = t(
+    incomplete
+      ? "Incomplete Excel row"
+      : missing
+        ? "Not in catalog"
+        : "Image missing",
+  );
   const status = t(
-    incomplete ? "Add the product name or model, then search for its photo. You can upload an image now." : searching
-      ? "Searching for the exact product photo…"
-      : search?.status === "found"
-        ? "Exact product photo found"
-        : search?.status === "not_found"
-          ? "No exact product photo found"
-          : search?.status === "failed"
-            ? "Image search could not be completed"
-            : "Upload a photo or search for this product's exact image.",
+    incomplete
+      ? "Add the product name or model, then search for its photo. You can upload an image now."
+      : searching
+        ? "Searching for the exact product photo…"
+        : search?.status === "found"
+          ? "Exact product photo found"
+          : search?.status === "not_found"
+            ? "No exact product photo found"
+            : search?.status === "failed"
+              ? "Image search could not be completed"
+              : "Upload a photo or search for this product's exact image.",
   );
   if (variant === "badge") {
     const content = (
@@ -137,7 +148,11 @@ export function MissingCatalogNotice({
             {t("Photo source")}
           </a>
         )}
-        {search?.message && <small>{search.message}</small>}
+        {(search?.status === "not_found" || search?.status === "failed") && (
+          <small>
+            {t("Add the full model name and product code, or upload a photo.")}
+          </small>
+        )}
       </div>
       {(onFindImage || onUploadImage || onOpenEditor) && (
         <div className="missing-catalog-actions">

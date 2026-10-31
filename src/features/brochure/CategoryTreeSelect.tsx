@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Product } from "../../domain/models";
 import { t } from "./i18n";
+import "../../styles/category-select.css";
 import { normalizeSearch, matchesSearch } from "./searchText";
 import {
   type CategoryNode,
@@ -67,14 +68,29 @@ export function CategoryTreeSelect({
         counts.set(path, (counts.get(path) || 0) + 1);
       });
     }
+    const paths = sourcePaths ? [...sourcePaths] : [];
+    const available = categoryNodes(sourcePaths?.length ? [] : facets, paths);
+    // Keep saved paths selectable even after the catalog no longer returns them.
+    const savedPath =
+      categoryPath ||
+      (category &&
+      !available.some(
+        (node) =>
+          categorySegments(node.path)[0] === category &&
+          node.label === (subcategory || category),
+      )
+        ? [category, subcategory].filter(Boolean).join(" > ")
+        : "");
     return {
-      nodes: categoryNodes(
-        sourcePaths?.length ? [] : facets,
-        sourcePaths ? [...sourcePaths] : [],
-      ),
+      nodes: savedPath
+        ? categoryNodes(sourcePaths?.length ? [] : facets, [
+            ...paths,
+            savedPath,
+          ])
+        : available,
       counts,
     };
-  }, [catalog, sourcePaths]);
+  }, [catalog, sourcePaths, categoryPath, category, subcategory]);
   const selectedPath =
     categoryPath !== undefined
       ? categoryPath
@@ -126,7 +142,7 @@ export function CategoryTreeSelect({
 
   useEffect(() => {
     if (!open) return;
-    search.current?.focus();
+    search.current?.focus({ preventScroll: true });
     const dismiss = (event: PointerEvent) => {
       if (
         event.target instanceof Node &&
@@ -138,7 +154,7 @@ export function CategoryTreeSelect({
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
-        trigger.current?.focus();
+        trigger.current?.focus({ preventScroll: true });
       }
     };
     document.addEventListener("pointerdown", dismiss);
@@ -182,14 +198,14 @@ export function CategoryTreeSelect({
     onPathChange?.(path);
     setOpen(false);
     setQuery("");
-    trigger.current?.focus();
+    trigger.current?.focus({ preventScroll: true });
   }
   function keyNavigation(event: ReactKeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       setOpen(false);
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
       return;
     }
     if (event.target === search.current && event.key === "Enter") {
@@ -204,6 +220,23 @@ export function CategoryTreeSelect({
       event.target === search.current
     )
       return;
+    if (
+      (event.key === "ArrowRight" || event.key === "ArrowLeft") &&
+      event.target instanceof HTMLElement
+    ) {
+      const row = event.target.closest<HTMLElement>("[data-category-path]");
+      const path = row?.dataset.categoryPath;
+      if (path && branches.has(path) && !term) {
+        event.preventDefault();
+        setExpanded((current) => {
+          const next = new Set(current);
+          if (event.key === "ArrowRight") next.add(path);
+          else next.delete(path);
+          return next;
+        });
+        return;
+      }
+    }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     const buttons = [...(options.current?.querySelectorAll("button") || [])];
     if (!buttons.length) return;
@@ -228,6 +261,7 @@ export function CategoryTreeSelect({
       <div
         className={`cs-category-tree-row${node.depth ? " is-child" : ""}`}
         key={node.path}
+        data-category-path={node.path}
         style={{ paddingLeft: node.depth * 13 }}
       >
         <button
@@ -243,9 +277,10 @@ export function CategoryTreeSelect({
         >
           <span>
             <strong>{t(node.label)}</strong>
-            {term && node.parent && (
-              <small>{translatedPath(node.parent)}</small>
-            )}
+            <small className="cs-category-kind">
+              {t(node.depth ? "Subcategory" : "Category")}
+              {term && node.parent ? ` · ${translatedPath(node.parent)}` : ""}
+            </small>
           </span>
           {showCounts && <b>{counts.get(node.path) || 0}</b>}
         </button>
@@ -264,6 +299,7 @@ export function CategoryTreeSelect({
               })
             }
           >
+            <span>{t("Subcategories")}</span>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="m7 5 5 5-5 5" />
             </svg>
@@ -301,7 +337,7 @@ export function CategoryTreeSelect({
             {selectedParts.length ? t(selectedParts.at(-1)!) : placeholder}
           </strong>
           {selectedParts.length > 1 && (
-            <small>{selectedParts.slice(0, -1).map(t).join(" > ")}</small>
+            <small>{selectedParts.slice(0, -1).map(t).join(" › ")}</small>
           )}
         </span>
         <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -317,6 +353,23 @@ export function CategoryTreeSelect({
             role="dialog"
             aria-label={label}
           >
+            <div className="cs-category-heading">
+              <strong>{t("Choose a category")}</strong>
+              <p>
+                {t(
+                  "Select a category to include its subcategories, or expand it to choose one.",
+                )}
+              </p>
+              {selectedParts.length > 0 && (
+                <div
+                  className="cs-category-selection"
+                  aria-label={t("Selected category path")}
+                >
+                  <small>{t("Selected")}</small>
+                  <span>{selectedParts.map(t).join(" › ")}</span>
+                </div>
+              )}
+            </div>
             <div className="cs-category-search">
               <svg viewBox="0 0 20 20" aria-hidden="true">
                 <circle cx="8.5" cy="8.5" r="5.5" />
@@ -331,7 +384,45 @@ export function CategoryTreeSelect({
                 placeholder={t("Search categories or subcategories…")}
                 aria-label={t("Search categories or subcategories…")}
               />
+              {query && (
+                <button
+                  className="cs-category-clear"
+                  type="button"
+                  aria-label={t("Clear search")}
+                  onClick={() => {
+                    setQuery("");
+                    search.current?.focus({ preventScroll: true });
+                  }}
+                >
+                  ×
+                </button>
+              )}
             </div>
+            {!term && (
+              <div className="cs-category-branch-actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpanded(
+                      new Set(
+                        nodes
+                          .filter((node) => branches.has(node.path))
+                          .map((node) => node.path),
+                      ),
+                    )
+                  }
+                >
+                  {t("Expand all")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!expanded.size}
+                  onClick={() => setExpanded(new Set())}
+                >
+                  {t("Collapse all")}
+                </button>
+              </div>
+            )}
             <div
               className="cs-category-options"
               ref={options}

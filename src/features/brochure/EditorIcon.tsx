@@ -3,7 +3,16 @@ import React from "react";
 export function EditorIcon({
   name,
 }: {
-  name: "edit" | "image" | "screen" | "move" | "drag" | "trash";
+  name:
+    | "edit"
+    | "image"
+    | "screen"
+    | "move"
+    | "drag"
+    | "trash"
+    | "chevron-up"
+    | "chevron-down"
+    | "plus";
 }) {
   return (
     <svg
@@ -17,7 +26,13 @@ export function EditorIcon({
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {name === "edit" ? (
+      {name === "chevron-up" ? (
+        <path d="m6 15 6-6 6 6" />
+      ) : name === "chevron-down" ? (
+        <path d="m6 9 6 6 6-6" />
+      ) : name === "plus" ? (
+        <path d="M12 5v14M5 12h14" />
+      ) : name === "edit" ? (
         <>
           <path d="m4 16 11-11 4 4L8 20H4Z M13 7l4 4" />
         </>

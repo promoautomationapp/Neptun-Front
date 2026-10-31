@@ -7,7 +7,9 @@ import {
   SocialProductVisual,
 } from "../../src/features/social/CanvasLayers";
 import type { Placement } from "../../src/domain/models";
+import { setLanguage } from "../../src/features/brochure/i18n";
 beforeEach(() => {
+  setLanguage("en");
   vi.stubGlobal("PointerEvent", MouseEvent);
   vi.stubGlobal("ResizeObserver", undefined);
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(

@@ -174,3 +174,35 @@ it("hides successful preparation after four seconds and keeps failures actionabl
     view.getByRole("button", { name: "Retry failed photos" }),
   ).toBeTruthy();
 });
+
+it("keeps portalled product actions outside clipped cards and closes them after an action or Escape", () => {
+  const action = vi.fn();
+  const view = render(
+    <ActionMenu label="Edit product" portal>
+      <button onClick={action}>Product details</button>
+      <input aria-label="Upload photo" type="file" />
+    </ActionMenu>,
+  );
+  const menu = view.container.querySelector("details")!;
+  const open = () => {
+    menu.open = true;
+    fireEvent(menu, new Event("toggle"));
+  };
+  open();
+  const popup = document.querySelector(".cs-action-menu-portal")!;
+  expect(view.container.contains(popup)).toBe(false);
+  expect(popup.parentElement).toBe(document.body);
+  const button = view.getByRole("button", { name: "Product details" });
+  fireEvent.pointerDown(button);
+  expect(menu.open).toBe(true);
+  fireEvent.click(button);
+  expect(action).toHaveBeenCalledOnce();
+  expect(menu.open).toBe(false);
+  expect(
+    document.querySelector('input[aria-label="Upload photo"]'),
+  ).toBeTruthy();
+  open();
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(menu.open).toBe(false);
+  expect(document.activeElement).toBe(menu.querySelector("summary"));
+});

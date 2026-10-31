@@ -1,3 +1,5 @@
+import { setLanguage } from "../../src/features/brochure/i18n";
+import { beforeEach } from "vitest";
 import { selectSetting } from "../helpers/settings-sections";
 import React from "react";
 import {
@@ -112,3 +114,5 @@ it("renders a selected color logo on the cover and keeps manually selected broch
       ?.getAttribute("src"),
   ).toBe("/api/assets/legacy/assets/manual.png");
 });
+
+beforeEach(() => setLanguage("en"));

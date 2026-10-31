@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { AssetPicker, Field } from "./components";
@@ -18,14 +19,14 @@ export function SavingSelect({
   inherit?: boolean;
 }) {
   return (
-    <Field label={label}>
+    <Field label={t(label)}>
       <SearchableSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
-        {inherit && <option value="">Use the default above</option>}
-        <option value="amount">Kurse (€) — Save €</option>
-        <option value="percentage">Zbritje (%) — Discount %</option>
+        {inherit && <option value="">{t("Use the default above")}</option>}
+        <option value="amount">{t("Kurse (€) — Save €")}</option>
+        <option value="percentage">{t("Zbritje (%) — Discount %")}</option>
       </SearchableSelect>
     </Field>
   );
@@ -38,10 +39,11 @@ export function OffersTab({
 }: { facets: CategoryFacet[]; facetsError?: string } & SettingsTabProps) {
   return (
     <section className="ns-section">
-      <h2>Prices and savings</h2>
+      <h2>{t("Prices and savings")}</h2>
       <p>
-        Products can override these defaults inside a brochure. Subcategory
-        choices take priority over category choices.
+        {t(
+          "Products can override these defaults inside a brochure. Subcategory choices take priority over category choices.",
+        )}
       </p>
       <Field label="Default price design">
         <SearchableSelect
@@ -55,7 +57,7 @@ export function OffersTab({
         >
           {OFFER_STYLES.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} — {item.detail}
+              {t(item.name)} — {t(item.detail)}
             </option>
           ))}
         </SearchableSelect>
@@ -79,9 +81,9 @@ export function OffersTab({
             })
           }
         >
-          <option value="symbol">haPPy with symbol (current)</option>
-          <option value="wordmark">haPPy wordmark</option>
-          <option value="custom">Uploaded price logo</option>
+          <option value="symbol">{t("haPPy with symbol (current)")}</option>
+          <option value="wordmark">{t("haPPy wordmark")}</option>
+          <option value="custom">{t("Uploaded price logo")}</option>
         </SearchableSelect>
       </Field>
       <AssetPicker
@@ -131,7 +133,7 @@ export function OffersTab({
           }
         />
       </Field>
-      <SettingsGroup title={<> Price artwork colors </>}>
+      <SettingsGroup title={<> {t("Price artwork colors")} </>}>
         <div className="ns-grid">
           {(
             [
@@ -141,7 +143,7 @@ export function OffersTab({
               ["saving", "Red savings text"],
             ] as const
           ).map(([key, label]) => (
-            <Field key={key} label={label}>
+            <Field key={key} label={t(label)}>
               <input
                 type="color"
                 value={draft.brochure.pricePalette[key]}

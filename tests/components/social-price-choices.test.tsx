@@ -59,6 +59,7 @@ it.each([
     fireEvent.click(
       await view.findByRole("button", { name: /Social price defaults/ }),
     );
+    fireEvent.click(view.getByRole("button", { name: "Designs" }));
     const choices = view.container.querySelectorAll<HTMLButtonElement>(
       ".social-price-choice-grid > button",
     );

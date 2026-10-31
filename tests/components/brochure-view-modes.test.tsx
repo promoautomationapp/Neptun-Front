@@ -76,15 +76,15 @@ it("switches between editing, a clean preview and a dedicated comment view", () 
 it("returns from the full-screen preview to editing using its visible button or Escape", () => {
   const view = render(<BrochureEditor {...props} />);
   const modes = within(view.container.querySelector(".cs-canvas-dock")!);
-  fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
+  fireEvent.click(modes.getByRole("button", { name: "Open full preview" }));
   fireEvent.click(view.getByRole("button", { name: "Back to editing" }));
   expect(
     view.container.querySelector(".cs-page-preview.edit-view"),
   ).toBeTruthy();
   expect(document.activeElement).toBe(
-    modes.getByRole("button", { name: "Preview only" }),
+    modes.getByRole("button", { name: "Open full preview" }),
   );
-  fireEvent.click(modes.getByRole("button", { name: "Preview only" }));
+  fireEvent.click(modes.getByRole("button", { name: "Open full preview" }));
   fireEvent(
     view.getByRole("dialog", { name: "Brochure preview" }),
     new Event("cancel", { bubbles: true, cancelable: true }),
@@ -115,5 +115,28 @@ it("opens the notification thread in comment mode on the intended brochure page"
   expect(
     view.getByRole("region", { name: "Page review comments" }),
   ).toBeTruthy();
+  expect(props.onUpdate).not.toHaveBeenCalled();
+});
+
+it("previews in place without opening a dialog or editing the document and returns with Escape", () => {
+  const view = render(<BrochureEditor {...props} />);
+  const paper = view.container.querySelector(".cs-preview-paper");
+  const toolbar = within(view.container.querySelector(".cs-canvas-dock")!);
+  fireEvent.click(toolbar.getByRole("button", { name: "Preview only" }));
+  expect(view.queryByRole("dialog", { name: "Brochure preview" })).toBeNull();
+  expect(
+    view.container.querySelector(".cs-page-preview.inline-preview.view-only"),
+  ).toBeTruthy();
+  expect(view.container.querySelector(".cs-preview-paper")).toBe(paper);
+  expect(paper?.querySelector('[contenteditable="true"]')).toBeNull();
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(
+    view.container.querySelector(".cs-page-preview.edit-view"),
+  ).toBeTruthy();
+  expect(
+    toolbar
+      .getByRole("button", { name: "Preview only" })
+      .getAttribute("aria-pressed"),
+  ).toBe("false");
   expect(props.onUpdate).not.toHaveBeenCalled();
 });

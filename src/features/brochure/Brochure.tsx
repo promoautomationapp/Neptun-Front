@@ -26,6 +26,12 @@ import type { CampaignAssetChange } from "./CampaignAssetArtwork";
 import { CampaignAssetArtwork } from "./CampaignAssetArtwork";
 import { ProductBrandArtwork } from "./ProductBrandArtwork";
 import {
+  ReferenceFooterPayment,
+  ReferenceFooterValidity,
+} from "./ReferenceFooterText";
+import "../../styles/classic-cover-reference.css";
+import "../../styles/brochure-product-workspace.css";
+import {
   coverTextColor,
   coverMessageVisible,
   isFeaturedCoverProduct,
@@ -147,6 +153,7 @@ import { visibleImageBounds, televisionScreenBox } from "./screenGeometry";
 import {
   televisionAnnotationBaseBox,
   phoneAnnotationBaseBox,
+  otherScreenAnnotationBaseBox,
   usesPhoneCornerAnnotation,
 } from "./screenAnnotationGeometry";
 import { brochureFormatStyle } from "./brochureFormat";
@@ -816,6 +823,7 @@ interface ProductCardProps extends ProductEditingProps {
   product: Product;
   light?: boolean;
   hero?: boolean;
+  classicCover?: boolean;
   priceLogo: string;
   installments: number;
   layout?: string;
@@ -873,7 +881,7 @@ interface CardGesture {
   config: ReturnType<typeof layoutGrid>;
   next?: { width: number; height: number };
 }
-function ProductCard(props: ProductCardProps) {
+export function ProductCard(props: ProductCardProps) {
   const quickEdit = useProductQuickEdit({
     campaign: props.campaign,
     product: props.product,
@@ -1127,6 +1135,7 @@ function StandardProductCard({
   quickEdit,
   light = false,
   hero = false,
+  classicCover = false,
   priceLogo,
   installments,
   onEditImage,
@@ -1196,10 +1205,15 @@ function StandardProductCard({
   const specs =
     detailPlacement === "left"
       ? allSpecs
-      : brochureVisibleDetailEntries(preferredSpecs, {
-          columns: layoutGrid(layout || "grid6portrait").columns,
-          warrantyInStrip: Boolean(warranty && warrantyInStrip),
-        });
+      : classicCover
+        ? preferredSpecs.slice(
+            0,
+            6 - Number(Boolean(warranty && warrantyInStrip)),
+          )
+        : brochureVisibleDetailEntries(preferredSpecs, {
+            columns: layoutGrid(layout || "grid6portrait").columns,
+            warrantyInStrip: Boolean(warranty && warrantyInStrip),
+          });
   const changeProduct = onProductChange
     ? (
         field: keyof Product | Partial<Product>,
@@ -1511,11 +1525,6 @@ function StandardProductCard({
         wrap.top +
         (box.height - contentHeight) / 2 +
         (visible?.top || 0) * contentHeight;
-      const contentRight =
-        wrap.right -
-        box.right +
-        (box.width - contentWidth) / 2 +
-        (visible ? 1 - visible.right : 0) * contentWidth;
       if (phoneCorner) {
         setScreenCorner(
           phoneAnnotationBaseBox({
@@ -1539,12 +1548,12 @@ function StandardProductCard({
       const pageWidth =
         area.closest(".brochure-page")?.getBoundingClientRect().width ||
         wrap.width;
-      const labelHeight = pageWidth * 0.044;
-      setScreenCorner({
-        top: Math.max(1, contentTop - labelHeight) / visualScale,
-        right: Math.max(1, contentRight) / visualScale,
-        guides: contentTop >= labelHeight && wrap.width >= pageWidth * 0.22,
-      });
+      setScreenCorner(otherScreenAnnotationBaseBox({
+        left: (box.left - wrap.left + (box.width - contentWidth) / 2 + (visible?.left || 0) * contentWidth) / visualScale,
+        top: contentTop / visualScale,
+        width: contentWidth * (visible ? visible.right - visible.left : 1) / visualScale,
+        height: contentHeight * (visible ? visible.bottom - visible.top : 1) / visualScale,
+      }, pageWidth / visualScale));
     };
     const area = wrapRef.current;
     const card = area.closest(".brochure-product");
@@ -1768,9 +1777,7 @@ function StandardProductCard({
               className="brochure-inch-label"
               style={
                 screenCorner
-                  ? screenInches || phoneCorner
-                    ? { ...screenCorner }
-                    : { top: screenCorner.top, right: screenCorner.right }
+                  ? { ...screenCorner }
                   : { visibility: "hidden" }
               }
             />
@@ -1867,82 +1874,96 @@ function StandardProductCard({
             onStart={(event) => beginImageGesture(event, "scale")}
           />
         )}
-        {(onEditImage || onEditDetails || onMove) && (
-          <ActionMenu
-            className="cs-product-tools"
-            label={
-              <>
-                <EditorIcon name="edit" />
-                <span className="cs-product-tools-label">{t("Edit product")}</span>
-              </>
-            }
-          >
-            {onEditImage && (
-              <button
-                type="button"
-                onClick={() => onEditImage(product)}
-                title={t("Change image")}
-                aria-label={`${t("Change image")}: ${product.name}`}
-              >
-                <EditorIcon name="image" />
-                {t("Change image")}
-              </button>
-            )}
-            {onEditScreen && hasEditableScreen(product) && (
-              <button
-                type="button"
-                onClick={() => onEditScreen(product)}
-                title={t("Image inside the screen")}
-                aria-label={`${t("Image inside the screen")}: ${product.name}`}
-              >
-                <EditorIcon name="screen" />
-                {t("TV wallpaper")}
-              </button>
-            )}
-            {onEditDetails && (
-              <button
-                type="button"
-                onClick={() => onEditDetails(product)}
-                title={t("Edit product details")}
-                aria-label={`${t("Edit product details")}: ${product.name}`}
-              >
-                <EditorIcon name="edit" />
-                {t("Product details")}
-              </button>
-            )}
-            {onMove && (
-              <button
-                type="button"
-                onClick={() => onMove(product)}
-                title={t("Move product to another page")}
-                aria-label={`${t("Move product to another page")}: ${product.name}`}
-              >
-                <EditorIcon name="move" />
-                {t("Move to another page")}
-              </button>
-            )}
-            {onProductDragStart && (
-              <span
-                draggable="true"
-                role="button"
-                tabIndex={0}
-                onDragStart={(event) => onProductDragStart(product, event)}
-                onKeyDown={(event) => {
-                  if ((event.key === "Enter" || event.key === " ") && onMove) {
-                    event.preventDefault();
-                    onMove(product);
-                  }
-                }}
-                title={t("Drag to reorder or move to a page")}
-                aria-label={`${t("Drag to reorder or move to a page")}: ${product.name}`}
-              >
-                <EditorIcon name="drag" />
-                {t("Drag to reorder")}
-              </span>
-            )}
-          </ActionMenu>
-        )}
       </div>
+      {(onEditImage || onEditDetails || onMove) && (
+        <ActionMenu
+          portal
+          portalClassName="cs-product-menu-popover"
+          className="cs-product-tools"
+          label={
+            <>
+              <EditorIcon name="edit" />
+              <span className="cs-product-tools-label">
+                {t("Edit product")}
+              </span>
+            </>
+          }
+        >
+          {onEditImage && (
+            <button
+              type="button"
+              onClick={() => onEditImage(product)}
+              title={t("Change image")}
+              aria-label={`${t("Change image")}: ${product.name}`}
+            >
+              <EditorIcon name="image" />
+              {t("Change image")}
+            </button>
+          )}
+          {onEditScreen && hasEditableScreen(product) && (
+            <button
+              type="button"
+              onClick={() => onEditScreen(product)}
+              title={t("Image inside the screen")}
+              aria-label={`${t("Image inside the screen")}: ${product.name}`}
+            >
+              <EditorIcon name="screen" />
+              {t("TV wallpaper")}
+            </button>
+          )}
+          {onEditDetails && (
+            <button
+              type="button"
+              onClick={() => onEditDetails(product)}
+              title={t("Edit product details")}
+              aria-label={`${t("Edit product details")}: ${product.name}`}
+            >
+              <EditorIcon name="edit" />
+              {t("Product details")}
+            </button>
+          )}
+          {onEditDetails && onProductChange && (
+            <button
+              type="button"
+              onClick={() => onEditDetails(product, "__artwork")}
+              aria-label={`${t("Add image layer")}: ${product.name}`}
+            >
+              <EditorIcon name="image" />
+              {t("Add image layer")}
+            </button>
+          )}
+          {onMove && (
+            <button
+              type="button"
+              onClick={() => onMove(product)}
+              title={t("Move product to another page")}
+              aria-label={`${t("Move product to another page")}: ${product.name}`}
+            >
+              <EditorIcon name="move" />
+              {t("Move to another page")}
+            </button>
+          )}
+          {onProductDragStart && (
+            <span
+              draggable="true"
+              role="button"
+              tabIndex={0}
+              onDragStart={(event) => onProductDragStart(product, event)}
+              onKeyDown={(event) => {
+                if ((event.key === "Enter" || event.key === " ") && onMove) {
+                  event.preventDefault();
+                  onMove(product);
+                }
+              }}
+              title={t("Drag to reorder or move to a page")}
+              aria-label={`${t("Drag to reorder or move to a page")}: ${product.name}`}
+            >
+              <EditorIcon name="drag" />
+              {t("Drag to reorder")}
+            </span>
+          )}
+        </ActionMenu>
+      )}
       <ApplePhotoClearance photoAreaRef={wrapRef} />
       <DefaultSavingsClearance
         key={`${redReference}-${blueReference}-${validSale(product)}`}
@@ -2415,7 +2436,15 @@ function CoverPageContent({
   dropCode,
 }: BrochurePageProps) {
   const products = coverProducts(campaign);
+  const ribbonGradientId = `cover-ribbon-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
+  const classicCover =
+    !october &&
+    campaign.brochureFooter?.style === "reference" &&
+    products.length >= 3 &&
+    products.some((product, index) =>
+      isFeaturedCoverProduct(campaign, product.code, index, products.length),
+    );
   const backgroundColor =
     pageBackgroundContrastColor(campaign, "cover") || "#1c4075";
   const backgroundImage = pageBackgroundImage(campaign, "cover");
@@ -2445,8 +2474,10 @@ function CoverPageContent({
   const referenceCoverGradient =
     october &&
     !backgroundImage &&
-    campaign.coverBackgroundGradient?.from === "#144c83" &&
-    campaign.coverBackgroundGradient?.to === "#70acdc";
+    ((campaign.coverBackgroundGradient?.from === "#144c83" &&
+      campaign.coverBackgroundGradient?.to === "#70acdc") ||
+      (campaign.coverBackgroundGradient?.from === "#234173" &&
+        campaign.coverBackgroundGradient?.to === "#86b3de"));
   const readability = referenceCoverGradient
     ? backgroundReadability({ kind: "solid", color: "#144c83" })
     : coverArt && !backgroundImage
@@ -2470,7 +2501,7 @@ function CoverPageContent({
   );
   return (
     <section
-      className={`brochure-page brochure-cover cover-editable-elements ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
+      className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -2552,23 +2583,37 @@ function CoverPageContent({
               aria-hidden="true"
             >
               <defs>
-                <linearGradient id="october-ribbon-gradient">
+                <linearGradient
+                  id={ribbonGradientId}
+                  x1="0"
+                  y1="0"
+                  x2={
+                    campaign.coverBackgroundGradient?.angle === 180 ? "0" : "1"
+                  }
+                  y2={
+                    campaign.coverBackgroundGradient?.angle === 180 ? "1" : "0"
+                  }
+                >
                   <stop
                     stopColor={
-                      campaign.coverBackgroundGradient?.from || "#144c83"
+                      campaign.coverBackgroundGradient?.from ||
+                      campaign.coverBackgroundColor ||
+                      "#1b4075"
                     }
                   />
                   <stop
                     offset="1"
                     stopColor={
-                      campaign.coverBackgroundGradient?.to || "#70acdc"
+                      campaign.coverBackgroundGradient?.to ||
+                      campaign.coverBackgroundColor ||
+                      "#1b4075"
                     }
                   />
                 </linearGradient>
               </defs>
               <path
                 d="M0 70L1080 0V130L0 190Z"
-                fill="url(#october-ribbon-gradient)"
+                fill={`url(#${ribbonGradientId})`}
               />
             </svg>
           </CoverElement>
@@ -2604,7 +2649,9 @@ function CoverPageContent({
           defaultPlacement={
             october
               ? { x: 31.85, y: 3.26, width: 35.57, height: 6.085 }
-              : undefined
+              : campaign.coverBandVariant === "hajde"
+                ? { x: 30, y: 2, width: 40, height: 8 }
+                : undefined
           }
           onReplaceFile={onReplaceCoverLogo}
           onChooseImage={onChooseCoverLogo}
@@ -2626,27 +2673,32 @@ function CoverPageContent({
           )}
         </CoverElement>
       )}
-      {october && campaign.showCoverLogo !== false && (
-        <CoverElement
-          campaign={campaign}
-          kind="brand-tagline"
-          defaultPlacement={{ x: 46.63, y: 9.95, width: 22.1, height: 1.9 }}
-          onChange={onCoverElementChange}
-          onHide={onCoverElementHide}
-        >
-          <span
-            {...inlineText(
-              campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë.",
-              t("Brand tagline"),
-              onCoverTextChange
-                ? (value) => onCoverTextChange("coverBrandTagline", value)
-                : undefined,
-            )}
+      {(october || campaign.coverBandVariant === "hajde") &&
+        campaign.showCoverLogo !== false && (
+          <CoverElement
+            campaign={campaign}
+            kind="brand-tagline"
+            defaultPlacement={
+              october
+                ? { x: 46.63, y: 9.95, width: 22.1, height: 1.9 }
+                : { x: 46, y: 9.2, width: 24, height: 1.6 }
+            }
+            onChange={onCoverElementChange}
+            onHide={onCoverElementHide}
           >
-            {campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë."}
-          </span>
-        </CoverElement>
-      )}
+            <span
+              {...inlineText(
+                campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë.",
+                t("Brand tagline"),
+                onCoverTextChange
+                  ? (value) => onCoverTextChange("coverBrandTagline", value)
+                  : undefined,
+              )}
+            >
+              {campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë."}
+            </span>
+          </CoverElement>
+        )}
       {campaign.showCoverHeadline !== false && headline && (
         <CoverElement
           campaign={campaign}
@@ -2724,7 +2776,9 @@ function CoverPageContent({
           />
         </CoverElement>
       )}
-      {october && campaign.showCoverBand === true && (
+      {((october && campaign.showCoverBand === true) ||
+        campaign.coverBandVariant === "hajde" ||
+        campaign.coverBandVariant === "online") && (
         <CoverElement
           campaign={campaign}
           kind="october-hajde"
@@ -2733,7 +2787,13 @@ function CoverPageContent({
               ? (file) => onReplaceCoverArtwork("cover-hajde", file)
               : undefined
           }
-          defaultPlacement={{ x: 12.31, y: 48.24, width: 21.15, height: 4.64 }}
+          defaultPlacement={
+            campaign.coverBandVariant === "hajde"
+              ? { x: 6, y: 12, width: 29, height: 5 }
+              : campaign.coverBandVariant === "online"
+                ? { x: 7, y: 48, width: 27, height: 6 }
+                : { x: 12.31, y: 48.24, width: 21.15, height: 4.64 }
+          }
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
@@ -2752,9 +2812,13 @@ function CoverPageContent({
           campaign={campaign}
           kind="message"
           defaultPlacement={
-            october
-              ? { x: 46.35, y: 45.51, width: 43.61, height: 5.9 }
-              : undefined
+            campaign.coverBandVariant === "hajde"
+              ? { x: 39, y: 12, width: 55, height: 5 }
+              : campaign.coverBandVariant === "online"
+                ? { x: 39, y: 48, width: 57, height: 6 }
+                : october
+                  ? { x: 46.35, y: 45.51, width: 43.61, height: 5.9 }
+                  : undefined
           }
           className={
             campaign.showCoverBand === true &&
@@ -2778,7 +2842,14 @@ function CoverPageContent({
               color: coverTextColor(campaign, "coverMessageColor"),
             }}
           >
-            {tagline}
+            {campaign.coverBandVariant === "online" &&
+            tagline === "Blej ONLINE" ? (
+              <>
+                Blej <em className="cover-online-word">ONLINE</em>
+              </>
+            ) : (
+              tagline
+            )}
           </p>
         </CoverElement>
       )}
@@ -2803,6 +2874,7 @@ function CoverPageContent({
                 key={product.code}
                 campaign={campaign}
                 product={product}
+                classicCover={classicCover}
                 hero={isFeaturedCoverProduct(
                   campaign,
                   product.code,
@@ -3453,6 +3525,36 @@ export function BrochureFooter({
       : {};
   const reference = design.style === "reference";
   const height = design.height ?? (reference ? 5 : 4);
+  const dates = (
+    <span
+      key={`dates:${design.dateText ?? footerDateText(campaign)}`}
+      className="brochure-footer-dates"
+      style={{ fontSize: `${design.dateSize ?? (reference ? 2 : 1.9)}cqw` }}
+      {...editable("dateText")}
+    >
+      {reference ? (
+        <ReferenceFooterValidity
+          text={design.dateText ?? footerDateText(campaign)}
+        />
+      ) : (
+        (design.dateText ?? footerDateText(campaign))
+      )}
+    </span>
+  );
+  const payment = (
+    <span
+      key={`payment:${paymentTextFor(campaign)}`}
+      className="brochure-footer-payment"
+      style={{ fontSize: `${design.paymentSize ?? (reference ? 2 : 1.45)}cqw` }}
+      {...editable("paymentText")}
+    >
+      {reference ? (
+        <ReferenceFooterPayment text={paymentTextFor(campaign)} />
+      ) : (
+        paymentTextFor(campaign)
+      )}
+    </span>
+  );
   return (
     <CoverElement
       campaign={campaign}
@@ -3480,23 +3582,17 @@ export function BrochureFooter({
             : {}),
         }}
       >
-        <span
-          className="brochure-footer-dates"
-          style={{ fontSize: `${design.dateSize ?? (reference ? 2 : 1.9)}cqw` }}
-          {...editable("dateText")}
-        >
-          {design.dateText ?? footerDateText(campaign)}
-        </span>
-        <span
-          className="brochure-footer-payment"
-          style={{
-            fontSize: `${design.paymentSize ?? (reference ? 2 : 1.45)}cqw`,
-          }}
-          {...editable("paymentText")}
-        >
-          {paymentTextFor(campaign)}
-        </span>
-        {!reference && <AwardBadges campaign={campaign} onChange={onChange} />}
+        {reference ? (
+          <>
+            {payment} {dates}
+          </>
+        ) : (
+          <>
+            {dates}
+            {payment}
+            <AwardBadges campaign={campaign} onChange={onChange} />
+          </>
+        )}
       </div>
     </CoverElement>
   );

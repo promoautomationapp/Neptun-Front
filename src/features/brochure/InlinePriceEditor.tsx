@@ -69,6 +69,9 @@ export function InlinePriceEditor({
       data-export-hide="true"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) save();
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         save();

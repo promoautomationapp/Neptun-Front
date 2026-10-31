@@ -1,0 +1,44 @@
+.cs-action-menu-portal {
+  z-index: 1200;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--np-border, #d6e3ed);
+  border-radius: 13px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244766);
+  box-shadow: 0 12px 40px #0c284535;
+  font-family: Manrope, Arial, sans-serif;
+}
+.cs-action-menu-portal > button,
+.cs-action-menu-portal > .cs-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+.cs-action-menu-portal > button:hover,
+.cs-action-menu-portal > .cs-button:hover {
+  background: var(--np-raised, #eff6fb);
+}
+.cs-action-menu-portal svg { flex: none; }
+.cs-action-menu-portal[hidden] { display: none; }
+.cs-action-menu-portal button:focus-visible {
+  outline: 2px solid var(--np-accent, #3287ba);
+  outline-offset: -2px;
+}
+@media print { .cs-action-menu-portal { display: none !important; } }

@@ -66,7 +66,10 @@ export function ProductBrandArtwork({ campaign, product, onChange }: Props) {
       onEdit={onChange ? choose : undefined}
       onRemove={onChange ? () => onChange("hideBrandLogo", true) : undefined}
     >
-      <strong className="brochure-brand-mark">
+      <strong
+        className="brochure-brand-mark"
+        data-logo-image={source ? "true" : undefined}
+      >
         {source ? (
           <img
             src={source}

@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
 import { Field, Toggle } from "./components";
@@ -40,13 +41,13 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
   }
   return (
     <section className="ns-section">
-      <h2>Product design defaults</h2>
+      <h2>{t("Product design defaults")}</h2>
       <p>
-        New brochures copy these choices. Existing brochures and individual
-        product edits keep their own design. Automatic choices use the current
-        Neptun reference.
+        {t(
+          "New brochures copy these choices. Existing brochures and individual product edits keep their own design. Automatic choices use the current Neptun reference.",
+        )}
       </p>
-      <SettingsGroup title={<> Product grouping and spacing </>}>
+      <SettingsGroup title={<> {t("Product grouping and spacing")} </>}>
         <Toggle
           label="Automatically group products by type"
           checked={draft.brochure.automaticProductLayout}
@@ -57,8 +58,9 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           }
         />
         <p>
-          Turn this off to use the selected default grid for every product type,
-          including MacBooks.
+          {t(
+            "Turn this off to use the selected default grid for every product type, including MacBooks.",
+          )}
         </p>
         <Field label="Default page spacing">
           <SearchableSelect
@@ -70,8 +72,8 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
               })
             }
           >
-            <option value="automatic">Current Neptun spacing</option>
-            <option value="custom">Custom spacing</option>
+            <option value="automatic">{t("Current Neptun spacing")}</option>
+            <option value="custom">{t("Custom spacing")}</option>
           </SearchableSelect>
         </Field>
         {d.grid.mode === "custom" && (
@@ -103,7 +105,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           </div>
         )}
       </SettingsGroup>
-      <SettingsGroup title={<> Product photos </>}>
+      <SettingsGroup title={<> {t("Product photos")} </>}>
         <Field label="Default photo position and size">
           <SearchableSelect
             value={d.photo.mode}
@@ -114,8 +116,10 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
               })
             }
           >
-            <option value="automatic">Automatic fit for each product</option>
-            <option value="custom">Custom position and size</option>
+            <option value="automatic">
+              {t("Automatic fit for each product")}
+            </option>
+            <option value="custom">{t("Custom position and size")}</option>
           </SearchableSelect>
         </Field>
         {d.photo.mode === "custom" && (
@@ -144,11 +148,12 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           }
         />
         <p>
-          TV sizing applies in automatic mode. Prepared image files are reused
-          without alteration.
+          {t(
+            "TV sizing applies in automatic mode. Prepared image files are reused without alteration.",
+          )}
         </p>
       </SettingsGroup>
-      <SettingsGroup title={<> Product details </>}>
+      <SettingsGroup title={<> {t("Product details")} </>}>
         <Field label="Default details position">
           <SearchableSelect
             value={d.details.placement}
@@ -161,10 +166,10 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
             }
           >
             <option value="automatic">
-              Automatic for the product and price design
+              {t("Automatic for the product and price design")}
             </option>
-            <option value="left">Left of photo</option>
-            <option value="bottom">Below photo</option>
+            <option value="left">{t("Left of photo")}</option>
+            <option value="bottom">{t("Below photo")}</option>
           </SearchableSelect>
         </Field>
         <Field label="Default detail box fill">
@@ -178,13 +183,13 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
               })
             }
           >
-            <option value="automatic">Current Neptun reference</option>
-            <option value="filled">Filled</option>
-            <option value="outline">Outline</option>
+            <option value="automatic">{t("Current Neptun reference")}</option>
+            <option value="filled">{t("Filled")}</option>
+            <option value="outline">{t("Outline")}</option>
           </SearchableSelect>
         </Field>
       </SettingsGroup>
-      <SettingsGroup title={<> Product typography </>}>
+      <SettingsGroup title={<> {t("Product typography")} </>}>
         <Field
           label="Default product text font"
           hint="Applies to product names, codes and detail text. Price artwork retains its original typeface."
@@ -199,7 +204,9 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
               })
             }
           >
-            <option value="automatic">Current Neptun reference fonts</option>
+            <option value="automatic">
+              {t("Current Neptun reference fonts")}
+            </option>
             <option value="SkolaSans">SkolaSans</option>
             <option value="TSTAR">TSTAR</option>
             <option value="Arial">Arial</option>
@@ -227,7 +234,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           ))}
         </div>
       </SettingsGroup>
-      <SettingsGroup title={<> Price and savings artwork </>}>
+      <SettingsGroup title={<> {t("Price and savings artwork")} </>}>
         <div className="ns-grid">
           {number(
             "Default price size (%)",
@@ -247,11 +254,12 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
           )}
         </div>
         <p>
-          Manually moved or resized price and savings elements keep their saved
-          dimensions.
+          {t(
+            "Manually moved or resized price and savings elements keep their saved dimensions.",
+          )}
         </p>
       </SettingsGroup>
-      <SettingsGroup title={<> Line beside the product name </>}>
+      <SettingsGroup title={<> {t("Line beside the product name")} </>}>
         <Toggle
           label="Show product name divider"
           checked={d.divider.visible}
@@ -291,7 +299,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
         ).map(([key, label, fallback]) => (
           <div key={key}>
             <Toggle
-              label={`Use automatic ${label.toLocaleLowerCase()}`}
+              label={`${t("Use automatic")} ${t(label).toLocaleLowerCase()}`}
               checked={!d.divider[key]}
               onChange={(value) =>
                 change("divider", {

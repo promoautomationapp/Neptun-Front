@@ -215,3 +215,5 @@ it("resets a photo to its snapshotted custom default and shows the same numbers 
   fireEvent.click(view.getByRole("button", { name: "Reset photo position" }));
   expect(change).toHaveBeenLastCalledWith("brochureImagePlacement", null);
 });
+
+beforeEach(() => setLanguage("en"));

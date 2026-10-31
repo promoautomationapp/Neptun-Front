@@ -126,10 +126,10 @@
 .cs-create-products + .cs-date-mode { margin-top: 20px; }
 
 /* A complete page fits the viewport while retaining the selected output ratio. */
-body:has(.cs-page-preview.view-only:not(.comment-view)) {
+body:has(.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)) {
   overflow: hidden;
 }
-.cs-page-preview.view-only:not(.comment-view) {
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview) {
   position: fixed;
   inset: 0;
   z-index: 500;
@@ -142,16 +142,16 @@ body:has(.cs-page-preview.view-only:not(.comment-view)) {
   background: #eaf0f5;
   overflow: hidden;
 }
-.cs-page-preview.view-only:not(.comment-view) .cs-preview-top {
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview) .cs-preview-top {
   position: relative;
   top: auto;
   flex: none;
   margin-bottom: 0;
 }
-.cs-page-preview.view-only:not(.comment-view) .cs-import-page-warning {
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview) .cs-import-page-warning {
   display: none;
 }
-.cs-page-preview.view-only:not(.comment-view) .cs-preview-paper {
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview) .cs-preview-paper {
   container-type: size;
   position: relative;
   display: grid;
@@ -165,7 +165,7 @@ body:has(.cs-page-preview.view-only:not(.comment-view)) {
   padding: 8px;
   box-shadow: none;
 }
-.cs-page-preview.view-only:not(.comment-view) .cs-preview-paper > .brochure-output-page {
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview) .cs-preview-paper > .brochure-output-page {
   width: min(100cqw, calc(100cqh * var(--brochure-page-aspect, 1080 / 1350)));
   height: auto;
   max-width: 100cqw;
@@ -173,15 +173,15 @@ body:has(.cs-page-preview.view-only:not(.comment-view)) {
   box-shadow: 0 10px 35px #12385730;
 }
 @media (max-width: 620px) {
-  .cs-page-preview.view-only:not(.comment-view) {
+  .cs-page-preview.view-only:not(.comment-view):not(.inline-preview) {
     gap: 8px;
     padding: 10px;
   }
-  .cs-page-preview.view-only:not(.comment-view) .cs-preview-paper {
+  .cs-page-preview.view-only:not(.comment-view):not(.inline-preview) .cs-preview-paper {
     padding: 4px;
   }
 }
 @media print {
-  body:has(.cs-page-preview.view-only:not(.comment-view)) { overflow: visible; }
-  .cs-page-preview.view-only:not(.comment-view) { display: none; }
+  body:has(.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)) { overflow: visible; }
+  .cs-page-preview.view-only:not(.comment-view):not(.inline-preview) { display: none; }
 }

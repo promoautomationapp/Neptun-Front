@@ -1,0 +1,130 @@
+/* A single offer is its own composition, rather than the first grid slot.
+   Explicit card sizes retain the layout chosen by the editor. */
+.brochure-page.brochure-interior.count-1:not(.custom-card-layout)
+  > .brochure-products {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) !important;
+  place-items: center;
+}
+.brochure-page.brochure-interior.count-1:not(.custom-card-layout)
+  > .brochure-products
+  > .brochure-product {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 / -1 !important;
+  justify-self: center;
+  align-self: center;
+  width: 64%;
+  height: 76%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Keep 1, 12 and 100 on one line, with a consistent center at the rule. */
+.brochure-page.brochure-october .october-footer-number {
+  width: 5.4cqw;
+  height: 3cqw;
+  bottom: calc(2.7% - 1.5cqw);
+}
+.brochure-page.brochure-october .october-footer-line {
+  width: calc(100% - 17.93% - 3.3% - 6.4cqw);
+}
+.brochure-page.brochure-october
+  .october-footer-number
+  > .campaign-asset-artwork {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brochure-page.brochure-october .october-page-number {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.brochure-interior-brand-footer > b {
+  flex: none;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  min-width: 1.6em;
+  text-align: center;
+}
+
+/* The trigger belongs to the card; the open menu is portaled to the viewport. */
+.brochure-product > .cs-product-tools {
+  top: 5px;
+  left: 5px;
+  z-index: 85;
+}
+.campaign-app
+  .cs-editor-section
+  .brochure-product
+  > .cs-product-tools
+  > summary {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  width: auto;
+  min-width: 34px;
+  min-height: 32px;
+  gap: 5px;
+  padding: 6px 8px;
+}
+.brochure-product > .cs-product-tools .cs-product-tools-label {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: nowrap;
+}
+.cs-product-menu-popover {
+  min-width: 220px;
+  max-width: min(300px, calc(100vw - 16px));
+  padding: 6px;
+  border: 1px solid var(--np-border, #d3e0ec);
+  border-radius: 12px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #25455f);
+  box-shadow: 0 10px 30px #102e4926;
+  font:
+    600 12px/1.4 "DM Sans",
+    Arial,
+    sans-serif;
+  text-transform: none;
+}
+.cs-product-menu-popover > :is(button, span[role="button"]) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 38px;
+  padding: 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.cs-product-menu-popover > :is(button, span[role="button"]):hover {
+  background: var(--np-selected, #edf5fb);
+}
+.cs-product-menu-popover > :is(button, span[role="button"]):focus-visible {
+  outline: 2px solid var(--np-accent, #398fc7);
+  outline-offset: -2px;
+}
+.cs-product-menu-popover svg {
+  flex: none;
+  color: var(--np-accent, #367da8);
+}

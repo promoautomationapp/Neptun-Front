@@ -474,7 +474,7 @@
   color: inherit;
 }
 .brochure-page.brochure-october.brochure-interior.light .brochure-product {
-  color: #333636;
+  color: #343534;
 }
 .brochure-page.brochure-october .october-cover-ribbon > svg {
   display: block;
@@ -571,7 +571,7 @@
 }
 .brochure-page.brochure-october.brochure-interior.has-background-readability.light
   .brochure-product-copy {
-  color: #333636;
+  color: #343534;
 }
 .brochure-page.brochure-october.brochure-interior
   .brochure-product:not(.details-left)
@@ -616,3 +616,12 @@
 .brochure-page.brochure-october .cover-element-band.october-native-band > img {
   clip-path: inset(0 0 25%);
 }
+
+/* The monochrome transform maps opaque logo pixels to #343534, preserves alpha,
+   and exports without SVG filter references or additional image requests. */
+.brochure-page.light .brochure-brand-mark {color:#343534;}
+.brochure-page.light .brochure-brand-mark[data-logo-image="true"]>img {filter:brightness(0) invert(20.39675206%) sepia(6.28108265%) hue-rotate(70.97620239deg)!important;}
+.brochure-page.cover-branding-hajde .cover-element-brand-tagline {color:#fff;font:italic 500 1.6cqw/1.1 SkolaSans,Arial,sans-serif;white-space:nowrap;}
+.brochure-page.cover-branding-hajde .cover-element-message p {font-size:2.9cqw!important;font-weight:800;font-style:italic;color:white;}
+.brochure-page.cover-branding-online .cover-element-message p {font-style:normal;transform:none;font-size:4.7cqw!important;}
+.cover-online-word {color:#ff4228;font-style:normal;font-weight:900;}

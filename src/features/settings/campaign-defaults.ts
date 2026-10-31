@@ -110,6 +110,7 @@ export function campaignDefaults(
     },
     showCoverLogo: b.showCoverLogo,
     showCoverBand: b.showCoverBand,
+    ...(b.coverBandVariant ? { coverBandVariant: b.coverBandVariant } : {}),
     showCoverHeadline: b.showCoverHeadline,
     showCoverMessage: b.showCoverMessage,
     showCoverGradient: b.showCoverGradient,

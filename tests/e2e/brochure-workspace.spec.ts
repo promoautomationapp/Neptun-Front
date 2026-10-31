@@ -343,7 +343,7 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
   await page.getByRole("heading", { name: "Your brochure" }).click();
   await expect(page.locator(".cs-brochure-actions-menu[open]")).toHaveCount(0);
   const beforePreviewAi = aiCalls;
-  await page.getByRole("button", { name: "Preview only", exact: true }).click();
+  await page.getByRole("button", { name: "Open full preview", exact: true }).click();
   const preview = page.getByRole("dialog", { name: "Brochure preview" });
   await expect(preview).toBeVisible();
   await expect(preview.locator(".cs-preview-thumbnails button")).toHaveCount(3);
@@ -469,7 +469,7 @@ test("brochure browsing, footer editing, portrait wallpapers and dark controls s
     .getByRole("button", { name: /Use reference brochure preset/ })
     .click();
   await page.getByRole("button", { name: "Close design tools" }).click();
-  await page.getByRole("button", { name: "Preview only", exact: true }).click();
+  await page.getByRole("button", { name: "Open full preview", exact: true }).click();
   await page.keyboard.press("Home");
   await expect(
     preview.locator(".cs-preview-dialog-paper .cover-product-frame"),

@@ -3,7 +3,7 @@ import {
   openSettingsTab,
 } from "../helpers/settings-sections";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsEditor } from "../../src/features/settings/SettingsEditor";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
 import type { WorkspaceSettings } from "../../src/features/settings/settings.schema";
@@ -87,3 +87,5 @@ it("keeps the brochure's saved size selectable after its workspace definition ch
     view.queryByRole("option", { name: "New counter · 2000 × 1000 px" }),
   ).toBeNull();
 });
+
+beforeEach(() => setLanguage("en"));

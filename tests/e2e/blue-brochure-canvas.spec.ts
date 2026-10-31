@@ -343,7 +343,7 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
       .locator(".brochure-product-copy")
       .first()
       .evaluate((node) => getComputedStyle(node).color),
-  ).toBe("rgb(51, 54, 54)");
+  ).toBe("rgb(255, 255, 255)");
   await expect(paper.locator(".october-apple-header")).toHaveCount(1);
   await expect(paper.locator(".october-category-ribbon")).toHaveCount(0);
   await pages.nth(3).click();
@@ -358,7 +358,7 @@ test("Blue brochure supports text and pinned comments anywhere, independent pagi
     .locator(".cs-editor-section")
     .screenshot({ path: "artifacts/blue-canvas-dark.png" });
   const beforePreview = aiCalls;
-  await page.getByRole("button", { name: "Preview only", exact: true }).click();
+  await page.getByRole("button", { name: "Open full preview", exact: true }).click();
   const preview = page.getByRole("dialog", { name: "Brochure preview" });
   await expect(preview.locator(".cs-preview-thumbnails button")).toHaveCount(6);
   await page.keyboard.press("Home");

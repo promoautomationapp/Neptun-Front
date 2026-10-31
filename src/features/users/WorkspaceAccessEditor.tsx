@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { useEffect, useId, useState } from "react";
 import { CategoryTreeSelect } from "../brochure/CategoryTreeSelect";
 import { catalogFacets } from "../products/products.api";
@@ -39,7 +40,7 @@ export function workspaceAccessError(access: WorkspaceAccess): string {
   if (access.catalogCategoryPaths?.length === 0)
     return "Choose at least one category branch, or allow all categories.";
   if ((access.catalogCategoryPaths?.length || 0) > MAX_BRANCHES)
-    return `Choose up to ${MAX_BRANCHES} category branches.`;
+    return `${t("Choose up to")} ${MAX_BRANCHES} ${t("category branches.")}`;
   return "";
 }
 
@@ -95,7 +96,9 @@ export function WorkspaceAccessEditor({
   if (role === "admin")
     return (
       <p className="na-access-admin">
-        Admins have full workspace access, including all catalog categories.
+        {t(
+          "Admins have full workspace access, including all catalog categories.",
+        )}
       </p>
     );
 
@@ -108,7 +111,9 @@ export function WorkspaceAccessEditor({
     if (disabled) return;
     const next = addAccessBranch(selected || [], path);
     if (next.length > MAX_BRANCHES) {
-      setSelectionNotice(`Choose up to ${MAX_BRANCHES} category branches.`);
+      setSelectionNotice(
+        `${t("Choose up to")} ${MAX_BRANCHES} ${t("category branches.")}`,
+      );
       return;
     }
     setSelectionNotice("");
@@ -122,9 +127,9 @@ export function WorkspaceAccessEditor({
     >
       <summary>
         <span>
-          <strong>Workspace access</strong>
+          <strong>{t("Workspace access")}</strong>
           <small>
-            {custom ? "Custom access" : "Usual access for this role"}
+            {t(custom ? "Custom access" : "Usual access for this role")}
           </small>
         </span>
         <span className="na-access-chevron" aria-hidden="true">
@@ -135,7 +140,7 @@ export function WorkspaceAccessEditor({
         <div
           className="na-access-segments"
           role="radiogroup"
-          aria-label="Workspace access mode"
+          aria-label={t("Workspace access mode")}
         >
           <button
             type="button"
@@ -144,7 +149,7 @@ export function WorkspaceAccessEditor({
             disabled={disabled}
             onClick={() => onChange(defaultWorkspaceAccess())}
           >
-            Usual access for this role
+            {t("Usual access for this role")}
           </button>
           <button
             type="button"
@@ -153,13 +158,15 @@ export function WorkspaceAccessEditor({
             disabled={disabled}
             onClick={() => update({ mode: "custom" })}
           >
-            Custom access
+            {t("Custom access")}
           </button>
         </div>
         <p className="na-access-help">
-          {custom
-            ? "Choose what this colleague can use in the workspace."
-            : "Staff and PMs can use the catalog, social posts, and delete brochures. Their role still determines editing and review actions."}
+          {t(
+            custom
+              ? "Choose what this colleague can use in the workspace."
+              : "Staff and PMs can use the catalog, social posts, and delete brochures. Their role still determines editing and review actions.",
+          )}
         </p>
         {custom && (
           <>
@@ -186,9 +193,9 @@ export function WorkspaceAccessEditor({
                 <div className="na-access-permission" key={key}>
                   <div>
                     <label id={`${id}-${key}`} htmlFor={`${id}-${key}-switch`}>
-                      {label}
+                      {t(label)}
                     </label>
-                    <small id={`${id}-${key}-help`}>{description}</small>
+                    <small id={`${id}-${key}-help`}>{t(description)}</small>
                   </div>
                   <button
                     id={`${id}-${key}-switch`}
@@ -220,11 +227,11 @@ export function WorkspaceAccessEditor({
                 className="na-access-categories"
                 aria-labelledby={`${id}-categories`}
               >
-                <h3 id={`${id}-categories`}>Catalog categories</h3>
+                <h3 id={`${id}-categories`}>{t("Catalog categories")}</h3>
                 <div
                   className="na-access-segments"
                   role="radiogroup"
-                  aria-label="Catalog category scope"
+                  aria-label={t("Catalog category scope")}
                 >
                   <button
                     type="button"
@@ -233,7 +240,7 @@ export function WorkspaceAccessEditor({
                     disabled={disabled}
                     onClick={() => update({ catalogCategoryPaths: null })}
                   >
-                    All categories
+                    {t("All categories")}
                   </button>
                   <button
                     type="button"
@@ -244,19 +251,21 @@ export function WorkspaceAccessEditor({
                       update({ catalogCategoryPaths: selected || [] })
                     }
                   >
-                    Selected branches
+                    {t("Selected branches")}
                   </button>
                 </div>
                 {selected !== null && (
                   <>
                     <p className="na-access-help">
-                      A branch includes every category below it. Choose up to{" "}
-                      {MAX_BRANCHES} branches.
+                      {t(
+                        "A branch includes every category below it. Choose up to",
+                      )}{" "}
+                      {MAX_BRANCHES} {t("branches.")}
                     </p>
                     {selected.length > 0 && (
                       <ul
                         className="na-access-branches"
-                        aria-label="Allowed category branches"
+                        aria-label={t("Allowed category branches")}
                       >
                         {selected.map((path) => (
                           <li key={path}>
@@ -264,7 +273,7 @@ export function WorkspaceAccessEditor({
                             <button
                               type="button"
                               disabled={disabled}
-                              aria-label={`Remove category branch: ${path}`}
+                              aria-label={`${t("Remove category branch")}: ${path}`}
                               onClick={() =>
                                 update({
                                   catalogCategoryPaths: selected.filter(
@@ -282,7 +291,9 @@ export function WorkspaceAccessEditor({
                     {paths === null ? (
                       loadError ? (
                         <div className="na-access-load-error" role="status">
-                          <span>Category branches could not be loaded.</span>
+                          <span>
+                            {t("Category branches could not be loaded.")}
+                          </span>
                           <button
                             type="button"
                             className="cs-button"
@@ -291,12 +302,12 @@ export function WorkspaceAccessEditor({
                               setRevision((current) => current + 1)
                             }
                           >
-                            Retry categories
+                            {t("Retry categories")}
                           </button>
                         </div>
                       ) : (
                         <p className="na-access-help" role="status">
-                          Loading category branches…
+                          {t("Loading category branches…")}
                         </p>
                       )
                     ) : paths.length ? (
@@ -309,26 +320,27 @@ export function WorkspaceAccessEditor({
                           categoryPath=""
                           onChange={() => {}}
                           onPathChange={addBranch}
-                          label="Add category branch"
-                          placeholder="Choose a branch…"
+                          label={t("Add category branch")}
+                          placeholder={t("Choose a branch…")}
                           includeAll={false}
                           showCounts={false}
                         />
                       )
                     ) : (
                       <p className="na-access-help" role="status">
-                        No category branches are available yet. You can allow
-                        all categories or turn off catalog access.
+                        {t(
+                          "No category branches are available yet. You can allow all categories or turn off catalog access.",
+                        )}
                       </p>
                     )}
                     {validation && (
                       <p className="na-access-validation" role="status">
-                        {validation}
+                        {t(validation)}
                       </p>
                     )}
                     {selectionNotice && (
                       <p className="na-access-validation" role="status">
-                        {selectionNotice}
+                        {t(selectionNotice)}
                       </p>
                     )}
                   </>
@@ -338,8 +350,9 @@ export function WorkspaceAccessEditor({
           </>
         )}
         <p className="na-access-shared-note">
-          These controls affect the catalog and workspace tools. Existing shared
-          campaigns and brochures remain visible.
+          {t(
+            "These controls affect the catalog and workspace tools. Existing shared campaigns and brochures remain visible.",
+          )}
         </p>
       </div>
     </details>

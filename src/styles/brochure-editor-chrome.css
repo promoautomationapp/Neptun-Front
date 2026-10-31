@@ -385,6 +385,15 @@
 .cs-canvas-dock .cs-canvas-help {
   margin-left: auto;
 }
+.cs-page-preview.inline-preview .cs-preview-paper [data-export-hide],
+.cs-page-preview.inline-preview .cs-preview-paper [data-export-hide="true"] {
+  display: none !important;
+}
+.campaign-app .cs-canvas-dock > .cs-canvas-preview-button[aria-pressed="true"] {
+  background: var(--chrome-selected);
+  color: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+}
 .campaign-app .cs-canvas-dock .cs-canvas-help > summary {
   width: 30px;
   font-size: 14px;

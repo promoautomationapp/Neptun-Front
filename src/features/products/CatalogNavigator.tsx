@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useId, useMemo, type ReactNode } from "react";
 import type { Product } from "../../domain/models";
 import { t } from "../brochure/i18n";
 import { CategoryTreeSelect } from "../brochure/CategoryTreeSelect";
@@ -51,6 +51,7 @@ export function CatalogNavigator({
   selection: CatalogSelection;
   onChange: (selection: CatalogSelection) => void;
 }) {
+  const brandScopeId = useId();
   const path = selection.categoryPath.split(" > ").filter(Boolean);
   const branch = useMemo(
     () =>
@@ -60,6 +61,13 @@ export function CatalogNavigator({
   const brands = [
     ...new Set(branch.map((product) => product.brand).filter(Boolean)),
   ].sort((a, b) => String(a).localeCompare(String(b)));
+  const brandLabel = (brand: string) =>
+    /^(other|unknown|unbranded)$/i.test(brand.trim())
+      ? t("Unspecified brand")
+      : brand;
+  const selectedBrandMissing = Boolean(
+    selection.brand && !brands.includes(selection.brand),
+  );
   return (
     <section
       className="cs-catalog-navigator"
@@ -99,13 +107,43 @@ export function CatalogNavigator({
         <div className="cs-catalog-field">
           <FilterSelect
             label={t("Brand")}
+            aria-describedby={brandScopeId}
             value={selection.brand}
             onChange={(brand) => onChange({ ...selection, brand })}
             options={[
               { value: "", label: t("All brands") },
-              ...brands.map((brand) => ({ value: brand!, label: brand! })),
+              ...brands.map((brand) => ({
+                value: brand!,
+                label: brandLabel(brand!),
+              })),
+              ...(selectedBrandMissing
+                ? [
+                    {
+                      value: selection.brand,
+                      label: `${brandLabel(selection.brand)} · ${t("No products in this category")}`,
+                    },
+                  ]
+                : []),
             ]}
           />
+          <div className="cs-catalog-brand-scope" id={brandScopeId}>
+            <small>
+              {selection.categoryPath
+                ? `${t("Brands in")} ${path.map(t).join(" › ")}`
+                : t("All catalog brands")}
+              {` · ${brands.length}`}
+            </small>
+            {selection.categoryPath && (
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({ ...selection, categoryPath: "", brand: "" })
+                }
+              >
+                {t("Browse all brands")}
+              </button>
+            )}
+          </div>
         </div>
         <div className="cs-catalog-field">
           <FilterSelect

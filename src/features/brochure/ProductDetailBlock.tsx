@@ -94,6 +94,7 @@ export function ProductDetailBlock({
     top: 8,
   });
   const toolsRef = React.useRef<HTMLDivElement>(null);
+  const editorRef = React.useRef<HTMLSpanElement>(null);
   const moreRef = React.useRef<HTMLButtonElement>(null);
   const [draftText, setDraftText] = React.useState(editText);
   const gesture = React.useRef<DetailGesture | null>(null);
@@ -121,7 +122,8 @@ export function ProductDetailBlock({
       if (!(target instanceof Node)) return;
       if (
         blockRef.current?.contains(target) ||
-        toolsRef.current?.contains(target)
+        toolsRef.current?.contains(target) ||
+        editorRef.current?.contains(target)
       ) {
         setSelected(true);
       } else {
@@ -167,8 +169,8 @@ export function ProductDetailBlock({
     if (clickTimer.current) clearTimeout(clickTimer.current);
     setMenuOpen(false);
     if (editing) {
-      blockRef.current
-        ?.querySelector<HTMLInputElement>(".detail-block-inline-editor input")
+      editorRef.current
+        ?.querySelector<HTMLTextAreaElement>("textarea")
         ?.focus();
       return;
     }
@@ -690,44 +692,59 @@ export function ProductDetailBlock({
           onStart={(event) => begin(event, "resize")}
         />
       )}
-      {editing && selected && (
-        <span
-          className="detail-block-inline-editor"
-          data-export-hide="true"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <input
-            autoFocus
-            value={draftText}
-            aria-label={t("Edit this detail")}
-            onChange={(event) => setDraftText(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                saveText();
-              } else if (event.key === "Escape") {
-                event.preventDefault();
-                setEditing(false);
-              }
+      {editing &&
+        selected &&
+        createPortal(
+          <span
+            ref={editorRef}
+            style={{
+              left: toolbarPosition.left,
+              top: Math.max(
+                8,
+                Math.min(toolbarPosition.top + 46, window.innerHeight - 180),
+              ),
             }}
-          />
-          <button
-            type="button"
-            onClick={saveText}
-            aria-label={t("Save detail")}
+            className="detail-block-inline-editor"
+            data-export-hide="true"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
-            ✓
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            aria-label={t("Cancel")}
-          >
-            ×
-          </button>
-        </span>
-      )}
+            <textarea
+              autoFocus
+              rows={3}
+              value={draftText}
+              aria-label={t("Edit this detail")}
+              onChange={(event) => setDraftText(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  saveText();
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  setEditing(false);
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={saveText}
+              aria-label={t("Save detail")}
+            >
+              {t("Save")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              aria-label={t("Cancel")}
+            >
+              ×
+            </button>
+            <small>
+              {t("Press Enter to save, Shift + Enter for a new line.")}
+            </small>
+          </span>,
+          document.body,
+        )}
     </span>
   );
 }

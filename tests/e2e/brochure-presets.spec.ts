@@ -118,21 +118,33 @@ test("compact preset selection, enlarged previews and team designs work in dark 
   });
   await expect(modal).toBeVisible();
   await expect(
-    modal.getByRole("button", { name: "Neptun Classic", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  const thumbs = modal.locator(".cs-preset-thumb");
-  expect((await thumbs.first().boundingBox())!.height).toBeLessThanOrEqual(110);
-  expect(
-    await thumbs
-      .first()
-      .evaluate((node) => getComputedStyle(node).backgroundColor),
-  ).not.toBe("rgb(255, 255, 255)");
+    modal.getByText("Featured Product Collection", { exact: true }),
+  ).toBeVisible();
+  await expect(modal.locator(".cs-preset-thumb")).toHaveCount(0);
   await modal.screenshot({ path: "artifacts/brochure-preset-picker-dark.png" });
   await modal
-    .getByRole("button", { name: "Preview design Neptun Blue" })
+    .getByRole("button", { name: "Change design", exact: true })
     .click();
+  const choices = page.getByRole("dialog", {
+    name: "Choose a brochure design",
+    exact: true,
+  });
+  await expect(choices.locator(".cs-preset-card")).toHaveCount(5);
+  await expect(
+    choices.getByRole("button", {
+      name: "Featured Product Collection",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await choices.screenshot({
+    path: "artifacts/brochure-design-choices-dark.png",
+  });
+  await choices
+    .getByRole("button", { name: "Preview design UUU · Brand Edition" })
+    .click();
+  await expect(choices).toHaveCount(0);
   const preview = page.getByRole("dialog", {
-    name: "Brochure preview · Neptun Blue",
+    name: "Brochure preview · UUU · Brand Edition",
     exact: true,
   });
   await expect(preview).toBeVisible();
@@ -145,8 +157,8 @@ test("compact preset selection, enlarged previews and team designs work in dark 
     .click();
   await expect(preview).toHaveCount(0);
   await expect(
-    modal.getByRole("button", { name: "Neptun Blue", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    modal.getByText("UUU · Brand Edition", { exact: true }),
+  ).toBeVisible();
   await expect(
     modal.getByText(
       "Upload the first cover photograph. The NEPTUN logo and blue campaign band stay separate and editable.",
@@ -165,7 +177,9 @@ test("compact preset selection, enlarged previews and team designs work in dark 
   await page
     .getByRole("tab", { name: "Brochure designs", exact: true })
     .click();
-  await page.getByRole("button", { name: "Neptun Blue", exact: true }).click();
+  await page
+    .getByRole("button", { name: "UUU · Brand Edition", exact: true })
+    .click();
   await page.getByLabel("Brochure preset name").fill("Team Blue");
   await page.getByLabel("Brochure preset name").press("Tab");
   await page
@@ -199,9 +213,7 @@ test("compact preset selection, enlarged previews and team designs work in dark 
   await page.getByRole("button", { name: "Campaigns", exact: true }).click();
   await page.getByRole("button", { name: "New campaign", exact: true }).click();
   modal = page.getByRole("dialog", { name: "Create a campaign", exact: true });
-  await expect(
-    modal.getByRole("button", { name: "Team Blue", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(modal.getByText("Team Blue", { exact: true })).toBeVisible();
   await modal
     .getByRole("button", { name: "Create campaign →", exact: true })
     .click();
@@ -210,7 +222,7 @@ test("compact preset selection, enlarged previews and team designs work in dark 
     brochureVisualStyle: "october",
     offerStyle: "card",
     coverBackgroundImage: "",
-    productBackgroundColor: "#e3e3e3",
+    productBackgroundColor: "#1b4075",
   });
   expect(failures).toEqual([]);
 });

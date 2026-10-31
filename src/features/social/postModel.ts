@@ -351,7 +351,7 @@ export function createPost(
     logoLayout: "corner",
     logoScale: 100,
     logoPosition: "top-left",
-    showEventLogo: true,
+    showEventLogo: false,
     eventLogoUpload: campaign?.campaignLogo || "",
     eventLogo: "happy-day",
     eventPosition: "top-right",

@@ -18,6 +18,7 @@ export interface CanvasAssetProps {
   artwork?: boolean;
   onChange?: (placement: CanvasAssetPlacement) => void;
   onRemove?: () => void;
+  onEdit?: () => void;
   onGestureStart?: () => void;
   onGestureEnd?: () => void;
 }
@@ -34,6 +35,7 @@ export interface EditableOfferBlockProps {
   editable?: boolean;
   onChange?: (placement: Placement) => void;
   onEdit?: () => void;
+  onRemove?: () => void;
   onGestureStart?: () => void;
   onGestureEnd?: () => void;
   style?: CSSProperties;
@@ -87,6 +89,7 @@ import {
 import { EditableScreenAnnotation } from "../brochure/EditableScreenAnnotation";
 import { ProductArtworkLayer } from "../brochure/ProductArtworkLayer";
 import { materializeProductNameAlignment } from "../brochure/ProductNameDivider";
+import { t } from "../brochure/i18n";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -104,6 +107,7 @@ export function CanvasAsset({
   artwork = false,
   onChange,
   onRemove,
+  onEdit,
   onGestureStart,
   onGestureEnd,
 }: CanvasAssetProps) {
@@ -177,15 +181,43 @@ export function CanvasAsset({
       onPointerMove={editable ? move : undefined}
       onPointerUp={editable ? end : undefined}
       onPointerCancel={editable ? end : undefined}
+      onDoubleClick={
+        editable && onEdit
+          ? (event) => {
+              event.stopPropagation();
+              onEdit();
+            }
+          : undefined
+      }
     >
       {source ? <img src={source} alt={name} draggable={false} /> : children}
       {editable && (
         <div className="social-asset-tools" data-export-hide="true">
+          {onEdit && (
+            <button
+              type="button"
+              className="social-asset-edit"
+              aria-label={`${t("Change")} ${name}`}
+              title={`${t("Change")} ${name}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={onEdit}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                aria-hidden="true"
+              >
+                <path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15Z" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             className="social-asset-resize"
-            title={`Resize ${name}`}
-            aria-label={`Resize ${name}`}
+            title={`${t("Resize")} ${name}`}
+            aria-label={`${t("Resize")} ${name}`}
             onPointerDown={(event) => start(event, "resize")}
             onPointerMove={(event) => {
               event.stopPropagation();
@@ -202,12 +234,20 @@ export function CanvasAsset({
             <button
               type="button"
               className="social-asset-remove"
-              title={`Remove ${name}`}
-              aria-label={`Remove ${name}`}
+              title={`${t("Remove")} ${name}`}
+              aria-label={`${t("Remove")} ${name}`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={onRemove}
             >
-              ×
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+              </svg>
             </button>
           )}
         </div>
@@ -223,6 +263,7 @@ export function EditableOfferBlock({
   editable,
   onChange,
   onEdit,
+  onRemove,
   onGestureStart,
   onGestureEnd,
   style,
@@ -246,12 +287,15 @@ export function EditableOfferBlock({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    const correction = offerElement instanceof HTMLElement && offerElement.classList.contains("social-product-copy")
-      ? materializeProductNameAlignment(offerElement, canvas.width, 1)
-      : { x: 0, y: 0 };
+    const correction =
+      offerElement instanceof HTMLElement &&
+      offerElement.classList.contains("social-product-copy")
+        ? materializeProductNameAlignment(offerElement, canvas.width, 1)
+        : { x: 0, y: 0 };
     const x = (value.x || 0) + correction.x;
     const y = (value.y || 0) + correction.y;
-    if (correction.x || correction.y) onChange?.({ x, y, scale: value.scale || 1 });
+    if (correction.x || correction.y)
+      onChange?.({ x, y, scale: value.scale || 1 });
     gesture.current = {
       kind,
       startX: event.clientX,
@@ -336,15 +380,32 @@ export function EditableOfferBlock({
         transformOrigin: "center",
       }}
       title={editable ? `Double-click to edit ${name}` : undefined}
-      onDoubleClick={editable ? (event) => { event.stopPropagation(); onEdit?.(); } : undefined}
+      onDoubleClick={
+        editable
+          ? (event) => {
+              event.stopPropagation();
+              onEdit?.();
+            }
+          : undefined
+      }
     >
       {children}
       {editable && (
         <div className="social-offer-block-tools" data-export-hide="true">
+          {onEdit && onRemove && (
+            <button
+              type="button"
+              aria-label={`${t("Change")} ${name}`}
+              title={`${t("Change")} ${name}`}
+              onClick={onEdit}
+            >
+              ✎
+            </button>
+          )}
           <button
             type="button"
-            title={`Move ${name}`}
-            aria-label={`Move ${name}`}
+            title={`${t("Move")} ${name}`}
+            aria-label={`${t("Move")} ${name}`}
             onPointerDown={(event) => start(event, "move")}
             onPointerMove={move}
             onPointerUp={end}
@@ -354,8 +415,8 @@ export function EditableOfferBlock({
           </button>
           <button
             type="button"
-            title={`Resize ${name}`}
-            aria-label={`Resize ${name}`}
+            title={`${t("Resize")} ${name}`}
+            aria-label={`${t("Resize")} ${name}`}
             onPointerDown={(event) => start(event, "resize")}
             onPointerMove={move}
             onPointerUp={end}
@@ -363,6 +424,17 @@ export function EditableOfferBlock({
           >
             ↘
           </button>
+          {onRemove && (
+            <button
+              type="button"
+              className="social-offer-remove"
+              aria-label={`${t("Remove")} ${name}`}
+              title={`${t("Remove")} ${name}`}
+              onClick={onRemove}
+            >
+              ×
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -511,7 +583,9 @@ export function SocialProductVisual({
         const labelHeight = canvas.width * 0.044;
         const labelTop = Math.max(
           canvas.top - parent.top + canvas.width * 0.01,
-          visibleTop - labelHeight - (hasApplePhotos(product) ? canvas.width * 6 / 1080 : 0),
+          visibleTop -
+            labelHeight -
+            (hasApplePhotos(product) ? (canvas.width * 6) / 1080 : 0),
         );
         setMarker({
           right: `${((parent.width - visibleRight) / parent.width) * 100}%`,

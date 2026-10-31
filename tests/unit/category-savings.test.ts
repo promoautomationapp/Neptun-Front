@@ -16,10 +16,19 @@ describe("dynamic category savings", () => {
     expect(productCategoryPath(facet)).toBe("TV & AUDIO > AKSESORË > KABLLO");
     expect(categoryNodes([facet]).map((node) => node.depth)).toEqual([0, 1, 2]);
   });
-  it("uses percentages for small discounts, euros for large discounts and product overrides first", () => {
+  it("uses the offer price below €30, keeps the boundary in euros and respects product overrides", () => {
     const campaign = campaignDefaults(resolveSettings(null));
-    expect(resolvedSavingsMode(campaign, { regular: 50, sale: 40 })).toBe(
+    expect(resolvedSavingsMode(campaign, { regular: 50, sale: 29.99 })).toBe(
       "percentage",
+    );
+    expect(resolvedSavingsMode(campaign, { regular: 99, sale: 29.99 })).toBe(
+      "percentage",
+    );
+    expect(resolvedSavingsMode(campaign, { regular: 50, sale: 30 })).toBe(
+      "amount",
+    );
+    expect(resolvedSavingsMode(campaign, { regular: 50, sale: 40 })).toBe(
+      "amount",
     );
     expect(resolvedSavingsMode(campaign, { regular: 499, sale: 399 })).toBe(
       "amount",
@@ -39,7 +48,15 @@ describe("dynamic category savings", () => {
         sale: 14.99,
       }),
     ).toBe("percentage");
-    campaign.automaticSavings!.amountThreshold = 150;
+    expect(
+      resolvedSavingsMode(campaign, {
+        name: "ABC123",
+        categoryPath: "Home > Small appliances > COFFEE MACHINES",
+        regular: 50,
+        sale: 19.99,
+      }),
+    ).toBe("amount");
+    campaign.automaticSavings!.amountThreshold = 500;
     expect(resolvedSavingsMode(campaign, { regular: 499, sale: 399 })).toBe(
       "percentage",
     );
@@ -83,7 +100,65 @@ describe("dynamic category savings", () => {
     const snapshot = campaignDefaults(settings);
     settings.automaticSavings.amountThreshold = 500;
     settings.categoryPathSavingModes["SHTEPIA > TV"] = "percentage";
-    expect(snapshot.automaticSavings!.amountThreshold).toBe(50);
+    expect(snapshot.automaticSavings!.amountThreshold).toBe(30);
     expect(snapshot.categoryPathSavingModes).toEqual({});
+  });
+  it("keeps coffee machines and vacuums in euros in Albanian and English, with explicit overrides first", () => {
+    const campaign = campaignDefaults(resolveSettings(null));
+    for (const label of [
+      "Aparat kafeje",
+      "APARAT PËR KAFE",
+      "Coffee machine",
+      "Espresso machine",
+      "Fshesë elektrike",
+      "Fshesat",
+      "Vacuum cleaner",
+      "Robot vacuum",
+    ]) {
+      const product = { name: label, regular: 50, sale: 19.99 };
+      expect(resolvedSavingsMode(campaign, product), label).toBe("amount");
+      expect(
+        resolvedSavingsMode(campaign, { ...product, savingMode: "percentage" }),
+        label,
+      ).toBe("percentage");
+    }
+    expect(
+      resolvedSavingsMode(campaign, {
+        name: "Cable",
+        categoryPath: "IT > Accessories",
+        regular: 40,
+        sale: 19.99,
+      }),
+    ).toBe("percentage");
+    expect(
+      resolvedSavingsMode(
+        { categoryPathSavingModes: { IT: "amount" } },
+        { categoryPath: "IT > Accessories", regular: 40, sale: 19.99 },
+      ),
+    ).toBe("amount");
+  });
+  it("preserves the meaning of explicit older custom savings-amount rules", () => {
+    const settings = resolveSettings({
+      automaticSavings: { enabled: true, amountThreshold: 50 },
+    });
+    expect(settings.automaticSavings.basis).toBe("savings-amount");
+    expect(
+      resolvedSavingsMode(campaignDefaults(settings), {
+        regular: 199,
+        sale: 159,
+      }),
+    ).toBe("percentage");
+    expect(
+      resolvedSavingsMode(
+        {
+          automaticSavings: {
+            enabled: false,
+            amountThreshold: 30,
+            basis: "offer-price",
+          },
+        },
+        { regular: 50, sale: 19.99 },
+      ),
+    ).toBe("amount");
   });
 });

@@ -33,6 +33,13 @@ export function StudioSelect<Value extends string | number>({
   searchable = true,
   disabled = false,
 }: StudioSelectProps<Value>) {
+  label = t(label);
+  options = options.map((item) => ({
+    ...item,
+    label: t(item.label),
+    ...(item.detail ? { detail: t(item.detail) } : {}),
+    ...(item.group ? { group: t(item.group) } : {}),
+  }));
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [placement, setPlacement] = useState<StudioSelectPlacement | null>(
@@ -44,7 +51,12 @@ export function StudioSelect<Value extends string | number>({
     if (disabled) setOpen(false);
   }, [disabled]);
   const selected = options.find((item) => item.value === value) || options[0];
-  const visible = options.filter(item => matchesSearch(`${item.label} ${item.detail || ""} ${item.group || ""}`, query));
+  const visible = options.filter((item) =>
+    matchesSearch(
+      `${item.label} ${item.detail || ""} ${item.group || ""}`,
+      query,
+    ),
+  );
   useEffect(() => {
     if (!open) return;
     const close = (event: PointerEvent) => {

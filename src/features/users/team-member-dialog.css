@@ -1,0 +1,68 @@
+.na-member-dialog .cs-modal {
+  width: min(780px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  color: var(--np-text, #183852);
+  background: var(--np-surface, #fff);
+  border-color: var(--np-border, #dce6ef);
+}
+.na-member-dialog-description {
+  margin: 0 0 18px;
+  color: var(--np-muted, #607a90);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.na-member-dialog .na-user-form {
+  margin-top: 0;
+}
+.na-member-dialog .na-form-actions {
+  grid-column: 1 / -1;
+  padding-top: 16px;
+  border-top: 1px solid var(--np-border, #e4edf4);
+}
+.na-member-dialog .na-alert {
+  margin-top: 0;
+}
+@media (max-width: 600px) {
+  .na-member-dialog .na-user-form {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .na-member-dialog .cs-modal {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+}
+
+.na-member-dialog .cs-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.na-member-dialog .cs-modal-head,
+.na-member-dialog .cs-modal-footer {
+  flex: none;
+}
+.na-member-dialog .cs-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.na-member-dialog .cs-modal-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--np-border, #e4edf4);
+}
+.na-member-dialog .cs-modal-footer .na-form-actions {
+  padding-top: 0;
+  border: 0;
+}
+.na-member-dialog .cs-modal-head .cs-icon-button {
+  color: var(--np-muted, #607a90);
+  background: var(--np-raised, #f0f4f8);
+  border-color: var(--np-border, #dce6ef);
+}
+.na-member-dialog .cs-modal-actions .cs-button:not(.primary) {
+  color: var(--np-text, #21425f);
+  background: var(--np-raised, #fff);
+  border-color: var(--np-border, #d9e1e8);
+}

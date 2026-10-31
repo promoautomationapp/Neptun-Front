@@ -1,0 +1,180 @@
+.social-branding-help {
+  margin: 0 0 16px;
+  color: var(--np-muted, #62788b);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.social-branding-list {
+  display: grid;
+  gap: 10px;
+}
+.social-branding-row {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--np-border, #d5e1e9);
+  border-radius: 12px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #183d5c);
+}
+.social-branding-art {
+  display: grid;
+  place-items: center;
+  min-height: 66px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #cddce8;
+}
+.social-branding-art img {
+  max-width: 100%;
+  max-height: 50px;
+  object-fit: contain;
+}
+.social-branding-art > span {
+  color: #28577a;
+  font-size: 30px;
+}
+.social-branding-row strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.social-branding-row label,
+.social-branding-footer-options label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.social-branding-row input,
+.social-branding-footer-options input {
+  accent-color: #227db2;
+}
+.social-branding-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: end;
+}
+.social-branding-row-actions button,
+.social-branding-footer-options button {
+  padding: 8px 10px;
+  border: 1px solid var(--np-border, #d5e1e9);
+  border-radius: 8px;
+  background: var(--np-raised, #f1f6fa);
+  color: var(--np-text, #183d5c);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.social-branding-row-actions button.danger {
+  color: #d14c3d;
+  background: transparent;
+}
+.social-branding-row-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.social-branding-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+.social-branding-layout > button {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 12px;
+  border: 1px solid var(--np-border, #d5e1e9);
+  border-radius: 10px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #183d5c);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.social-branding-layout > button[aria-pressed="true"] {
+  border-color: var(--np-accent, #2d8ccb);
+  background: var(--np-selected, #e7f3fb);
+}
+.social-branding-layout-preview {
+  position: relative;
+  display: block;
+  width: 90px;
+  height: 70px;
+  background: #225383;
+  border-radius: 5px;
+  color: white;
+}
+.social-branding-layout-preview b {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font-size: 16px;
+}
+.social-branding-layout-preview.footer b {
+  top: auto;
+  bottom: 6px;
+}
+.social-branding-layout-preview.footer i {
+  position: absolute;
+  left: 28px;
+  right: 8px;
+  bottom: 9px;
+  height: 1px;
+  background: white;
+}
+.social-branding-footer-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.social-asset-edit {
+  left: -1.1cqw;
+  top: -1.1cqw;
+  cursor: pointer;
+}
+.social-asset-edit svg,
+.social-asset-remove svg {
+  display: block;
+  width: 80%;
+  height: 80%;
+  margin: auto;
+  pointer-events: none;
+}
+.social-asset-tools button.social-asset-remove {
+  background: #db513e;
+}
+.social-brand-footer > .social-brand-footer-line {
+  flex: 1;
+  border-bottom: 0.14cqw solid currentColor;
+  margin-bottom: 0.25cqw;
+}
+.social-canvas .social-brand-footer {
+  position: absolute;
+}
+.social-brand-footer .social-offer-remove {
+  cursor: pointer !important;
+  background: #db513e;
+}
+@media (max-width: 560px) {
+  .social-branding-row {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .social-branding-row-actions {
+    grid-column: 1/-1;
+  }
+  .social-branding-art {
+    min-height: 55px;
+  }
+  .social-branding-layout > button {
+    font-size: 11px;
+  }
+}

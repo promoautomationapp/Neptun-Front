@@ -3,6 +3,7 @@ import { ActionMenu } from "../brochure/ActionMenu";
 import { BrochurePreview } from "../brochure/BrochurePreview";
 import { BrochureImportNotices } from "../brochure/BrochureImportNotices";
 import { BrochurePageNavigator } from "../brochure/BrochurePageNavigator";
+import { BrochurePagination } from "../brochure/BrochurePagination";
 import "../../styles/brochure-editor-chrome.css";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
 import { EditorIcon } from "../brochure/EditorIcon";
@@ -2103,17 +2104,20 @@ function BrochureEditorContent({
   const [dropCode, setDropCode] = useState<string | null>(null);
   const [overPage, setOverPage] = useState<number | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [inlinePreview, setInlinePreview] = useState(false);
   const editModeButton = React.useRef<HTMLButtonElement>(null);
+  const fullPreviewButton = React.useRef<HTMLButtonElement>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [commentMode, setCommentMode] = useState(false);
   const [textMode, setTextMode] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const [showLogoPicker, setShowLogoPicker] = useState(false);
-  const canEditCanvas = !previewMode && !commentMode;
+  const canEditCanvas = !previewMode && !inlinePreview && !commentMode;
   const chooseCanvasTool = (tool: CanvasTool) => {
     setTextMode(tool === "text");
     setCommentMode(tool === "comment");
     setPreviewMode(false);
+    setInlinePreview(false);
   };
   useEffect(() => {
     if (!textMode) return;
@@ -2125,7 +2129,7 @@ function BrochureEditorContent({
   }, [textMode]);
   const lastPreviewPage = pages.length - (hasStoresPage ? 0 : 1);
   useEffect(() => {
-    if (!previewMode) return;
+    if (!previewMode && !inlinePreview) return;
     const leavePreview = (event: KeyboardEvent) => {
       if (
         event.key !== "Escape" ||
@@ -2135,13 +2139,15 @@ function BrochureEditorContent({
         return;
       event.preventDefault();
       setPreviewMode(false);
+      setInlinePreview(false);
       editModeButton.current?.focus();
     };
     window.addEventListener("keydown", leavePreview);
     return () => window.removeEventListener("keydown", leavePreview);
-  }, [previewMode]);
+  }, [previewMode, inlinePreview]);
   useEffect(() => {
     if (notificationTarget?.campaignId !== campaign.id) return;
+    setInlinePreview(false);
     setSelected(
       Math.max(
         -1,
@@ -2883,7 +2889,7 @@ function BrochureEditorContent({
           onSelect={setSelected}
           onClose={() => {
             setPreviewMode(false);
-            editModeButton.current?.focus();
+            fullPreviewButton.current?.focus();
           }}
           onExport={onExport}
         />
@@ -2902,7 +2908,7 @@ function BrochureEditorContent({
           onDropPage={pageDrop}
         />
         <div
-          className={`cs-page-preview ${canEditCanvas ? "edit-view" : "view-only"} ${commentMode ? "comment-view" : ""} ${canEditCanvas && showGuides ? "show-guides" : ""}`}
+          className={`cs-page-preview ${canEditCanvas ? "edit-view" : "view-only"} ${inlinePreview ? "inline-preview" : ""} ${commentMode ? "comment-view" : ""} ${canEditCanvas && showGuides ? "show-guides" : ""}`}
         >
           <div className="cs-canvas-meta">
             <strong>{title}</strong>
@@ -2950,14 +2956,14 @@ function BrochureEditorContent({
                 )}
                 <FileUpload
                   accept="image/*"
-                  aria-label={t("Add image to page")}
+                  aria-label={t("Add image layer")}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) void addPageArtwork(file);
                     event.target.value = "";
                   }}
                 >
-                  {t("Add image to page")}
+                  {t("Add image layer")}
                 </FileUpload>
                 <ReusableImages
                   settings={settings}
@@ -2969,19 +2975,44 @@ function BrochureEditorContent({
             <button
               type="button"
               className="cs-canvas-preview-button"
-              aria-label={t("Preview only")}
-              title={t("Preview only")}
+              aria-label={t(inlinePreview ? "Back to editing" : "Preview only")}
+              title={t(inlinePreview ? "Back to editing" : "Preview only")}
+              aria-pressed={inlinePreview}
               ref={editModeButton}
               onClick={() => {
-                setSelected((current) => Math.min(current, lastPreviewPage));
-                setPreviewMode(true);
+                setInlinePreview(!inlinePreview);
                 setTextMode(false);
                 setCommentMode(false);
-                setShowSettings(false);
               }}
             >
               <NavIcon name="eye" size={18} />
-              {t("Preview")}
+              {t(inlinePreview ? "Back to editing" : "Preview")}
+            </button>
+            <button
+              type="button"
+              ref={fullPreviewButton}
+              className="cs-canvas-full-preview-button"
+              aria-label={t("Open full preview")}
+              title={t("Open full preview")}
+              onClick={() => {
+                setSelected((current) => Math.min(current, lastPreviewPage));
+                setInlinePreview(false);
+                setPreviewMode(true);
+                setTextMode(false);
+                setCommentMode(false);
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                aria-hidden="true"
+              >
+                <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+              </svg>
             </button>
             <button
               type="button"
@@ -2997,6 +3028,7 @@ function BrochureEditorContent({
                 setCommentMode(false);
                 setTextMode(false);
                 setPreviewMode(false);
+                setInlinePreview(false);
               }}
             >
               <NavIcon name="stores" size={18} />
@@ -3263,6 +3295,26 @@ function BrochureEditorContent({
               />
             )}
           </div>
+          {!previewMode && (
+            <div className="cs-brochure-pagination-dock">
+              <BrochurePagination
+                pages={[
+                  { index: -1, label: t("Cover") },
+                  ...pages.map((item) => ({
+                    index: item.index,
+                    label: `${t("Page")} ${item.index + 2}`,
+                  })),
+                  {
+                    index: pages.length,
+                    label: t("Stores & details"),
+                    excluded: !hasStoresPage,
+                  },
+                ]}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </div>
+          )}
         </div>
         {commentMode && (
           <aside className="cs-page-controls cs-review-sidebar">
@@ -3891,6 +3943,10 @@ export default function App({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [notificationTarget, setNotificationTarget] =
     useState<BrochureEditorProps["notificationTarget"]>(null);
+  const [notificationPostTarget, setNotificationPostTarget] = useState<{
+    postId: string;
+    commentId: string | null;
+  } | null>(null);
   const notificationRequest = useRef<AbortController | null>(null);
   const emailLinkHandled = useRef(false);
 
@@ -3904,12 +3960,14 @@ export default function App({
     if (!user || emailLinkHandled.current) return;
     emailLinkHandled.current = true;
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("campaign");
+    const postId = params.get("post");
+    const id = postId || params.get("campaign");
     if (!id || id.length > 150) return;
     const rawPage = Number(params.get("page") || 0);
     void openReviewNotification({
       id: `email:${id}:${params.get("comment") || ""}`,
       campaignId: id,
+      documentKind: postId ? "post" : "campaign",
       pageIndex:
         Number.isInteger(rawPage) && rawPage >= 0 && rawPage <= 200
           ? rawPage
@@ -4300,10 +4358,25 @@ export default function App({
   async function openReviewNotification(
     target: Pick<
       WorkspaceNotification,
-      "id" | "campaignId" | "pageIndex" | "commentId"
+      "id" | "campaignId" | "pageIndex" | "commentId" | "documentKind"
     >,
   ) {
     if (section === "stores" && !(await canLeaveSettings())) return;
+    if (target.documentKind === "post") {
+      if (!access.canViewSocialPosts) {
+        setToast(t("You do not have access to social posts."));
+        return;
+      }
+      setNotificationPostTarget({
+        postId: target.campaignId,
+        commentId: target.commentId,
+      });
+      setModal(null);
+      setSettingsDirty(false);
+      setSectionValue("social");
+      setMobileMenuOpen(false);
+      return;
+    }
     notificationRequest.current?.abort();
     const request = new AbortController();
     notificationRequest.current = request;
@@ -4354,7 +4427,10 @@ export default function App({
           (entry): entry is [string, JsonValue] => entry[1] !== undefined,
         ),
       );
-      const updated = await reviewCampaign(activeId, action, serializedDetails);
+      const updated = await reviewCampaign(activeId, action, {
+        ...serializedDetails,
+        language: getLanguage(),
+      });
       window.dispatchEvent(new Event("neptun:notifications-updated"));
       setCampaigns((current) =>
         current.map((item) => (item.id === updated.id ? updated : item)),
@@ -5244,6 +5320,10 @@ export default function App({
               }
             >
               <SocialStudio
+                initialPostId={notificationPostTarget?.postId}
+                focusedCommentId={notificationPostTarget?.commentId}
+                user={user}
+                members={members}
                 canViewCatalog={access.canViewCatalog}
                 settings={settings}
                 catalog={catalog}
@@ -5739,6 +5819,14 @@ export default function App({
         <ProductImageEditor
           settings={settings}
           product={imageEditProduct}
+          onEditArtwork={() => {
+            setImageEditCode(null);
+            setDetail({
+              product: imageEditProduct,
+              editable: true,
+              focusDetailKey: "__artwork",
+            });
+          }}
           onEditScreen={() => {
             setImageEditCode(null);
             setScreenEditCode(String(imageEditProduct.code));

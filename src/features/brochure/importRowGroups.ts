@@ -13,6 +13,7 @@ export interface ImportSourceRow {
 }
 export interface ImportRowGroup {
   set: boolean;
+  positionGrouped?: boolean;
   sources: ImportSourceRow[];
 }
 

@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SettingsGroup } from "./components";
 import { AssetPicker } from "./components";
 import type { SettingsTabProps } from "./SettingsEditor";
@@ -8,11 +9,11 @@ export function ImagesTab({
 }: SettingsTabProps) {
   return (
     <section className="ns-section">
-      <h2>Default background images</h2>
+      <h2>{t("Default background images")}</h2>
       <p>
-        Upload a cover image separately from colors and logos. You can replace
-        or remove it for each brochure. Use the preview’s page buttons to check
-        each background.
+        {t(
+          "Upload a cover image separately from colors and logos. You can replace or remove it for each brochure. Use the preview’s page buttons to check each background.",
+        )}
       </p>
       {(
         [
@@ -32,9 +33,9 @@ export function ImagesTab({
                   : "productBackground"),
         )
         .map(([key, label]) => (
-          <SettingsGroup key={key} title={<> {label} </>}>
+          <SettingsGroup key={key} title={<> {t(label)} </>}>
             <AssetPicker
-              label={label}
+              label={t(label)}
               emptyLabel="Use the selected color or gradient"
               value={draft.brochure[key].image}
               library={draft.logoLibrary}

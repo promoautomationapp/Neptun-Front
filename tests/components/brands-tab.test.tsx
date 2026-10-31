@@ -1,3 +1,5 @@
+import { beforeEach as setEnglishBeforeTest } from "vitest";
+import { setLanguage } from "../../src/features/brochure/i18n";
 import { useState } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -189,3 +191,5 @@ it("limits gallery rows and falls back to a wordmark when an image cannot load",
   expect(image.isConnected).toBe(false);
   expect(view.getAllByText("EXAMPLE 39").length).toBeGreaterThan(0);
 });
+
+setEnglishBeforeTest(() => setLanguage("en"));

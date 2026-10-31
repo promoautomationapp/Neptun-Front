@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { availableBrochurePresets } from "../brochure/brochurePresets";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Product, Campaign } from "../../domain/models";
@@ -161,38 +162,44 @@ export function SettingsPreview({
       />
     );
   return (
-    <aside className="ns-live-preview" aria-label="Settings preview">
+    <aside className="ns-live-preview" aria-label={t("Settings preview")}>
       <div className="ns-preview-heading">
-        <span className="ns-kicker">LIVE BROCHURE PREVIEW</span>
-        <h2>See your changes</h2>
-        <p>Same proportions as the selected download format.</p>
+        <span className="ns-kicker">{t("LIVE BROCHURE PREVIEW")}</span>
+        <h2>{t("See your changes")}</h2>
+        <p>{t("Same proportions as the selected download format.")}</p>
       </div>
       {!parsed.success && comparison === "draft" && (
         <p role="status" className="ns-preview-note">
-          Complete the settings field to update the preview. Your draft is kept.
+          {t(
+            "Complete the settings field to update the preview. Your draft is kept.",
+          )}
         </p>
       )}
       <div
         className="ns-preview-switch"
         role="group"
-        aria-label="Compare settings"
+        aria-label={t("Compare settings")}
       >
         <button
           type="button"
           aria-pressed={comparison === "saved"}
           onClick={() => setComparison("saved")}
         >
-          Saved defaults
+          {t("Saved defaults")}
         </button>
         <button
           type="button"
           aria-pressed={comparison === "draft"}
           onClick={() => setComparison("draft")}
         >
-          Your changes
+          {t("Your changes")}
         </button>
       </div>
-      <div className="ns-preview-pages" role="group" aria-label="Preview page">
+      <div
+        className="ns-preview-pages"
+        role="group"
+        aria-label={t("Preview page")}
+      >
         {["cover", "products", "stores"].map((value) => (
           <button
             type="button"
@@ -200,11 +207,13 @@ export function SettingsPreview({
             aria-pressed={page === value}
             onClick={() => setPage(value)}
           >
-            {value === "cover"
-              ? "Cover"
-              : value === "products"
-                ? "Product page"
-                : "Stores page"}
+            {t(
+              value === "cover"
+                ? "Cover"
+                : value === "products"
+                  ? "Product page"
+                  : "Stores page",
+            )}
           </button>
         ))}
       </div>
@@ -218,20 +227,21 @@ export function SettingsPreview({
         type="button"
         onClick={() => setEnlarged(true)}
       >
-        Enlarge preview ↗
+        {t("Enlarge preview ↗")}
       </button>
       <details className="ns-preview-note">
-        <summary>Preview information</summary>
+        <summary>{t("Preview information")}</summary>
         <p className="ns-preview-note">
-          Sample products and prices illustrate the design. Saving defaults
-          applies to new campaigns; existing brochures keep their settings.
+          {t(
+            "Sample products and prices illustrate the design. Saving defaults applies to new campaigns; existing brochures keep their settings.",
+          )}
         </p>
       </details>
       {enlarged && (
         <Modal
           wide
-          title="Brochure preview"
-          kicker={comparison === "saved" ? "Saved defaults" : "Your changes"}
+          title={t("Brochure preview")}
+          kicker={t(comparison === "saved" ? "Saved defaults" : "Your changes")}
           onClose={() => setEnlarged(false)}
         >
           <div className="ns-enlarged-preview">
@@ -249,10 +259,12 @@ export function PreviewPaper({
   children,
   ratio,
   aspectRatio,
+  canvasWidth = 760,
 }: {
   children: ReactNode;
   ratio: number;
   aspectRatio: string;
+  canvasWidth?: number;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(300);
@@ -288,9 +300,9 @@ export function PreviewPaper({
       <div
         className="ns-preview-canvas"
         style={{
-          width: 760,
-          height: 760 / ratio,
-          transform: `scale(${width / 760})`,
+          width: canvasWidth,
+          height: canvasWidth / ratio,
+          transform: `scale(${width / canvasWidth})`,
         }}
       >
         {children}

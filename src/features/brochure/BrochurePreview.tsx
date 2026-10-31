@@ -5,6 +5,7 @@ import { CoverPage, ProductPage, StoresPage, splitPages } from "./Brochure";
 import { includesStoresPage } from "./storesSelection";
 import { t } from "./i18n";
 import { resolveBrochureFormat } from "./brochureFormat";
+import { BrochurePagination, revealPageThumbnail } from "./BrochurePagination";
 
 export function BrochurePreview({
   campaign,
@@ -33,6 +34,10 @@ export function BrochurePreview({
       : index === pages.length
         ? t("Stores & details")
         : `${t("Page")} ${index + 2}`;
+  const navigationPages = Array.from({ length: count }, (_, i) => ({
+    index: i - 1,
+    label: title(i - 1),
+  }));
   const renderPage = (index: number) =>
     index === -1 ? (
       <CoverPage campaign={campaign} />
@@ -59,9 +64,7 @@ export function BrochurePreview({
     };
   }, []);
   useEffect(() => {
-    strip.current
-      ?.querySelector('[aria-current="page"]')
-      ?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    revealPageThumbnail(strip.current);
   }, [current]);
   return createPortal(
     <dialog
@@ -164,30 +167,14 @@ export function BrochurePreview({
         </div>
       </div>
       <footer className="cs-preview-dialog-footer">
-        <button
-          type="button"
-          className="cs-button secondary"
-          disabled={current === -1}
-          onClick={() => onSelect(current - 1)}
-          aria-label={t("Previous page")}
-        >
-          ← {t("Previous")}
-        </button>
-        <div aria-live="polite">
-          <strong>{title(current)}</strong>
-          <span>
-            {current + 2} / {count} · {t("Use ← → to browse pages")}
-          </span>
-        </div>
-        <button
-          type="button"
-          className="cs-button secondary"
-          disabled={current === last}
-          onClick={() => onSelect(current + 1)}
-          aria-label={t("Next page")}
-        >
-          {t("Next")} →
-        </button>
+        <BrochurePagination
+          pages={navigationPages}
+          selected={current}
+          onSelect={onSelect}
+        />
+        <small className="cs-preview-pagination-hint">
+          {t("Use ← → to browse pages")}
+        </small>
       </footer>
     </dialog>,
     document.body,

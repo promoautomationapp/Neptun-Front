@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { LogoLibrary } from "./LogoLibrary";
 import { SettingsGroup } from "./components";
@@ -18,13 +19,14 @@ export function LogosTab({
     });
   return (
     <section className="ns-section">
-      <h2>Logos and icons</h2>
+      <h2>{t("Logos and icons")}</h2>
       <p>
-        Keep the current artwork or choose an uploaded image as the default.
-        Product icons appear only when the product has that feature.
+        {t(
+          "Keep the current artwork or choose an uploaded image as the default. Product icons appear only when the product has that feature.",
+        )}
       </p>
       <LogoLibrary draft={draft} update={update} />
-      <SettingsGroup title={<> Cover logo </>}>
+      <SettingsGroup title={<> {t("Cover logo")} </>}>
         <Toggle
           label="Show the cover logo by default"
           checked={b.showCoverLogo}
@@ -46,9 +48,9 @@ export function LogosTab({
               })
             }
           >
-            <option value="original">Current NEPTUN cover logo</option>
-            <option value="framed">Framed NEPTUN logo</option>
-            <option value="custom">Uploaded logo</option>
+            <option value="original">{t("Current NEPTUN cover logo")}</option>
+            <option value="framed">{t("Framed NEPTUN logo")}</option>
+            <option value="custom">{t("Uploaded logo")}</option>
           </SearchableSelect>
         </Field>
         <AssetPicker
@@ -74,16 +76,16 @@ export function LogosTab({
               })
             }
           >
-            <option value="classic">Current logo</option>
-            <option value="framed">Framed logo</option>
+            <option value="classic">{t("Current logo")}</option>
+            <option value="framed">{t("Framed logo")}</option>
           </SearchableSelect>
         </Field>
       </SettingsGroup>
       <div className="ns-grid">
         {LOGO_ROLES.map((role) => (
-          <SettingsGroup key={role.id} title={<> {role.label} </>}>
+          <SettingsGroup key={role.id} title={<> {t(role.label)} </>}>
             <AssetPicker
-              label={role.label}
+              label={t(role.label)}
               value={draft.brandAssets[role.id] || ""}
               defaultImage={role.image}
               library={draft.logoLibrary}
@@ -99,12 +101,12 @@ export function LogosTab({
         ))}
       </div>
       <ManufacturerLogos draft={draft} update={update} brands={brands} />
-      <h3>Product and contact icons</h3>
+      <h3>{t("Product and contact icons")}</h3>
       <div className="ns-grid">
         {ICON_ROLES.map((role) => (
-          <SettingsGroup key={role.id} title={<> {role.label} </>}>
+          <SettingsGroup key={role.id} title={<> {t(role.label)} </>}>
             <Toggle
-              label={`Show ${role.label} icon by default`}
+              label={`${t("Show")} ${t(role.label)} ${t("icon by default")}`}
               checked={draft.iconDefaults[role.id]?.visible !== false}
               onChange={(value) =>
                 update((next) => {
@@ -117,7 +119,7 @@ export function LogosTab({
               }
             />
             <AssetPicker
-              label={`${role.label} icon`}
+              label={`${t(role.label)} ${t("icon")}`}
               value={draft.iconDefaults[role.id]?.image || ""}
               defaultImage={role.image}
               library={draft.logoLibrary}

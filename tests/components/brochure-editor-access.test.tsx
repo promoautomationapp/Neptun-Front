@@ -20,7 +20,7 @@ it("opens the brochure with product, logo and page edit controls available", () 
   } as unknown as React.ComponentProps<typeof BrochureEditor>));
   expect(markup).toContain("cs-page-preview edit-view");
   expect(markup).toContain("Change cover logo");
-  expect(markup).toContain("Add image to page");
+  expect(markup).toContain("Add image layer");
   expect(markup).toContain("Preview only");
   expect(markup).toContain("Change image: TV LED 65");
   expect(markup).toContain("Move cover logo");

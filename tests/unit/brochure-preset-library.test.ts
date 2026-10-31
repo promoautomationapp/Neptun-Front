@@ -10,16 +10,20 @@ import {
   availableBrochurePresets,
   brochureDesignSnapshot,
 } from "../../src/features/brochure/brochurePresets";
+import { resolvedSavingsMode } from "../../src/features/settings/savingsPolicy";
 
 describe("independent brochure preset snapshots", () => {
   it("keeps the current default and provides the PDF design with an empty cover photograph", () => {
     const settings = resolveSettings(null);
     const presets = availableBrochurePresets(settings);
     expect(settings.defaultBrochurePresetId).toBe("neptun-current");
-    expect(presets[1]!.name).toBe("Neptun Blue");
+    expect(presets[1]!.name).toBe("UUU · Brand Edition");
     expect(presets.map((preset) => preset.id)).toEqual([
       "neptun-current",
       "neptun-october",
+      "neptun-uuu-gray",
+      "neptun-gradient-all",
+      "neptun-online",
     ]);
     expect(presets[0]!.design).toMatchObject({
       layout: "feature3",
@@ -30,7 +34,7 @@ describe("independent brochure preset snapshots", () => {
       brochureVisualStyle: "october",
       layout: "duo4",
       autoProductLayout: true,
-      productBackgroundColor: "#e3e3e3",
+      productBackgroundColor: "#1b4075",
       offerStyle: "card",
       showCoverBand: true,
       showFooterPageNumber: true,
@@ -41,7 +45,7 @@ describe("independent brochure preset snapshots", () => {
       pricePalette: { blue: "#003870", blueBand: "#e6e8e8" },
     });
   });
-  it("starts the blue reference with automatic detail placement and amount savings independent of other defaults", () => {
+  it("starts the blue reference with automatic detail placement and the standard price-based savings rule independent of other defaults", () => {
     const settings = resolveSettings(null);
     settings.productDesign.details.placement = "bottom";
     settings.savingMode = "percentage";
@@ -49,7 +53,11 @@ describe("independent brochure preset snapshots", () => {
     const design = availableBrochurePresets(settings)[1]!.design;
     expect(design).toMatchObject({
       savingMode: "amount",
-      automaticSavings: { enabled: false },
+      automaticSavings: {
+        enabled: true,
+        amountThreshold: 30,
+        basis: "offer-price",
+      },
       categoryPathSavingModes: {},
       categorySavingModes: {},
       productDesign: {
@@ -61,6 +69,52 @@ describe("independent brochure preset snapshots", () => {
         qudal: "/brochure-presets/october/qudal.png",
         service: "/brochure-presets/october/service.svg",
       },
+    });
+  });
+  it("applies the below €30 rule in all five ready designs without replacing explicit preset or product choices", () => {
+    const settings = resolveSettings(null);
+    const presets = availableBrochurePresets(settings);
+    expect(presets).toHaveLength(5);
+    for (const preset of presets) {
+      const campaign: Campaign = { id: preset.id, name: "Offer", products: [] };
+      applyBrochurePreset(campaign, preset);
+      expect(
+        resolvedSavingsMode(campaign, { regular: 40, sale: 29.99 }),
+        preset.id,
+      ).toBe("percentage");
+      expect(
+        resolvedSavingsMode(campaign, { regular: 40, sale: 30 }),
+        preset.id,
+      ).toBe("amount");
+      expect(
+        resolvedSavingsMode(campaign, {
+          name: "Vacuum cleaner",
+          regular: 40,
+          sale: 29.99,
+        }),
+        preset.id,
+      ).toBe("amount");
+      expect(
+        resolvedSavingsMode(campaign, {
+          regular: 40,
+          sale: 19.99,
+          savingMode: "amount",
+        }),
+        preset.id,
+      ).toBe("amount");
+    }
+    settings.brochurePresets = [
+      {
+        id: "neptun-october",
+        name: "Team rule",
+        design: { automaticSavings: { enabled: false, amountThreshold: 12 } },
+      },
+    ];
+    expect(
+      availableBrochurePresets(settings)[1]!.design.automaticSavings,
+    ).toEqual({
+      enabled: false,
+      amountThreshold: 12,
     });
   });
   it("applies design only and never overwrites content, review data or saved page changes", () => {
@@ -112,7 +166,12 @@ describe("independent brochure preset snapshots", () => {
       },
     ];
     const campaign: Campaign = { id: "saved", name: "Saved", products: [] };
-    applyBrochurePreset(campaign, availableBrochurePresets(settings)[2]!);
+    applyBrochurePreset(
+      campaign,
+      availableBrochurePresets(settings).find(
+        (item) => item.id === "custom-a",
+      )!,
+    );
     settings.brochurePresets[1]!.design.productBackgroundColor = "#ffffff";
     expect(campaign.productBackgroundColor).toBe("#ccddee");
     expect(campaign.brochureVisualStyle).toBe("october");

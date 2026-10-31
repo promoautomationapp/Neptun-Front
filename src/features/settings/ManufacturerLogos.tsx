@@ -1,3 +1,4 @@
+import { t } from "../brochure/i18n";
 import { SettingsGroup } from "./components";
 import { useMemo, useState } from "react";
 import { brandLogoFor, BUILTIN_BRAND_LOGOS } from "../brochure/brandLogos";
@@ -36,19 +37,22 @@ export function ManufacturerLogos({
 
   return (
     <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>Product brand logos ({available.length})</summary>
+      <summary>
+        {t("Product brand logos (")}
+        {available.length})
+      </summary>
       {open && (
         <div>
           <p>
-            Choose the manufacturer logos used on product cards in new
-            brochures. Each brochure can keep its own logo choices. Hiding a
-            logo shows the brand name instead.
+            {t(
+              "Choose the manufacturer logos used on product cards in new brochures. Each brochure can keep its own logo choices. Hiding a logo shows the brand name instead.",
+            )}
           </p>
           <Field label="Search product brands">
             <input
               type="search"
               value={search}
-              placeholder="For example, Samsung or LG"
+              placeholder={t("For example, Samsung or LG")}
               onChange={(event) => {
                 setSearch(event.target.value);
                 setShown(PAGE_SIZE);
@@ -57,8 +61,8 @@ export function ManufacturerLogos({
           </Field>
           <p role="status">
             {filtered.length
-              ? `Showing ${Math.min(shown, filtered.length)} of ${filtered.length} brands`
-              : "No matching product brands."}
+              ? `${t("Showing")} ${Math.min(shown, filtered.length)} ${t("of")} ${filtered.length} ${t("brands")}`
+              : t("No matching product brands.")}
           </p>
           <div className="ns-grid">
             {filtered.slice(0, shown).map((brand) => {
@@ -68,7 +72,7 @@ export function ManufacturerLogos({
               return (
                 <SettingsGroup key={brand} title={<> {brand} </>}>
                   <Toggle
-                    label={`Hide ${brand} logo`}
+                    label={`${t("Hide")} ${brand} ${t("logo")}`}
                     checked={hidden}
                     onChange={(hide) =>
                       update((next) => {
@@ -79,11 +83,12 @@ export function ManufacturerLogos({
                   />
                   {hidden ? (
                     <p>
-                      The logo is hidden. Product cards show {brand} as text.
+                      {t("The logo is hidden. Product cards show")} {brand}{" "}
+                      {t("as text.")}
                     </p>
                   ) : (
                     <AssetPicker
-                      label={`${brand} logo`}
+                      label={`${brand} ${t("logo")}`}
                       value={override}
                       defaultImage={brandLogoFor(undefined, brand)}
                       library={draft.logoLibrary}
@@ -109,7 +114,7 @@ export function ManufacturerLogos({
                         })
                       }
                     >
-                      Restore current {brand} logo
+                      {t("Restore current")} {brand} {t("logo")}
                     </button>
                   )}
                 </SettingsGroup>
@@ -121,7 +126,7 @@ export function ManufacturerLogos({
               type="button"
               onClick={() => setShown((value) => value + PAGE_SIZE)}
             >
-              Show more brands
+              {t("Show more brands")}
             </button>
           )}
         </div>

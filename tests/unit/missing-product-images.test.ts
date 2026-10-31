@@ -7,6 +7,7 @@ import {
   finishMissingImageSearch,
   findMissingProductImages,
   productImageSearchKey,
+  productImageSearchParams,
 } from "../../src/features/ai/missing-product-images";
 import {
   catalogWithExcelProducts,
@@ -41,6 +42,68 @@ function campaign(product = missing): Campaign {
   };
 }
 beforeEach(() => vi.clearAllMocks());
+
+it("includes supplied model, selected color, category and imported identity facts without prices", () => {
+  const product = {
+    ...missing,
+    model: "F999",
+    ean: "1234567890123",
+    subcategory: "Soundbars",
+    url: "https://www.neptun-ks.com/F999",
+    color: "Black",
+    specs: { Model: "F999", Color: "Black", Power: "120 W" },
+    excelSource: {
+      row: 1,
+      cells: {
+        Model: "F999",
+        Ngjyra: "Black",
+        Price: "299",
+        "Market Price": "399",
+      },
+    },
+  };
+  const params = productImageSearchParams(product);
+  expect(params).toMatchObject({
+    model: "F999",
+    ean: "1234567890123",
+    subcategory: "Soundbars",
+    sourceUrl: product.url,
+    variants: ["Black"],
+  });
+  expect(params.details).toContain("Model: F999");
+  expect(params.details).toContain("Ngjyra: Black");
+  expect(params.details.join(" ")).not.toMatch(/299|399|Price/);
+  const recolored = { ...product, color: "White" };
+  expect(productImageSearchKey(product)).not.toBe(productImageSearchKey(recolored));
+});
+it("shares one exact lookup for the same offer in different categories while applying each request separately", async () => {
+  const duplicate = {
+    ...missing,
+    code: "duplicate",
+    category: "Other placement",
+  };
+  const draft: Campaign = {
+    id: "duplicate-photos",
+    name: "Duplicates",
+    products: [
+      { ...missing, code: "first", bundleProducts: [structuredClone(missing)] },
+      {
+        ...duplicate,
+        bundleProducts: [{ ...missing, category: "Other placement" }],
+      },
+    ],
+  };
+  const targets = missingImageTargets(draft.products);
+  targets.forEach((target) => startMissingImageSearch(draft, target));
+  vi.mocked(requestAi).mockResolvedValue(found);
+  await findMissingProductImages(targets, (target, result) =>
+    finishMissingImageSearch(draft, target, result),
+  );
+  expect(requestAi).toHaveBeenCalledTimes(1);
+  expect(
+    draft.products.map((product) => product.bundleProducts?.[0]?.image),
+  ).toEqual([found.image, found.image]);
+});
 
 it("searches missing photos once after a command, records owned photo and leaves Excel facts/prices editable", async () => {
   const draft = campaign();
