@@ -35,6 +35,15 @@
   background: var(--np-surface, #fff);
   border-bottom: 1px solid var(--np-border, #e1e9ef);
 }
+.ns-preset-settings .ns-preview-switch button,
+.ns-preset-settings .ns-preview-pages button {
+  min-width: 0;
+  padding: 8px 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: normal;
+}
 .ns-preset-settings .ns-save-actions {
   margin-left: auto;
 }

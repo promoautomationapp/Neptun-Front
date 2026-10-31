@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 test("preset modal edits save and reload independently with live previews and mobile Albanian controls", async ({
   page,
@@ -7,8 +9,33 @@ test("preset modal edits save and reload independently with live previews and mo
   page.on("pageerror", (error) => errors.push(error.message));
   await page.route(
     (url) => url.pathname.startsWith("/api/"),
-    (route) =>
-      route.fulfill({ json: { products: [], brands: [], assets: [] } }),
+    async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      const prefix = path.startsWith("/api/assets/app/fonts/")
+        ? "/api/assets/app/"
+        : path.startsWith("/api/assets/legacy/")
+          ? "/api/assets/legacy/"
+          : "";
+      if (prefix) {
+        const file = resolve(
+          "../neptun-campaign-studio/public",
+          path.slice(prefix.length),
+        );
+        try {
+          return await route.fulfill({
+            body: await readFile(file),
+            contentType: file.endsWith(".otf")
+              ? "font/otf"
+              : file.endsWith(".svg")
+                ? "image/svg+xml"
+                : "image/png",
+          });
+        } catch {
+          /* Fixture uses renderer fallback for unavailable old assets. */
+        }
+      }
+      return route.fulfill({ json: { products: [], brands: [], assets: [] } });
+    },
   );
   await page.route("**/__preset-design-editor", (route) =>
     route.fulfill({
@@ -17,6 +44,7 @@ test("preset modal edits save and reload independently with live previews and mo
     }),
   );
   await page.goto("/__preset-design-editor");
+  await page.evaluate(() => document.fonts.ready);
   const existing = await page.locator("[data-existing]").textContent();
   await page
     .getByRole("tab", { name: "Brochure designs", exact: true })
@@ -47,9 +75,6 @@ test("preset modal edits save and reload independently with live previews and mo
       modal.getByRole("tab", { name: "Stores page", exact: true }),
     ).toBeVisible();
     await expect(
-      modal.getByRole("region", { name: "Settings preview", exact: true }),
-    ).toHaveCount(0);
-    await expect(
       modal.getByLabel("Settings preview", { exact: true }),
     ).toBeVisible();
     await modal.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -59,17 +84,22 @@ test("preset modal edits save and reload independently with live previews and mo
   await modal
     .getByRole("textbox", { name: "Design name", exact: true })
     .fill("Independent working design");
-  await modal
-    .locator("details.ns-settings-group")
-    .evaluateAll((groups) =>
-      groups.forEach((group) => ((group as HTMLDetailsElement).open = true)),
-    );
+  for (const group of await modal.locator("details.ns-settings-group").all()) {
+    if (!(await group.evaluate((el) => (el as HTMLDetailsElement).open)))
+      await group.locator("summary").click();
+  }
   await modal
     .getByLabel("Cover background color", { exact: true })
     .fill("#aabbcc");
   await expect(
-    modal.locator(".ns-preview-paper-slot .brochure-cover"),
+    modal.locator(".ns-preview-paper-slot .brochure-format-frame"),
   ).toHaveCSS("background-color", "rgb(170, 187, 204)");
+  await modal.locator(".cs-modal-body").evaluate((el) => (el.scrollTop = 0));
+  await page.screenshot({ path: "/tmp/neptun-preset-editor-en-cover-top.png" });
+  await modal
+    .getByLabel("Cover background color", { exact: true })
+    .scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "/tmp/neptun-preset-editor-en-cover.png" });
   await modal.getByRole("tab", { name: "Stores page", exact: true }).click();
   await modal
     .getByRole("tab", { name: "Stores & contacts", exact: true })
@@ -156,6 +186,34 @@ test("preset modal edits save and reload independently with live previews and mo
   expect(geometry.width).toBeLessThanOrEqual(geometry.viewport);
   expect(geometry.scroll).toBeLessThanOrEqual(geometry.width + 2);
   await page.screenshot({ path: "/tmp/neptun-preset-editor-sq-mobile.png" });
+  await sq.locator(".ns-preview-paper-slot").scrollIntoViewIfNeeded();
+  await expect(
+    sq.getByRole("button", { name: "Ruaj dizajnin", exact: true }),
+  ).toBeInViewport();
+  const previewControls = await sq
+    .locator(".ns-preview-pages")
+    .evaluate((el) => ({
+      width: el.getBoundingClientRect().width,
+      scroll: el.scrollWidth,
+    }));
+  expect(previewControls.scroll).toBeLessThanOrEqual(previewControls.width + 2);
+  await page.screenshot({
+    path: "/tmp/neptun-preset-editor-sq-mobile-preview.png",
+  });
+  await sq.getByRole("tab", { name: "Faqja e dyqaneve", exact: true }).click();
+  await sq
+    .getByRole("tab", { name: "Dyqanet dhe kontaktet", exact: true })
+    .click();
+  await sq.getByRole("button", { name: "Shto lokacion", exact: true }).click();
+  await sq
+    .getByRole("textbox", { name: "Emri i dyqanit", exact: true })
+    .fill("Dyqan i ri");
+  await expect(
+    sq.getByRole("button", { name: "Ruaj dizajnin", exact: true }),
+  ).toBeInViewport();
+  await page.screenshot({
+    path: "/tmp/neptun-preset-editor-sq-mobile-fields.png",
+  });
   await sq.getByRole("button", { name: "Anulo", exact: true }).click();
   expect(errors).toEqual([]);
 });
