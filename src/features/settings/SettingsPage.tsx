@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadSettings, persistSettings } from "./settings.api";
 import type { SettingsSnapshot } from "./settings.api";
 import { resolveSettings } from "./settings.schema";
@@ -35,6 +35,9 @@ export function SettingsPage({
         }
       : null,
   );
+  const latestSnapshot = useRef(snapshot);
+  const pendingRead = useRef<Promise<SettingsSnapshot> | null>(null);
+  const [reloading, setReloading] = useState(false);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
   const [facets, setFacets] = useState<CategoryFacet[]>([]);
@@ -46,35 +49,45 @@ export function SettingsPage({
     // must not wait for a duplicate request, including when bootstrap finishes late.
     if (seed) {
       setError("");
-      setSnapshot(
-        (current) =>
-          current ?? {
-            ...seed,
-            settings: resolveSettings(seed.settings),
-          },
-      );
+      const next = latestSnapshot.current ?? {
+        ...seed,
+        settings: resolveSettings(seed.settings),
+      };
+      latestSnapshot.current = next;
+      setSnapshot(next);
+      setReloading(false);
       return;
     }
     let active = true;
     const controller = new AbortController();
     setError("");
-    void loadSettings(controller.signal)
-      .then((value) => {
-        if (active) {
-          const next = { ...value, settings: resolveSettings(value.settings) };
-          setSnapshot(next);
-          onSnapshotChange?.(next);
-        }
-      })
+    setReloading(true);
+    const read = loadSettings(controller.signal).then((value) => {
+      const next = { ...value, settings: resolveSettings(value.settings) };
+      if (active) {
+        // Keep the optimistic version current before React commits the new editor.
+        latestSnapshot.current = next;
+        setSnapshot(next);
+        onSnapshotChange?.(next);
+      }
+      return next;
+    });
+    pendingRead.current = read;
+    void read
       .catch((cause: unknown) => {
         if (active)
           setError(
             cause instanceof Error ? cause.message : "Could not load Settings.",
           );
+      })
+      .finally(() => {
+        if (pendingRead.current === read) pendingRead.current = null;
+        if (active) setReloading(false);
       });
     return () => {
       active = false;
       controller.abort();
+      if (pendingRead.current === read) pendingRead.current = null;
     };
   }, [reload, seed, onSnapshotChange]);
   useEffect(() => {
@@ -129,6 +142,7 @@ export function SettingsPage({
       initial={snapshot.settings}
       draftKey={draftKey}
       draftVersion={snapshot.version}
+      externalBusy={reloading}
       onDirtyChange={onDirtyChange}
       onBusyChange={onBusyChange}
       facets={facets}
@@ -136,9 +150,18 @@ export function SettingsPage({
       facetsError={facetsError}
       onReload={() => setReload((value) => value + 1)}
       onSave={async (settings) => {
-        const saved = await persistSettings(settings, snapshot.version);
+        const pending = pendingRead.current;
+        // An explicitly requested reload discards the previous draft. A queued
+        // save therefore uses that refreshed data instead of replaying stale fields.
+        const loaded = pending ? await pending : null;
+        const base = loaded || latestSnapshot.current || snapshot;
+        const saved = await persistSettings(
+          loaded ? resolveSettings(loaded.settings) : settings,
+          base.version,
+        );
         const value = resolveSettings(saved.settings);
-        setSnapshot({ ...saved, settings: value });
+        latestSnapshot.current = { ...saved, settings: value };
+        setSnapshot(latestSnapshot.current);
         onSnapshotChange?.({ ...saved, settings: value });
         onSaved?.(value);
         return value;

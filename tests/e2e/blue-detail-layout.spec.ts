@@ -38,6 +38,24 @@ test("Blue details match the phone column and horizontal product rows while reta
   });
   expect(phone.direction).toBe("column");
   expect(phone.detailsRight).toBeLessThan(phone.photoMiddle);
+  await expect
+    .poll(() =>
+      cards
+        .first()
+        .locator(".product-detail-block")
+        .evaluateAll((blocks) =>
+          blocks.every((block) => {
+            const frame = block.getBoundingClientRect();
+            const text = block.querySelector("b")?.getBoundingClientRect();
+            return (
+              !text ||
+              (text.top >= frame.top - 1 && text.bottom <= frame.bottom + 1)
+            );
+          }),
+        ),
+    )
+    .toBe(true);
+
   for (const index of [1, 2, 3]) {
     const card = cards.nth(index);
     await expect(card).not.toHaveClass(/\bdetails-left\b/);
@@ -85,6 +103,27 @@ test("Blue details match the phone column and horizontal product rows while reta
     expect(geometry.radius).toBeGreaterThan(0);
     await expect(card.locator(".reference-price-card")).toHaveCount(1);
   }
+  const tablet = cards.nth(3);
+  const guide = await tablet.evaluate((card) => {
+    const image = card.querySelector<HTMLImageElement>(
+      ".brochure-product-image",
+    )!;
+    const img = image.getBoundingClientRect();
+    const width = Math.min(
+      img.width,
+      (img.height * image.naturalWidth) / image.naturalHeight,
+    );
+    const photoRight = img.left + (img.width + width) / 2;
+    const annotation = card
+      .querySelector(".screen-size-other")!
+      .getBoundingClientRect();
+    return {
+      photoRight,
+      guideX:
+        annotation.left + (annotation.width * 33.3868950515) / 67.1693479534,
+    };
+  });
+  expect(guide.guideX).toBeGreaterThan(guide.photoRight);
   const price = cards.nth(2).locator(".reference-price-svg");
   const fills = await price
     .locator("path")

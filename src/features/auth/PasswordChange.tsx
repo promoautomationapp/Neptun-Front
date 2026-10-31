@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { changePassword } from "./auth.api";
 import { PasswordFields } from "./AccountFrame";
+import { t } from "../brochure/i18n";
+import { useAuthLanguage } from "./AuthPreferences";
+import { authErrorMessage } from "./authErrors";
 
 export function PasswordChange({
   onChanged,
 }: {
   onChanged: (message: string, signInRequired: boolean) => void;
 }) {
+  useAuthLanguage();
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -39,11 +43,7 @@ export function PasswordChange({
       setNotice(message);
       onChanged(message, result.signInRequired);
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Could not change your password.",
-      );
+      setError(authErrorMessage(reason, "Could not change your password."));
     } finally {
       setBusy(false);
     }
@@ -51,7 +51,7 @@ export function PasswordChange({
   return (
     <form className="na-form" onSubmit={(event) => void submit(event)}>
       <label>
-        Current password
+        {t("Current password")}
         <input
           type="password"
           autoComplete="current-password"
@@ -70,19 +70,19 @@ export function PasswordChange({
       />
       {error && (
         <p className="na-alert error" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {notice && (
         <p className="na-alert success" role="status">
-          {notice}
+          {t(notice)}
         </p>
       )}
       <button className="cs-button primary" type="submit" disabled={busy}>
-        {busy ? "Updating password…" : "Update password"}
+        {t(busy ? "Updating password…" : "Update password")}
       </button>
       <small className="na-field-help">
-        You will be asked to sign in again after changing your password.
+        {t("You will be asked to sign in again after changing your password.")}
       </small>
     </form>
   );

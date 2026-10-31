@@ -1,21 +1,24 @@
 import type { ReactNode } from "react";
-import { AppearanceToggle } from "../appearance/Appearance";
 import "../../styles/account-management.css";
 import { PromoAutomationCredit } from "../../shared/PromoAutomationCredit";
+import { AuthPreferences, useAuthLanguage } from "./AuthPreferences";
+import { t } from "../brochure/i18n";
+import "./auth-screen.css";
 
 export function AccountFrame({ children }: { children: ReactNode }) {
+  useAuthLanguage();
   return (
-    <div className="na-account-screen">
-      <AppearanceToggle />
+    <div className="na-account-screen na-auth-screen">
+      <AuthPreferences />
       <div className="na-account-brand">
         <span className="na-account-wordmark">
           <img src="/branding/neptun-logo.png" alt="NEPTUN" />
         </span>
-        <span>Brochure workspace</span>
+        <span>{t("Brochure workspace")}</span>
       </div>
       <main className="na-account-card">{children}</main>
       <p className="na-account-footnote">
-        Access to your team workspace is by invitation.
+        {t("Access to your team workspace is by invitation.")}
       </p>
       <PromoAutomationCredit />
     </div>
@@ -35,10 +38,11 @@ export function PasswordFields({
   onConfirm: (value: string) => void;
   disabled?: boolean;
 }) {
+  useAuthLanguage();
   return (
     <>
       <label>
-        New password
+        {t("New password")}
         <input
           type="password"
           autoComplete="new-password"
@@ -51,10 +55,10 @@ export function PasswordFields({
         />
       </label>
       <small id="password-guidance" className="na-field-help">
-        Use at least 12 characters. A memorable phrase works well.
+        {t("Use at least 12 characters. A memorable phrase works well.")}
       </small>
       <label>
-        Confirm new password
+        {t("Confirm new password")}
         <input
           type="password"
           autoComplete="new-password"

@@ -166,11 +166,18 @@ it("duplicates, renames, deletes and creates independent designs from scratch", 
   fireEvent.click(
     view.getByRole("button", { name: "New design from scratch" }),
   );
-  expect(observed.brochure.productBackground).toMatchObject({
-    color: "#ffffff",
-    gradient: null,
+  const blank = observed.brochurePresets.find(
+    (preset) => preset.name === "Untitled design",
+  )!;
+  expect(blank.design).toMatchObject({
+    productBackgroundColor: "#ffffff",
+    productBackgroundGradient: null,
+    showCoverBand: false,
   });
-  expect(observed.brochure.showCoverBand).toBe(false);
+  // Creating a design no longer overwrites unrelated workspace defaults.
+  expect(observed.brochure.productBackground).toEqual(
+    resolveSettings(null).brochure.productBackground,
+  );
 });
 
 it("reuses the blue design for Happy Hour in November and keeps preview dates current", () => {

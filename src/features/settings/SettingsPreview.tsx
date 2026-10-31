@@ -1,5 +1,8 @@
 import { t } from "../brochure/i18n";
-import { availableBrochurePresets } from "../brochure/brochurePresets";
+import {
+  applyBrochurePreset,
+  availableBrochurePresets,
+} from "../brochure/brochurePresets";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Product, Campaign } from "../../domain/models";
 import type { WorkspaceSettings } from "./settings.schema";
@@ -135,7 +138,8 @@ export function SettingsPreview({
       preset.id ===
       (comparison === "saved" ? initial.defaultBrochurePresetId : presetId),
   );
-  if (selected) {
+  if (selected && tab === "presets") applyBrochurePreset(campaign, selected);
+  else if (selected) {
     campaign.brochurePresetId = selected.id;
     campaign.brochureVisualStyle = selected.design.brochureVisualStyle;
     campaign.tagline = selected.design.tagline ?? campaign.tagline;

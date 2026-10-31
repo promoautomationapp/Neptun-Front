@@ -64,12 +64,31 @@ it("hides support accounts from Neptun admins and invites new staff by default",
           status: "invited",
         },
       });
-    return response({ users: [staff, support], emailConfigured: true });
+    return response({
+      users: [
+        staff,
+        support,
+        {
+          ...staff,
+          id: "deleted",
+          email: "deleted@example.test",
+          name: "Deleted colleague",
+          status: "disabled",
+        },
+      ],
+      emailConfigured: true,
+    });
   });
   vi.stubGlobal("fetch", api);
   const view = render(<UsersPage currentUser={admin} />);
   await view.findByText("Team Staff");
   expect(view.queryByText("Platform Support")).toBeNull();
+  expect(view.queryByText("Deleted colleague")).toBeNull();
+  fireEvent.click(view.getByRole("combobox", { name: "Status" }));
+  expect(view.queryByRole("option", { name: "Disabled" })).toBeNull();
+  fireEvent.keyDown(view.getByRole("searchbox", { name: "Search options" }), {
+    key: "Escape",
+  });
   expect(view.queryByText("support@example.test")).toBeNull();
   expect(view.queryByText(/Support superadmin/)).toBeNull();
   expect(view.getByText("Administrators")).toBeTruthy();
@@ -200,7 +219,11 @@ it("restores a verified disabled colleague while email delivery is unavailable",
         }),
   );
   vi.stubGlobal("fetch", api);
-  const view = render(<UsersPage currentUser={admin} />);
+  const view = render(
+    <UsersPage
+      currentUser={{ ...admin, role: "superadmin", isSupport: true }}
+    />,
+  );
   const button = await view.findByRole("button", { name: "Restore access" });
   expect((button as HTMLButtonElement).disabled).toBe(false);
   fireEvent.click(button);
@@ -286,7 +309,11 @@ it("offers a new invitation, rather than restoring unverified cancelled accounts
       }),
     ),
   );
-  const view = render(<UsersPage currentUser={admin} />);
+  const view = render(
+    <UsersPage
+      currentUser={{ ...admin, role: "superadmin", isSupport: true }}
+    />,
+  );
   expect(
     await view.findByRole("button", { name: "Invite again" }),
   ).toBeTruthy();
@@ -321,6 +348,7 @@ it("cancels an invitation through the backend instead of deleting the user", asy
     within(dialog).getByRole("button", { name: "Cancel invitation" }),
   );
   await view.findByText("Invitation cancelled.");
+  expect(view.queryByText("staff@example.test")).toBeNull();
   expect(
     JSON.parse(
       String(

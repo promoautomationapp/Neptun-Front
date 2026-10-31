@@ -9,6 +9,8 @@ import {
   applyBrochurePreset,
   availableBrochurePresets,
   brochureDesignSnapshot,
+  brochurePresetFromSettings,
+  applyPresetToSettings,
 } from "../../src/features/brochure/brochurePresets";
 import { resolvedSavingsMode } from "../../src/features/settings/savingsPolicy";
 
@@ -238,4 +240,62 @@ describe("independent brochure preset snapshots", () => {
       }).success,
     ).toBe(false);
   });
+});
+
+it("captures minimal independent stores and rejects recursive workspace data in a design", () => {
+  const settings = resolveSettings(null);
+  settings.stores = [
+    {
+      id: "own",
+      name: "Own store",
+      city: "City",
+      address: "Street",
+      phone: "100",
+      visible: true,
+    },
+  ];
+  const design = brochurePresetFromSettings(
+    settings,
+    "custom-stores",
+    "Store design",
+  );
+  settings.brochurePresets.push(
+    design as (typeof settings.brochurePresets)[number],
+  );
+  const captured = brochurePresetFromSettings(
+    settings,
+    "custom-second",
+    "Second design",
+  );
+  expect(captured.design.storesSnapshot).toEqual(design.design.storesSnapshot);
+  expect(Object.keys(captured.design.storesSnapshot!).sort()).toEqual([
+    "contact",
+    "stores",
+  ]);
+  expect(workspaceSettingsSchema.safeParse(settings).success).toBe(true);
+  expect(
+    workspaceSettingsSchema.safeParse({
+      ...settings,
+      brochurePresets: [
+        {
+          ...design,
+          design: {
+            ...design.design,
+            storesSnapshot: {
+              ...design.design.storesSnapshot,
+              brochurePresets: settings.brochurePresets,
+            },
+          },
+        },
+      ],
+    }).success,
+  ).toBe(false);
+  const target = resolveSettings(null);
+  const originalStores = structuredClone(target.stores);
+  applyPresetToSettings(target, design, { includeStores: false });
+  expect(target.stores).toEqual(originalStores);
+  applyPresetToSettings(target, design);
+  expect(target.stores).toEqual(settings.stores);
+  target.stores[0]!.name = "Changed copy";
+  expect(design.design.storesSnapshot?.stores[0]?.name).toBe("Own store");
 });

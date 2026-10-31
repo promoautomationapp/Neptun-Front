@@ -1,12 +1,14 @@
 import { t } from "../brochure/i18n";
 import { useState } from "react";
+import { PresetDesignModal } from "./PresetDesignModal";
+import type { CategoryFacet } from "./categoryHierarchy";
+import type { Product } from "../../domain/models";
 import type { SettingsTabProps } from "./SettingsEditor";
 import {
   BrochurePresetPicker,
   BrochurePresetPreview,
 } from "../brochure/BrochurePresetPicker";
 import {
-  applyPresetToSettings,
   availableBrochurePresets,
   brochurePresetFromSettings,
   builtInBrochurePresets,
@@ -21,46 +23,44 @@ export function BrochurePresetsTab({
   update,
   selectedId,
   onSelect,
-}: SettingsTabProps & { selectedId: string; onSelect: (id: string) => void }) {
+  facets = [],
+  facetsError,
+  brands = [],
+  previewProducts = [],
+}: SettingsTabProps & {
+  selectedId: string;
+  onSelect: (id: string) => void;
+  facets?: CategoryFacet[];
+  facetsError?: string;
+  brands?: string[];
+  previewProducts?: Product[];
+}) {
   const presets = availableBrochurePresets(draft);
   const selected =
     presets.find((preset) => preset.id === selectedId) ?? presets[0]!;
   const [preview, setPreview] = useState<BrochurePreset | null>(null);
+  const [editing, setEditing] = useState<BrochurePreset | null>(null);
   const [message, setMessage] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  function remember(next: WorkspaceSettings, preset: BrochurePreset) {
-    const captured = captureEditedBrochurePreset(
-      next,
-      preset,
-    ) as WorkspaceSettings["brochurePresets"][number];
-    const index = next.brochurePresets.findIndex(
-      (item) => item.id === preset.id,
-    );
-    if (index < 0) next.brochurePresets.push(captured);
-    else next.brochurePresets[index] = captured;
-  }
   function choose(preset: BrochurePreset) {
-    if (preset.id === selected.id) return;
-    update((next) => {
-      remember(next, selected);
-      applyPresetToSettings(next, preset);
-    });
     onSelect(preset.id);
     setConfirmDelete(false);
-    setMessage(
-      "Design loaded. Edit its colors, images, prices and layout in the other settings sections, then save settings to update this design.",
-    );
+    setMessage("Design selected. Choose Edit design to change its settings.");
   }
-  function newDesign(fromCurrent: boolean) {
+  function newDesign(fromCurrent: boolean, fromWorkspace = false) {
     const id = `custom-${crypto.randomUUID()}`;
     const name = fromCurrent
-      ? `${selected.name} ${t("copy")}`
+      ? `${t(selected.name)} ${t("copy")}`
       : t("Untitled design");
     const definition = fromCurrent
-      ? { ...captureEditedBrochurePreset(draft, selected), id, name }
+      ? fromWorkspace
+        ? brochurePresetFromSettings(draft, id, name)
+        : { ...selected, design: structuredClone(selected.design), id, name }
       : brochurePresetFromSettings(
           resolveSettings({
+            ...structuredClone(draft),
             brochure: {
+              ...structuredClone(draft.brochure),
               productBackground: { color: "#ffffff", gradient: null },
               coverBackground: { color: "#ffffff", gradient: null },
               storesBackground: { color: "#ffffff", gradient: null },
@@ -73,11 +73,9 @@ export function BrochurePresetsTab({
           name,
         );
     update((next) => {
-      remember(next, selected);
       next.brochurePresets.push(
         definition as WorkspaceSettings["brochurePresets"][number],
       );
-      applyPresetToSettings(next, definition);
     });
     onSelect(id);
     setMessage(
@@ -101,18 +99,29 @@ export function BrochurePresetsTab({
         onPreview={setPreview}
       />
       <div className="cs-preset-edit">
+        <button
+          type="button"
+          className="cs-preset-primary"
+          onClick={() => setEditing(selected)}
+        >
+          {t("Edit design")}
+        </button>
         <label>
           {t("Design name")}
           <input
             type="text"
             aria-label={t("Brochure preset name")}
             maxLength={120}
-            key={`${selected.id}-${selected.name}`}
-            defaultValue={selected.name}
+            key={`${selected.id}-${selected.builtin ? t(selected.name) : selected.name}`}
+            defaultValue={selected.builtin ? t(selected.name) : selected.name}
             onBlur={(event) => {
               const name = event.target.value.trim();
+              const displayed = selected.builtin
+                ? t(selected.name)
+                : selected.name;
+              if (name === displayed) return;
               if (!name) {
-                event.target.value = selected.name;
+                event.target.value = displayed;
                 return;
               }
               update((next) => {
@@ -143,7 +152,7 @@ export function BrochurePresetsTab({
         </label>
         <p>
           {t(
-            "The design open here is updated when you use Save settings. Cover photographs are supplied separately for each brochure.",
+            "Open Edit design to change colors, product layouts, prices, logos and stores. Save settings shares the library with the team.",
           )}
         </p>
         <div className="cs-preset-management-actions">
@@ -180,10 +189,16 @@ export function BrochurePresetsTab({
                   (item) => item.id === selected.id,
                 )!;
                 update((next) => {
+                  // Store the original snapshot explicitly; legacy workspace
+                  // defaults must not be reapplied over a reset design.
                   next.brochurePresets = next.brochurePresets.filter(
                     (item) => item.id !== selected.id,
                   );
-                  applyPresetToSettings(next, original);
+                  next.brochurePresets.push({
+                    id: original.id,
+                    name: original.name,
+                    design: structuredClone(original.design),
+                  } as WorkspaceSettings["brochurePresets"][number]);
                 });
                 setMessage(
                   "Original design restored. Save settings to keep it.",
@@ -211,16 +226,12 @@ export function BrochurePresetsTab({
             <button
               type="button"
               onClick={() => {
-                const fallback = presets.find(
-                  (item) => item.id === "neptun-current",
-                )!;
                 update((next) => {
                   next.brochurePresets = next.brochurePresets.filter(
                     (item) => item.id !== selected.id,
                   );
                   if (next.defaultBrochurePresetId === selected.id)
                     next.defaultBrochurePresetId = "neptun-current";
-                  applyPresetToSettings(next, fallback);
                 });
                 onSelect("neptun-current");
                 setConfirmDelete(false);
@@ -238,7 +249,7 @@ export function BrochurePresetsTab({
         )}
       </div>
       <div className="cs-preset-management-actions">
-        <button type="button" onClick={() => newDesign(true)}>
+        <button type="button" onClick={() => newDesign(true, true)}>
           {t("Save current settings as a new design")}
         </button>
         <button type="button" onClick={() => newDesign(false)}>
@@ -246,13 +257,42 @@ export function BrochurePresetsTab({
         </button>
       </div>
       {message && <p role="status">{t(message)}</p>}
+      {editing && (
+        <PresetDesignModal
+          key={editing.id}
+          preset={editing}
+          settings={draft}
+          facets={facets}
+          facetsError={facetsError}
+          brands={brands}
+          previewProducts={previewProducts}
+          onClose={() => setEditing(null)}
+          onCommit={(captured, working) => {
+            update((next) => {
+              const entry = {
+                id: captured.id,
+                name: captured.name,
+                design: structuredClone(captured.design),
+              } as WorkspaceSettings["brochurePresets"][number];
+              const index = next.brochurePresets.findIndex(
+                (item) => item.id === entry.id,
+              );
+              if (index < 0) next.brochurePresets.push(entry);
+              else next.brochurePresets[index] = entry;
+              for (const asset of working.logoLibrary)
+                if (!next.logoLibrary.some((item) => item.id === asset.id))
+                  next.logoLibrary.push(structuredClone(asset));
+            });
+            setEditing(null);
+            setMessage(
+              "Design updated. Save settings to share it with the team.",
+            );
+          }}
+        />
+      )}
       {preview && (
         <BrochurePresetPreview
-          preset={
-            preview.id === selected.id
-              ? captureEditedBrochurePreset(draft, selected)
-              : preview
-          }
+          preset={presets.find((item) => item.id === preview.id) || preview}
           settings={draft}
           onClose={() => setPreview(null)}
         />

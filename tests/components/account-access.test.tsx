@@ -1,10 +1,13 @@
 import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountAccess } from "../../src/features/auth/AccountAccess";
 import { PasswordChange } from "../../src/features/auth/PasswordChange";
 import { SignIn } from "../../src/features/auth/SignIn";
 import { accountLinkToken } from "../../src/app/App";
+import { setLanguage } from "../../src/features/brochure/i18n";
+
+beforeEach(() => setLanguage("en"));
 
 const token = "a-secure-single-use-token";
 const account = {

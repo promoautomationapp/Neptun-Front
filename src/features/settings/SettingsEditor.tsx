@@ -147,8 +147,12 @@ export function SettingsEditor({
   onDirtyChange,
   onBusyChange,
   previewProducts = [],
+  designScope,
+  externalBusy = false,
 }: {
   initial: WorkspaceSettings;
+  externalBusy?: boolean;
+  designScope?: { name: string; changed?: boolean; onCancel: () => void };
   /** A session-storage key scoped to the signed-in organization and user. */
   draftKey?: string;
   draftVersion?: number;
@@ -165,6 +169,7 @@ export function SettingsEditor({
     recoverSettingsDraft(initial, draftKey, draftVersion),
   );
   const [draft, setDraft] = useState(recovery.draft);
+  const [captureOnSave, setCaptureOnSave] = useState(true);
   const [selectedPresetId, setSelectedPresetId] = useState(
     recovery.selectedPresetId,
   );
@@ -180,10 +185,15 @@ export function SettingsEditor({
   currentDraftKey.current = draftKey;
   const [tab, setTab] = useState<TabId>("design");
   const [area, setArea] = useState<SettingsArea>("cover");
-  const visibleTabs = tabs.filter((item) =>
-    (
-      areas.find((group) => group.id === area)!.tabs as readonly string[]
-    ).includes(item.id),
+  const visibleAreas = designScope
+    ? areas.filter((group) => group.id !== "presets")
+    : areas;
+  const visibleTabs = tabs.filter(
+    (item) =>
+      (!designScope || (item.id !== "presets" && item.id !== "types")) &&
+      (
+        areas.find((group) => group.id === area)!.tabs as readonly string[]
+      ).includes(item.id),
   );
   const [previewCategory, setPreviewCategory] = useState("");
   const [previewRequest, setPreviewRequest] = useState<{
@@ -210,13 +220,14 @@ export function SettingsEditor({
   } | null>(null);
   const rootId = useId();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const dirty = JSON.stringify(draft) !== baseline;
+  const dirty =
+    JSON.stringify(draft) !== baseline || Boolean(designScope?.changed);
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
   useEffect(() => {
-    onBusyChange?.(saving || uploads > 0);
-  }, [saving, uploads, onBusyChange]);
+    onBusyChange?.(externalBusy || saving || uploads > 0);
+  }, [externalBusy, saving, uploads, onBusyChange]);
   useEffect(
     () => () => {
       onDirtyChange?.(false);
@@ -235,6 +246,7 @@ export function SettingsEditor({
     const recovered = recoverSettingsDraft(initial, draftKey, draftVersion);
     setDraft(recovered.draft);
     setSelectedPresetId(recovered.selectedPresetId);
+    setCaptureOnSave(true);
     setBaseline(initialSnapshot);
     setDraftBinding({
       key: draftKey,
@@ -290,6 +302,7 @@ export function SettingsEditor({
     initial,
   ]);
   const update = useCallback((change: (next: WorkspaceSettings) => void) => {
+    setCaptureOnSave(true);
     setDraft((current) => {
       const next = structuredClone(current);
       change(next);
@@ -297,12 +310,27 @@ export function SettingsEditor({
     });
     setMessage("");
   }, []);
+  // Library edits already contain their own complete design snapshot. They must
+  // not be recaptured from unrelated workspace store/contact defaults on save.
+  const updateLibrary = useCallback(
+    (change: (next: WorkspaceSettings) => void) => {
+      setDraft((current) => {
+        const next = structuredClone(current);
+        change(next);
+        return next;
+      });
+      setCaptureOnSave(false);
+      setMessage("");
+    },
+    [],
+  );
   const uploadState = useCallback(
     (busy: boolean) =>
       setUploads((count) => Math.max(0, count + (busy ? 1 : -1))),
     [],
   );
   async function save() {
+    if (externalBusy) return;
     const savingDraftKey = draftKey;
     const validDraft = workspaceSettingsSchema.safeParse(draft);
     if (!validDraft.success) {
@@ -317,7 +345,7 @@ export function SettingsEditor({
     const selected = availableBrochurePresets(next).find(
       (preset) => preset.id === selectedPresetId,
     );
-    if (selected) {
+    if (selected && captureOnSave) {
       const captured = captureEditedBrochurePreset(
         next,
         selected,
@@ -350,6 +378,7 @@ export function SettingsEditor({
       };
       setDraft(structuredClone(saved));
       setBaseline(JSON.stringify(saved));
+      setCaptureOnSave(false);
       setMessage("Settings saved. New brochures will use these defaults.");
     } catch (cause: unknown) {
       if (currentDraftKey.current !== savingDraftKey) return;
@@ -364,17 +393,19 @@ export function SettingsEditor({
   }
   const props = { draft, update, pageArea: area };
   return (
-    <div className="ns-settings">
+    <div className={`ns-settings ${designScope ? "ns-preset-settings" : ""}`}>
       <header>
-        <div>
-          <span className="ns-kicker">NEPTUN · WORKSPACE</span>
-          <h1>{t("Settings")}</h1>
-          <p>
-            {t(
-              "Choose the starting defaults for new brochures. Every brochure can be edited separately.",
-            )}
-          </p>
-        </div>
+        {!designScope && (
+          <div>
+            <span className="ns-kicker">NEPTUN · WORKSPACE</span>
+            <h1>{t("Settings")}</h1>
+            <p>
+              {t(
+                "Choose the starting defaults for new brochures. Every brochure can be edited separately.",
+              )}
+            </p>
+          </div>
+        )}
         <div className="ns-save-actions">
           <span role="status">
             {t(
@@ -390,27 +421,43 @@ export function SettingsEditor({
           <button
             className="cs-button primary"
             type="button"
-            disabled={!dirty || saving || uploads > 0}
+            disabled={!dirty || externalBusy || saving || uploads > 0}
             onClick={() => {
               void save();
             }}
           >
-            {t(saving ? "Saving…" : "Save settings")}
+            {t(
+              saving
+                ? "Saving…"
+                : designScope
+                  ? "Save design"
+                  : "Save settings",
+            )}
           </button>
-          {dirty && (
+          {designScope ? (
             <button
               type="button"
-              disabled={saving || uploads > 0}
-              onClick={() => {
-                clearSettingsDraft(draftKey);
-                setDraft(structuredClone(initial));
-                setBaseline(JSON.stringify(initial));
-                setError("");
-                setMessage("Changes discarded.");
-              }}
+              disabled={externalBusy || saving || uploads > 0}
+              onClick={designScope.onCancel}
             >
-              {t("Discard changes")}
+              {t("Cancel")}
             </button>
+          ) : (
+            dirty && (
+              <button
+                type="button"
+                disabled={externalBusy || saving || uploads > 0}
+                onClick={() => {
+                  clearSettingsDraft(draftKey);
+                  setDraft(structuredClone(initial));
+                  setBaseline(JSON.stringify(initial));
+                  setError("");
+                  setMessage("Changes discarded.");
+                }}
+              >
+                {t("Discard changes")}
+              </button>
+            )
           )}
         </div>
       </header>
@@ -420,7 +467,7 @@ export function SettingsEditor({
           {onReload && (
             <button
               type="button"
-              disabled={saving || uploads > 0}
+              disabled={externalBusy || saving || uploads > 0}
               onClick={() => {
                 clearSettingsDraft(draftKey);
                 onReload();
@@ -441,16 +488,20 @@ export function SettingsEditor({
         aria-label={t("Settings page areas")}
         className="ns-page-areas"
       >
-        {areas.map((group) => (
+        {visibleAreas.map((group) => (
           <button
             key={group.id}
             role="tab"
             type="button"
             aria-selected={area === group.id}
-            disabled={saving || uploads > 0}
+            disabled={externalBusy || saving || uploads > 0}
             onClick={() => {
               setArea(group.id);
-              setTab(group.tabs[0] as TabId);
+              setTab(
+                group.id === "workspace" && designScope
+                  ? "formats"
+                  : (group.tabs[0] as TabId),
+              );
               previewPage(
                 group.id === "inside"
                   ? "products"
@@ -460,7 +511,11 @@ export function SettingsEditor({
               );
             }}
           >
-            {t(group.label)}
+            {t(
+              group.id === "workspace" && designScope
+                ? "Format & layout"
+                : group.label,
+            )}
           </button>
         ))}
       </div>
@@ -477,7 +532,7 @@ export function SettingsEditor({
             }}
             id={`${rootId}-${item.id}`}
             key={item.id}
-            disabled={saving || uploads > 0}
+            disabled={externalBusy || saving || uploads > 0}
             role="tab"
             aria-selected={tab === item.id}
             aria-controls={`${rootId}-panel`}
@@ -523,13 +578,21 @@ export function SettingsEditor({
             <SettingsPreviewContext.Provider value={previewPage}>
               <fieldset
                 className="ns-tab-content"
-                disabled={saving || uploads > 0}
+                disabled={externalBusy || saving || uploads > 0}
               >
                 {tab === "presets" && (
                   <BrochurePresetsTab
                     {...props}
+                    update={updateLibrary}
                     selectedId={selectedPresetId}
-                    onSelect={setSelectedPresetId}
+                    facets={facets}
+                    facetsError={facetsError}
+                    brands={brands}
+                    previewProducts={previewProducts}
+                    onSelect={(id) => {
+                      setSelectedPresetId(id);
+                      setCaptureOnSave(false);
+                    }}
                   />
                 )}
                 {tab === "design" && <DesignTab {...props} />}

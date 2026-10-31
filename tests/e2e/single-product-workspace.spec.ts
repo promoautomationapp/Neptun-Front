@@ -148,6 +148,40 @@ test("single offers stay centered, footer numbers stay horizontal, and product m
   const editor = page.locator("[data-product-artwork-editor]");
   await expect(editor).toHaveAttribute("open");
   await expect(editor.getByLabel("Add image to this product")).toBeAttached();
+  const details = page.getByRole("dialog", {
+    name: "Product details",
+    exact: true,
+  });
+  const live = details.getByRole("region", {
+    name: "Product preview",
+    exact: true,
+  });
+  await expect(live).toBeVisible();
+  await details
+    .getByRole("textbox", { name: "Detail value 1", exact: true })
+    .fill("Bluetooth\nUpdated feature");
+  await expect(live.locator(".brochure-specs")).toContainText(
+    "Updated feature",
+  );
+  await details
+    .getByRole("button", { name: "Move down 1", exact: true })
+    .click();
+  await expect(
+    details.getByRole("textbox", { name: "Detail value 2", exact: true }),
+  ).toHaveValue("Bluetooth\nUpdated feature");
+  await details.screenshot({
+    path: "artifacts/neptun-product-details-desktop.png",
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await details.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    ),
+  ).toBe(true);
+  await expect(details.getByRole("button",{ name:"Close",exact:true })).toBeInViewport();
+  await details.screenshot({path: "artifacts/neptun-product-details-mobile.png"});
+  await page.setViewportSize({ width: 1040, height: 1050 });
+
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Close", exact: true })

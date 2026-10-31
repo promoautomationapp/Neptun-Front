@@ -2,6 +2,11 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { matchesSearch } from "./searchText";
 import { getLanguage, t } from "./i18n";
+import {
+  isStatusOptions,
+  statusTone,
+} from "../../components/statusPresentation";
+import "../../components/status-colors.css";
 
 export interface FilterOption<Value extends string | number = string> {
   value: Value;
@@ -75,6 +80,7 @@ export function FilterSelect<Value extends string | number>({
   const list = useRef<HTMLDivElement>(null);
   const selected =
     options.find((option) => option.value === value) || options[0];
+  const statusOptions = isStatusOptions(options.map((option) => option.value));
   const visible = options.filter((option) =>
     matchesSearch(option.label, query),
   );
@@ -194,6 +200,9 @@ export function FilterSelect<Value extends string | number>({
         id={id}
         type="button"
         className="cs-filter-trigger"
+        data-status-tone={
+          statusOptions && selected ? statusTone(selected.value) : undefined
+        }
         aria-label={labelledby ? undefined : label}
         aria-labelledby={labelledby}
         aria-describedby={describedby}
@@ -236,6 +245,9 @@ export function FilterSelect<Value extends string | number>({
                   key={option.value}
                   type="button"
                   role="option"
+                  data-status-tone={
+                    statusOptions ? statusTone(option.value) : undefined
+                  }
                   aria-selected={option.value === value}
                   disabled={option.disabled}
                   onClick={() => {

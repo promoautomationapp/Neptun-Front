@@ -22,6 +22,8 @@ import {
   workspaceAccessError,
 } from "./WorkspaceAccessEditor";
 import "../../styles/account-management.css";
+import { statusTone } from "../../components/statusPresentation";
+import "../../components/status-colors.css";
 
 const errorOf = (reason: unknown) =>
   reason instanceof Error
@@ -97,7 +99,10 @@ export function UsersPage({
           currentUser.role === "superadmin"
             ? result.users
             : result.users.filter(
-                (user) => !user.isSupport && user.role !== "superadmin",
+                (user) =>
+                  !user.isSupport &&
+                  user.role !== "superadmin" &&
+                  user.status !== "disabled",
               ),
         );
         setEmailConfigured(result.emailConfigured);
@@ -135,9 +140,14 @@ export function UsersPage({
     );
   function replaceUser(user: ManagedUser) {
     setUsers((current) =>
-      current.some((item) => item.id === user.id)
-        ? current.map((item) => (item.id === user.id ? user : item))
-        : [...current, user],
+      currentUser.role !== "superadmin" &&
+      (user.isSupport ||
+        user.role === "superadmin" ||
+        user.status === "disabled")
+        ? current.filter((item) => item.id !== user.id)
+        : current.some((item) => item.id === user.id)
+          ? current.map((item) => (item.id === user.id ? user : item))
+          : [...current, user],
     );
     onMembersChanged?.();
   }
@@ -502,7 +512,9 @@ export function UsersPage({
               <option value="all">{t("All statuses")}</option>
               <option value="active">{t("Active")}</option>
               <option value="invited">{t("Invited")}</option>
-              <option value="disabled">{t("Disabled")}</option>
+              {currentUser.role === "superadmin" && (
+                <option value="disabled">{t("Disabled")}</option>
+              )}
             </SearchableSelect>
           </label>
           <button
@@ -561,7 +573,10 @@ export function UsersPage({
                         )}
                     </td>
                     <td>
-                      <span className={"na-status " + user.status}>
+                      <span
+                        className={"na-status ns-status-badge " + user.status}
+                        data-status-tone={statusTone(user.status)}
+                      >
                         {t(
                           user.status === "invited"
                             ? "Invitation pending"

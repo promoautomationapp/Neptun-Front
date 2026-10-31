@@ -11,6 +11,8 @@ import { createPortal } from "react-dom";
 import { t } from "../features/brochure/i18n";
 import { matchesSearch } from "../features/brochure/searchText";
 import "./searchable-select.css";
+import { isStatusOptions, statusTone } from "./statusPresentation";
+import "./status-colors.css";
 
 interface Choice {
   value: string;
@@ -93,6 +95,7 @@ export function SearchableSelect({
     ? current.map(String)
     : [String(current)];
   const choices = choicesFrom(children);
+  const statusOptions = isStatusOptions(choices.map((choice) => choice.value));
   const selectedLabels = choices
     .filter((choice) => selected.includes(choice.value))
     .map((choice) => choice.label);
@@ -292,6 +295,9 @@ export function SearchableSelect({
         type="button"
         role="combobox"
         className="ns-searchable-trigger"
+        data-status-tone={
+          statusOptions ? statusTone(selected[0] || "") : undefined
+        }
         aria-label={props["aria-label"] || implicitLabel || undefined}
         aria-labelledby={props["aria-labelledby"]}
         aria-describedby={props["aria-describedby"]}
@@ -368,6 +374,9 @@ export function SearchableSelect({
                   <button
                     type="button"
                     role="option"
+                    data-status-tone={
+                      statusOptions ? statusTone(choice.value) : undefined
+                    }
                     aria-selected={selected.includes(choice.value)}
                     disabled={choice.disabled}
                     onClick={() => choose(choice)}

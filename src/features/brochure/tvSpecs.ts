@@ -1,17 +1,77 @@
 import type { Product } from "../../domain/models";
 import { isAppleProduct } from "./priceDesign";
-import { isBrochureAccessory } from "./productTypes";
+import { isBrochureAccessory, isMobilePhone } from "./productTypes";
+
+const normalized = (value: unknown) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+
+function screenCategories(product: Partial<Product>) {
+  const path = String(product.categoryPath || "")
+    .split(/\s*(?:>|›)\s*/)
+    .filter(Boolean)
+    .reverse();
+  return [...path, product.subcategory, product.category]
+    .map(normalized)
+    .filter(Boolean);
+}
+
+function screenAccessory(product: Partial<Product>) {
+  const specific = screenCategories(product)[0] || "";
+  return (
+    isBrochureAccessory(product) ||
+    isBrochureAccessory({ ...product, subcategory: specific }) ||
+    /\b(?:COVERS?|CASES?|SLEEVES?|PROTECTORS?|SCREEN\s+PROTECTION|MBROJTES\w*|MBESHTJELLESE\w*|MBAJTES\w*|MBUSHES\w*|KABLLO\w*|CHARGERS?|ADAPTERS?|ADAPTORS?|CABLES?|SPARE\s+PARTS?|PJES\w*\s+REZERV\w*|REPLACEMENT\s+(?:SCREENS?|DISPLAYS?)|(?:SCREENS?|DISPLAYS?)\s+REPLACEMENT)\b/.test(
+      `${specific} ${normalized(product.name)}`,
+    )
+  );
+}
+
+type OtherScreenKind = "phone" | "tablet" | "laptop" | "monitor";
+function namedScreenKind(value: string): OtherScreenKind | null {
+  if (
+    /^(?:TABLET(?:E|A|ET|AT|S)?|(?:APPLE\s+)?IPAD|(?:SAMSUNG\s+)?(?:GALAXY\s+)?TAB|(?:HUAWEI\s+)?MATEPAD|(?:XIAOMI\s+)?REDMI\s+PAD)(?:\s|$)/.test(
+      value,
+    )
+  )
+    return "tablet";
+  if (
+    /^(?:(?:GAMING\s+)?(?:LAPTOP(?:E|ET|S)?|NOTEBOOKS?|ULTRABOOKS?)|(?:APPLE\s+)?MAC\s*BOOK|KOMPJUTER(?:A|E|ET)?\s+PORTATIV(?:E|I)?)(?:\s|$)/.test(
+      value,
+    )
+  )
+    return "laptop";
+  if (
+    /^(?:MONITOR(?:E|ET|S)?|EKRAN(?:E|ET|I|A)?|SCREENS?|DISPLAYS?)(?:\s|$)/.test(
+      value,
+    )
+  )
+    return "monitor";
+  return null;
+}
+
+function otherScreenKind(product: Partial<Product>): OtherScreenKind | null {
+  if (screenAccessory(product)) return null;
+  for (const category of screenCategories(product)) {
+    const kind = namedScreenKind(category);
+    if (kind) return kind;
+  }
+  // A generic category or a manufacturer leaf must not hide an explicit device
+  // name. Tablet families are checked before Redmi/Galaxy phone recognition.
+  return (
+    namedScreenKind(normalized(product.name)) ||
+    (isMobilePhone(product) ? "phone" : null)
+  );
+}
 
 export function isTelevision(product: Partial<Product>) {
-  if (isBrochureAccessory(product)) return false;
-  const normalize = (value: unknown) =>
-    String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim()
-      .toUpperCase();
-  const subcategory = normalize(product.subcategory);
-  const category = normalize(product.category);
+  if (screenAccessory(product)) return false;
+  const subcategory = normalized(product.subcategory);
+  const category = normalized(product.category);
   const televisionCategory =
     /^(?:TV|TELEVIZOR(?:E|ET)?|TELEVISIONS?)(?:\s+(?:LED|QLED|OLED|QNED|MINI\s*LED))?$/;
   return (
@@ -24,10 +84,13 @@ export function isTelevision(product: Partial<Product>) {
 }
 
 export function hasEditableScreen(product: Partial<Product>) {
+  if (screenAccessory(product)) return false;
   if (isTelevision(product)) return true;
-  const text = `${product.category || ""} ${product.subcategory || ""} ${product.name || ""}`;
-  return /\b(?:laptop|notebook|macbook|tablet|ipad|monitor|iphone|smartphone|telefon|redmi|galaxy|watch|smartwatch|A\d{2,3}|S\d{2,3}\+?|xiaomi\s+\d{1,2}[a-z]?)\b/i.test(
-    text,
+  if (otherScreenKind(product)) return true;
+  return /\b(?:SMARTWATCH|WATCH)\b/.test(
+    normalized(
+      `${product.category || ""} ${product.subcategory || ""} ${product.name || ""}`,
+    ),
   );
 }
 
@@ -83,34 +146,27 @@ export function defaultProductImageScale(product: Partial<Product>) {
 
 export function otherScreenInches(product: Partial<Product>) {
   if (isAppleProduct(product)) return null;
-  const category = String(product.subcategory || "")
-    .trim()
-    .toUpperCase();
-  const name = String(product.name || "");
-  const isPhone =
-    /^(?:SMARTPHONES?|PHONE|TELEFON(?:A|I| CELULAR)?)$/.test(category) ||
-    (!category &&
-      /^(?:SMARTPHONE|PHONE|TELEFON|GALAXY|REDMI|SAMSUNG\s+(?:GALAXY|[AS]\d)|XIAOMI\s+\d)\b/i.test(
-        name,
-      ));
-  const isScreenCategory =
-    isPhone ||
-    /^(?:LAPTOP(?: GAMING)?|TABLETË?|MONITOR(?: GAMING)?)$/.test(category);
-  if (
-    !isScreenCategory &&
-    (category || !/^(?:LAPTOP|TABLET|MONITOR)\b/i.test(name))
-  )
-    return null;
-  const screenSpec = Object.entries(product.specs || {}).find(([key]) =>
+  const kind = otherScreenKind(product);
+  if (!kind) return null;
+  const screenSpecs = Object.entries(product.specs || {}).filter(([key]) =>
     /ekran|display|screen\s*size|p[ëe]rmasat|diagonal/i.test(key),
   );
-  const source = String(screenSpec?.[1] || name);
-  const match = source.match(
-    /\b(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:["″”]|inch|inç)/i,
-  );
-  if (!match) return null;
-  const inches = Number((match[1] ?? "").replace(",", "."));
-  return inches >= (isPhone ? 3 : 7) && inches <= 50 ? inches : null;
+  const sources = [
+    ...screenSpecs.map(([, value]) => value),
+    ...(product.brochureDetails || []).map((detail) =>
+      typeof detail === "string" ? detail : detail.text,
+    ),
+    product.name,
+  ];
+  for (const source of sources) {
+    const match = String(source || "").match(
+      /\b(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:["″”]|inch|inç)/i,
+    );
+    if (!match) continue;
+    const inches = Number((match[1] ?? "").replace(",", "."));
+    if (inches >= (kind === "phone" ? 3 : 7) && inches <= 50) return inches;
+  }
+  return null;
 }
 
 export function screenAnnotationType(product: Partial<Product>) {

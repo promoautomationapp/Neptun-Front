@@ -1,0 +1,118 @@
+/* Status always retains a written label; color and the dot are supplementary. */
+[data-status-tone="success"] {
+  --status-ink: #146044;
+  --status-bg: #e8f5ed;
+  --status-border: #a8d6ba;
+  --status-dot: #23845b;
+}
+[data-status-tone="pending"] {
+  --status-ink: #77510a;
+  --status-bg: #fff5d9;
+  --status-border: #e3c378;
+  --status-dot: #a56b08;
+}
+[data-status-tone="review"] {
+  --status-ink: #174c86;
+  --status-bg: #eaf2ff;
+  --status-border: #abc9ee;
+  --status-dot: #306eb4;
+}
+[data-status-tone="attention"] {
+  --status-ink: #943d1b;
+  --status-bg: #fff0e7;
+  --status-border: #e7b49a;
+  --status-dot: #be592f;
+}
+[data-status-tone="inactive"] {
+  --status-ink: #4d5c70;
+  --status-bg: #edf0f4;
+  --status-border: #c3cbd6;
+  --status-dot: #69788a;
+}
+.ns-status-badge[data-status-tone],
+.ns-searchable-trigger[data-status-tone],
+.cs-filter-trigger[data-status-tone] {
+  color: var(--status-ink);
+  background: var(--status-bg);
+  border: 1px solid var(--status-border);
+}
+.ns-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.ns-status-badge::before,
+.ns-searchable-trigger[data-status-tone] > span:first-child::before,
+.cs-filter-trigger[data-status-tone] > span:first-child::before,
+.ns-searchable-options > button[data-status-tone] > span:first-child::before,
+.cs-filter-options button[data-status-tone] > span:first-child::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-dot);
+  flex: none;
+}
+.ns-searchable-trigger[data-status-tone] > span:first-child::before,
+.cs-filter-trigger[data-status-tone] > span:first-child::before,
+.ns-searchable-options > button[data-status-tone] > span:first-child::before,
+.cs-filter-options button[data-status-tone] > span:first-child::before {
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+.ns-searchable-options > button[data-status-tone],
+.cs-filter-options button[data-status-tone] {
+  color: var(--status-ink);
+  background: var(--status-bg);
+  border: 1px solid transparent;
+}
+.ns-searchable-options > button[data-status-tone][aria-selected="true"],
+.cs-filter-options button[data-status-tone][aria-selected="true"] {
+  border-color: var(--status-border);
+  font-weight: 800;
+}
+html[data-theme="dark"] [data-status-tone="success"] {
+  --status-ink: #a4edc9;
+  --status-bg: #193c30;
+  --status-border: #3c775c;
+  --status-dot: #72d6a5;
+}
+html[data-theme="dark"] [data-status-tone="pending"] {
+  --status-ink: #ffe0a0;
+  --status-bg: #40351f;
+  --status-border: #80683c;
+  --status-dot: #e3b85c;
+}
+html[data-theme="dark"] [data-status-tone="review"] {
+  --status-ink: #b6d8ff;
+  --status-bg: #1e3756;
+  --status-border: #496d96;
+  --status-dot: #87b9f3;
+}
+html[data-theme="dark"] [data-status-tone="attention"] {
+  --status-ink: #ffd0b4;
+  --status-bg: #4b3025;
+  --status-border: #925f48;
+  --status-dot: #f5a278;
+}
+html[data-theme="dark"] [data-status-tone="inactive"] {
+  --status-ink: #cfdae7;
+  --status-bg: #2b3747;
+  --status-border: #596b80;
+  --status-dot: #a3b4c8;
+}
+html[data-theme="dark"] .ns-status-badge[data-status-tone],
+html[data-theme="dark"] .ns-searchable-trigger[data-status-tone],
+html[data-theme="dark"] .cs-filter-trigger[data-status-tone],
+html[data-theme="dark"] .ns-searchable-options > button[data-status-tone],
+html[data-theme="dark"] .cs-filter-options button[data-status-tone] {
+  color: var(--status-ink);
+  background: var(--status-bg);
+  border-color: var(--status-border);
+}

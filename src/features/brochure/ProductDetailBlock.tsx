@@ -123,7 +123,11 @@ export function ProductDetailBlock({
       if (
         blockRef.current?.contains(target) ||
         toolsRef.current?.contains(target) ||
-        editorRef.current?.contains(target)
+        editorRef.current?.contains(target) ||
+        (target instanceof Element &&
+          target
+            .closest("[data-detail-editor-id]")
+            ?.getAttribute("data-detail-editor-id") === toolsId)
       ) {
         setSelected(true);
       } else {
@@ -139,7 +143,7 @@ export function ProductDetailBlock({
       document.removeEventListener("pointerdown", selectTarget, true);
       document.removeEventListener("focusin", selectTarget, true);
     };
-  }, [editable]);
+  }, [editable, toolsId]);
   React.useLayoutEffect(() => {
     if (!selected) return;
     const position = () => {
@@ -697,6 +701,7 @@ export function ProductDetailBlock({
         createPortal(
           <span
             ref={editorRef}
+            data-detail-editor-id={toolsId}
             style={{
               left: toolbarPosition.left,
               top: Math.max(

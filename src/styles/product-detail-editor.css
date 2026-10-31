@@ -193,3 +193,29 @@
     grid-template-columns: 1fr;
   }
 }
+.cs-detail-live-preview .ns-preview-page {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.cs-detail-live-preview .ns-preview-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: top left;
+}
+.cs-modal:has(.cs-product-detail-editor) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+}
+.cs-modal:has(.cs-product-detail-editor) > .cs-modal-head {
+  flex-shrink: 0;
+}
+.cs-modal:has(.cs-product-detail-editor) > .cs-modal-body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}

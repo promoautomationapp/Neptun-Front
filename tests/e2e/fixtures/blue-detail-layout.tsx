@@ -28,8 +28,8 @@ const products: Product[] = [
     subcategory: "Smartphone",
     image: image(230, 430),
     brochureDetails: [
-      "Android 16",
-      "Kamera: 50MP / Front: 12MP",
+      "Android\n16",
+      "KAMERA: Triple:\n50MP+8MP+5MP\nFront: 12MP",
       "8GB / 256GB",
       "Bateria: 5000 mAh",
     ],
@@ -56,7 +56,7 @@ const products: Product[] = [
   },
   {
     code: "tablet",
-    name: "Samsung Galaxy Tab",
+    name: 'Samsung Galaxy Tab 11"',
     brand: "Samsung",
     subcategory: "Tablet",
     image: image(430, 310),

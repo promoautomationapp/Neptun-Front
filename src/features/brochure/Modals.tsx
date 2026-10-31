@@ -1738,9 +1738,9 @@ export function Details({
       const row = rows.find(
         (element) => element.dataset.detailEditorKey === focusDetailKey,
       );
-      const field = row?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-        "textarea,input:last-of-type",
-      );
+      const field =
+        row?.querySelector<HTMLTextAreaElement>("textarea") ||
+        row?.querySelector<HTMLInputElement>("input:last-of-type");
       if (field) {
         row?.scrollIntoView?.({ block: "center" });
         field.focus();

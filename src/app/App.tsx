@@ -7,6 +7,9 @@ import { AccountAccess } from "../features/auth/AccountAccess";
 import { AccountFrame } from "../features/auth/AccountFrame";
 import { PasswordChange } from "../features/auth/PasswordChange";
 import { AppearanceProvider } from "../features/appearance/Appearance";
+import { authErrorMessage } from "../features/auth/authErrors";
+import { useAuthLanguage } from "../features/auth/AuthPreferences";
+import { t } from "../features/brochure/i18n";
 
 export function accountLinkToken(
   location: Pick<Location, "pathname" | "search">,
@@ -20,9 +23,11 @@ export function accountLinkToken(
   return new URLSearchParams(location.search).get("token") || "";
 }
 export function App() {
+  useAuthLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState("");
+  const [sessionError, setSessionError] = useState("");
   const [accountToken, setAccountToken] = useState(() =>
     accountLinkToken(window.location),
   );
@@ -38,11 +43,7 @@ export function App() {
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted)
-          setMessage(
-            error instanceof Error
-              ? error.message
-              : "Could not load your session.",
-          );
+          setSessionError(authErrorMessage(error));
       })
       .finally(() => {
         if (!controller.signal.aborted) setReady(true);
@@ -52,6 +53,7 @@ export function App() {
   function authChange(next: User | null, notice = "") {
     setUser(next);
     setMessage(notice);
+    setSessionError("");
   }
   function renderScreen() {
     if (accountToken !== null)
@@ -69,19 +71,27 @@ export function App() {
     if (!ready)
       return (
         <AccountFrame>
-          <p role="status">Checking session…</p>
+          <p role="status">{t("Checking session…")}</p>
         </AccountFrame>
       );
     if (!user)
-      return <SignIn onSignIn={(next) => authChange(next)} notice={message} />;
+      return (
+        <SignIn
+          onSignIn={(next) => authChange(next)}
+          notice={message}
+          connectionError={sessionError}
+        />
+      );
     if (user.mustChangePassword)
       return (
         <AccountFrame>
-          <span className="cs-eyebrow">ACCOUNT SECURITY</span>
-          <h1>Update your password</h1>
-          <p>Choose your own password before continuing to the workspace.</p>
+          <span className="cs-eyebrow">{t("ACCOUNT SECURITY")}</span>
+          <h1>{t("Update your password")}</h1>
+          <p>
+            {t("Choose your own password before continuing to the workspace.")}
+          </p>
           <div className="na-account-identity">
-            <strong>{user.name || "Your account"}</strong>
+            <strong>{user.name || t("Your account")}</strong>
             <span>{user.email}</span>
           </div>
           <PasswordChange

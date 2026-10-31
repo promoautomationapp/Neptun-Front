@@ -52,3 +52,22 @@ it("uses the phone corner only for non-Apple phones, excluding compatible access
   ])
     expect(usesPhoneCornerAnnotation(product)).toBe(false);
 });
+
+it("anchors tablet and laptop guides outside the visible image edge at every preview scale", async () => {
+  const { otherScreenAnnotationBaseBox } =
+    await import("../../src/features/brochure/screenAnnotationGeometry");
+  for (const factor of [0.4, 1, 1.5]) {
+    const photo = {
+      left: 50 * factor,
+      top: 80 * factor,
+      width: 400 * factor,
+      height: 280 * factor,
+    };
+    const label = otherScreenAnnotationBaseBox(photo, 1080 * factor);
+    const verticalX =
+      label.left + (label.width * 33.3868950515) / 67.1693479534;
+    const guideY = label.top + (label.width * 25.7483815485) / 67.1693479534;
+    expect(verticalX).toBeCloseTo(photo.left + photo.width + 2 * factor, 5);
+    expect(guideY).toBeLessThan(photo.top);
+  }
+});

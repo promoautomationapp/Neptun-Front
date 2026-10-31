@@ -34,9 +34,18 @@ function settingsDesignSnapshot(settings: Settings): Partial<Campaign> {
   const design = brochureDesignSnapshot(campaignDefaults(settings));
   // Campaign-type logos are chosen when creating a campaign, separately from a design.
   delete design.pageArtworks;
+  // Designs own store data, never a nested copy of the workspace/preset library.
+  design.storesSnapshot = {
+    stores: structuredClone(settings.stores),
+    contact: structuredClone(settings.contact),
+  };
   return design;
 }
 const currentDesign = settingsDesignSnapshot(resolveSettings(null));
+// Built-ins inherit the team's current locations until explicitly customized.
+delete currentDesign.storesSnapshot;
+delete currentDesign.selectedStoreIndexes;
+delete currentDesign.storeOrder;
 const blueProductDesign: ProductDesignDefaults = {
   ...currentDesign.productDesign!,
   details: {
@@ -248,8 +257,11 @@ export function availableBrochurePresets(input: Settings): BrochurePreset[] {
       const customized = Object.fromEntries(
         Object.entries(defaults).filter(
           ([key, value]) =>
+            !["storesSnapshot", "selectedStoreIndexes", "storeOrder"].includes(
+              key,
+            ) &&
             JSON.stringify(value) !==
-            JSON.stringify(currentDesign[key as keyof Campaign]),
+              JSON.stringify(currentDesign[key as keyof Campaign]),
         ),
       );
       Object.assign(design, customized);
@@ -315,9 +327,17 @@ export function brochurePresetFromSettings(
 export function applyPresetToSettings(
   settings: WorkspaceSettings,
   preset: BrochurePresetDefinition,
+  { includeStores = true }: { includeStores?: boolean } = {},
 ): void {
   const d = preset.design;
   const b = settings.brochure;
+  if (includeStores && d.storesSnapshot) {
+    settings.stores = structuredClone(d.storesSnapshot.stores).map((store) => ({
+      ...store,
+      visible: store.visible !== false,
+    }));
+    settings.contact = structuredClone(d.storesSnapshot.contact);
+  }
   b.brochureVisualStyle =
     d.brochureVisualStyle ??
     (preset.id === "neptun-october" ? "october" : "current");

@@ -4,6 +4,8 @@ import { REVIEW_STATUS } from "../brochure/ReviewPanel";
 import { t } from "../brochure/i18n";
 import { campaignValidity } from "./campaignValidity";
 import "./campaign-status.css";
+import { statusTone } from "../../components/statusPresentation";
+import "../../components/status-colors.css";
 
 /** Offer dates never replace the saved review workflow status. */
 export function CampaignStatus({
@@ -24,7 +26,8 @@ export function CampaignStatus({
   return (
     <>
       <span
-        className={`cs-workflow-status ${surface === "library" ? "cs-campaign-status" : status === "completed" ? "completed" : "progress"} status-${disabled ? "disabled" : status}`}
+        className={`cs-workflow-status ns-status-badge ${surface === "library" ? "cs-campaign-status" : status === "completed" ? "completed" : "progress"} status-${disabled ? "disabled" : status}`}
+        data-status-tone={statusTone(disabled ? "disabled" : status)}
         aria-label={disabled ? undefined : `${t("Workflow status")}: ${label}`}
       >
         {disabled ? t("Deleted") : label}

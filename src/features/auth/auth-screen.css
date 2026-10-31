@@ -1,0 +1,246 @@
+.cs-signin.cs-auth-screen {
+  min-height: 100dvh;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.92fr);
+}
+.cs-auth-screen .cs-signin-art {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(32px, 5vw, 72px);
+  gap: 64px;
+  justify-content: space-between;
+}
+.cs-auth-screen .cs-auth-brand {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+.cs-auth-screen .cs-auth-brand img {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+}
+.cs-auth-screen .cs-auth-brand > span {
+  display: none;
+}
+.cs-signin.cs-auth-screen .cs-signin-art h1 {
+  max-width: 520px;
+  margin: 16px 0 20px;
+  font-size: clamp(38px, 4.4vw, 64px);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.cs-auth-screen .cs-signin-art p {
+  max-width: 340px;
+  margin: 0;
+  line-height: 1.6;
+  font-size: 14px;
+}
+.cs-signin.cs-auth-screen .cs-signin-panel {
+  padding: 28px clamp(28px, 4.5vw, 72px);
+  align-items: stretch;
+  justify-content: center;
+}
+.cs-signin.cs-auth-screen .cs-auth-form-content {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+}
+.cs-signin.cs-auth-screen .cs-auth-form-content h2 {
+  margin: 12px 0;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.13;
+  text-wrap: balance;
+}
+.cs-auth-screen .cs-auth-form-content > p {
+  max-width: none;
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cs-auth-screen .cs-team-login {
+  width: 100%;
+  margin: 20px 0 0;
+  gap: 16px;
+}
+.cs-auth-screen .cs-team-login label {
+  gap: 8px;
+  font-size: 12px;
+}
+.cs-auth-screen .cs-team-login input {
+  min-height: 46px;
+  font-size: 16px;
+}
+.cs-auth-screen .cs-team-login .cs-button,
+.na-auth-screen .na-form .cs-button {
+  min-height: 46px;
+  white-space: normal;
+  line-height: 1.4;
+}
+.cs-auth-screen .cs-auth-form-content > .na-text-button {
+  min-height: 36px;
+  margin: 8px 0;
+}
+.cs-auth-screen .cs-auth-form-content > small {
+  display: block;
+  color: #70879b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.cs-auth-screen .cs-auth-form-content > .pa-powered-by {
+  margin-top: 20px;
+}
+.na-auth-preferences {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.cs-signin.cs-auth-screen .na-auth-preferences {
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+.na-auth-preferences .cs-language-switch button {
+  min-width: 36px;
+  min-height: 32px;
+}
+.na-auth-preferences > .np-appearance-toggle {
+  margin: 0;
+  height: 40px;
+}
+.cs-auth-screen .cs-auth-message {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.55;
+}
+html[data-theme="dark"] body .cs-auth-screen .na-text-button {
+  color: #8ccbf5;
+}
+.na-account-screen.na-auth-screen {
+  padding: 20px;
+  gap: 0;
+}
+.na-auth-screen > .na-auth-preferences {
+  width: min(100%, 520px);
+  margin: 0 0 20px;
+}
+.na-auth-screen .na-account-brand {
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.na-auth-screen .na-account-wordmark {
+  width: min(170px, 55vw);
+}
+.na-auth-screen .na-account-card {
+  padding: clamp(24px, 4vw, 36px);
+}
+.na-auth-screen .na-account-card > .cs-button {
+  min-height: 44px;
+  white-space: normal;
+}
+.na-auth-screen .na-account-footnote {
+  margin: 18px 0 0;
+  line-height: 1.5;
+}
+@media (min-width: 961px) and (max-height: 760px) {
+  .cs-signin.cs-auth-screen .cs-signin-art {
+    padding-block: 32px;
+    gap: 32px;
+  }
+  .cs-signin.cs-auth-screen .cs-signin-art h1 {
+    font-size: clamp(36px, 3.6vw, 52px);
+  }
+  .cs-auth-screen .na-auth-preferences {
+    margin-bottom: 18px;
+  }
+}
+@media (max-width: 960px) {
+  .cs-signin.cs-auth-screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+  .cs-signin.cs-auth-screen .cs-signin-art {
+    display: block;
+    min-height: 0;
+    padding: 18px clamp(24px, 5vw, 48px);
+  }
+  .cs-auth-screen .cs-auth-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 760px;
+    margin: auto;
+  }
+  .cs-auth-screen .cs-auth-brand img {
+    width: 138px;
+  }
+  .cs-auth-screen .cs-auth-brand > span {
+    display: block;
+    color: #d1e5f5;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    line-height: 1.4;
+  }
+  .cs-auth-screen .cs-signin-art-copy {
+    display: none;
+  }
+  .cs-signin.cs-auth-screen .cs-signin-panel {
+    padding: 24px;
+    justify-content: flex-start;
+  }
+  .cs-auth-screen .cs-auth-form-content {
+    margin-block: auto;
+  }
+  .cs-auth-screen .na-auth-preferences {
+    margin-bottom: 24px;
+  }
+}
+@media (max-width: 520px) {
+  .cs-signin.cs-auth-screen .cs-signin-art {
+    padding: 16px 24px;
+  }
+  .cs-auth-screen .cs-auth-brand img {
+    width: 120px;
+  }
+  .cs-auth-screen .cs-auth-brand > span {
+    max-width: 140px;
+    font-size: 11px;
+  }
+  .cs-signin.cs-auth-screen .cs-signin-panel {
+    padding: 18px 24px 24px;
+  }
+  .cs-auth-screen .na-auth-preferences {
+    margin-bottom: 20px;
+  }
+  .cs-signin.cs-auth-screen .cs-auth-form-content h2 {
+    margin-block: 10px;
+    font-size: 30px;
+  }
+  .cs-auth-screen .cs-auth-form-content > p {
+    margin-bottom: 12px;
+  }
+  .cs-auth-screen .cs-team-login {
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .cs-auth-screen .cs-auth-form-content > .pa-powered-by {
+    margin-top: 16px;
+  }
+  .na-account-screen.na-auth-screen {
+    padding: 16px;
+  }
+  .na-auth-screen .na-account-brand {
+    margin-bottom: 16px;
+  }
+  .na-auth-screen .na-account-card h1 {
+    font-size: 28px;
+  }
+}

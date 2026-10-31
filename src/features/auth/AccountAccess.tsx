@@ -10,12 +10,11 @@ import {
   verifyInvitation,
 } from "../../api/users";
 import { AccountFrame, PasswordFields } from "./AccountFrame";
+import { t } from "../brochure/i18n";
+import { useAuthLanguage } from "./AuthPreferences";
+import { authErrorMessage } from "./authErrors";
 
 type AccountToken = z.infer<typeof accountTokenSchema>;
-const messageOf = (error: unknown) =>
-  error instanceof Error
-    ? error.message
-    : "Could not complete this request. Please try again.";
 
 export function AccountAccess({
   token,
@@ -24,6 +23,7 @@ export function AccountAccess({
   token: string;
   onComplete: (message: string) => void;
 }) {
+  useAuthLanguage();
   const [account, setAccount] = useState<AccountToken | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -45,7 +45,7 @@ export function AccountAccess({
         setCodeSent(result.codeSent);
       })
       .catch((reason) => {
-        if (!controller.signal.aborted) setError(messageOf(reason));
+        if (!controller.signal.aborted) setError(authErrorMessage(reason));
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -88,7 +88,7 @@ export function AccountAccess({
         setComplete(true);
       }
     } catch (reason) {
-      setError(messageOf(reason));
+      setError(authErrorMessage(reason));
     } finally {
       setBusy(false);
     }
@@ -104,31 +104,35 @@ export function AccountAccess({
         "A new verification code is on its way. Use the most recent code in your email.",
       );
     } catch (reason) {
-      setError(messageOf(reason));
+      setError(authErrorMessage(reason));
     } finally {
       setBusy(false);
     }
   }
   return (
     <AccountFrame>
-      <span className="cs-eyebrow">SECURE ACCOUNT ACCESS</span>
+      <span className="cs-eyebrow">{t("SECURE ACCOUNT ACCESS")}</span>
       <h1>
-        {complete
-          ? invitation
-            ? "Welcome to your team"
-            : "Password updated"
-          : invitation
-            ? "Join your team"
-            : "Reset your password"}
+        {t(
+          complete
+            ? invitation
+              ? "Welcome to your team"
+              : "Password updated"
+            : invitation
+              ? "Join your team"
+              : "Reset your password",
+        )}
       </h1>
       {loading ? (
-        <p role="status">Checking your secure link…</p>
+        <p role="status">{t("Checking your secure link…")}</p>
       ) : complete ? (
         <>
           <p>
-            {invitation
-              ? "Your email is verified and your account is ready."
-              : "Your password has been changed. A security notice will be sent to your email."}
+            {t(
+              invitation
+                ? "Your email is verified and your account is ready."
+                : "Your password has been changed. A security notice will be sent to your email.",
+            )}
           </p>
           <button
             className="cs-button primary"
@@ -141,52 +145,56 @@ export function AccountAccess({
               )
             }
           >
-            Continue to sign in →
+            {t("Continue to sign in →")}
           </button>
         </>
       ) : !account ? (
         <>
           <p role="alert" className="na-alert error">
-            {error || "This link is invalid or has expired."}
+            {t(error || "This link is invalid or has expired.")}
           </p>
           <p>
-            For an invitation, ask your team admin to send a fresh link. For a
-            password reset, request a new reset email.
+            {t(
+              "For an invitation, ask your team admin to send a fresh link. For a password reset, request a new reset email.",
+            )}
           </p>
           <button
             className="cs-button"
             type="button"
             onClick={() => onComplete("")}
           >
-            Back to sign in
+            {t("Back to sign in")}
           </button>
         </>
       ) : (
         <>
           <p>
-            {invitation
-              ? "Set your password, then verify your email to activate your invitation."
-              : "Verify your email and choose a new password to regain access."}
+            {t(
+              invitation
+                ? "Set your password, then verify your email to activate your invitation."
+                : "Verify your email and choose a new password to regain access.",
+            )}
           </p>
           <div className="na-account-identity">
-            <strong>{account.name || "Your account"}</strong>
+            <strong>{account.name || t("Your account")}</strong>
             <span>{account.email}</span>
           </div>
           {notice && (
             <p className="na-alert success" role="status">
-              {notice}
+              {t(notice)}
             </p>
           )}
           {error && (
             <p className="na-alert error" role="alert">
-              {error}
+              {t(error)}
             </p>
           )}
           {!invitation && !codeSent ? (
             <>
               <p>
-                We will send a verification code to the email linked to this
-                secure reset request.
+                {t(
+                  "We will send a verification code to the email linked to this secure reset request.",
+                )}
               </p>
               <button
                 className="cs-button primary"
@@ -194,7 +202,7 @@ export function AccountAccess({
                 disabled={busy}
                 onClick={() => void sendVerificationCode()}
               >
-                {busy ? "Sending code…" : "Send verification code"}
+                {t(busy ? "Sending code…" : "Send verification code")}
               </button>
             </>
           ) : (
@@ -210,7 +218,7 @@ export function AccountAccess({
               )}
               {codeSent && (
                 <label>
-                  Verification code
+                  {t("Verification code")}
                   <input
                     type="text"
                     inputMode="numeric"
@@ -224,11 +232,12 @@ export function AccountAccess({
                     onChange={(event) =>
                       setCode(event.target.value.replace(/\D/g, ""))
                     }
-                    placeholder="6-digit code"
+                    placeholder={t("6-digit code")}
                   />
                   <small className="na-field-help">
-                    Codes expire after 10 minutes. Check your inbox and spam
-                    folder.
+                    {t(
+                      "Codes expire after 10 minutes. Check your inbox and spam folder.",
+                    )}
                   </small>
                 </label>
               )}
@@ -237,13 +246,15 @@ export function AccountAccess({
                 type="submit"
                 disabled={busy}
               >
-                {busy
-                  ? "Please wait…"
-                  : invitation
-                    ? codeSent
-                      ? "Verify email and activate account"
-                      : "Set password and send code"
-                    : "Reset password"}
+                {t(
+                  busy
+                    ? "Please wait…"
+                    : invitation
+                      ? codeSent
+                        ? "Verify email and activate account"
+                        : "Set password and send code"
+                      : "Reset password",
+                )}
               </button>
               {codeSent && (
                 <button
@@ -252,7 +263,7 @@ export function AccountAccess({
                   disabled={busy}
                   onClick={() => void sendVerificationCode()}
                 >
-                  Send a new verification code
+                  {t("Send a new verification code")}
                 </button>
               )}
             </form>

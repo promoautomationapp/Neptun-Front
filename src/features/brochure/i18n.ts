@@ -265,6 +265,130 @@ const translations: Record<string, string> = {
     "Nën këtë çmim oferte, shfaq Zbritje (%). Aparatet e kafesë dhe fshesat ruajnë Kurseni (€). Zgjedhjet e produktit dhe kategorisë kanë përparësi.",
   "Lower offer price": "Çmim oferte më i ulët",
   "At or above the threshold": "Në ose mbi kufirin",
+  Language: "Gjuha",
+  "Campaign workspace": "Hapësira e fushatave",
+  "NEPTUN KOSOVO · CAMPAIGN STUDIO": "NEPTUN KOSOVA · STUDIO E FUSHATAVE",
+  "NEPTUN KOSOVO": "NEPTUN KOSOVA",
+  "Forgot your password?": "Keni harruar fjalëkalimin?",
+  "Enter your work email. If your account is eligible, we will email a secure link to reset your password.":
+    "Shkruani emailin tuaj të punës. Nëse llogaria juaj i plotëson kushtet, do t’ju dërgojmë një lidhje të sigurt për të rivendosur fjalëkalimin.",
+  "Sign in to create brochures, manage campaigns, and review your team’s work.":
+    "Hyni për të krijuar broshura, për të menaxhuar fushata dhe për të shqyrtuar punën e ekipit tuaj.",
+  "Check your email": "Kontrolloni emailin tuaj",
+  "If your account is eligible, a reset link is on its way. Check your inbox and spam folder, then follow the link and verify the code.":
+    "Nëse llogaria juaj i plotëson kushtet, lidhja për rivendosjen e fjalëkalimit do të mbërrijë me email. Kontrolloni edhe dosjen Spam, hapni lidhjen dhe verifikoni kodin.",
+  "Please wait…": "Ju lutemi prisni…",
+  "Send secure reset link": "Dërgo lidhjen për rivendosje",
+  "Forgot password?": "Keni harruar fjalëkalimin?",
+  "← Back to sign in": "← Kthehu te hyrja",
+  "Reset links expire after 30 minutes.":
+    "Lidhjet për rivendosje skadojnë pas 30 minutash.",
+  "Access is by invitation. Contact your team admin if you need an account.":
+    "Qasja bëhet me ftesë. Kontaktoni administratorin e ekipit nëse ju nevojitet një llogari.",
+  "We couldn’t connect to Neptun. Check your connection and try again.":
+    "Nuk u lidhëm dot me Neptun. Kontrolloni lidhjen dhe provoni përsëri.",
+  "The connection is taking longer than expected. Please try again.":
+    "Lidhja po zgjat më shumë se zakonisht. Provoni përsëri.",
+  "Too many attempts. Please wait a few minutes, then try again.":
+    "Shumë përpjekje. Prisni disa minuta dhe provoni përsëri.",
+  "Neptun is temporarily unavailable. Please try again shortly.":
+    "Neptun është përkohësisht i padisponueshëm. Provoni përsëri pas pak.",
+  "Could not complete this request. Please try again.":
+    "Kërkesa nuk u përfundua. Provoni përsëri.",
+  "Incorrect email or password.": "Emaili ose fjalëkalimi është i pasaktë.",
+  "Your current password is incorrect.": "Fjalëkalimi aktual është i pasaktë.",
+  "Choose a password different from your current password.":
+    "Zgjidhni një fjalëkalim të ndryshëm nga ai aktual.",
+  "Your password changed in another session. Sign in again.":
+    "Fjalëkalimi juaj u ndryshua në një sesion tjetër. Hyni përsëri.",
+  "This link has expired.": "Kjo lidhje ka skaduar.",
+  "This link is invalid or has expired.":
+    "Kjo lidhje është e pavlefshme ose ka skaduar.",
+  "This link or verification code is invalid or has expired.":
+    "Lidhja ose kodi i verifikimit është i pavlefshëm ose ka skaduar.",
+  "This link or code is invalid or has expired. Request a new one.":
+    "Lidhja ose kodi është i pavlefshëm ose ka skaduar. Kërkoni një të ri.",
+  "Create your password before requesting a verification code.":
+    "Krijoni fjalëkalimin para se të kërkoni kodin e verifikimit.",
+  "Brochure workspace": "Hapësira e broshurave",
+  "Access to your team workspace is by invitation.":
+    "Qasja në hapësirën e ekipit tuaj bëhet me ftesë.",
+  "New password": "Fjalëkalimi i ri",
+  "Use at least 12 characters. A memorable phrase works well.":
+    "Përdorni të paktën 12 karaktere. Mund të zgjidhni një shprehje që e mbani mend lehtë.",
+  "Confirm new password": "Konfirmoni fjalëkalimin e ri",
+  "Choose a password with at least 12 characters.":
+    "Zgjidhni një fjalëkalim me të paktën 12 karaktere.",
+  "The two passwords do not match.": "Dy fjalëkalimet nuk përputhen.",
+  "SECURE ACCOUNT ACCESS": "QASJE E SIGURT NË LLOGARI",
+  "Welcome to your team": "Mirë se vini në ekip",
+  "Password updated": "Fjalëkalimi u përditësua",
+  "Join your team": "Bashkohuni me ekipin",
+  "Reset your password": "Rivendosni fjalëkalimin",
+  "Checking your secure link…": "Duke kontrolluar lidhjen e sigurt…",
+  "Your email is verified and your account is ready.":
+    "Emaili juaj u verifikua dhe llogaria është gati.",
+  "Your password has been changed. A security notice will be sent to your email.":
+    "Fjalëkalimi juaj u ndryshua. Do të merrni një njoftim sigurie në email.",
+  "Your account is ready. Sign in with your new password.":
+    "Llogaria juaj është gati. Hyni me fjalëkalimin e ri.",
+  "Password updated. Sign in with your new password.":
+    "Fjalëkalimi u përditësua. Hyni me fjalëkalimin e ri.",
+  "Continue to sign in →": "Vazhdo te hyrja →",
+  "For an invitation, ask your team admin to send a fresh link. For a password reset, request a new reset email.":
+    "Për ftesë, kërkoni një lidhje të re nga administratori i ekipit. Për rivendosjen e fjalëkalimit, kërkoni një email të ri.",
+  "Back to sign in": "Kthehu te hyrja",
+  "Set your password, then verify your email to activate your invitation.":
+    "Vendosni fjalëkalimin, pastaj verifikoni emailin për të aktivizuar ftesën.",
+  "Verify your email and choose a new password to regain access.":
+    "Verifikoni emailin dhe zgjidhni një fjalëkalim të ri për të rifituar qasjen.",
+  "Your account": "Llogaria juaj",
+  "A verification code is on its way to your email. Enter it below to finish joining your team.":
+    "Kodi i verifikimit do të mbërrijë në email. Shkruajeni më poshtë për t’u bashkuar me ekipin.",
+  "A new verification code is on its way. Use the most recent code in your email.":
+    "Kodi i ri i verifikimit do të mbërrijë me email. Përdorni kodin më të fundit.",
+  "We will send a verification code to the email linked to this secure reset request.":
+    "Do të dërgojmë një kod verifikimi në emailin e lidhur me këtë kërkesë të sigurt për rivendosje.",
+  "Sending code…": "Duke dërguar kodin…",
+  "Send verification code": "Dërgo kodin e verifikimit",
+  "Verification code": "Kodi i verifikimit",
+  "6-digit code": "Kodi me 6 shifra",
+  "Codes expire after 10 minutes. Check your inbox and spam folder.":
+    "Kodet skadojnë pas 10 minutash. Kontrolloni emailin dhe dosjen Spam.",
+  "Verify email and activate account":
+    "Verifiko emailin dhe aktivizo llogarinë",
+  "Set password and send code": "Vendos fjalëkalimin dhe dërgo kodin",
+  "Reset password": "Rivendos fjalëkalimin",
+  "Send a new verification code": "Dërgo një kod të ri verifikimi",
+  "Could not change your password.":
+    "Fjalëkalimi nuk u ndryshua. Provoni përsëri.",
+  "Current password": "Fjalëkalimi aktual",
+  "Updating password…": "Duke përditësuar fjalëkalimin…",
+  "Update password": "Përditëso fjalëkalimin",
+  "You will be asked to sign in again after changing your password.":
+    "Pas ndryshimit të fjalëkalimit do t’ju kërkohet të hyni përsëri.",
+  "Password changed. Email delivery is unavailable; please contact your admin. Sign in with your new password.":
+    "Fjalëkalimi u ndryshua. Emaili nuk mund të dërgohet; kontaktoni administratorin. Hyni me fjalëkalimin e ri.",
+  "Password changed. A security notice will be sent to your email. Sign in with your new password.":
+    "Fjalëkalimi u ndryshua. Do të merrni një njoftim sigurie në email. Hyni me fjalëkalimin e ri.",
+  "ACCOUNT SECURITY": "SIGURIA E LLOGARISË",
+  "Update your password": "Përditësoni fjalëkalimin",
+  "Choose your own password before continuing to the workspace.":
+    "Zgjidhni fjalëkalimin tuaj para se të vazhdoni në hapësirën e punës.",
+  "Edit design": "Redakto dizajnin",
+  "Save design": "Ruaj dizajnin",
+  "Enter a design name.": "Shkruani emrin e dizajnit.",
+  "Edit this design with a live preview. Other designs and existing brochures keep their settings.":
+    "Redaktoni këtë dizajn me parapamje të drejtpërdrejtë. Dizajnet e tjera dhe broshurat ekzistuese ruajnë cilësimet e tyre.",
+  "Design selected. Choose Edit design to change its settings.":
+    "Dizajni u zgjodh. Zgjidhni Redakto dizajnin për t’i ndryshuar cilësimet.",
+  "Open Edit design to change colors, product layouts, prices, logos and stores. Save settings shares the library with the team.":
+    "Hapni Redakto dizajnin për të ndryshuar ngjyrat, renditjen e produkteve, çmimet, logot dhe dyqanet. Ruaj cilësimet e ndan bibliotekën me ekipin.",
+  "Design updated. Save settings to share it with the team.":
+    "Dizajni u përditësua. Ruani cilësimet për ta ndarë me ekipin.",
+  "This email cannot be invited. Choose a different work email.":
+    "Ky email nuk mund të ftohet. Zgjidhni një email tjetër pune.",
+  "This page is not available.": "Kjo faqe nuk është e disponueshme.",
   "Your cover image": "Imazhi juaj i kopertinës",
   "UUU · Gray pages": "UUU · Faqe gri",
   "Full gradient": "Gradient në të gjitha faqet",
