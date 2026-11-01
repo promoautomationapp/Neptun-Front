@@ -4,6 +4,7 @@ import { Modal } from "../../components/Modal";
 import { NavIcon } from "../studio/NavIcon";
 import { apiFetch } from "../../api/client";
 import { getLanguage, t } from "../brochure/i18n";
+import { formatCatalogTime } from "./catalogDate";
 import "../../styles/catalog-refresh.css";
 interface RefreshStatus {
   status: "idle" | "queued" | "running" | "completed" | "failed";
@@ -128,16 +129,8 @@ export function CatalogRefreshControl({
     }
   }
   const formatTime = (value?: string | null) =>
-    value && !Number.isNaN(Date.parse(value))
-      ? new Intl.DateTimeFormat(getLanguage() === "sq" ? "sq-AL" : "en-GB", {
-          day: "numeric",
-          month: "long",
-          hour: "2-digit",
-          minute: "2-digit",
-          hourCycle: "h23",
-          timeZone: "Europe/Belgrade",
-        }).format(new Date(value))
-      : t("Not synced yet");
+    formatCatalogTime(value, getLanguage() === "sq" ? "sq" : "en") ??
+    t("Not synced yet");
   const lastAttempt =
     status?.status === "failed" ? status.completedAt || status.startedAt : null;
   const failure = t(

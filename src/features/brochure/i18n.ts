@@ -1,4 +1,28 @@
 const translations: Record<string, string> = {
+  "Edit formatted post text": "Redakto tekstin e formatuar të postimit",
+  "POST TEXT": "TEKSTI I POSTIMIT",
+  "Post text": "Teksti i postimit",
+  "Write your message": "Shkruani mesazhin tuaj",
+  "Format the heading or supporting copy, and add an image if needed.":
+    "Formatoni titullin ose tekstin shoqërues dhe shtoni një imazh nëse nevojitet.",
+  "Heading 1": "Titulli 1",
+  "Heading 2": "Titulli 2",
+  Underline: "Nënvizo",
+  "Bullet list": "Listë me pika",
+  "Numbered list": "Listë me numra",
+  Link: "Lidhje",
+  "Link address": "Adresa e lidhjes",
+  "Add link": "Shto lidhjen",
+  "Remove link": "Hiq lidhjen",
+  Redo: "Ribëj",
+  "Clear text": "Pastro tekstin",
+  "Apply to post": "Zbato në postim",
+  "Too many requests. Please try again later.":
+    "Shumë kërkesa. Ju lutemi, provoni sërish më vonë.",
+  "Too many new AI requests. Please wait and try again.":
+    "Shumë kërkesa të reja për AI. Ju lutemi, prisni dhe provoni sërish.",
+  "Open the workspace to continue.": "Hapni hapësirën e punës për të vazhduar.",
+  "Request origin is not allowed.": "Origjina e kërkesës nuk lejohet.",
   "/ 6 products selected": "/ 6 produkte të zgjedhura",
   "4 · Copy & overlays": "4 · Teksti dhe shtresat",
   "5 · Logos & badges": "5 · Logot dhe shenjat",

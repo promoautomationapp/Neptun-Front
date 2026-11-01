@@ -11,6 +11,7 @@
   },
   "vars": {
     "API_ORIGIN": "https://neptun-backend.onrender.com",
+    "PUBLIC_APP_ORIGIN": "https://neptun.promoautomation.app",
   },
   "observability": {
     "logs": {

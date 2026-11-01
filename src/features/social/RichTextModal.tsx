@@ -9,9 +9,11 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import DOMPurify from "dompurify";
 import { readImage } from "../brochure/utils";
+import { t } from "../brochure/i18n";
 
 export function safeRichHtml(html: string | null | undefined): string {
-  return DOMPurify.sanitize(String(html || ""), {
+  const fragment = DOMPurify.sanitize(String(html || ""), {
+    RETURN_DOM_FRAGMENT: true,
     ALLOWED_TAGS: [
       "p",
       "h1",
@@ -30,8 +32,29 @@ export function safeRichHtml(html: string | null | undefined): string {
       "span",
       "img",
     ],
-    ALLOWED_ATTR: ["href", "target", "rel", "style", "src", "alt", "class"],
+    ALLOWED_ATTR: ["href", "target", "rel", "style", "src", "alt"],
   });
+  // Tiptap exposes color and alignment here. Untrusted CSS/classes must not
+  // turn shared post copy into application chrome or an external CSS request.
+  for (const element of fragment.querySelectorAll<HTMLElement>("[style]")) {
+    const color = element.style.color;
+    const align = element.style.textAlign;
+    element.removeAttribute("style");
+    if (color) element.style.color = color;
+    if (["left", "right", "center", "justify", "start", "end"].includes(align))
+      element.style.textAlign = align;
+  }
+  for (const link of fragment.querySelectorAll("a")) {
+    if (link.getAttribute("target") === "_blank")
+      link.setAttribute("rel", "noopener noreferrer");
+    else {
+      link.removeAttribute("target");
+      link.removeAttribute("rel");
+    }
+  }
+  const host = document.createElement("div");
+  host.append(fragment);
+  return host.innerHTML;
 }
 
 export interface RichTextModalProps {
@@ -55,19 +78,28 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
       Image.configure({ allowBase64: true }),
     ],
     content: safeRichHtml(html),
+    editorProps: {
+      attributes: {
+        role: "textbox",
+        "aria-label": t("Post text"),
+        "aria-multiline": "true",
+      },
+    },
   });
   const button = (
     label: string,
     action: React.MouseEventHandler<HTMLButtonElement>,
     active = false,
+    accessibleLabel = label,
   ) => (
     <button
       type="button"
       className={active ? "active" : ""}
       onClick={action}
-      aria-label={label}
+      aria-label={t(accessibleLabel)}
+      title={t(accessibleLabel)}
     >
-      {label}
+      {t(label)}
     </button>
   );
   return (
@@ -82,19 +114,22 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
         className="social-rich-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Edit formatted post text"
+        aria-label={t("Edit formatted post text")}
       >
         <header>
           <div>
-            <small>POST COPY</small>
-            <h2>Write your message</h2>
+            <small>{t("POST TEXT")}</small>
+            <h2>{t("Write your message")}</h2>
             <p>
-              Format the heading or supporting copy, and add an image if needed.
+              {t(
+                "Format the heading or supporting copy, and add an image if needed.",
+              )}
             </p>
           </div>
           <button
             type="button"
             className="social-modal-close"
+            aria-label={t("Close")}
             onClick={onClose}
           >
             ×
@@ -103,40 +138,45 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
         <div
           className="social-rich-toolbar"
           role="toolbar"
-          aria-label="Text formatting"
+          aria-label={t("Text formatting")}
         >
           {button(
             "H1",
             () => editor?.chain().focus().toggleHeading({ level: 1 }).run(),
             editor?.isActive("heading", { level: 1 }),
+            "Heading 1",
           )}
           {button(
             "H2",
             () => editor?.chain().focus().toggleHeading({ level: 2 }).run(),
             editor?.isActive("heading", { level: 2 }),
+            "Heading 2",
           )}
           {button(
             "B",
             () => editor?.chain().focus().toggleBold().run(),
             editor?.isActive("bold"),
+            "Bold",
           )}
           {button(
             "I",
             () => editor?.chain().focus().toggleItalic().run(),
             editor?.isActive("italic"),
+            "Italic",
           )}
           {button(
             "U",
             () => editor?.chain().focus().toggleUnderline().run(),
             editor?.isActive("underline"),
+            "Underline",
           )}
           {button(
-            "• List",
+            "Bullet list",
             () => editor?.chain().focus().toggleBulletList().run(),
             editor?.isActive("bulletList"),
           )}
           {button(
-            "1. List",
+            "Numbered list",
             () => editor?.chain().focus().toggleOrderedList().run(),
             editor?.isActive("orderedList"),
           )}
@@ -149,10 +189,11 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
           {button("Right", () =>
             editor?.chain().focus().setTextAlign("right").run(),
           )}
-          <label className="social-rich-color" title="Text color">
+          <label className="social-rich-color" title={t("Text color")}>
             A
             <input
               type="color"
+              aria-label={t("Text color")}
               defaultValue="#ffffff"
               onInput={(event) =>
                 editor
@@ -173,6 +214,7 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
             hidden
             ref={fileRef}
             type="file"
+            aria-label={t("Upload image")}
             accept="image/png,image/jpeg,image/webp"
             onChange={async (event) => {
               const input = event.currentTarget;
@@ -193,6 +235,7 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
           <div className="social-link-form">
             <input
               type="url"
+              aria-label={t("Link address")}
               autoFocus
               placeholder="https://example.com"
               value={linkValue}
@@ -208,7 +251,7 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
                 }
               }}
             >
-              Add link
+              {t("Add link")}
             </button>
             <button
               type="button"
@@ -217,7 +260,7 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
                 setLinkOpen(false);
               }}
             >
-              Remove
+              {t("Remove link")}
             </button>
           </div>
         )}
@@ -229,18 +272,18 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
               editor?.commands.clearContent();
             }}
           >
-            Clear
+            {t("Clear text")}
           </button>
           <span />
           <button type="button" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </button>
           <button
             className="primary"
             type="button"
             onClick={() => onSave(safeRichHtml(editor?.getHTML() || ""))}
           >
-            Apply to post
+            {t("Apply to post")}
           </button>
         </footer>
       </section>

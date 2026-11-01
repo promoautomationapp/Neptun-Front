@@ -1,12 +1,80 @@
 // @vitest-environment node
 import { afterEach, describe, expect, test, vi } from "vitest";
 import worker from "../../cloudflare/worker";
+import { createHmac } from "node:crypto";
 
 const origin = "https://neptun-backend.onrender.com";
 const env = () => ({ API_ORIGIN: origin, ASSETS: { fetch: vi.fn() } });
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Cloudflare frontend API forwarding", () => {
+  test("signs private metadata server-side and overwrites spoofed forwarding headers", async () => {
+    const secret = "test-only-edge-key-32-characters-long";
+    const outbound = vi.fn().mockResolvedValue(new Response("ok"));
+    vi.stubGlobal("fetch", outbound);
+    await worker.fetch(
+      new Request("https://studio.example.com/api/probe?q=1", {
+        method: "POST",
+        headers: {
+          "CF-Connecting-IP": "203.0.113.42",
+          "X-Neptun-Edge-Signature": "fake",
+          "X-Neptun-Edge-Extra": "fake",
+          "X-Forwarded-For": "1.2.3.4",
+        },
+        body: "{}",
+      }),
+      {
+        ...env(),
+        EDGE_PROXY_SECRET: secret,
+        PUBLIC_APP_ORIGIN: "https://studio.example.com",
+      },
+    );
+    const forwarded = outbound.mock.calls[0]?.[0] as Request;
+    const timestamp = forwarded.headers.get("x-neptun-edge-timestamp");
+    expect(forwarded.headers.get("x-neptun-edge-signature")).toBe(
+      createHmac("sha256", secret)
+        .update(
+          [
+            "v1",
+            timestamp,
+            "POST",
+            "/api/probe?q=1",
+            "203.0.113.42",
+            "https://studio.example.com",
+          ].join("\n"),
+        )
+        .digest("hex"),
+    );
+    expect(forwarded.headers.has("x-forwarded-for")).toBe(false);
+    expect(forwarded.headers.has("x-neptun-edge-extra")).toBe(false);
+  });
+  test("blocks unapproved hosts and browser origins before reaching Render", async () => {
+    const outbound = vi.fn();
+    vi.stubGlobal("fetch", outbound);
+    const bindings = {
+      ...env(),
+      PUBLIC_APP_ORIGIN: "https://studio.example.com",
+    };
+    expect(
+      (
+        await worker.fetch(
+          new Request("https://other.example.com/api/team/session"),
+          bindings,
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await worker.fetch(
+          new Request("https://studio.example.com/api/team/login", {
+            headers: { Origin: "https://other.example.com" },
+          }),
+          bindings,
+        )
+      ).status,
+    ).toBe(403);
+    expect(outbound).not.toHaveBeenCalled();
+  });
   test("preserves sign-in body, origin, cookies and secure Set-Cookie headers", async () => {
     const fetch = vi.fn().mockResolvedValue(
       new Response('{"user":{}}', {
@@ -69,17 +137,15 @@ describe("Cloudflare frontend API forwarding", () => {
 
   test("keeps asset bytes, status and private cache headers intact", async () => {
     const pixels = new Uint8Array([1, 2, 3, 255]);
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(pixels, {
-          headers: {
-            "Content-Type": "image/png",
-            "Cache-Control": "private, max-age=31536000, immutable",
-            Vary: "Cookie",
-          },
-        }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(pixels, {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "private, max-age=31536000, immutable",
+          Vary: "Cookie",
+        },
+      }),
+    );
     vi.stubGlobal("fetch", fetch);
     const response = await worker.fetch(
       new Request(

@@ -18,7 +18,9 @@ Review history is saved with each document. Changes made while AI is running rem
 
 Changes are saved automatically. A status directly above the brochure distinguishes edit and preview modes, reports saving or save errors, and shows other active editors. Version conflicts retain the local draft instead of silently replacing it. Apply backend migration `0013_campaign_presence.sql` with `npm run db:migrate` to enable team activity.
 
-The backend worker performs the daily category/subcategory catalog refresh at 03:00 Europe/Belgrade. Existing products and prepared assets are retained, and saved brochure snapshots are independent of catalog updates.
+The backend checks catalog refresh eligibility at 03:00 Europe/Belgrade and refreshes automatically every three local calendar days. Manual refresh remains available. Existing products and prepared assets are retained, and saved brochure snapshots are independent of catalog updates.
+
+Production browser requests use the frontend's same-origin `/api/*` Cloudflare Worker proxy. Keep `VITE_API_URL` empty and use the fixed server-side `API_ORIGIN`. A paired runtime `EDGE_PROXY_SECRET` on the Worker and backend activates signed private admission; it must never be exposed in a `VITE_*` setting. Configure the Worker secret first, then Render. The full review and activation steps are in `../Neptun-Backend/docs/SECURITY_REVIEW.md`.
 
 ## Validation
 
