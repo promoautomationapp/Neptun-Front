@@ -2442,6 +2442,7 @@ function CoverPageContent({
   const products = coverProducts(campaign);
   const ribbonGradientId = `cover-ribbon-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
+  const defaultRibbon = !campaign.coverElementPlacements?.["campaign-ribbon"];
   const classicCover =
     !october &&
     campaign.brochureFooter?.style === "reference" &&
@@ -2623,7 +2624,7 @@ function CoverPageContent({
             </svg>
           </CoverElement>
           <div
-            className="october-cover-body"
+            className={`october-cover-body ${defaultRibbon ? "october-cover-body-default" : ""}`}
             style={{ background: backgroundFill }}
           />
         </>
@@ -2760,7 +2761,7 @@ function CoverPageContent({
           }
           className={
             october && !campaign.campaignAssets?.["cover-band"]?.image
-              ? "october-native-band"
+              ? `october-native-band ${defaultRibbon && !campaign.coverElementPlacements?.band ? "october-default-band" : ""}`
               : !campaign.coverElementPlacements?.band &&
                   brochureAssetSource(campaign, "coverBand") ===
                     "/api/assets/legacy/assets/uuu-hajde-band.png"

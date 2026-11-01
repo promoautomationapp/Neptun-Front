@@ -2768,6 +2768,11 @@ const translations: Record<string, string> = {
   "Layer preview": "Parapamja e shtresës",
   "Changes appear immediately in the preview.":
     "Ndryshimet shfaqen menjëherë në parapamje.",
+  "Click to select; double-click to manage image":
+    "Klikoni për ta zgjedhur; klikoni dy herë për të menaxhuar imazhin",
+  "Product images": "Imazhet e produkteve",
+  "Choose a product to manage its image.":
+    "Zgjidhni një produkt për të menaxhuar imazhin e tij.",
   "Add images, text or a color layer. Changes appear in the preview.":
     "Shtoni imazhe, tekst ose një shtresë ngjyre. Ndryshimet shfaqen në parapamje.",
   Transparent: "I tejdukshëm",

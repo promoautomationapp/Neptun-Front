@@ -20,6 +20,9 @@ interface Choice {
   disabled: boolean;
   group: string;
 }
+export interface SearchableSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  searchable?: boolean;
+}
 type OptionProps = {
   children?: React.ReactNode;
   value?: string | number;
@@ -77,8 +80,9 @@ export function SearchableSelect({
   id,
   name,
   required,
+  searchable,
   ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+}: SearchableSelectProps) {
   const nativeProps = { ...props };
   delete nativeProps["aria-label"];
   delete nativeProps["aria-labelledby"];
@@ -96,6 +100,7 @@ export function SearchableSelect({
     : [String(current)];
   const choices = choicesFrom(children);
   const statusOptions = isStatusOptions(choices.map((choice) => choice.value));
+  const showSearch = searchable ?? !statusOptions;
   const selectedLabels = choices
     .filter((choice) => selected.includes(choice.value))
     .map((choice) => choice.label);
@@ -110,7 +115,7 @@ export function SearchableSelect({
   const search = useRef<HTMLInputElement>(null);
   const listId = `select-${useId().replaceAll(":", "")}`;
   const available = choices.filter((choice) =>
-    matchesSearch(`${choice.group} ${choice.label}`, query),
+    matchesSearch(`${choice.group} ${choice.label}`, showSearch ? query : ""),
   );
   const isDisabled = () =>
     Boolean(disabled || trigger.current?.matches(":disabled"));
@@ -172,7 +177,12 @@ export function SearchableSelect({
     const place = () => {
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) return;
-      const width = Math.min(Math.max(rect.width, 250), window.innerWidth - 24);
+      const width = Math.min(
+        statusOptions
+          ? Math.min(340, Math.max(rect.width, 220))
+          : Math.max(rect.width, 250),
+        window.innerWidth - 24,
+      );
       const below = window.innerHeight - rect.bottom - 16;
       const above = rect.top - 16;
       const flip = below < 230 && above > below;
@@ -203,7 +213,18 @@ export function SearchableSelect({
         trigger.current?.focus();
       }
     };
-    const focus = requestAnimationFrame(() => search.current?.focus());
+    const focus = requestAnimationFrame(() => {
+      if (showSearch) search.current?.focus();
+      else {
+        const options = panel.current?.querySelectorAll<HTMLButtonElement>(
+          '[role="option"]:not(:disabled)',
+        );
+        const selectedOption = [...(options || [])].find(
+          (option) => option.getAttribute("aria-selected") === "true",
+        );
+        (selectedOption || options?.[0])?.focus();
+      }
+    });
     place();
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
@@ -216,7 +237,7 @@ export function SearchableSelect({
       document.removeEventListener("pointerdown", pointer);
       document.removeEventListener("keydown", escape, true);
     };
-  }, [open]);
+  }, [open, showSearch, statusOptions]);
 
   function choose(choice: Choice) {
     if (choice.disabled || isDisabled() || !native.current) return;
@@ -258,6 +279,15 @@ export function SearchableSelect({
       if (first) choose(first);
       return;
     }
+    if (
+      ["Enter", " "].includes(event.key) &&
+      event.target instanceof HTMLButtonElement &&
+      event.target.getAttribute("role") === "option"
+    ) {
+      event.preventDefault();
+      event.target.click();
+      return;
+    }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     if (
       (event.key === "Home" || event.key === "End") &&
@@ -288,7 +318,10 @@ export function SearchableSelect({
     buttons[next]?.focus();
   }
   return (
-    <div className={`ns-searchable-select ${className}`} style={style}>
+    <div
+      className={`ns-searchable-select ${statusOptions ? "ns-status-select" : ""} ${className}`}
+      style={style}
+    >
       <button
         ref={trigger}
         id={id}
@@ -316,7 +349,14 @@ export function SearchableSelect({
           }
         }}
       >
-        <span>{selectedLabels.join(", ") || t("Choose an option")}</span>
+        <span
+          className={statusOptions ? "ns-status-select-label" : undefined}
+          data-status-tone={
+            statusOptions ? statusTone(selected[0] || "") : undefined
+          }
+        >
+          {selectedLabels.join(", ") || t("Choose an option")}
+        </span>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <path d="m5 7 5 5 5-5" />
         </svg>
@@ -340,19 +380,21 @@ export function SearchableSelect({
         createPortal(
           <div
             ref={panel}
-            className="ns-searchable-panel"
+            className={`ns-searchable-panel ${statusOptions ? "ns-status-panel" : ""}`}
             style={position}
             onKeyDown={keys}
           >
-            <input
-              ref={search}
-              type="search"
-              className="ns-searchable-search"
-              aria-label={t("Search options")}
-              placeholder={t("Search options…")}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
+            {showSearch && (
+              <input
+                ref={search}
+                type="search"
+                className="ns-searchable-search"
+                aria-label={t("Search options")}
+                placeholder={t("Search options…")}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            )}
             <div
               id={listId}
               role="listbox"
@@ -374,6 +416,9 @@ export function SearchableSelect({
                   <button
                     type="button"
                     role="option"
+                    className={
+                      statusOptions ? "ns-status-option-row" : undefined
+                    }
                     data-status-tone={
                       statusOptions ? statusTone(choice.value) : undefined
                     }
@@ -381,9 +426,27 @@ export function SearchableSelect({
                     disabled={choice.disabled}
                     onClick={() => choose(choice)}
                   >
-                    <span>{choice.label}</span>
-                    {selected.includes(choice.value) && (
-                      <span aria-hidden="true">✓</span>
+                    <span
+                      className={
+                        statusOptions ? "ns-status-select-label" : undefined
+                      }
+                      data-status-tone={
+                        statusOptions ? statusTone(choice.value) : undefined
+                      }
+                    >
+                      {choice.label}
+                    </span>
+                    {statusOptions ? (
+                      <span
+                        className="ns-status-option-check"
+                        aria-hidden="true"
+                      >
+                        {selected.includes(choice.value) ? "✓" : ""}
+                      </span>
+                    ) : (
+                      selected.includes(choice.value) && (
+                        <span aria-hidden="true">✓</span>
+                      )
                     )}
                   </button>
                 </React.Fragment>

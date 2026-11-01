@@ -198,8 +198,12 @@ export function CanvasAsset({
   return (
     <div
       ref={assetRef}
-      className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""} ${selected ? "selected" : ""}`}
-      style={{ ...style, height: height === undefined ? undefined : `${height}%`, zIndex }}
+      className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""} ${selected && editable ? "selected" : ""}`}
+      style={{
+        ...style,
+        height: height === undefined ? undefined : `${height}%`,
+        zIndex,
+      }}
       aria-label={name}
       onPointerDown={
         editable
@@ -223,8 +227,20 @@ export function CanvasAsset({
       }
     >
       {color ? (
-        <div className="social-color-layer" style={{ backgroundColor: color, opacity: clamp(opacity, 0, 1) }} />
-      ) : source ? <img src={source} alt={name} draggable={false} style={{ opacity: clamp(opacity, 0, 1) }} /> : children}
+        <div
+          className="social-color-layer"
+          style={{ backgroundColor: color, opacity: clamp(opacity, 0, 1) }}
+        />
+      ) : source ? (
+        <img
+          src={source}
+          alt={name}
+          draggable={false}
+          style={{ opacity: clamp(opacity, 0, 1) }}
+        />
+      ) : (
+        children
+      )}
       {editable && (
         <div className="social-asset-tools" data-export-hide="true">
           {onEdit && (

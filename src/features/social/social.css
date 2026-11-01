@@ -946,6 +946,11 @@
 .social-product:hover .social-product-tools,.social-product:focus-within .social-product-tools { opacity:1; }
 .social-product-tools button { display:grid; place-items:center; width:3.2cqw; height:3.2cqw; min-width:20px; min-height:20px; border:1px solid #fff; border-radius:.5cqw; background:#1688cf; color:#fff; box-shadow:0 2px 6px #001d3e70; cursor:pointer; font-weight:900; touch-action:none; }
 .social-product-tools button.selected { background:#f3432c; }
+.social-product.selected { outline: 2px solid #45b6f0; outline-offset: .6cqw; }
+.social-product.selected .social-product-tools { opacity: 1; }
+.social-product-image-manage span { display: none; }
+.social-product.selected .social-product-tools .social-product-image-manage { display: flex; align-items: center; gap: 5px; width: max-content; min-height: 30px; padding: 5px 8px; font-size: 12px; white-space: nowrap; }
+.social-product.selected .social-product-image-manage span { display: inline; }
 .social-product-tools .social-product-resize { cursor:nwse-resize; }
 .social-product img.social-adjusting-image { pointer-events:auto; cursor:grab; touch-action:none; }
 .social-product img.social-adjusting-image:active { cursor:grabbing; }

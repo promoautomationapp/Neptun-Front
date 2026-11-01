@@ -5129,7 +5129,7 @@ export default function App({
                 : section === "catalog"
                   ? t("Product catalog")
                   : section === "social"
-                    ? "Social posts"
+                    ? t("Social posts")
                     : section === "users"
                       ? t("Team & access")
                       : section === "activity"

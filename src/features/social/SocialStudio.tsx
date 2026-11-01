@@ -506,6 +506,22 @@ export function PostCanvas({
     element: HTMLElement;
   } | null>(null);
   const [draggingCanvas, setDraggingCanvas] = useState(false);
+  const [selectedProductCode, setSelectedProductCode] = useState<string | null>(
+    null,
+  );
+  const selectedProductElement = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!selectedProductCode) return;
+    const dismiss = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !selectedProductElement.current?.contains(event.target)
+      )
+        setSelectedProductCode(null);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [selectedProductCode]);
   function detailsBlock(product: Product, atImage = false) {
     if (!post.showSpecs || post.detailStyle === "simple") return null;
     const reference = usesRedReferencePrice(
@@ -826,7 +842,7 @@ export function PostCanvas({
           return (
             <div
               key={product.code}
-              className={`social-product ${onMove ? "draggable" : ""}`}
+              className={`social-product ${onMove ? "draggable" : ""} ${onMove && selectedProductCode === product.code ? "selected" : ""}`}
               style={{
                 left: `${point.x}%`,
                 top: `${point.y}%`,
@@ -869,7 +885,19 @@ export function PostCanvas({
                   : undefined
               }
               onDoubleClick={() => onEditProduct?.(product.code)}
-              title={onMove ? "Drag to move; double-click to edit" : undefined}
+              onClick={
+                onEditProduct
+                  ? (event) => {
+                      selectedProductElement.current = event.currentTarget;
+                      setSelectedProductCode(product.code);
+                    }
+                  : undefined
+              }
+              title={
+                onMove
+                  ? t("Click to select; double-click to manage image")
+                  : undefined
+              }
             >
               <SocialProductVisual
                 product={product}
@@ -908,12 +936,13 @@ export function PostCanvas({
                 <div className="social-product-tools" data-export-hide="true">
                   <button
                     type="button"
-                    title={t("Change product image")}
-                    aria-label={`${t("Change product image")}: ${product.name}`}
+                    className="social-product-image-manage"
+                    title={t("Manage image")}
+                    aria-label={`${t("Manage image")}: ${product.name}`}
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => onEditProduct?.(product.code)}
                   >
-                    ▧
+                    <EditorIcon name="image" /> <span>{t("Manage image")}</span>
                   </button>
                   <button
                     type="button"
@@ -1536,6 +1565,7 @@ export function SocialStudio({
   const [picker, setPicker] = useState(false);
   const [rich, setRich] = useState(false);
   const [imageCode, setImageCode] = useState<string | null>(null);
+  const [productImagePicker, setProductImagePicker] = useState(false);
   const [screenCode, setScreenCode] = useState<string | null>(null);
   const [imageAdjustCode, setImageAdjustCode] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -2375,6 +2405,29 @@ export function SocialStudio({
         </div>
       )}
       {post && brandingPanel && <SocialBrandingPanel post={post} onUpdate={update} onChoose={(kind) => {setBrandingPanel(false);setBrandingPicker(kind);}} onClose={() => setBrandingPanel(false)} />}
+      {post && productImagePicker && (
+        <Modal
+          title={t("Product images")}
+          onClose={() => setProductImagePicker(false)}
+        >
+          <p>{t("Choose a product to manage its image.")}</p>
+          <div className="social-saved-image-grid">
+            {post.products.map((product) => (
+              <button
+                type="button"
+                key={product.code}
+                onClick={() => {
+                  setProductImagePicker(false);
+                  setImageCode(product.code);
+                }}
+              >
+                <img src={imageSource(product.image)} alt="" />
+                <span>{product.name}</span>
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
       {post && brandingPicker && (
         <CoverLogoPicker
           settings={settings}
@@ -2422,158 +2475,263 @@ export function SocialStudio({
       {post && showLayers && (
         <Modal title={t("Layers")} onClose={() => setShowLayers(false)} wide>
           <div className="social-layer-workspace">
-          <div className="social-layer-controls">
-          <p>
-            {t("Add images, text or a color layer. Changes appear in the preview.")}
-          </p>
-          <button
-            type="button"
-            className="cs-button"
-            onClick={() => {
-              setShowLayers(false);
-              setImageLayerPicker(true);
-            }}
-          >
-            <EditorIcon name="plus" /> {t("Add image layer")}
-          </button>
-          <button type="button" className="cs-button" onClick={addColorLayer}>
-            <EditorIcon name="plus" /> {t("Add color layer")}
-          </button>
-          <div className="social-layer-list">
-            {!(post.artworks || []).length && (
-              <p>{t("No added layers yet.")}</p>
-            )}
-            {[...(post.artworks || [])]
-              .reverse()
-              .map((artwork, index, layers) => {
-                const name = socialLayerName(artwork);
-                return (
-                <section className="social-layer-row" key={artwork.id}>
-                  {artwork.type === "text" ? (
-                    <b aria-hidden="true">T</b>
-                  ) : artwork.type === "overlay" ? (
-                    <i className="social-layer-color-swatch" aria-hidden="true" style={{ backgroundColor: validBackgroundColor(artwork.color) || "#1b4075" }} />
-                  ) : (
-                    <img src={resolveAsset(artwork.image || "")} alt="" />
-                  )}
-                  <strong>
-                    {name}
-                  </strong>
-                  <div className="social-layer-settings">
-                    {artwork.type === "overlay" && (
-                      <label className="social-layer-color-control">
-                        {t("Color")}
-                        <span>
-                          <input type="color" aria-label={`${t("Layer color")}: ${name}`} value={validBackgroundColor(artwork.color) || "#1b4075"} onChange={(event) => changeLayer(artwork.id, { color: event.target.value })} />
-                          <input type="text" key={artwork.color} defaultValue={artwork.color || "#1b4075"} maxLength={7} aria-label={`${t("Color code")}: ${name}`} onBlur={(event) => {
-                            const color = validBackgroundColor(event.currentTarget.value);
-                            if (color) changeLayer(artwork.id, { color });
-                            else event.currentTarget.value = artwork.color || "#1b4075";
-                          }} />
-                        </span>
-                      </label>
-                    )}
-                    <LayerOpacityControl value={artwork.opacity ?? 1} label={`${t("Opacity")}: ${name}`} onChange={(opacity) => changeLayer(artwork.id, { opacity })} />
-                    <div className="social-layer-dimensions">
-                      {(["x", "y", "width", ...(artwork.type === "overlay" ? ["height"] : [])] as ("x" | "y" | "width" | "height")[]).map((field) => (
-                        <label key={field}>
-                          {t({ x: "Horizontal position", y: "Vertical position", width: "Width", height: "Height" }[field])} · %
-                          <input type="number" min={field === "width" || field === "height" ? 1 : 0} max={100} step={1} aria-label={`${t({ x: "Layer X position", y: "Layer Y position", width: "Layer width", height: "Layer height" }[field])}: ${name}`} value={artwork[field] ?? (field === "height" ? 35 : 0)} onChange={(event) => changeLayer(artwork.id, { [field]: Math.max(field === "width" || field === "height" ? 1 : 0, Math.min(100, Number(event.target.value))) })} />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="social-layer-actions">
-                    <button
-                      type="button"
-                      aria-label={`${t("Move forward")}: ${name}`}
-                      disabled={index === 0}
-                      onClick={() =>
-                        update((draft) => {
-                          const values = draft.artworks || [];
-                          const from = values.findIndex(
-                            (item) => item.id === artwork.id,
-                          );
-                          if (from >= 0 && from < values.length - 1)
-                            [values[from], values[from + 1]] = [
-                              values[from + 1]!,
-                              values[from]!,
-                            ];
-                        })
-                      }
-                    >
-                      <EditorIcon name="chevron-up" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`${t("Move backward")}: ${name}`}
-                      disabled={index === layers.length - 1}
-                      onClick={() =>
-                        update((draft) => {
-                          const values = draft.artworks || [];
-                          const from = values.findIndex(
-                            (item) => item.id === artwork.id,
-                          );
-                          if (from > 0)
-                            [values[from], values[from - 1]] = [
-                              values[from - 1]!,
-                              values[from]!,
-                            ];
-                        })
-                      }
-                    >
-                      <EditorIcon name="chevron-down" />
-                    </button>
-                    {artwork.type !== "text" && artwork.type !== "overlay" && (
-                      <button
-                        type="button"
-                        aria-label={`${t("Manage image")}: ${name}`}
-                        onClick={() => {
-                          setShowLayers(false);
-                          setBrandingPicker({ artworkId: artwork.id });
-                        }}
-                      >
-                        <EditorIcon name="edit" /> {t("Manage image")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      aria-label={`${t(artwork.hidden ? "Show" : "Hide")}: ${name}`}
-                      onClick={() =>
-                        update((draft) => {
-                          const item = draft.artworks?.find(
-                            (entry) => entry.id === artwork.id,
-                          );
-                          if (item) item.hidden = !item.hidden;
-                        })
-                      }
-                    >
-                      {t(artwork.hidden ? "Show" : "Hide")}
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`${t("Delete")}: ${name}`}
-                      onClick={() =>
-                        update((draft) => {
-                          draft.artworks = (draft.artworks || []).filter(
-                            (item) => item.id !== artwork.id,
-                          );
-                        })
-                      }
-                    >
-                      <EditorIcon name="trash" /> {t("Delete")}
-                    </button>
-                  </div>
-                </section>
-                );
-              })}
-          </div>
-          </div>
-          <aside className="social-layer-preview" aria-label={t("Layer preview")} style={{ "--social-layer-preview-width": `${Math.round(28 * dims.width / dims.height)}vh` } as React.CSSProperties}>
-            <strong>{t("Layer preview")}</strong>
-            <p>{t("Changes appear immediately in the preview.")}</p>
-            <PostCanvas post={post} maxWidth={`min(100%, ${Math.round(52 * dims.width / dims.height)}vh)`} previewCutouts={previewCutouts} />
-          </aside>
+            <div className="social-layer-controls">
+              <p>
+                {t(
+                  "Add images, text or a color layer. Changes appear in the preview.",
+                )}
+              </p>
+              <button
+                type="button"
+                className="cs-button"
+                onClick={() => {
+                  setShowLayers(false);
+                  setImageLayerPicker(true);
+                }}
+              >
+                <EditorIcon name="plus" /> {t("Add image layer")}
+              </button>
+              <button
+                type="button"
+                className="cs-button"
+                onClick={addColorLayer}
+              >
+                <EditorIcon name="plus" /> {t("Add color layer")}
+              </button>
+              <div className="social-layer-list">
+                {!(post.artworks || []).length && (
+                  <p>{t("No added layers yet.")}</p>
+                )}
+                {[...(post.artworks || [])]
+                  .reverse()
+                  .map((artwork, index, layers) => {
+                    const name = socialLayerName(artwork);
+                    return (
+                      <section className="social-layer-row" key={artwork.id}>
+                        {artwork.type === "text" ? (
+                          <b aria-hidden="true">T</b>
+                        ) : artwork.type === "overlay" ? (
+                          <i
+                            className="social-layer-color-swatch"
+                            aria-hidden="true"
+                            style={{
+                              backgroundColor:
+                                validBackgroundColor(artwork.color) ||
+                                "#1b4075",
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={resolveAsset(artwork.image || "")}
+                            alt=""
+                          />
+                        )}
+                        <strong>{name}</strong>
+                        <div className="social-layer-settings">
+                          {artwork.type === "overlay" && (
+                            <label className="social-layer-color-control">
+                              {t("Color")}
+                              <span>
+                                <input
+                                  type="color"
+                                  aria-label={`${t("Layer color")}: ${name}`}
+                                  value={
+                                    validBackgroundColor(artwork.color) ||
+                                    "#1b4075"
+                                  }
+                                  onChange={(event) =>
+                                    changeLayer(artwork.id, {
+                                      color: event.target.value,
+                                    })
+                                  }
+                                />
+                                <input
+                                  type="text"
+                                  key={artwork.color}
+                                  defaultValue={artwork.color || "#1b4075"}
+                                  maxLength={7}
+                                  aria-label={`${t("Color code")}: ${name}`}
+                                  onBlur={(event) => {
+                                    const color = validBackgroundColor(
+                                      event.currentTarget.value,
+                                    );
+                                    if (color)
+                                      changeLayer(artwork.id, { color });
+                                    else
+                                      event.currentTarget.value =
+                                        artwork.color || "#1b4075";
+                                  }}
+                                />
+                              </span>
+                            </label>
+                          )}
+                          <LayerOpacityControl
+                            value={artwork.opacity ?? 1}
+                            label={`${t("Opacity")}: ${name}`}
+                            onChange={(opacity) =>
+                              changeLayer(artwork.id, { opacity })
+                            }
+                          />
+                          <div className="social-layer-dimensions">
+                            {(
+                              [
+                                "x",
+                                "y",
+                                "width",
+                                ...(artwork.type === "overlay"
+                                  ? ["height"]
+                                  : []),
+                              ] as ("x" | "y" | "width" | "height")[]
+                            ).map((field) => (
+                              <label key={field}>
+                                {t(
+                                  {
+                                    x: "Horizontal position",
+                                    y: "Vertical position",
+                                    width: "Width",
+                                    height: "Height",
+                                  }[field],
+                                )}{" "}
+                                · %
+                                <input
+                                  type="number"
+                                  min={
+                                    field === "width" || field === "height"
+                                      ? 1
+                                      : 0
+                                  }
+                                  max={100}
+                                  step={1}
+                                  aria-label={`${t({ x: "Layer X position", y: "Layer Y position", width: "Layer width", height: "Layer height" }[field])}: ${name}`}
+                                  value={
+                                    artwork[field] ??
+                                    (field === "height" ? 35 : 0)
+                                  }
+                                  onChange={(event) =>
+                                    changeLayer(artwork.id, {
+                                      [field]: Math.max(
+                                        field === "width" ||
+                                          field === "height"
+                                          ? 1
+                                          : 0,
+                                        Math.min(
+                                          100,
+                                          Number(event.target.value),
+                                        ),
+                                      ),
+                                    })
+                                  }
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="social-layer-actions">
+                          <button
+                            type="button"
+                            aria-label={`${t("Move forward")}: ${name}`}
+                            disabled={index === 0}
+                            onClick={() =>
+                              update((draft) => {
+                                const values = draft.artworks || [];
+                                const from = values.findIndex(
+                                  (item) => item.id === artwork.id,
+                                );
+                                if (from >= 0 && from < values.length - 1)
+                                  [values[from], values[from + 1]] = [
+                                    values[from + 1]!,
+                                    values[from]!,
+                                  ];
+                              })
+                            }
+                          >
+                            <EditorIcon name="chevron-up" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${t("Move backward")}: ${name}`}
+                            disabled={index === layers.length - 1}
+                            onClick={() =>
+                              update((draft) => {
+                                const values = draft.artworks || [];
+                                const from = values.findIndex(
+                                  (item) => item.id === artwork.id,
+                                );
+                                if (from > 0)
+                                  [values[from], values[from - 1]] = [
+                                    values[from - 1]!,
+                                    values[from]!,
+                                  ];
+                              })
+                            }
+                          >
+                            <EditorIcon name="chevron-down" />
+                          </button>
+                          {artwork.type !== "text" &&
+                            artwork.type !== "overlay" && (
+                              <button
+                                type="button"
+                                aria-label={`${t("Manage image")}: ${name}`}
+                                onClick={() => {
+                                  setShowLayers(false);
+                                  setBrandingPicker({
+                                    artworkId: artwork.id,
+                                  });
+                                }}
+                              >
+                                <EditorIcon name="edit" /> {t("Manage image")}
+                              </button>
+                            )}
+                          <button
+                            type="button"
+                            aria-label={`${t(artwork.hidden ? "Show" : "Hide")}: ${name}`}
+                            onClick={() =>
+                              update((draft) => {
+                                const item = draft.artworks?.find(
+                                  (entry) => entry.id === artwork.id,
+                                );
+                                if (item) item.hidden = !item.hidden;
+                              })
+                            }
+                          >
+                            {t(artwork.hidden ? "Show" : "Hide")}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${t("Delete")}: ${name}`}
+                            onClick={() =>
+                              update((draft) => {
+                                draft.artworks = (
+                                  draft.artworks || []
+                                ).filter((item) => item.id !== artwork.id);
+                              })
+                            }
+                          >
+                            <EditorIcon name="trash" /> {t("Delete")}
+                          </button>
+                        </div>
+                      </section>
+                    );
+                  })}
+              </div>
+            </div>
+            <aside
+              className="social-layer-preview"
+              aria-label={t("Layer preview")}
+              style={
+                {
+                  "--social-layer-preview-width": `${Math.round((28 * dims.width) / dims.height)}vh`,
+                } as React.CSSProperties
+              }
+            >
+              <strong>{t("Layer preview")}</strong>
+              <p>{t("Changes appear immediately in the preview.")}</p>
+              <PostCanvas
+                post={post}
+                maxWidth={`min(100%, ${Math.round((52 * dims.width) / dims.height)}vh)`}
+                previewCutouts={previewCutouts}
+              />
+            </aside>
           </div>
         </Modal>
       )}
@@ -3548,6 +3706,12 @@ export function SocialStudio({
                       </>
                     }
                   >
+                    <button type="button" disabled={!post.products.length} onClick={() => {
+                      if (post.products.length === 1) setImageCode(post.products[0]!.code);
+                      else setProductImagePicker(true);
+                    }}>
+                      <EditorIcon name="image" /> {t("Change product image")}
+                    </button>
                     <button type="button" onClick={() => setImageLayerPicker(true)}>
                       <EditorIcon name="layers" /> {t("Add image layer")}
                     </button>

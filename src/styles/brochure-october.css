@@ -344,6 +344,13 @@
   background: inherit;
   pointer-events: none;
 }
+/* Meet the ribbon's lower diagonal, rather than covering it with a flat
+   rectangle. The fill uses page coordinates so a cover gradient continues
+   cleanly into the product area, without exposing a strip of the photograph. */
+.brochure-october .october-cover-body.october-cover-body-default {
+  top: 0;
+  clip-path: polygon(0 55.38%, 100% 51.170526%, 100% 100%, 0 100%);
+}
 .brochure-october .october-cover-ribbon {
   z-index: 2 !important;
 }
@@ -615,6 +622,19 @@
 
 .brochure-page.brochure-october .cover-element-band.october-native-band > img {
   clip-path: inset(0 0 25%);
+}
+.brochure-page.brochure-october .cover-element-band.october-default-band > img {
+  clip-path: polygon(0 0, 100% 0, 100% 65.270013%, 0 75.269213%);
+}
+.brochure-page.brochure-october.cover-with-uuu
+  .cover-element-message.cover-band-default-message {
+  background: transparent;
+  border-radius: 0;
+}
+.brochure-page.brochure-october.cover-with-uuu
+  .cover-element-message.cover-band-default-message p {
+  text-align: left;
+  transform: rotate(-3.18deg);
 }
 
 /* The monochrome transform maps opaque logo pixels to #343534, preserves alpha,

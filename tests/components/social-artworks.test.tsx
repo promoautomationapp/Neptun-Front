@@ -224,11 +224,14 @@ it("offers image management after a click and adds a layer without replacing the
   ).toBeGreaterThan(Number(view.getByLabelText("Original image").style.zIndex));
   fireEvent.click(view.getByRole("button", { name: "Layers" }));
   const layers = await view.findByRole("dialog", { name: "Layers" });
+  const layerPreview = within(layers).getByLabelText("Layer preview");
   fireEvent.click(
     within(layers).getByRole("button", { name: "Move backward: Added image" }),
   );
-  expect(Number(view.getByLabelText("Added image").style.zIndex)).toBeLessThan(
-    Number(view.getByLabelText("Original image").style.zIndex),
+  expect(
+    Number(within(layerPreview).getByLabelText("Added image").style.zIndex),
+  ).toBeLessThan(
+    Number(within(layerPreview).getByLabelText("Original image").style.zIndex),
   );
   fireEvent.click(
     within(layers).getByRole("button", { name: "Hide: Original image" }),
@@ -259,9 +262,116 @@ it("offers image management after a click and adds a layer without replacing the
       { name: "Show: Original image" },
     ),
   );
-  expect(restored.getByLabelText("Original image")).toBeTruthy();
+  expect(restored.getAllByLabelText("Original image")).toHaveLength(2);
   expect(requestAi).not.toHaveBeenCalled();
 });
+
+it.each(["en", "sq"] as const)(
+  "previews color, image and text opacity immediately and restores saved color layers (%s)",
+  async (language) => {
+    setLanguage(language);
+    stored[0]!.artworks = [
+      {
+        id: "photo",
+        name: "Existing image",
+        image: "/overlay-photo.png",
+        x: 40,
+        y: 40,
+        width: 25,
+      },
+      {
+        id: "copy",
+        type: "text",
+        name: "Overlay copy",
+        text: "Overlay copy",
+        x: 20,
+        y: 20,
+        width: 25,
+        fontSize: 4,
+      },
+    ];
+    const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+    await open(view);
+    fireEvent.click(view.getByRole("button", { name: t("Layers") }));
+    const manager = await view.findByRole("dialog", { name: t("Layers") });
+    fireEvent.click(
+      within(manager).getByRole("button", { name: t("Add color layer") }),
+    );
+    const preview = within(within(manager).getByLabelText(t("Layer preview")));
+    const overlay = () => preview.getByLabelText(t("Color layer"));
+    expect(overlay().style.height).toBe("45%");
+    expect(
+      overlay().querySelector<HTMLElement>(".social-color-layer")?.style
+        .opacity,
+    ).toBe("0.5");
+    fireEvent.change(
+      within(manager).getByLabelText(
+        `${t("Layer color")}: ${t("Color layer")}`,
+      ),
+      { target: { value: "#ff5522" } },
+    );
+    fireEvent.change(
+      within(manager).getByRole("slider", {
+        name: `${t("Opacity")}: ${t("Color layer")}`,
+      }),
+      { target: { value: "28" } },
+    );
+    fireEvent.change(
+      within(manager).getByRole("spinbutton", {
+        name: `${t("Layer width")}: ${t("Color layer")}`,
+      }),
+      { target: { value: "60" } },
+    );
+    expect(overlay().style.width).toBe("60%");
+    expect(
+      overlay().querySelector<HTMLElement>(".social-color-layer")?.style
+        .backgroundColor,
+    ).toBe("rgb(255, 85, 34)");
+    expect(
+      overlay().querySelector<HTMLElement>(".social-color-layer")?.style
+        .opacity,
+    ).toBe("0.28");
+    fireEvent.change(
+      within(manager).getByRole("spinbutton", {
+        name: `${t("Opacity")}: Existing image (%)`,
+      }),
+      { target: { value: "0" } },
+    );
+    expect(preview.getByAltText("Existing image").style.opacity).toBe("0");
+    fireEvent.change(
+      within(manager).getByRole("spinbutton", {
+        name: `${t("Opacity")}: Overlay copy (%)`,
+      }),
+      { target: { value: "64" } },
+    );
+    expect(preview.getByText("Overlay copy").style.opacity).toBe("0.64");
+    await waitFor(
+      () => {
+        expect(
+          stored[0]?.artworks?.find((item) => item.type === "overlay"),
+        ).toMatchObject({
+          color: "#ff5522",
+          opacity: 0.28,
+          width: 60,
+          height: 45,
+        });
+        expect(stored[0]?.artworks?.[0]?.opacity).toBe(0);
+        expect(stored[0]?.artworks?.[1]?.opacity).toBe(0.64);
+      },
+      { timeout: 2500 },
+    );
+    view.unmount();
+    const restored = render(<SocialStudio catalog={[]} campaigns={[]} />);
+    await open(restored);
+    const savedOverlay = restored.getByLabelText(t("Color layer"));
+    expect(savedOverlay.style.width).toBe("60%");
+    expect(
+      savedOverlay.querySelector<HTMLElement>(".social-color-layer")?.style
+        .opacity,
+    ).toBe("0.28");
+    expect(requestAi).not.toHaveBeenCalled();
+  },
+);
 
 it("opens additive layers from the product image editor and the Images menu", async () => {
   const settings = resolveSettings(null);
@@ -305,6 +415,63 @@ it("opens additive layers from the product image editor and the Images menu", as
   ).toBeTruthy();
   expect(requestAi).not.toHaveBeenCalled();
 });
+
+it.each(["en", "sq"] as const)(
+  "keeps product image management visible after selection and offers the same editor from double-click and Images (%s)",
+  async (language) => {
+    setLanguage(language);
+    const view = render(<SocialStudio catalog={[]} campaigns={[]} />);
+    await open(view);
+    const photo = view
+      .getByAltText("First product")
+      .closest<HTMLElement>(".social-product")!;
+    fireEvent.click(photo);
+    expect(photo.classList.contains("selected")).toBe(true);
+    fireEvent.click(
+      within(photo).getByRole("button", {
+        name: `${t("Manage image")}: First product`,
+      }),
+    );
+    const editor = await view.findByRole("dialog", {
+      name: t("Change product image"),
+    });
+    expect(
+      within(editor).getByRole("button", { name: t("Add image layer") }),
+    ).toBeTruthy();
+    fireEvent.click(within(editor).getByRole("button", { name: t("Close") }));
+    fireEvent.doubleClick(photo);
+    const reopened = await view.findByRole("dialog", {
+      name: t("Change product image"),
+    });
+    fireEvent.click(within(reopened).getByRole("button", { name: t("Close") }));
+    fireEvent.click(view.getByText(t("Images"), { exact: true }));
+    fireEvent.click(
+      await view.findByRole("button", { name: t("Change product image") }),
+    );
+    const products = await view.findByRole("dialog", {
+      name: t("Product images"),
+    });
+    fireEvent.click(
+      within(products).getByRole("button", { name: "Second product" }),
+    );
+    const selectedEditor = await view.findByRole("dialog", {
+      name: t("Change product image"),
+    });
+    fireEvent.click(
+      within(selectedEditor).getByRole("button", { name: t("Close") }),
+    );
+    fireEvent.click(photo);
+    fireEvent.click(view.getByRole("button", { name: t("Preview") }));
+    expect(photo.classList.contains("selected")).toBe(false);
+    expect(
+      within(photo).queryByRole("button", {
+        name: `${t("Manage image")}: First product`,
+      }),
+    ).toBeNull();
+    expect(savePost).not.toHaveBeenCalled();
+    expect(requestAi).not.toHaveBeenCalled();
+  },
+);
 
 it("keeps shared brochure products usable but removes catalog selection when catalog access is off", async () => {
   setLanguage("en");

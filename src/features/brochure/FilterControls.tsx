@@ -20,6 +20,7 @@ export interface FilterSelectProps<Value extends string | number = string> {
   options: readonly FilterOption<Value>[];
   onChange: (value: Value) => void;
   disabled?: boolean;
+  searchable?: boolean;
   id?: string;
   hideLabel?: boolean;
   "aria-labelledby"?: string;
@@ -66,6 +67,7 @@ export function FilterSelect<Value extends string | number>({
   options,
   onChange,
   disabled = false,
+  searchable,
   id,
   hideLabel = false,
   "aria-labelledby": labelledby,
@@ -81,8 +83,9 @@ export function FilterSelect<Value extends string | number>({
   const selected =
     options.find((option) => option.value === value) || options[0];
   const statusOptions = isStatusOptions(options.map((option) => option.value));
+  const showSearch = searchable ?? !statusOptions;
   const visible = options.filter((option) =>
-    matchesSearch(option.label, query),
+    matchesSearch(option.label, showSearch ? query : ""),
   );
   function close() {
     setOpen(false);
@@ -118,7 +121,12 @@ export function FilterSelect<Value extends string | number>({
     const place = () => {
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) return;
-      const width = Math.min(Math.max(rect.width, 240), window.innerWidth - 16);
+      const width = Math.min(
+        statusOptions
+          ? Math.min(340, Math.max(rect.width, 220))
+          : Math.max(rect.width, 240),
+        window.innerWidth - 16,
+      );
       const below = window.innerHeight - rect.bottom - 12;
       const above = rect.top - 12;
       const upward = below < 240 && above > below;
@@ -132,13 +140,24 @@ export function FilterSelect<Value extends string | number>({
       });
     };
     place();
+    const focus = requestAnimationFrame(() => {
+      if (showSearch) return;
+      const buttons = list.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="option"]:not(:disabled)',
+      );
+      const selectedOption = [...(buttons || [])].find(
+        (button) => button.getAttribute("aria-selected") === "true",
+      );
+      (selectedOption || buttons?.[0])?.focus();
+    });
     window.addEventListener("resize", place);
     document.addEventListener("scroll", place, true);
     return () => {
+      cancelAnimationFrame(focus);
       window.removeEventListener("resize", place);
       document.removeEventListener("scroll", place, true);
     };
-  }, [open]);
+  }, [open, showSearch, statusOptions]);
   function onKeys(event: React.KeyboardEvent<HTMLElement>) {
     if (open && event.key === "Escape") {
       event.preventDefault();
@@ -169,6 +188,16 @@ export function FilterSelect<Value extends string | number>({
       return;
     }
     if (
+      open &&
+      ["Enter", " "].includes(event.key) &&
+      event.target instanceof HTMLButtonElement &&
+      event.target.getAttribute("role") === "option"
+    ) {
+      event.preventDefault();
+      event.target.click();
+      return;
+    }
+    if (
       !["ArrowDown", "ArrowUp", ...(!input ? ["Home", "End"] : [])].includes(
         event.key,
       )
@@ -193,7 +222,10 @@ export function FilterSelect<Value extends string | number>({
     buttons[next]?.focus();
   }
   return (
-    <div className={`cs-filter-control ${open ? "is-open" : ""}`} ref={root}>
+    <div
+      className={`cs-filter-control ${statusOptions ? "ns-status-select" : ""} ${open ? "is-open" : ""}`}
+      ref={root}
+    >
       {!hideLabel && <span className="cs-filter-label">{label}</span>}
       <button
         ref={trigger}
@@ -215,7 +247,14 @@ export function FilterSelect<Value extends string | number>({
         }}
         onKeyDown={onKeys}
       >
-        <span>{selected?.label}</span>
+        <span
+          className={statusOptions ? "ns-status-select-label" : undefined}
+          data-status-tone={
+            statusOptions && selected ? statusTone(selected.value) : undefined
+          }
+        >
+          {selected?.label}
+        </span>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <path d="m5 7 5 5 5-5" />
         </svg>
@@ -224,27 +263,30 @@ export function FilterSelect<Value extends string | number>({
         !disabled &&
         createPortal(
           <div
-            className="cs-filter-options cs-searchable-options"
+            className={`cs-filter-options cs-searchable-options ${statusOptions ? "ns-status-panel" : ""}`}
             ref={popover}
             style={placement}
             onKeyDown={onKeys}
           >
-            <div className="cs-filter-option-search">
-              <input
-                autoFocus
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                aria-label={`${t("Search")} ${label}`}
-                placeholder={t("Search options…")}
-              />
-            </div>
+            {showSearch && (
+              <div className="cs-filter-option-search">
+                <input
+                  autoFocus
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  aria-label={`${t("Search")} ${label}`}
+                  placeholder={t("Search options…")}
+                />
+              </div>
+            )}
             <div role="listbox" aria-label={label} ref={list}>
               {visible.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   role="option"
+                  className={statusOptions ? "ns-status-option-row" : undefined}
                   data-status-tone={
                     statusOptions ? statusTone(option.value) : undefined
                   }
@@ -256,8 +298,23 @@ export function FilterSelect<Value extends string | number>({
                     trigger.current?.focus();
                   }}
                 >
-                  <span>{option.label}</span>
-                  {option.value === value && <span aria-hidden="true">✓</span>}
+                  <span
+                    className={
+                      statusOptions ? "ns-status-select-label" : undefined
+                    }
+                    data-status-tone={
+                      statusOptions ? statusTone(option.value) : undefined
+                    }
+                  >
+                    {option.label}
+                  </span>
+                  {statusOptions ? (
+                    <span className="ns-status-option-check" aria-hidden="true">
+                      {option.value === value ? "✓" : ""}
+                    </span>
+                  ) : (
+                    option.value === value && <span aria-hidden="true">✓</span>
+                  )}
                 </button>
               ))}
               {!visible.length && (

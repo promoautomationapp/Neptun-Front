@@ -29,9 +29,7 @@
   --status-border: #c3cbd6;
   --status-dot: #69788a;
 }
-.ns-status-badge[data-status-tone],
-.ns-searchable-trigger[data-status-tone],
-.cs-filter-trigger[data-status-tone] {
+.ns-status-badge[data-status-tone] {
   color: var(--status-ink);
   background: var(--status-bg);
   border: 1px solid var(--status-border);
@@ -47,10 +45,7 @@
   line-height: 1.3;
 }
 .ns-status-badge::before,
-.ns-searchable-trigger[data-status-tone] > span:first-child::before,
-.cs-filter-trigger[data-status-tone] > span:first-child::before,
-.ns-searchable-options > button[data-status-tone] > span:first-child::before,
-.cs-filter-options button[data-status-tone] > span:first-child::before {
+.ns-status-select-label[data-status-tone]::before {
   content: "";
   display: inline-block;
   width: 7px;
@@ -59,22 +54,88 @@
   background: var(--status-dot);
   flex: none;
 }
-.ns-searchable-trigger[data-status-tone] > span:first-child::before,
-.cs-filter-trigger[data-status-tone] > span:first-child::before,
-.ns-searchable-options > button[data-status-tone] > span:first-child::before,
-.cs-filter-options button[data-status-tone] > span:first-child::before {
-  margin-right: 8px;
-  vertical-align: 1px;
+.ns-status-select-label[data-status-tone]::before {
+  width: 6px;
+  height: 6px;
 }
-.ns-searchable-options > button[data-status-tone],
-.cs-filter-options button[data-status-tone] {
-  color: var(--status-ink);
+.ns-status-select > :is(.ns-searchable-trigger, .cs-filter-trigger) {
+  background: var(--np-surface, #ffffff);
+  color: var(--np-text, #244764);
+  border-color: var(--np-border, #c8d8e6);
+}
+.ns-status-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.35;
+}
+.ns-status-select-label[data-status-tone] {
+  width: fit-content;
+  padding: 4px 9px;
+  border: 1px solid var(--status-border);
+  border-radius: 999px;
   background: var(--status-bg);
-  border: 1px solid transparent;
+  color: var(--status-ink);
+  font-size: 12px;
+  font-weight: 650;
 }
-.ns-searchable-options > button[data-status-tone][aria-selected="true"],
-.cs-filter-options button[data-status-tone][aria-selected="true"] {
-  border-color: var(--status-border);
+.ns-status-select
+  > :is(.ns-searchable-trigger, .cs-filter-trigger)
+  > .ns-status-select-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ns-status-panel {
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--np-border, #d4e0e9);
+  border-radius: 12px;
+  background: var(--np-raised, #ffffff);
+  color: var(--np-text, #244764);
+  box-shadow: 0 12px 32px #163a5724;
+}
+.ns-status-panel [role="listbox"] {
+  display: grid;
+  gap: 4px;
+}
+.ns-status-panel .ns-status-option-row {
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--np-text, #244764);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ns-status-panel .ns-status-option-row[aria-selected="true"] {
+  background: var(--np-selected, #edf4f9);
+  color: var(--np-text, #244764);
+  font-weight: 650;
+}
+.ns-status-panel .ns-status-option-row:hover:not(:disabled) {
+  background: var(--np-selected, #f1f6fa);
+}
+.ns-status-panel .ns-status-option-row:focus-visible {
+  background: var(--np-selected, #edf4f9);
+  outline: 2px solid var(--np-accent, #4788b5);
+  outline-offset: -2px;
+}
+.ns-status-panel .ns-status-select-label {
+  max-width: calc(100% - 28px);
+  white-space: normal;
+  text-wrap: pretty;
+}
+.ns-status-option-check {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: 18px;
+  color: var(--np-accent, #236d9f);
+  font-size: 15px;
   font-weight: 800;
 }
 html[data-theme="dark"] [data-status-tone="success"] {
@@ -107,12 +168,27 @@ html[data-theme="dark"] [data-status-tone="inactive"] {
   --status-border: #596b80;
   --status-dot: #a3b4c8;
 }
-html[data-theme="dark"] .ns-status-badge[data-status-tone],
-html[data-theme="dark"] .ns-searchable-trigger[data-status-tone],
-html[data-theme="dark"] .cs-filter-trigger[data-status-tone],
-html[data-theme="dark"] .ns-searchable-options > button[data-status-tone],
-html[data-theme="dark"] .cs-filter-options button[data-status-tone] {
+html[data-theme="dark"] .ns-status-badge[data-status-tone] {
   color: var(--status-ink);
   background: var(--status-bg);
   border-color: var(--status-border);
+}
+html[data-theme="dark"]
+  body
+  .ns-status-select
+  > :is(.ns-searchable-trigger, .cs-filter-trigger) {
+  background: var(--np-raised, #19293b);
+  color: var(--np-text, #e2edf7);
+  border-color: var(--np-border, #344b60);
+}
+html[data-theme="dark"] body .ns-status-panel .ns-status-option-row {
+  background: transparent;
+  color: var(--np-text, #e2edf7);
+}
+html[data-theme="dark"]
+  body
+  .ns-status-panel
+  .ns-status-option-row:is(:hover, :focus-visible, [aria-selected="true"]) {
+  background: var(--np-selected, #263d54);
+  color: var(--np-text, #e2edf7);
 }
