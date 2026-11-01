@@ -61,6 +61,19 @@ export function CoverElement({
   );
   const gesture = React.useRef<CoverGesture | null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = React.useState(false);
+  const canManageImage = Boolean(onChooseImage || onReplaceFile);
+  React.useEffect(() => {
+    const clear = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setSelected(false);
+    };
+    document.addEventListener("pointerdown", clear);
+    return () => document.removeEventListener("pointerdown", clear);
+  }, []);
+  function manageImage() {
+    if (onChooseImage) onChooseImage();
+    else upload.current?.click();
+  }
   React.useEffect(
     () =>
       setPlacement(
@@ -248,7 +261,10 @@ export function CoverElement({
   return (
     <div
       ref={ref}
-      className={`cover-editable-element cover-element-${kind} ${onChange ? "editable" : ""} ${className}`}
+      className={`cover-editable-element cover-element-${kind} ${onChange ? "editable" : ""}${selected ? " is-selected" : ""} ${className}`}
+      tabIndex={canManageImage ? 0 : undefined}
+      onFocus={canManageImage ? () => setSelected(true) : undefined}
+      onClick={canManageImage ? () => setSelected(true) : undefined}
       style={
         {
           "--cover-text-scale": placement.width / Math.max(0.01, textBaseWidth),
@@ -265,8 +281,7 @@ export function CoverElement({
         onChooseImage || onReplaceFile
           ? (event) => {
               event.stopPropagation();
-              if (onChooseImage) onChooseImage();
-              else upload.current?.click();
+              manageImage();
             }
           : undefined
       }
@@ -295,6 +310,7 @@ export function CoverElement({
       onPointerDown={
         onChange && kind !== "gradient"
           ? (event) => {
+              if (canManageImage) setSelected(true);
               if (
                 (event.target as Element).closest(
                   "button, input, textarea, select, summary, .cs-product-tools, [role='button'], [contenteditable='true']",
@@ -332,17 +348,34 @@ export function CoverElement({
           onStart={(event) => start(event, "resize")}
         />
       )}
-      {onChange && (
+      {(onChange || canManageImage) && (
         <div className="cover-element-tools" data-export-hide="true">
-          <button
-            type="button"
-            aria-label={`Move cover ${kind}`}
-            {...handlers("move")}
-          >
-            <EditorIcon name="move" />
-            <span>{t("Move")}</span>
-          </button>
-          {onHide && (
+          {canManageImage && (
+            <button
+              type="button"
+              className="cover-manage-image"
+              aria-label={t("Manage image")}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                manageImage();
+              }}
+            >
+              <EditorIcon name="image" />
+              <span>{t("Manage image")}</span>
+            </button>
+          )}
+          {onChange && (
+            <button
+              type="button"
+              aria-label={`Move cover ${kind}`}
+              {...handlers("move")}
+            >
+              <EditorIcon name="move" />
+              <span>{t("Move")}</span>
+            </button>
+          )}
+          {onChange && onHide && (
             <button
               type="button"
               aria-label={`Hide cover ${kind}`}

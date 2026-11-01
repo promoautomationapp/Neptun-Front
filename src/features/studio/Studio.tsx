@@ -2058,15 +2058,7 @@ function StorePageControls({
   );
 }
 
-export function BrochureEditor(props: BrochureEditorProps) {
-  return (
-    <ImagePickerProvider settings={props.settings}>
-      <BrochureEditorContent {...props} />
-    </ImagePickerProvider>
-  );
-}
-
-function BrochureEditorContent({
+export function BrochureEditor({
   canMakeSocial = true,
   canUseCatalog = true,
   campaign,
@@ -2112,6 +2104,8 @@ function BrochureEditorContent({
   const [textMode, setTextMode] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const [showLogoPicker, setShowLogoPicker] = useState(false);
+  const [showLayers, setShowLayers] = useState(false);
+  const [showLayerPicker, setShowLayerPicker] = useState(false);
   const canEditCanvas = !previewMode && !inlinePreview && !commentMode;
   const chooseCanvasTool = (tool: CanvasTool) => {
     setTextMode(tool === "text");
@@ -2339,9 +2333,13 @@ function BrochureEditorContent({
         x: point?.x ?? 5,
         y: point?.y ?? 12,
         width: 20,
+        zIndex: 6,
       });
     });
     onToast(t("Artwork added. Drag it to position it on this page."));
+  }
+  function addImageLayer(source: string) {
+    addSavedPageArtwork({id: crypto.randomUUID(), name: t("Image"), url: source});
   }
   async function addPageArtwork(
     file: File,
@@ -2366,6 +2364,7 @@ function BrochureEditorContent({
             point?.y ??
             Math.min(80, 5 + draft.pageArtworks[artworkPageKey].length * 8),
           width: 20,
+          zIndex: 6,
         });
       });
       onToast(t("Artwork added. Drag it to position it on this page."));
@@ -2738,7 +2737,7 @@ function BrochureEditorContent({
     setMovePage(selected);
     setMovePosition("start");
   }
-  return (
+  const editor = (
     <div
       className="cs-editor-section"
       style={brochureAspectStyle(pageFormat.aspectRatio)}
@@ -2866,6 +2865,8 @@ function BrochureEditorContent({
       {showLogoPicker && (
         <CoverLogoPicker
           settings={settings}
+          onAddLayer={addImageLayer}
+          onManageLayers={() => setShowLayers(true)}
           currentSource={
             campaign.coverLogoSource ||
             campaign.brandAssets?.neptun ||
@@ -2880,6 +2881,30 @@ function BrochureEditorContent({
             })
           }
         />
+      )}
+      {showLayerPicker && (
+        <CoverLogoPicker
+          settings={settings}
+          kind="image"
+          title={t("Add image layer")}
+          confirmLabel={t("Add image layer")}
+          onSelect={addImageLayer}
+          onClose={() => setShowLayerPicker(false)}
+        />
+      )}
+      {showLayers && (
+        <Modal title={t("Layers")} kicker={title} onClose={() => setShowLayers(false)}>
+          <PageLayersControls
+            key={artworkPageKey}
+            campaign={campaign}
+            pageKey={artworkPageKey}
+            onUpdate={onUpdate}
+            onToast={onToast}
+          />
+          <div className="cs-modal-actions">
+            <Button onClick={() => setShowLayers(false)}>{t("Done")}</Button>
+          </div>
+        </Modal>
       )}
       {previewMode && (
         <BrochurePreview
@@ -2954,22 +2979,27 @@ function BrochureEditorContent({
                     {t("Change cover logo")}
                   </button>
                 )}
-                <FileUpload
-                  accept="image/*"
+                <button
+                  type="button"
                   aria-label={t("Add image layer")}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void addPageArtwork(file);
-                    event.target.value = "";
-                  }}
+                  onClick={() => setShowLayerPicker(true)}
                 >
+                  <EditorIcon name="plus" />
                   {t("Add image layer")}
-                </FileUpload>
+                </button>
+                <button type="button" onClick={() => setShowLayers(true)}>
+                  <EditorIcon name="layers" /> {t("Manage layers")}
+                </button>
                 <ReusableImages
                   settings={settings}
                   onAdd={addSavedPageArtwork}
                 />
               </ActionMenu>
+            )}
+            {canEditCanvas && (
+              <button type="button" className="cs-canvas-layers-button" onClick={() => setShowLayers(true)}>
+                <EditorIcon name="layers" /> {t("Layers")}
+              </button>
             )}
             <span className="cs-canvas-dock-divider" aria-hidden="true" />
             <button
@@ -3097,6 +3127,7 @@ function BrochureEditorContent({
                       }
                     : undefined
                 }
+                onCoverImageChange={canEditCanvas ? (source) => onUpdate((draft) => {draft.coverImage = source;}) : undefined}
                 onStoresFooterChange={
                   canEditCanvas
                     ? (kind: string, value: Placement) =>
@@ -3851,6 +3882,15 @@ function BrochureEditorContent({
         </Modal>
       )}
     </div>
+  );
+  return (
+    <ImagePickerProvider
+      settings={settings}
+      onAddLayer={addImageLayer}
+      onManageLayers={() => setShowLayers(true)}
+    >
+      {editor}
+    </ImagePickerProvider>
   );
 }
 

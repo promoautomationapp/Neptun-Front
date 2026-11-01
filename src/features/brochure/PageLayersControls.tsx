@@ -50,6 +50,15 @@ export function PageLayersControls({
       if (item) Object.assign(item, changes);
     });
   }
+  const layerName = (layer: PageArtworkLayer) =>
+    t(
+      layer.name ||
+        (layer.type === "text"
+          ? "Text"
+          : layer.type === "overlay"
+            ? "Color / shadow layer"
+            : "Image"),
+    );
   const base = (type: string): PageArtworkLayer => ({
     id: crypto.randomUUID(),
     type,
@@ -65,7 +74,7 @@ export function PageLayersControls({
           fade: "bottom",
           zIndex: 2,
         }
-      : { text: "Your message", color: "#ffffff", fontSize: 4, zIndex: 6 }),
+      : { text: t("Your message"), color: "#ffffff", fontSize: 4, zIndex: 6 }),
   });
   async function upload(
     files: FileList | null,
@@ -88,15 +97,15 @@ export function PageLayersControls({
             y: logo ? 16 : 15 + index * 3,
             width: logo ? 25 : 45,
             opacity: 1,
-            zIndex: logo ? 6 : 2,
+            zIndex: 6,
           })),
       );
       if (replacing && items[0])
         change({ image: items[0].image, name: items[0].name });
       else if (items.length) add(items);
-      else onToast?.("Choose images under 12 MB.");
+      else onToast?.(t("Choose images under 12 MB."));
     } catch {
-      onToast?.("Could not read these images.");
+      onToast?.(t("Could not read these images."));
     }
   }
   const coordinates: Array<"x" | "y" | "width" | "height"> =
@@ -106,81 +115,131 @@ export function PageLayersControls({
   return (
     <div className="cs-page-layers-controls">
       <p>
-        Add photos, logos, text or a color layer. Drag each layer on the page;
-        use its corner to resize.
+        {t(
+          "Add an image as a separate layer. Drag it on the page to move it, or drag a corner to resize it. The original image stays in place.",
+        )}
       </p>
       <div className="cs-page-layer-actions">
         <FileUpload
           accept="image/*"
           multiple
-          aria-label="Add multiple page images"
+          aria-label={t("Add multiple page images")}
           onChange={(event) => {
-            upload(event.target.files);
+            const pending = upload(event.target.files);
             event.target.value = "";
+            return pending;
           }}
         >
-          Add images
+          {t("Add images")}
         </FileUpload>
         {pageKey === "cover" && (
           <FileUpload
             accept="image/*"
             multiple
-            aria-label="Add campaign logos"
+            aria-label={t("Add campaign logos")}
             onChange={(event) => {
-              void upload(event.target.files, false, true);
+              const pending = upload(event.target.files, false, true);
               event.target.value = "";
+              return pending;
             }}
           >
             {t("Add campaign logos")}
           </FileUpload>
         )}
         <button type="button" onClick={() => add([base("text")])}>
-          Add text
+          {t("Add text")}
         </button>
         <button type="button" onClick={() => add([base("overlay")])}>
-          Add color / shadow
+          {t("Add color / shadow")}
         </button>
       </div>
+      {layers.length > 0 ? (
+        <div className="cs-page-layer-library">
+          <strong>
+            {t("Layers on this page")} <span>{layers.length}</span>
+          </strong>
+          <div
+            className="cs-page-layer-list"
+            role="group"
+            aria-label={t("Select a page layer")}
+          >
+            {[...layers].reverse().map((layer) => (
+              <button
+                key={layer.id}
+                type="button"
+                className="cs-page-layer-choice"
+                aria-pressed={selected?.id === layer.id}
+                aria-label={`${t("Select layer")}: ${layerName(layer)}`}
+                onClick={() => setSelectedId(layer.id)}
+              >
+                <span
+                  className="cs-page-layer-thumbnail"
+                  style={
+                    layer.type === "overlay"
+                      ? { backgroundColor: layer.color || backgroundColor }
+                      : undefined
+                  }
+                >
+                  {layer.type === "text" ? (
+                    <b aria-hidden="true">T</b>
+                  ) : layer.type === "overlay" ? null : (
+                    <img src={layer.image} alt="" />
+                  )}
+                </span>
+                <span>
+                  <b>{layerName(layer)}</b>
+                  <small>
+                    {t(
+                      layer.type === "text"
+                        ? "Text layer"
+                        : layer.type === "overlay"
+                          ? "Color / shadow layer"
+                          : "Image layer",
+                    )}
+                  </small>
+                </span>
+                <span className="cs-page-layer-selected" aria-hidden="true">
+                  {selected?.id === layer.id ? "✓" : ""}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="cs-page-layer-empty">
+          {t(
+            "No added layers yet. Add an image above to place it over the page.",
+          )}
+        </p>
+      )}
       {selected && (
         <>
           <label>
-            Layer
+            {t("Layer order")}
             <SearchableSelect
-              aria-label="Selected page layer"
-              value={selected.id}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
-              {layers.map((item) => (
-                <option value={item.id} key={item.id}>
-                  {item.name || "Image"}
-                </option>
-              ))}
-            </SearchableSelect>
-          </label>
-          <label>
-            Layer order
-            <SearchableSelect
-              aria-label="Page layer order"
+              aria-label={t("Page layer order")}
               value={selected.zIndex ?? 2}
               onChange={(event) =>
                 change({ zIndex: Number(event.target.value) })
               }
             >
-              <option value={1}>Behind other artwork</option>
-              <option value={2}>Over background · under logo & products</option>
-              <option value={4}>Over products · under logo</option>
-              <option value={6}>Over logo & products</option>
-              <option value={10}>In front of everything</option>
+              <option value={1}>{t("Behind other artwork")}</option>
+              <option value={2}>
+                {t("Over background · under logo & products")}
+              </option>
+              <option value={4}>{t("Over products · under logo")}</option>
+              <option value={6}>{t("Over page content")}</option>
+              <option value={10}>{t("In front of everything")}</option>
             </SearchableSelect>
           </label>
           <label>
-            Opacity · {Math.round((selected.opacity ?? 1) * 100)}%
+            {t("Opacity")} · {Math.round((selected.opacity ?? 1) * 100)}%
             <input
               type="range"
               min="0"
               max="1"
               step=".05"
-              aria-label="Page layer opacity"
+              aria-label={t("Page layer opacity")}
               value={selected.opacity ?? 1}
               onChange={(event) =>
                 change({ opacity: Number(event.target.value) })
@@ -190,16 +249,16 @@ export function PageLayersControls({
           {selected.type === "text" && (
             <>
               <label>
-                Text
+                {t("Text")}
                 <textarea
                   rows={3}
-                  aria-label="Page layer text"
+                  aria-label={t("Page layer text")}
                   value={selected.text || ""}
                   onChange={(event) => change({ text: event.target.value })}
                 />
               </label>
               <label>
-                Text size
+                {t("Text size")}
                 <input
                   type="number"
                   min="1"
@@ -214,10 +273,10 @@ export function PageLayersControls({
           )}
           {selected.type === "text" || selected.type === "overlay" ? (
             <label>
-              Color
+              {t("Color")}
               <input
                 type="color"
-                aria-label="Page layer color"
+                aria-label={t("Page layer color")}
                 value={selected.color || "#1c4075"}
                 onChange={(event) => change({ color: event.target.value })}
               />
@@ -226,19 +285,20 @@ export function PageLayersControls({
             <>
               <FileUpload
                 accept="image/*"
-                aria-label="Replace page layer image"
+                aria-label={t("Replace page layer image")}
                 onChange={(event) => {
-                  upload(event.target.files, true);
+                  const pending = upload(event.target.files, true);
                   event.target.value = "";
+                  return pending;
                 }}
               >
-                Replace image
+                {t("Replace image")}
               </FileUpload>
               {selected.height != null && (
                 <label>
-                  Image fit
+                  {t("Image fit")}
                   <SearchableSelect
-                    aria-label="Page image fit"
+                    aria-label={t("Page image fit")}
                     value={selected.imageFit || "cover"}
                     onChange={(event) =>
                       change({
@@ -246,13 +306,13 @@ export function PageLayersControls({
                       })
                     }
                   >
-                    <option value="cover">Fill the frame</option>
-                    <option value="contain">Fit entire image</option>
+                    <option value="cover">{t("Fill the frame")}</option>
+                    <option value="contain">{t("Fit entire image")}</option>
                   </SearchableSelect>
                 </label>
               )}
               <label>
-                Photo shadow
+                {t("Photo shadow")}
                 <input
                   type="checkbox"
                   checked={Boolean(selected.shadow)}
@@ -266,10 +326,10 @@ export function PageLayersControls({
               </label>
               {selected.shadow && (
                 <label>
-                  Shadow color
+                  {t("Shadow color")}
                   <input
                     type="color"
-                    aria-label="Page image shadow color"
+                    aria-label={t("Page image shadow color")}
                     value={selected.shadowColor || "#1c4075"}
                     onChange={(event) =>
                       change({ shadowColor: event.target.value })
@@ -281,29 +341,33 @@ export function PageLayersControls({
           )}
           {selected.type === "overlay" && (
             <label>
-              Fade
+              {t("Fade")}
               <SearchableSelect
-                aria-label="Page shadow fade"
+                aria-label={t("Page shadow fade")}
                 value={selected.fade || "solid"}
                 onChange={(event) => change({ fade: event.target.value })}
               >
-                <option value="solid">Solid tint</option>
-                <option value="top">Fade from top</option>
-                <option value="bottom">Fade from bottom</option>
-                <option value="edges">Soft edges / vignette</option>
+                <option value="solid">{t("Solid tint")}</option>
+                <option value="top">{t("Fade from top")}</option>
+                <option value="bottom">{t("Fade from bottom")}</option>
+                <option value="edges">{t("Soft edges / vignette")}</option>
               </SearchableSelect>
             </label>
           )}
           <div className="cs-page-layer-coordinates">
             {coordinates.map((field) => (
               <label key={field}>
-                {field}
+                {t(
+                  { x: "Left", y: "Top", width: "Width", height: "Height" }[
+                    field
+                  ],
+                )}
                 <input
                   type="number"
                   min="0"
                   max="100"
                   step=".5"
-                  aria-label={`Page layer ${field}`}
+                  aria-label={`${t("Page layer")} ${t({ x: "Left", y: "Top", width: "Width", height: "Height" }[field])}`}
                   value={selected[field] ?? 0}
                   onChange={(event) =>
                     change({
@@ -318,12 +382,12 @@ export function PageLayersControls({
             ))}
           </div>
           <label>
-            Rotation
+            {t("Rotation")}
             <input
               type="range"
               min="-45"
               max="45"
-              aria-label="Page layer rotation"
+              aria-label={t("Page layer rotation")}
               value={selected.rotation || 0}
               onChange={(event) =>
                 change({ rotation: Number(event.target.value) })
@@ -342,7 +406,7 @@ export function PageLayersControls({
               })
             }
           >
-            Remove selected layer
+            {t("Remove selected layer")}
           </button>
         </>
       )}

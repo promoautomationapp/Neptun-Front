@@ -7,6 +7,7 @@ import type { Settings } from "../../domain/models";
 import { reusableImages } from "../settings/ReusableImages";
 import type { LogoAsset } from "../settings/settings.schema";
 import { t } from "./i18n";
+import { EditorIcon } from "./EditorIcon";
 import { readImage } from "./utils";
 import "./cover-logo-picker.css";
 
@@ -15,6 +16,9 @@ export interface CoverLogoPickerProps {
   currentSource?: string;
   title?: string;
   kind?: "logo" | "image";
+  confirmLabel?: string;
+  onAddLayer?: (source: string) => void;
+  onManageLayers?: () => void;
   onSelect: (source: string) => void;
   onClose: () => void;
 }
@@ -24,6 +28,9 @@ export function CoverLogoPicker({
   currentSource = "",
   title,
   kind = "logo",
+  confirmLabel,
+  onAddLayer,
+  onManageLayers,
   onSelect,
   onClose,
 }: CoverLogoPickerProps) {
@@ -102,6 +109,31 @@ export function CoverLogoPicker({
               : "Choose a saved logo or upload a new one.",
           )}
         </p>
+        {(onAddLayer || onManageLayers) && (
+          <div className="cs-image-layer-options">
+            <EditorIcon name="layers" />
+            <span>
+              <strong>{t("Image layers")}</strong>
+              <small>
+                {t(
+                  "Keep the current image and place another image over it. Choose a photo below, then add it as a new layer.",
+                )}
+              </small>
+            </span>
+            {onManageLayers && (
+              <button
+                type="button"
+                className="cs-button"
+                onClick={() => {
+                  onClose();
+                  onManageLayers();
+                }}
+              >
+                {t("Manage layers")}
+              </button>
+            )}
+          </div>
+        )}
         <div className="cs-cover-logo-layout">
           <section className="cs-cover-logo-library" aria-label={libraryLabel}>
             <div className="cs-cover-logo-library-head">
@@ -178,6 +210,19 @@ export function CoverLogoPicker({
         <button type="button" className="cs-button" onClick={onClose}>
           {t("Cancel")}
         </button>
+        {onAddLayer && (
+          <button
+            type="button"
+            className="cs-button secondary"
+            disabled={!selected || busy}
+            onClick={() => {
+              onAddLayer(selected);
+              onClose();
+            }}
+          >
+            <EditorIcon name="plus" /> {t("Add as new layer")}
+          </button>
+        )}
         <button
           type="button"
           className="cs-button primary"
@@ -187,7 +232,7 @@ export function CoverLogoPicker({
             onClose();
           }}
         >
-          {t(isImage ? "Use this image" : "Use this logo")}
+          {confirmLabel || t(isImage ? "Use this image" : "Use this logo")}
         </button>
       </div>
     </Modal>

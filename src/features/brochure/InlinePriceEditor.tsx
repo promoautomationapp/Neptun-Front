@@ -151,6 +151,17 @@ export function useProductQuickEdit({
   onEditImage?: (product: Product) => void;
 }) {
   const [editingPrice, setEditingPrice] = useState(false);
+  const [imageSelected, setImageSelected] = useState(false);
+  const imageCard = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!imageSelected) return;
+    const clearSelection = (event: PointerEvent) => {
+      if (!imageCard.current?.contains(event.target as Node))
+        setImageSelected(false);
+    };
+    document.addEventListener("pointerdown", clearSelection);
+    return () => document.removeEventListener("pointerdown", clearSelection);
+  }, [imageSelected]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -167,7 +178,6 @@ export function useProductQuickEdit({
       ? {}
       : {
           onClickCapture: (event) => {
-            if (!onChange) return;
             const target = event.target as Element;
             if (
               target.closest(
@@ -175,6 +185,17 @@ export function useProductQuickEdit({
               )
             )
               return;
+            if (
+              onEditImage &&
+              target.closest(
+                ".brochure-product-image,.product-artwork-item img,.large-bundle-photo-area img",
+              )
+            ) {
+              imageCard.current = event.currentTarget;
+              setImageSelected(true);
+              return;
+            }
+            if (!onChange) return;
             const badge = target.closest(savingsSelector);
             if (
               !badge &&
@@ -223,14 +244,24 @@ export function useProductQuickEdit({
         };
   return {
     events,
-    editor:
-      editingPrice && onChange ? (
-        <InlinePriceEditor
-          key={product.code}
-          product={product}
-          onSave={onChange}
-          onClose={() => setEditingPrice(false)}
-        />
-      ) : null,
+    editor: (
+      <>
+        {imageSelected && onEditImage && (
+          <div className="cs-image-selection-tools" data-export-hide="true">
+            <button type="button" onClick={() => onEditImage(product)}>
+              {t("Manage image")}
+            </button>
+          </div>
+        )}
+        {editingPrice && onChange ? (
+          <InlinePriceEditor
+            key={product.code}
+            product={product}
+            onSave={onChange}
+            onClose={() => setEditingPrice(false)}
+          />
+        ) : null}
+      </>
+    ),
   };
 }

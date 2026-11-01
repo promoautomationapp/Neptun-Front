@@ -110,6 +110,20 @@ function ArtworkItem({
       setError(t("Could not read this image."));
     }
   }
+  function manageImage(title = t("Manage image")) {
+    if (!onChange || !isImage) return;
+    if (chooseImage) {
+      chooseImage({
+        source: currentPosition.current.image,
+        title,
+        kind: "image",
+        onSelect: (image) => {
+          change({ image });
+          setError("");
+        },
+      });
+    } else upload.current?.click();
+  }
   const gesture = useRef<ArtworkGesture | null>(null);
   useEffect(() => {
     currentPosition.current = artwork;
@@ -271,20 +285,13 @@ function ArtworkItem({
         onChange && isImage
           ? (event) => {
               event.stopPropagation();
-              if (chooseImage) {
-                chooseImage({
-                  source: currentPosition.current.image,
-                  title: t("Replace page image"),
-                  kind: "image",
-                  onSelect: (image) => {
-                    change({ image });
-                    setError("");
-                  },
-                });
-              } else upload.current?.click();
+              manageImage(t("Replace page image"));
             }
           : undefined
       }
+      tabIndex={onChange && isImage ? 0 : undefined}
+      onFocus={onChange && isImage ? onSelect : undefined}
+      onClick={onChange && isImage ? onSelect : undefined}
       onDragOver={
         onChange && isImage
           ? (event) => {
@@ -417,6 +424,21 @@ function ArtworkItem({
             className="artwork-resize"
             onStart={(event) => start(event, "resize")}
           />
+          {isImage && (
+            <button
+              type="button"
+              className="page-image-manage"
+              aria-label={t("Manage image")}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                manageImage();
+              }}
+            >
+              <EditorIcon name="image" />
+              <span>{t("Manage image")}</span>
+            </button>
+          )}
           {isImage && (
             <input
               ref={upload}

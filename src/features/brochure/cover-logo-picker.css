@@ -11,6 +11,27 @@
   grid-template-columns: minmax(0, 1.6fr) minmax(210px, 1fr);
   gap: 24px;
 }
+.cs-image-layer-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--np-border, #cfdee8);
+  border-radius: 10px;
+  background: var(--np-selected, #edf6fc);
+}
+.cs-image-layer-options > span {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 5px;
+  font-size: 13px;
+}
+.cs-image-layer-options small {
+  color: var(--np-muted, #536b7e);
+  line-height: 1.5;
+}
 .cs-cover-logo-library {
   display: grid;
   align-content: start;

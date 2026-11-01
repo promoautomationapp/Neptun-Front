@@ -6,6 +6,7 @@ export function EditorIcon({
   name:
     | "edit"
     | "image"
+    | "layers"
     | "screen"
     | "move"
     | "drag"
@@ -26,7 +27,9 @@ export function EditorIcon({
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {name === "chevron-up" ? (
+      {name === "layers" ? (
+        <path d="m12 3 10 5-10 5L2 8Zm-10 9 10 5 10-5M2 16l10 5 10-5" />
+      ) : name === "chevron-up" ? (
         <path d="m6 15 6-6 6 6" />
       ) : name === "chevron-down" ? (
         <path d="m6 9 6 6 6-6" />

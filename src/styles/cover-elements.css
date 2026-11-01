@@ -187,7 +187,7 @@
   top: 30%;
 }
 .brochure-page.cover-editable-elements
-  .brochure-red-reference-saving:is(:not([style]),[style=""]) {
+  .brochure-red-reference-saving:is(:not([style]), [style=""]) {
   max-width: 12cqw;
 }
 .brochure-page.cover-editable-elements
@@ -242,11 +242,11 @@
 .brochure-page.cover-editable-elements
   .cover-product-frame
   > .brochure-product
-  .brochure-specs:is(:not([style]),[style=""]) {
+  .brochure-specs:is(:not([style]), [style=""]) {
   width: 100%;
 }
 .brochure-page.cover-editable-elements
-  .brochure-red-reference-saving:is(:not([style]),[style=""]) {
+  .brochure-red-reference-saving:is(:not([style]), [style=""]) {
   top: 32%;
   right: 0.5%;
   width: 18%;
@@ -304,22 +304,36 @@
   min-height: 8cqw;
 }
 
-.brochure-page .brochure-product > .brochure-specs > .brochure-warranty > b.detail-warranty-count {
+.brochure-page
+  .brochure-product
+  > .brochure-specs
+  > .brochure-warranty
+  > b.detail-warranty-count {
   font-size: 2.8cqw;
   line-height: 1.15;
 }
 .brochure-page .brochure-product > .brochure-specs > .brochure-warranty {
-  padding-top: .5cqw;
-  padding-bottom: .3cqw;
+  padding-top: 0.5cqw;
+  padding-bottom: 0.3cqw;
 }
 
-.brochure-page.cover-editable-elements .cover-element-message p{text-align:center;font-family:SkolaSans,Arial,sans-serif;line-height:1.25;font-weight:600}
+.brochure-page.cover-editable-elements .cover-element-message p {
+  text-align: center;
+  font-family: SkolaSans, Arial, sans-serif;
+  line-height: 1.25;
+  font-weight: 600;
+}
 
 /* The default ribbon bleeds beyond both edges like the printed brochure. */
-.brochure-page.cover-with-uuu .cover-element-band>img{width:104%;max-width:none;margin-left:-2%}
+.brochure-page.cover-with-uuu .cover-element-band > img {
+  width: 104%;
+  max-width: none;
+  margin-left: -2%;
+}
 /* Complete the ribbon's inward-sloping right cut at the page edge. The
    original UUU / hajde artwork remains untouched above this backing. */
-.brochure-page.cover-with-uuu .cover-element-band.cover-band-default-artwork::before {
+.brochure-page.cover-with-uuu
+  .cover-element-band.cover-band-default-artwork::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -330,25 +344,76 @@
 }
 /* Only the decorative cover photo stops beneath the ribbon. Product photos
    and saved/custom ribbon placements retain their existing geometry. */
-.brochure-page.cover-with-uuu:has(> .cover-element-band.cover-band-default-artwork) > .cover-campaign-art {
+.brochure-page.cover-with-uuu:has(
+    > .cover-element-band.cover-band-default-artwork
+  )
+  > .cover-campaign-art {
   clip-path: polygon(0 0, 100% 0, 100% 57.95cqw, 0 60.25cqw);
 }
-.brochure-page.cover-with-uuu .cover-element-message p{font-style:italic;text-align:left}
-.brochure-page.cover-with-uuu .cover-element-message.cover-band-default-message {
+.brochure-page.cover-with-uuu .cover-element-message p {
+  font-style: italic;
+  text-align: left;
+}
+.brochure-page.cover-with-uuu
+  .cover-element-message.cover-band-default-message {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.brochure-page.cover-with-uuu .cover-element-message.cover-band-default-message p {
+.brochure-page.cover-with-uuu
+  .cover-element-message.cover-band-default-message
+  p {
   width: 100%;
   text-align: center;
   transform: rotate(-3deg);
   transform-origin: center;
 }
 /* The native blue ribbon already provides a readable text surface. */
-.brochure-page.cover-with-uuu:has(> .cover-element-band.cover-band-default-artwork) .cover-element-message.cover-band-default-message {
+.brochure-page.cover-with-uuu:has(
+    > .cover-element-band.cover-band-default-artwork
+  )
+  .cover-element-message.cover-band-default-message {
   background: transparent;
   border-radius: 0;
 }
 
-.brochure-page.cover-editable-elements .cover-featured-product .brochure-product-image{height:100%;max-height:100%;object-fit:contain}
+.brochure-page.cover-editable-elements
+  .cover-featured-product
+  .brochure-product-image {
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cover-editable-element.is-selected > .cover-element-tools {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cover-editable-element.is-selected {
+  outline: 1px solid #30baff;
+}
+.cover-element-tools > button.cover-manage-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: max-content;
+  max-width: min(220px, 80cqw);
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 8px;
+  box-shadow: 0 3px 12px #0e2a4626;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244a66);
+  font:
+    600 12px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+  white-space: nowrap;
+}
+.cover-manage-image svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}

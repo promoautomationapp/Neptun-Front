@@ -200,3 +200,130 @@ html[data-theme="dark"] .brochure-page .page-text-toolbar button {
     display: none;
   }
 }
+
+.cs-page-layer-library {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.cs-page-layer-library > strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--np-text, #244a66);
+}
+.cs-page-layer-library > strong > span {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 20px;
+  background: var(--np-raised, #edf5fa);
+  color: var(--np-muted, #648198);
+  text-align: center;
+}
+.cs-page-layer-list {
+  display: grid;
+  gap: 6px;
+  max-height: 264px;
+  overflow-y: auto;
+}
+.cs-page-layer-choice {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 58px;
+  padding: 7px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 9px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244a66);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.cs-page-layer-choice[aria-pressed="true"] {
+  border-color: var(--np-accent, #267eb9);
+  box-shadow: inset 0 0 0 1px var(--np-accent, #267eb9);
+  background: var(--np-raised, #edf5fa);
+}
+.cs-page-layer-choice:focus-visible {
+  outline: 2px solid var(--np-accent, #267eb9);
+  outline-offset: 2px;
+}
+.cs-page-layer-thumbnail {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 6px;
+  background: var(--np-raised, #f1f6fa);
+  color: var(--np-text, #244a66);
+}
+.cs-page-layer-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cs-page-layer-choice > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.cs-page-layer-choice > span:nth-child(2) > b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cs-page-layer-choice small {
+  color: var(--np-muted, #648198);
+  font-size: 11px;
+}
+.cs-page-layer-selected {
+  color: var(--np-accent, #267eb9);
+  font-weight: 700;
+}
+.cs-page-layers-controls > .cs-page-layer-empty {
+  padding: 12px;
+  border: 1px dashed var(--np-border, #cbdce7);
+  border-radius: 8px;
+  background: var(--np-raised, #f5f9fb);
+}
+
+.brochure-page .brochure-floating-artwork button.page-image-manage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  top: 6px;
+  left: 6px;
+  width: max-content;
+  max-width: min(220px, 80cqw);
+  height: auto;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 8px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244a66);
+  box-shadow: 0 3px 12px #0e2a4626;
+  font:
+    600 12px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.brochure-page
+  .brochure-floating-artwork:is(:hover, :focus-within, .is-selected)
+  button.page-image-manage {
+  opacity: 1;
+}
+.brochure-page .page-image-manage svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}

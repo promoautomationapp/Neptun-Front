@@ -19,9 +19,13 @@ export function useImagePicker() {
 
 export function ImagePickerProvider({
   settings,
+  onAddLayer,
+  onManageLayers,
   children,
 }: {
   settings?: Settings;
+  onAddLayer?: (source: string) => void;
+  onManageLayers?: () => void;
   children: React.ReactNode;
 }) {
   const [request, setRequest] = useState<
@@ -41,6 +45,8 @@ export function ImagePickerProvider({
           currentSource={request.source}
           title={request.title}
           kind={request.kind}
+          onAddLayer={onAddLayer}
+          onManageLayers={onManageLayers}
           onSelect={request.onSelect}
           onClose={() => setRequest(null)}
         />

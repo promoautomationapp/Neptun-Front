@@ -107,6 +107,11 @@ it("double-clicks an image to replace it and a savings badge to switch units wit
   act(() => vi.advanceTimersByTime(500));
   expect(change).toHaveBeenCalledWith({ savingMode: "percentage" });
   expect(view.queryByRole("dialog")).toBeNull();
+  fireEvent.click(view.getByAltText("TV"));
+  expect(image).not.toHaveBeenCalled();
+  fireEvent.click(view.getByRole("button", { name: "Manage image" }));
+  expect(image).toHaveBeenCalledWith(product);
+  image.mockClear();
   fireEvent.doubleClick(view.getByAltText("TV"));
   expect(image).toHaveBeenCalledWith(product);
 });

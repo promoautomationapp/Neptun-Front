@@ -1,4 +1,5 @@
 import { EditorIcon } from "./EditorIcon";
+import { useImagePicker } from "./ImagePickerProvider";
 import { PageDecorations, type PageDecorationChange } from "./PageDecorations";
 import { isOctoberBrochure, OCTOBER_ASSETS } from "./octoberDesign";
 import { ActionMenu } from "./ActionMenu";
@@ -839,6 +840,7 @@ export interface BrochurePageProps extends ProductEditingProps {
   onReplaceCoverLogo?: (file: File) => void;
   onChooseCoverLogo?: () => void;
   onReplaceCoverPhoto?: (file: File) => void;
+  onCoverImageChange?: (source: string) => void;
   onReplaceCoverArtwork?: (key: string, file: File) => void;
   onPageDecorationChange?: PageDecorationChange;
   onCoverTextChange?: (
@@ -2423,6 +2425,7 @@ function CoverPageContent({
   onReplaceCoverLogo,
   onChooseCoverLogo,
   onReplaceCoverPhoto,
+  onCoverImageChange,
   onReplaceCoverArtwork,
   onCoverTextChange,
   onFooterTextChange,
@@ -2435,6 +2438,7 @@ function CoverPageContent({
   draggingCode,
   dropCode,
 }: BrochurePageProps) {
+  const chooseImage = useImagePicker();
   const products = coverProducts(campaign);
   const ribbonGradientId = `cover-ribbon-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
@@ -2525,6 +2529,7 @@ function CoverPageContent({
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
           onReplaceFile={onReplaceCoverPhoto}
+          onChooseImage={chooseImage && onCoverImageChange ? () => chooseImage({source: coverArt, kind: "image", title: t("Manage image"), onSelect: onCoverImageChange}) : undefined}
         >
           {coverArt ? (
             <img src={coverArt} alt={t("Cover photograph")} draggable={false} />
@@ -2742,6 +2747,7 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="band"
+          onChooseImage={chooseImage && onCampaignAssetChange ? () => chooseImage({source: campaign.campaignAssets?.["cover-band"]?.image || (october ? OCTOBER_ASSETS.uuu : brochureAssetSource(campaign, "coverBand")), kind: "image", title: t("Manage image"), onSelect: (image) => onCampaignAssetChange("cover-band", {image})}) : undefined}
           onReplaceFile={
             onReplaceCoverArtwork
               ? (file) => onReplaceCoverArtwork("cover-band", file)
@@ -2782,6 +2788,7 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="october-hajde"
+          onChooseImage={chooseImage && onCampaignAssetChange ? () => chooseImage({source: campaign.campaignAssets?.["cover-hajde"]?.image || OCTOBER_ASSETS.hajdeWhite, kind: "image", title: t("Manage image"), onSelect: (image) => onCampaignAssetChange("cover-hajde", {image})}) : undefined}
           onReplaceFile={
             onReplaceCoverArtwork
               ? (file) => onReplaceCoverArtwork("cover-hajde", file)

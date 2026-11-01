@@ -9,6 +9,7 @@ import {
   fireEvent,
   render,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SocialPost } from "../../src/domain/models";
@@ -25,6 +26,7 @@ import { readImage } from "../../src/features/brochure/utils";
 import { requestAi } from "../../src/features/ai/ai.api";
 import type * as UtilsModule from "../../src/features/brochure/utils";
 import type * as BrandLogosModule from "../../src/features/brochure/brandLogos";
+import { resolveSettings } from "../../src/features/settings/settings.schema";
 
 vi.mock("../../src/features/social/socialStorage", () => ({
   getPosts: vi.fn(),
@@ -74,7 +76,10 @@ function fixture(name = "Social QA"): SocialPost {
 function open(view: ReturnType<typeof render>, name = "Social QA") {
   return view
     .findByRole("button", { name: new RegExp(name) })
-    .then((button) => { fireEvent.click(button); fireEvent.click(view.getByRole("button", {name: t("Designs")})); });
+    .then((button) => {
+      fireEvent.click(button);
+      fireEvent.click(view.getByRole("button", { name: t("Designs") }));
+    });
 }
 beforeEach(() => {
   setLanguage("en");
@@ -168,6 +173,136 @@ it("adds separate images, moves/resizes one, and restores both layers on reload 
   expect(
     reloaded.getByLabelText("artwork.png").getAttribute("style"),
   ).toContain("width: 20%");
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("offers image management after a click and adds a layer without replacing the image, then persists layer order and visibility", async () => {
+  stored[0]!.artworks = [
+    {
+      id: "original",
+      name: "Original image",
+      image: "/original.png",
+      x: 50,
+      y: 50,
+      width: 35,
+    },
+  ];
+  const settings = resolveSettings(null);
+  settings.logoLibrary = [
+    {
+      id: "layer-fixture",
+      name: "Layer fixture",
+      url: "/api/assets/legacy/layer-fixture.png",
+    },
+  ];
+  const view = render(
+    <SocialStudio catalog={[]} campaigns={[]} settings={settings} />,
+  );
+  await open(view);
+  fireEvent.click(view.getByLabelText("Original image"));
+  expect(
+    view.getByLabelText("Original image").classList.contains("selected"),
+  ).toBe(true);
+  fireEvent.click(
+    view.getByRole("button", { name: "Manage image: Original image" }),
+  );
+  const picker = await view.findByRole("dialog", { name: "Manage image" });
+  fireEvent.click(
+    within(picker).getByRole("button", { name: "Select image: Layer fixture" }),
+  );
+  fireEvent.click(
+    within(picker).getByRole("button", { name: "Add as new layer" }),
+  );
+  expect(view.getByAltText("Original image").getAttribute("src")).toBe(
+    "/original.png",
+  );
+  expect(view.getByAltText("Added image").getAttribute("src")).toContain(
+    "layer-fixture.png",
+  );
+  expect(
+    Number(view.getByLabelText("Added image").style.zIndex),
+  ).toBeGreaterThan(Number(view.getByLabelText("Original image").style.zIndex));
+  fireEvent.click(view.getByRole("button", { name: "Layers" }));
+  const layers = await view.findByRole("dialog", { name: "Layers" });
+  fireEvent.click(
+    within(layers).getByRole("button", { name: "Move backward: Added image" }),
+  );
+  expect(Number(view.getByLabelText("Added image").style.zIndex)).toBeLessThan(
+    Number(view.getByLabelText("Original image").style.zIndex),
+  );
+  fireEvent.click(
+    within(layers).getByRole("button", { name: "Hide: Original image" }),
+  );
+  expect(view.queryByLabelText("Original image")).toBeNull();
+  await waitFor(
+    () => {
+      expect(stored[0]?.artworks?.map((artwork) => artwork.image)).toEqual([
+        "/api/assets/legacy/layer-fixture.png",
+        "/original.png",
+      ]);
+      expect(stored[0]?.artworks?.[1]?.hidden).toBe(true);
+    },
+    { timeout: 2500 },
+  );
+  expect(stored[0]?.products[0]?.image).toBe("/prepared-one.png");
+  view.unmount();
+  const restored = render(
+    <SocialStudio catalog={[]} campaigns={[]} settings={settings} />,
+  );
+  await open(restored);
+  expect(restored.getByLabelText("Added image")).toBeTruthy();
+  expect(restored.queryByLabelText("Original image")).toBeNull();
+  fireEvent.click(restored.getByRole("button", { name: "Layers" }));
+  fireEvent.click(
+    within(await restored.findByRole("dialog", { name: "Layers" })).getByRole(
+      "button",
+      { name: "Show: Original image" },
+    ),
+  );
+  expect(restored.getByLabelText("Original image")).toBeTruthy();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("opens additive layers from the product image editor and the Images menu", async () => {
+  const settings = resolveSettings(null);
+  settings.logoLibrary = [
+    {
+      id: "layer-fixture",
+      name: "Layer fixture",
+      url: "/api/assets/legacy/layer-fixture.png",
+    },
+  ];
+  const view = render(
+    <SocialStudio catalog={[]} campaigns={[]} settings={settings} />,
+  );
+  await open(view);
+  fireEvent.click(view.getAllByTitle("Change image")[0]!);
+  const productEditor = await view.findByRole("dialog", {
+    name: "Change product image",
+  });
+  fireEvent.click(
+    within(productEditor).getByRole("button", { name: "Add image layer" }),
+  );
+  const layerPicker = await view.findByRole("dialog", {
+    name: "Add image layer",
+  });
+  fireEvent.click(
+    within(layerPicker).getByRole("button", {
+      name: "Select image: Layer fixture",
+    }),
+  );
+  fireEvent.click(
+    within(layerPicker).getByRole("button", { name: "Add image layer" }),
+  );
+  await waitFor(() => expect(stored[0]?.artworks).toHaveLength(1), {
+    timeout: 2500,
+  });
+  expect(stored[0]?.products[0]?.image).toBe("/prepared-one.png");
+  fireEvent.click(view.getByText("Images", { exact: true }));
+  fireEvent.click(await view.findByRole("button", { name: "Add image layer" }));
+  expect(
+    await view.findByRole("dialog", { name: "Add image layer" }),
+  ).toBeTruthy();
   expect(requestAi).not.toHaveBeenCalled();
 });
 

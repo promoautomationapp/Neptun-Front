@@ -96,6 +96,7 @@ import { SocialBrandingPanel } from "./SocialBrandingPanel";
 import { brandingVisibility, chooseSocialBranding, socialBrandingSource, socialBrandingText as brandingText, type SocialBrandingKind } from "./socialBranding";
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
 import { ActionMenu } from "../brochure/ActionMenu";
+import { EditorIcon } from "../brochure/EditorIcon";
 import {
   BrochureComments,
   type ReviewActionHandler,
@@ -709,11 +710,11 @@ export function PostCanvas({
           source={post.customLogo}
         />
       )}
-      {(post.artworks || []).map((artwork: Artwork) =>
+      {(post.artworks || []).map((artwork: Artwork, index) =>
         artwork.type === "text" ? (
           <SocialCanvasText
             key={artwork.id}
-            artwork={artwork}
+            artwork={{ ...artwork, zIndex: 30 + index }}
             onChange={
               onChangeArtwork
                 ? (patch) => onChangeArtwork(artwork.id, patch)
@@ -732,6 +733,7 @@ export function PostCanvas({
               source={artwork.image}
               position={artwork}
               width={artwork.width}
+              zIndex={30 + index}
               editable={Boolean(onUpdateAsset)}
               onGestureStart={() => setDraggingCanvas(true)}
               onGestureEnd={() => setDraggingCanvas(false)}
@@ -1529,6 +1531,8 @@ export function SocialStudio({
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("pointer");
   const [showDesigns, setShowDesigns] = useState(false);
   const [savedImages, setSavedImages] = useState(false);
+  const [imageLayerPicker, setImageLayerPicker] = useState(false);
+  const [showLayers, setShowLayers] = useState(false);
   const [brandingPanel, setBrandingPanel] = useState(false);
   const [brandingPicker, setBrandingPicker] = useState<SocialBrandingKind | {artworkId:string} | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -1912,6 +1916,14 @@ export function SocialStudio({
         width: 20,
       });
     });
+  }
+  function addImageLayer(source: string) {
+    addSavedArtwork({
+      id: crypto.randomUUID(),
+      name: t("Added image"),
+      url: source,
+    });
+    setCanvasTool("pointer");
   }
   async function deleteActive() {
     if (!post) return;
@@ -2329,7 +2341,169 @@ export function SocialStudio({
         </div>
       )}
       {post && brandingPanel && <SocialBrandingPanel post={post} onUpdate={update} onChoose={(kind) => {setBrandingPanel(false);setBrandingPicker(kind);}} onClose={() => setBrandingPanel(false)} />}
-      {post && brandingPicker && <CoverLogoPicker settings={settings} kind={typeof brandingPicker === "string" ? "logo" : "image"} title={typeof brandingPicker === "string" ? brandingText("Change logo") : t("Change image")} currentSource={typeof brandingPicker === "string" ? socialBrandingSource(post, brandingPicker) : post.artworks?.find((artwork) => artwork.id === brandingPicker.artworkId)?.image} onClose={() => setBrandingPicker(null)} onSelect={(source) => {update((draft) => { if (typeof brandingPicker === "string") chooseSocialBranding(draft,brandingPicker,source); else {const artwork=draft.artworks?.find((item) => item.id===brandingPicker.artworkId); if(artwork) artwork.image=source;} }); setBrandingPicker(null);setCanvasTool("pointer");}} />}
+      {post && brandingPicker && (
+        <CoverLogoPicker
+          settings={settings}
+          kind={typeof brandingPicker === "string" ? "logo" : "image"}
+          title={
+            typeof brandingPicker === "string"
+              ? brandingText("Change logo")
+              : t("Manage image")
+          }
+          currentSource={
+            typeof brandingPicker === "string"
+              ? socialBrandingSource(post, brandingPicker)
+              : post.artworks?.find(
+                  (artwork) => artwork.id === brandingPicker.artworkId,
+                )?.image
+          }
+          onClose={() => setBrandingPicker(null)}
+          onAddLayer={addImageLayer}
+          onManageLayers={() => setShowLayers(true)}
+          onSelect={(source) => {
+            update((draft) => {
+              if (typeof brandingPicker === "string")
+                chooseSocialBranding(draft, brandingPicker, source);
+              else {
+                const artwork = draft.artworks?.find(
+                  (item) => item.id === brandingPicker.artworkId,
+                );
+                if (artwork) artwork.image = source;
+              }
+            });
+            setCanvasTool("pointer");
+          }}
+        />
+      )}
+      {post && imageLayerPicker && (
+        <CoverLogoPicker
+          settings={settings}
+          kind="image"
+          title={t("Add image layer")}
+          confirmLabel={t("Add image layer")}
+          onClose={() => setImageLayerPicker(false)}
+          onSelect={addImageLayer}
+        />
+      )}
+      {post && showLayers && (
+        <Modal title={t("Layers")} onClose={() => setShowLayers(false)}>
+          <p>
+            {t("Keep the current image and place another image over it.")}
+          </p>
+          <button
+            type="button"
+            className="cs-button"
+            onClick={() => {
+              setShowLayers(false);
+              setImageLayerPicker(true);
+            }}
+          >
+            <EditorIcon name="plus" /> {t("Add image layer")}
+          </button>
+          <div className="social-layer-list">
+            {!(post.artworks || []).length && (
+              <p>{t("No added layers yet.")}</p>
+            )}
+            {[...(post.artworks || [])]
+              .reverse()
+              .map((artwork, index, layers) => (
+                <section className="social-layer-row" key={artwork.id}>
+                  {artwork.type === "text" ? (
+                    <b aria-hidden="true">T</b>
+                  ) : (
+                    <img src={resolveAsset(artwork.image || "")} alt="" />
+                  )}
+                  <strong>
+                    {artwork.type === "text"
+                      ? artwork.text || t("Text")
+                      : artwork.name || t("Added image")}
+                  </strong>
+                  <div className="social-layer-actions">
+                    <button
+                      type="button"
+                      aria-label={`${t("Move forward")}: ${artwork.name || artwork.text}`}
+                      disabled={index === 0}
+                      onClick={() =>
+                        update((draft) => {
+                          const values = draft.artworks || [];
+                          const from = values.findIndex(
+                            (item) => item.id === artwork.id,
+                          );
+                          if (from >= 0 && from < values.length - 1)
+                            [values[from], values[from + 1]] = [
+                              values[from + 1]!,
+                              values[from]!,
+                            ];
+                        })
+                      }
+                    >
+                      <EditorIcon name="chevron-up" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${t("Move backward")}: ${artwork.name || artwork.text}`}
+                      disabled={index === layers.length - 1}
+                      onClick={() =>
+                        update((draft) => {
+                          const values = draft.artworks || [];
+                          const from = values.findIndex(
+                            (item) => item.id === artwork.id,
+                          );
+                          if (from > 0)
+                            [values[from], values[from - 1]] = [
+                              values[from - 1]!,
+                              values[from]!,
+                            ];
+                        })
+                      }
+                    >
+                      <EditorIcon name="chevron-down" />
+                    </button>
+                    {artwork.type !== "text" && (
+                      <button
+                        type="button"
+                        aria-label={`${t("Manage image")}: ${artwork.name || t("Added image")}`}
+                        onClick={() => {
+                          setShowLayers(false);
+                          setBrandingPicker({ artworkId: artwork.id });
+                        }}
+                      >
+                        <EditorIcon name="edit" /> {t("Manage image")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`${t(artwork.hidden ? "Show" : "Hide")}: ${artwork.name || artwork.text}`}
+                      onClick={() =>
+                        update((draft) => {
+                          const item = draft.artworks?.find(
+                            (entry) => entry.id === artwork.id,
+                          );
+                          if (item) item.hidden = !item.hidden;
+                        })
+                      }
+                    >
+                      {t(artwork.hidden ? "Show" : "Hide")}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${t("Delete")}: ${artwork.name || artwork.text}`}
+                      onClick={() =>
+                        update((draft) => {
+                          draft.artworks = (draft.artworks || []).filter(
+                            (item) => item.id !== artwork.id,
+                          );
+                        })
+                      }
+                    >
+                      <EditorIcon name="trash" /> {t("Delete")}
+                    </button>
+                  </div>
+                </section>
+              ))}
+          </div>
+        </Modal>
+      )}
       {post && savedImages && (
         <Modal
           title={t("Saved logos and images")}
@@ -3299,6 +3473,9 @@ export function SocialStudio({
                       </>
                     }
                   >
+                    <button type="button" onClick={() => setImageLayerPicker(true)}>
+                      <EditorIcon name="layers" /> {t("Add image layer")}
+                    </button>
                     <FileUpload
                       aria-label={t("Upload images to post")}
                       accept="image/*"
@@ -3318,6 +3495,11 @@ export function SocialStudio({
                     <button type="button" onClick={() => setBrandingPicker("custom")}>{brandingText("Add logo or badge")}</button>
                     <button type="button" onClick={() => setBrandingPanel(true)}>{brandingText("Manage logos and layout")}</button>
                   </ActionMenu>
+                )}
+                {!previewMode && (
+                  <button type="button" className="social-dock-action" onClick={() => setShowLayers(true)}>
+                    <EditorIcon name="layers" /> {t("Layers")}
+                  </button>
                 )}
                 <span className="social-dock-spacer" />
                 {!previewMode && (
@@ -4236,6 +4418,11 @@ export function SocialStudio({
               delete item.screenArtwork;
             })
           }
+          settings={settings}
+          onEditArtwork={() => {
+            setImageCode(null);
+            setImageLayerPicker(true);
+          }}
           onClose={() => setImageCode(null)}
         />
       )}

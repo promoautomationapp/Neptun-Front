@@ -251,6 +251,33 @@ it("keeps dropping a file onto a page image direct even when a picker is availab
   expect(requestAi).not.toHaveBeenCalled();
 });
 
+it("adds a separate image layer from image management without replacing the selected image", () => {
+  const replace = vi.fn(),
+    add = vi.fn(),
+    manage = vi.fn();
+  const view = render(
+    <ImagePickerProvider onAddLayer={add} onManageLayers={manage}>
+      <PageArtwork
+        campaign={{ pageArtworks: { cover: [pageImage] } }}
+        pageKey="cover"
+        onChange={replace}
+      />
+    </ImagePickerProvider>,
+  );
+  fireEvent.click(view.getByRole("img", { name: "Page artwork" }));
+  fireEvent.click(view.getByRole("button", { name: "Manage image" }));
+  expect(view.getByText("Image layers")).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "Add as new layer" }));
+  expect(add).toHaveBeenCalledExactlyOnceWith(pageImage.image);
+  expect(replace).not.toHaveBeenCalled();
+  expect(view.queryByRole("dialog")).toBeNull();
+  fireEvent.doubleClick(view.getByRole("img", { name: "Page artwork" }));
+  fireEvent.click(view.getByRole("button", { name: "Manage layers" }));
+  expect(manage).toHaveBeenCalledOnce();
+  expect(view.queryByRole("dialog")).toBeNull();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
 it.each(["campaign", "brand"])(
   "keeps the standalone %s asset upload available without a provider",
   (kind) => {

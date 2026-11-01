@@ -12,6 +12,7 @@ export interface CanvasAssetProps {
   position?: Placement;
   presetStyle?: CSSProperties;
   width: number;
+  zIndex?: number;
   minWidth?: number;
   maxWidth?: number;
   editable?: boolean;
@@ -79,7 +80,7 @@ interface ProductVisualGesture {
 import { hasApplePhotos } from "../brochure/productTypes";
 import { APPLE_PHOTO_CLEARANCE_EVENT } from "../brochure/ApplePhotoClearance";
 import { isBundleOffer } from "../brochure/productBundles";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { otherScreenInches, tvScreenInches } from "../brochure/tvSpecs";
 import { tvInchesEmbedded } from "../brochure/imageReview";
 import {
@@ -101,6 +102,7 @@ export function CanvasAsset({
   position,
   presetStyle,
   width,
+  zIndex,
   minWidth = 4,
   maxWidth = 70,
   editable,
@@ -112,6 +114,20 @@ export function CanvasAsset({
   onGestureEnd,
 }: CanvasAssetProps) {
   const gesture = useRef<AssetGesture | null>(null);
+  const assetRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(false);
+  useEffect(() => {
+    if (!selected) return;
+    const dismiss = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !assetRef.current?.contains(event.target)
+      )
+        setSelected(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [selected]);
   const style = position
     ? {
         left: `${position.x}%`,
@@ -174,10 +190,19 @@ export function CanvasAsset({
   }
   return (
     <div
-      className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""}`}
-      style={style}
+      ref={assetRef}
+      className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""} ${selected ? "selected" : ""}`}
+      style={{ ...style, zIndex }}
       aria-label={name}
-      onPointerDown={editable ? (event) => start(event, "move") : undefined}
+      onPointerDown={
+        editable
+          ? (event) => {
+              setSelected(true);
+              start(event, "move");
+            }
+          : undefined
+      }
+      onClick={editable ? () => setSelected(true) : undefined}
       onPointerMove={editable ? move : undefined}
       onPointerUp={editable ? end : undefined}
       onPointerCancel={editable ? end : undefined}
@@ -197,8 +222,8 @@ export function CanvasAsset({
             <button
               type="button"
               className="social-asset-edit"
-              aria-label={`${t("Change")} ${name}`}
-              title={`${t("Change")} ${name}`}
+              aria-label={`${t("Manage image")}: ${name}`}
+              title={`${t("Manage image")}: ${name}`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={onEdit}
             >
@@ -211,6 +236,7 @@ export function CanvasAsset({
               >
                 <path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15Z" />
               </svg>
+              <span>{t("Manage image")}</span>
             </button>
           )}
           <button
