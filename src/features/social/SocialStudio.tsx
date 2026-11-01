@@ -199,6 +199,12 @@ type ReviewItem = {
   brand: string;
 };
 type AssetPlacement = { x: number; y: number; width: number };
+function socialLayerName(artwork: Artwork) {
+  if (artwork.type === "text") return artwork.text || t("Text");
+  if (!artwork.name || artwork.name === "Color layer")
+    return t(artwork.type === "overlay" ? "Color layer" : "Added image");
+  return artwork.name;
+}
 interface PostCanvasProps {
   post: SocialPost;
   onMove?: (code: string, x: number, y: number) => void;
@@ -729,7 +735,7 @@ export function PostCanvas({
           !artwork.hidden && (
             <CanvasAsset
               key={artwork.id}
-              name={t(artwork.name || (artwork.type === "overlay" ? "Color layer" : "Added image"))}
+              name={socialLayerName(artwork)}
               artwork
               source={artwork.image}
               position={artwork}
@@ -2418,7 +2424,7 @@ export function SocialStudio({
           <div className="social-layer-workspace">
           <div className="social-layer-controls">
           <p>
-            {t("Keep the current image and place another image over it.")}
+            {t("Add images, text or a color layer. Changes appear in the preview.")}
           </p>
           <button
             type="button"
@@ -2439,7 +2445,9 @@ export function SocialStudio({
             )}
             {[...(post.artworks || [])]
               .reverse()
-              .map((artwork, index, layers) => (
+              .map((artwork, index, layers) => {
+                const name = socialLayerName(artwork);
+                return (
                 <section className="social-layer-row" key={artwork.id}>
                   {artwork.type === "text" ? (
                     <b aria-hidden="true">T</b>
@@ -2449,17 +2457,15 @@ export function SocialStudio({
                     <img src={resolveAsset(artwork.image || "")} alt="" />
                   )}
                   <strong>
-                    {artwork.type === "text"
-                      ? artwork.text || t("Text")
-                      : t(artwork.name || (artwork.type === "overlay" ? "Color layer" : "Added image"))}
+                    {name}
                   </strong>
                   <div className="social-layer-settings">
                     {artwork.type === "overlay" && (
                       <label className="social-layer-color-control">
                         {t("Color")}
                         <span>
-                          <input type="color" aria-label={`${t("Layer color")}: ${t(artwork.name || "Color layer")}`} value={validBackgroundColor(artwork.color) || "#1b4075"} onChange={(event) => changeLayer(artwork.id, { color: event.target.value })} />
-                          <input type="text" key={artwork.color} defaultValue={artwork.color || "#1b4075"} maxLength={7} aria-label={`${t("Color code")}: ${t(artwork.name || "Color layer")}`} onBlur={(event) => {
+                          <input type="color" aria-label={`${t("Layer color")}: ${name}`} value={validBackgroundColor(artwork.color) || "#1b4075"} onChange={(event) => changeLayer(artwork.id, { color: event.target.value })} />
+                          <input type="text" key={artwork.color} defaultValue={artwork.color || "#1b4075"} maxLength={7} aria-label={`${t("Color code")}: ${name}`} onBlur={(event) => {
                             const color = validBackgroundColor(event.currentTarget.value);
                             if (color) changeLayer(artwork.id, { color });
                             else event.currentTarget.value = artwork.color || "#1b4075";
@@ -2467,12 +2473,12 @@ export function SocialStudio({
                         </span>
                       </label>
                     )}
-                    <LayerOpacityControl value={artwork.opacity ?? 1} label={`${t("Opacity")}: ${t(artwork.name || (artwork.type === "text" ? "Text" : artwork.type === "overlay" ? "Color layer" : "Added image"))}`} onChange={(opacity) => changeLayer(artwork.id, { opacity })} />
+                    <LayerOpacityControl value={artwork.opacity ?? 1} label={`${t("Opacity")}: ${name}`} onChange={(opacity) => changeLayer(artwork.id, { opacity })} />
                     <div className="social-layer-dimensions">
                       {(["x", "y", "width", ...(artwork.type === "overlay" ? ["height"] : [])] as ("x" | "y" | "width" | "height")[]).map((field) => (
                         <label key={field}>
-                          {t({ x: "Left", y: "Top", width: "Width", height: "Height" }[field])} · %
-                          <input type="number" min={field === "width" || field === "height" ? 1 : 0} max={100} step={1} aria-label={`${t({ x: "Layer X position", y: "Layer Y position", width: "Layer width", height: "Layer height" }[field])}: ${t(artwork.name || "Added image")}`} value={artwork[field] ?? (field === "height" ? 35 : 0)} onChange={(event) => changeLayer(artwork.id, { [field]: Math.max(field === "width" || field === "height" ? 1 : 0, Math.min(100, Number(event.target.value))) })} />
+                          {t({ x: "Horizontal position", y: "Vertical position", width: "Width", height: "Height" }[field])} · %
+                          <input type="number" min={field === "width" || field === "height" ? 1 : 0} max={100} step={1} aria-label={`${t({ x: "Layer X position", y: "Layer Y position", width: "Layer width", height: "Layer height" }[field])}: ${name}`} value={artwork[field] ?? (field === "height" ? 35 : 0)} onChange={(event) => changeLayer(artwork.id, { [field]: Math.max(field === "width" || field === "height" ? 1 : 0, Math.min(100, Number(event.target.value))) })} />
                         </label>
                       ))}
                     </div>
@@ -2480,7 +2486,7 @@ export function SocialStudio({
                   <div className="social-layer-actions">
                     <button
                       type="button"
-                      aria-label={`${t("Move forward")}: ${artwork.name || artwork.text}`}
+                      aria-label={`${t("Move forward")}: ${name}`}
                       disabled={index === 0}
                       onClick={() =>
                         update((draft) => {
@@ -2500,7 +2506,7 @@ export function SocialStudio({
                     </button>
                     <button
                       type="button"
-                      aria-label={`${t("Move backward")}: ${artwork.name || artwork.text}`}
+                      aria-label={`${t("Move backward")}: ${name}`}
                       disabled={index === layers.length - 1}
                       onClick={() =>
                         update((draft) => {
@@ -2521,7 +2527,7 @@ export function SocialStudio({
                     {artwork.type !== "text" && artwork.type !== "overlay" && (
                       <button
                         type="button"
-                        aria-label={`${t("Manage image")}: ${artwork.name || t("Added image")}`}
+                        aria-label={`${t("Manage image")}: ${name}`}
                         onClick={() => {
                           setShowLayers(false);
                           setBrandingPicker({ artworkId: artwork.id });
@@ -2532,7 +2538,7 @@ export function SocialStudio({
                     )}
                     <button
                       type="button"
-                      aria-label={`${t(artwork.hidden ? "Show" : "Hide")}: ${artwork.name || artwork.text}`}
+                      aria-label={`${t(artwork.hidden ? "Show" : "Hide")}: ${name}`}
                       onClick={() =>
                         update((draft) => {
                           const item = draft.artworks?.find(
@@ -2546,7 +2552,7 @@ export function SocialStudio({
                     </button>
                     <button
                       type="button"
-                      aria-label={`${t("Delete")}: ${artwork.name || artwork.text}`}
+                      aria-label={`${t("Delete")}: ${name}`}
                       onClick={() =>
                         update((draft) => {
                           draft.artworks = (draft.artworks || []).filter(
@@ -2559,7 +2565,8 @@ export function SocialStudio({
                     </button>
                   </div>
                 </section>
-              ))}
+                );
+              })}
           </div>
           </div>
           <aside className="social-layer-preview" aria-label={t("Layer preview")} style={{ "--social-layer-preview-width": `${Math.round(28 * dims.width / dims.height)}vh` } as React.CSSProperties}>

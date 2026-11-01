@@ -119,6 +119,7 @@ export function CanvasAsset({
   onGestureStart,
   onGestureEnd,
 }: CanvasAssetProps) {
+  const editLabel = color ? t("Edit") : t("Manage image");
   const gesture = useRef<AssetGesture | null>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(false);
@@ -230,8 +231,8 @@ export function CanvasAsset({
             <button
               type="button"
               className="social-asset-edit"
-              aria-label={`${t("Manage image")}: ${name}`}
-              title={`${t("Manage image")}: ${name}`}
+              aria-label={`${editLabel}: ${name}`}
+              title={`${editLabel}: ${name}`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={onEdit}
             >
@@ -244,7 +245,7 @@ export function CanvasAsset({
               >
                 <path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15Z" />
               </svg>
-              <span>{t("Manage image")}</span>
+              <span>{editLabel}</span>
             </button>
           )}
           <button

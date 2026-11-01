@@ -2763,6 +2763,8 @@ const translations: Record<string, string> = {
   "Layer width": "Gjerësia e shtresës",
   "Layer X position": "Pozicioni horizontal i shtresës",
   "Layer Y position": "Pozicioni vertikal i shtresës",
+  "Horizontal position": "Pozicioni horizontal",
+  "Vertical position": "Pozicioni vertikal",
   "Layer preview": "Parapamja e shtresës",
   "Changes appear immediately in the preview.":
     "Ndryshimet shfaqen menjëherë në parapamje.",
