@@ -174,10 +174,10 @@ it("shows the layer controls, empty guidance and upload errors in Albanian", asy
   await waitFor(() =>
     expect(toast).toHaveBeenCalledWith("Zgjidhni imazhe më të vogla se 12 MB."),
   );
-  fireEvent.click(view.getByRole("button", { name: "Shto ngjyrë / hije" }));
+  fireEvent.click(view.getByRole("button", { name: "Shto shtresë ngjyre" }));
   expect(
     view.getByRole("button", {
-      name: "Zgjidh shtresën: Shtresë ngjyre / hijeje",
+      name: "Zgjidh shtresën: Shtresë ngjyre",
     }),
   ).toBeTruthy();
   fireEvent.click(
@@ -190,4 +190,82 @@ it("shows the layer controls, empty guidance and upload errors in Albanian", asy
   expect(
     view.getByRole("button", { name: "Hiq shtresën e zgjedhur" }),
   ).toBeTruthy();
+});
+
+it("adds a color layer over page content and keeps its 0%, 50% and 100% opacity changes without affecting products", () => {
+  const save = vi.fn();
+  const view = render(<Workspace onSave={save} />);
+  fireEvent.click(view.getByRole("button", { name: "Add color layer" }));
+  const added = (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[2];
+  expect(added).toMatchObject({
+    type: "overlay",
+    opacity: 0.5,
+    fade: "solid",
+    zIndex: 6,
+  });
+  for (const percent of [0, 100, 50]) {
+    fireEvent.click(
+      view.getByRole("button", { name: `Set opacity: ${percent}%` }),
+    );
+    const saved = save.mock.lastCall?.[0] as Campaign;
+    expect(saved.pageArtworks?.cover?.[2]?.opacity).toBe(percent / 100);
+    expect(saved.products).toEqual(initial.products);
+    expect(saved.pageArtworks?.cover?.slice(0, 2)).toEqual(
+      initial.pageArtworks?.cover,
+    );
+    expect(
+      (
+        view.getByRole("slider", {
+          name: "Page layer opacity",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe(String(percent));
+    expect(
+      (
+        view.getByRole("spinbutton", {
+          name: "Page layer opacity (%)",
+        }) as HTMLInputElement
+      ).value,
+    ).toBe(String(percent));
+  }
+  fireEvent.change(
+    view.getByRole("spinbutton", { name: "Page layer opacity (%)" }),
+    { target: { value: "37" } },
+  );
+  expect(
+    (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[2]?.opacity,
+  ).toBe(0.37);
+});
+
+it("updates a color layer from a custom hex or swatch without saving incomplete or invalid color input", () => {
+  const save = vi.fn();
+  const view = render(<Workspace empty onSave={save} />);
+  fireEvent.click(view.getByRole("button", { name: "Add color layer" }));
+  const hex = view.getByRole("textbox", { name: "Page layer color code" });
+  save.mockClear();
+  for (const value of ["#", "#2", "#23", "#234", "#2341", "#23417"]) {
+    fireEvent.change(hex, { target: { value } });
+    expect((hex as HTMLInputElement).value).toBe(value);
+  }
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.change(hex, { target: { value: "#234173" } });
+  expect(
+    (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[0]?.color,
+  ).toBe("#234173");
+  expect(
+    (view.getByLabelText("Page layer color") as HTMLInputElement).value,
+  ).toBe("#234173");
+  save.mockClear();
+  fireEvent.change(hex, { target: { value: "#ZZZZZZ" } });
+  expect(hex.getAttribute("aria-invalid")).toBe("true");
+  fireEvent.blur(hex);
+  expect((hex as HTMLInputElement).value).toBe("#234173");
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.change(view.getByLabelText("Page layer color"), {
+    target: { value: "#e64e3a" },
+  });
+  expect(
+    (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[0]?.color,
+  ).toBe("#e64e3a");
+  expect((hex as HTMLInputElement).value).toBe("#e64e3a");
 });

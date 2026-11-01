@@ -1,0 +1,130 @@
+.cs-layer-opacity {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--np-border, #d4e1e9);
+  border-radius: 10px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244a66);
+  font: inherit;
+}
+.cs-layer-opacity legend {
+  padding: 0 5px;
+  font-weight: 700;
+}
+.cs-layer-opacity-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 14px;
+}
+.cs-layer-opacity input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  min-height: 8px;
+  margin: 10px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(
+    90deg,
+    var(--np-accent, #267eb9) 0 var(--layer-opacity-percent),
+    var(--np-border, #d4e1e9) var(--layer-opacity-percent) 100%
+  );
+  cursor: pointer;
+}
+.cs-layer-opacity input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 21px;
+  height: 21px;
+  border: 3px solid var(--np-surface, #fff);
+  border-radius: 50%;
+  background: var(--np-accent, #267eb9);
+  box-shadow:
+    0 0 0 1px var(--np-accent, #267eb9),
+    0 2px 5px #16364d26;
+}
+.cs-layer-opacity input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border: 3px solid var(--np-surface, #fff);
+  border-radius: 50%;
+  background: var(--np-accent, #267eb9);
+  box-shadow:
+    0 0 0 1px var(--np-accent, #267eb9),
+    0 2px 5px #16364d26;
+}
+.cs-layer-opacity input[type="range"]:focus-visible {
+  outline: 2px solid var(--np-accent, #267eb9);
+  outline-offset: 6px;
+}
+.cs-layer-opacity .cs-layer-opacity-value {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 0 8px 0 0;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 8px;
+  background: var(--np-raised, #f5f9fb);
+}
+.cs-layer-opacity .cs-layer-opacity-value:focus-within {
+  outline: 2px solid var(--np-accent, #267eb9);
+  outline-offset: 2px;
+}
+.cs-layer-opacity .cs-layer-opacity-controls .cs-layer-opacity-value input {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 7px 0 7px 8px;
+  border: 0;
+  outline: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+}
+.cs-layer-opacity-value input::-webkit-inner-spin-button,
+.cs-layer-opacity-value input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.cs-layer-opacity-value input[type="number"] {
+  -moz-appearance: textfield;
+}
+.cs-layer-opacity-scale {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--np-muted, #648198);
+  font-size: 11px;
+}
+.cs-layer-opacity-presets {
+  display: flex;
+  gap: 6px;
+}
+.cs-layer-opacity-presets button {
+  min-width: 48px;
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 6px;
+  background: var(--np-surface, #fff);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.cs-layer-opacity-presets button[aria-pressed="true"] {
+  border-color: var(--np-accent, #267eb9);
+  background: var(--np-raised, #edf5fa);
+  color: var(--np-accent, #267eb9);
+  font-weight: 700;
+}

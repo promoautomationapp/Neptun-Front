@@ -124,6 +124,7 @@ export function SocialCanvasText({
     >
       <div
         ref={text}
+        style={{ opacity: Math.max(0, Math.min(1, value.opacity ?? 1)) }}
         data-social-text-layer={artwork.id}
         role={onChange ? "textbox" : undefined}
         aria-label={onChange ? t("Text layer") : undefined}

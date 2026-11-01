@@ -12,6 +12,9 @@ export interface CanvasAssetProps {
   position?: Placement;
   presetStyle?: CSSProperties;
   width: number;
+  height?: number;
+  color?: string;
+  opacity?: number;
   zIndex?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -102,6 +105,9 @@ export function CanvasAsset({
   position,
   presetStyle,
   width,
+  height,
+  color,
+  opacity = 1,
   zIndex,
   minWidth = 4,
   maxWidth = 70,
@@ -192,7 +198,7 @@ export function CanvasAsset({
     <div
       ref={assetRef}
       className={`social-canvas-asset ${artwork ? "social-artwork-asset" : ""} ${editable ? "editable" : ""} ${selected ? "selected" : ""}`}
-      style={{ ...style, zIndex }}
+      style={{ ...style, height: height === undefined ? undefined : `${height}%`, zIndex }}
       aria-label={name}
       onPointerDown={
         editable
@@ -215,7 +221,9 @@ export function CanvasAsset({
           : undefined
       }
     >
-      {source ? <img src={source} alt={name} draggable={false} /> : children}
+      {color ? (
+        <div className="social-color-layer" style={{ backgroundColor: color, opacity: clamp(opacity, 0, 1) }} />
+      ) : source ? <img src={source} alt={name} draggable={false} style={{ opacity: clamp(opacity, 0, 1) }} /> : children}
       {editable && (
         <div className="social-asset-tools" data-export-hide="true">
           {onEdit && (

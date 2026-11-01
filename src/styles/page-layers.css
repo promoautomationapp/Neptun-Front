@@ -327,3 +327,66 @@ html[data-theme="dark"] .brochure-page .page-text-toolbar button {
   height: 17px;
   flex-shrink: 0;
 }
+
+.cs-page-layer-actions > .cs-page-add-color {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border-color: var(--np-accent, #267eb9);
+  background: var(--np-raised, #edf5fa);
+  color: var(--np-accent, #267eb9);
+  font-weight: 700;
+}
+.cs-page-layer-color {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--np-border, #d4e1e9);
+  border-radius: 10px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #244a66);
+}
+.cs-page-layer-color legend {
+  padding: 0 5px;
+  font-weight: 700;
+}
+.cs-page-layer-color > div {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
+}
+.cs-page-layer-color input[type="color"] {
+  width: 56px;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 3px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 8px;
+  background: var(--np-raised, #f5f9fb);
+  cursor: pointer;
+}
+.cs-page-layer-color input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 8px;
+  background: var(--np-raised, #f5f9fb);
+  color: inherit;
+  font:
+    13px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.cs-page-layer-color small {
+  color: var(--np-muted, #648198);
+  font-size: 11px;
+}

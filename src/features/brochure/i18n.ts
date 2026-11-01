@@ -2756,6 +2756,26 @@ const translations: Record<string, string> = {
   "Keep the current image and place another image over it.":
     "Mbani imazhin aktual dhe vendosni një imazh tjetër mbi të.",
   "Over page content": "Mbi përmbajtjen e faqes",
+  "Add color layer": "Shto shtresë ngjyre",
+  "Color layer": "Shtresë ngjyre",
+  "Layer color": "Ngjyra e shtresës",
+  "Layer height": "Lartësia e shtresës",
+  "Layer width": "Gjerësia e shtresës",
+  "Layer X position": "Pozicioni horizontal i shtresës",
+  "Layer Y position": "Pozicioni vertikal i shtresës",
+  "Layer preview": "Parapamja e shtresës",
+  "Changes appear immediately in the preview.":
+    "Ndryshimet shfaqen menjëherë në parapamje.",
+  "Add images, text or a color layer. Changes appear in the preview.":
+    "Shtoni imazhe, tekst ose një shtresë ngjyre. Ndryshimet shfaqen në parapamje.",
+  Transparent: "I tejdukshëm",
+  Solid: "I plotë",
+  "Opacity presets": "Vlerat e gatshme të dukshmërisë",
+  "Set opacity": "Vendos dukshmërinë",
+  "Color code": "Kodi i ngjyrës",
+  "Page layer color code": "Kodi i ngjyrës së shtresës së faqes",
+  "Choose a color or enter its code, such as #1B4075.":
+    "Zgjidhni një ngjyrë ose shënoni kodin e saj, si p.sh. #1B4075.",
 };
 
 let language =

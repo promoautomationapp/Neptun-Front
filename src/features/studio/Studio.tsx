@@ -243,6 +243,7 @@ import "../../styles/product-editing.css";
 import "../../styles/import-flex.css";
 import "../../styles/page-background.css";
 import "../../styles/brochure-direct-edit.css";
+import "../../styles/layer-workspace.css";
 import "../../styles/stores-design.css";
 import "../../styles/brochure-comments.css";
 import "../../styles/brochure-import-artwork.css";
@@ -2893,7 +2894,9 @@ export function BrochureEditor({
         />
       )}
       {showLayers && (
-        <Modal title={t("Layers")} kicker={title} onClose={() => setShowLayers(false)}>
+        <Modal wide title={t("Layers")} kicker={title} onClose={() => setShowLayers(false)}>
+          <div className="cs-layer-workspace">
+          <div>
           <PageLayersControls
             key={artworkPageKey}
             campaign={campaign}
@@ -2901,6 +2904,15 @@ export function BrochureEditor({
             onUpdate={onUpdate}
             onToast={onToast}
           />
+          </div>
+          <aside className="cs-layer-preview" aria-label={t("Layer preview")}>
+            <strong>{t("Layer preview")}</strong>
+            <p>{t("Changes appear immediately in the preview.")}</p>
+            <div className="cs-layer-preview-paper">
+              {selected === -1 ? <CoverPage campaign={campaign} settings={settings} /> : page ? <ProductPage campaign={campaign} settings={settings} page={page} /> : <StoresPage campaign={campaign} settings={settings} />}
+            </div>
+          </aside>
+          </div>
           <div className="cs-modal-actions">
             <Button onClick={() => setShowLayers(false)}>{t("Done")}</Button>
           </div>

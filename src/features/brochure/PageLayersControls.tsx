@@ -1,6 +1,8 @@
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
+import { EditorIcon } from "./EditorIcon";
+import { LayerOpacityControl } from "./LayerOpacityControl";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import type { PageArtworkLayer } from "./PageArtwork";
 import React from "react";
@@ -62,7 +64,7 @@ export function PageLayersControls({
   const base = (type: string): PageArtworkLayer => ({
     id: crypto.randomUUID(),
     type,
-    name: type === "overlay" ? "Color / shadow layer" : "Text",
+    name: type === "overlay" ? "Color layer" : "Text",
     x: 5,
     y: 18,
     width: type === "overlay" ? 90 : 50,
@@ -70,9 +72,9 @@ export function PageLayersControls({
       ? {
           height: 35,
           color: backgroundColor,
-          opacity: 0.65,
-          fade: "bottom",
-          zIndex: 2,
+          opacity: 0.5,
+          fade: "solid",
+          zIndex: 6,
         }
       : { text: t("Your message"), color: "#ffffff", fontSize: 4, zIndex: 6 }),
   });
@@ -115,11 +117,17 @@ export function PageLayersControls({
   return (
     <div className="cs-page-layers-controls">
       <p>
-        {t(
-          "Add an image as a separate layer. Drag it on the page to move it, or drag a corner to resize it. The original image stays in place.",
-        )}
+        {t("Add images, text or a color layer. Changes appear in the preview.")}
       </p>
       <div className="cs-page-layer-actions">
+        <button
+          type="button"
+          className="cs-page-add-color"
+          onClick={() => add([base("overlay")])}
+        >
+          <EditorIcon name="layers" />
+          {t("Add color layer")}
+        </button>
         <FileUpload
           accept="image/*"
           multiple
@@ -148,9 +156,6 @@ export function PageLayersControls({
         )}
         <button type="button" onClick={() => add([base("text")])}>
           {t("Add text")}
-        </button>
-        <button type="button" onClick={() => add([base("overlay")])}>
-          {t("Add color / shadow")}
         </button>
       </div>
       {layers.length > 0 ? (
@@ -193,7 +198,7 @@ export function PageLayersControls({
                       layer.type === "text"
                         ? "Text layer"
                         : layer.type === "overlay"
-                          ? "Color / shadow layer"
+                          ? "Color layer"
                           : "Image layer",
                     )}
                   </small>
@@ -232,20 +237,12 @@ export function PageLayersControls({
               <option value={10}>{t("In front of everything")}</option>
             </SearchableSelect>
           </label>
-          <label>
-            {t("Opacity")} · {Math.round((selected.opacity ?? 1) * 100)}%
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step=".05"
-              aria-label={t("Page layer opacity")}
-              value={selected.opacity ?? 1}
-              onChange={(event) =>
-                change({ opacity: Number(event.target.value) })
-              }
-            />
-          </label>
+          <LayerOpacityControl
+            key={`opacity-${selected.id}`}
+            value={selected.opacity ?? 1}
+            label={t("Page layer opacity")}
+            onChange={(opacity) => change({ opacity })}
+          />
           {selected.type === "text" && (
             <>
               <label>
@@ -272,15 +269,11 @@ export function PageLayersControls({
             </>
           )}
           {selected.type === "text" || selected.type === "overlay" ? (
-            <label>
-              {t("Color")}
-              <input
-                type="color"
-                aria-label={t("Page layer color")}
-                value={selected.color || "#1c4075"}
-                onChange={(event) => change({ color: event.target.value })}
-              />
-            </label>
+            <LayerColorControl
+              key={`color-${selected.id}`}
+              value={selected.color || "#1c4075"}
+              onChange={(color) => change({ color })}
+            />
           ) : (
             <>
               <FileUpload
@@ -411,5 +404,78 @@ export function PageLayersControls({
         </>
       )}
     </div>
+  );
+}
+
+function normalizedHex(value: string) {
+  const candidate = value.trim().replace(/^#/, "");
+  if (/^[a-f0-9]{6}$/i.test(candidate)) return `#${candidate.toLowerCase()}`;
+  if (/^[a-f0-9]{3}$/i.test(candidate))
+    return `#${[...candidate]
+      .map((character) => character.repeat(2))
+      .join("")
+      .toLowerCase()}`;
+  return "";
+}
+
+function LayerColorControl({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  const color = normalizedHex(value) || "#1c4075";
+  const [draft, setDraft] = React.useState(color);
+  React.useEffect(() => setDraft(color), [color]);
+  return (
+    <fieldset className="cs-page-layer-color">
+      <legend>{t("Color")}</legend>
+      <div>
+        <input
+          type="color"
+          value={color}
+          aria-label={t("Page layer color")}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            onChange(event.target.value);
+          }}
+        />
+        <label>
+          <span>{t("Color code")}</span>
+          <input
+            type="text"
+            value={draft}
+            maxLength={7}
+            spellCheck={false}
+            autoComplete="off"
+            aria-label={t("Page layer color code")}
+            aria-invalid={Boolean(draft) && !normalizedHex(draft)}
+            onChange={(event) => {
+              const next = event.target.value;
+              setDraft(next);
+              const valid = /^#?[a-f0-9]{6}$/i.test(next.trim())
+                ? normalizedHex(next)
+                : "";
+              if (valid) onChange(valid);
+            }}
+            onBlur={() => {
+              const valid = normalizedHex(draft);
+              if (valid) {
+                setDraft(valid);
+                if (valid !== color) onChange(valid);
+              } else setDraft(color);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                event.currentTarget.blur();
+              }
+            }}
+          />
+        </label>
+      </div>
+      <small>{t("Choose a color or enter its code, such as #1B4075.")}</small>
+    </fieldset>
   );
 }

@@ -97,6 +97,7 @@ import { brandingVisibility, chooseSocialBranding, socialBrandingSource, socialB
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
 import { ActionMenu } from "../brochure/ActionMenu";
 import { EditorIcon } from "../brochure/EditorIcon";
+import { LayerOpacityControl } from "../brochure/LayerOpacityControl";
 import {
   BrochureComments,
   type ReviewActionHandler,
@@ -728,11 +729,15 @@ export function PostCanvas({
           !artwork.hidden && (
             <CanvasAsset
               key={artwork.id}
-              name={artwork.name || "Added image"}
+              name={t(artwork.name || (artwork.type === "overlay" ? "Color layer" : "Added image"))}
               artwork
               source={artwork.image}
               position={artwork}
               width={artwork.width}
+              height={artwork.type === "overlay" ? artwork.height ?? 35 : undefined}
+              color={artwork.type === "overlay" ? validBackgroundColor(artwork.color) || "#1b4075" : undefined}
+              opacity={artwork.opacity}
+              maxWidth={artwork.type === "overlay" ? 100 : 70}
               zIndex={30 + index}
               editable={Boolean(onUpdateAsset)}
               onGestureStart={() => setDraggingCanvas(true)}
@@ -1925,6 +1930,29 @@ export function SocialStudio({
     });
     setCanvasTool("pointer");
   }
+  function addColorLayer() {
+    update((draft) => {
+      (draft.artworks ||= []).push({
+        id: crypto.randomUUID(),
+        type: "overlay",
+        name: "Color layer",
+        color: "#1b4075",
+        opacity: 0.5,
+        x: 50,
+        y: 50,
+        width: 75,
+        height: 45,
+      });
+    });
+    setShowLayers(true);
+    setCanvasTool("pointer");
+  }
+  function changeLayer(id: string, changes: Partial<Artwork>) {
+    update((draft) => {
+      const artwork = draft.artworks?.find((item) => item.id === id);
+      if (artwork) Object.assign(artwork, changes);
+    });
+  }
   async function deleteActive() {
     if (!post) return;
     clearTimeout(saveTimer.current);
@@ -2386,7 +2414,9 @@ export function SocialStudio({
         />
       )}
       {post && showLayers && (
-        <Modal title={t("Layers")} onClose={() => setShowLayers(false)}>
+        <Modal title={t("Layers")} onClose={() => setShowLayers(false)} wide>
+          <div className="social-layer-workspace">
+          <div className="social-layer-controls">
           <p>
             {t("Keep the current image and place another image over it.")}
           </p>
@@ -2400,6 +2430,9 @@ export function SocialStudio({
           >
             <EditorIcon name="plus" /> {t("Add image layer")}
           </button>
+          <button type="button" className="cs-button" onClick={addColorLayer}>
+            <EditorIcon name="plus" /> {t("Add color layer")}
+          </button>
           <div className="social-layer-list">
             {!(post.artworks || []).length && (
               <p>{t("No added layers yet.")}</p>
@@ -2410,14 +2443,40 @@ export function SocialStudio({
                 <section className="social-layer-row" key={artwork.id}>
                   {artwork.type === "text" ? (
                     <b aria-hidden="true">T</b>
+                  ) : artwork.type === "overlay" ? (
+                    <i className="social-layer-color-swatch" aria-hidden="true" style={{ backgroundColor: validBackgroundColor(artwork.color) || "#1b4075" }} />
                   ) : (
                     <img src={resolveAsset(artwork.image || "")} alt="" />
                   )}
                   <strong>
                     {artwork.type === "text"
                       ? artwork.text || t("Text")
-                      : artwork.name || t("Added image")}
+                      : t(artwork.name || (artwork.type === "overlay" ? "Color layer" : "Added image"))}
                   </strong>
+                  <div className="social-layer-settings">
+                    {artwork.type === "overlay" && (
+                      <label className="social-layer-color-control">
+                        {t("Color")}
+                        <span>
+                          <input type="color" aria-label={`${t("Layer color")}: ${t(artwork.name || "Color layer")}`} value={validBackgroundColor(artwork.color) || "#1b4075"} onChange={(event) => changeLayer(artwork.id, { color: event.target.value })} />
+                          <input type="text" key={artwork.color} defaultValue={artwork.color || "#1b4075"} maxLength={7} aria-label={`${t("Color code")}: ${t(artwork.name || "Color layer")}`} onBlur={(event) => {
+                            const color = validBackgroundColor(event.currentTarget.value);
+                            if (color) changeLayer(artwork.id, { color });
+                            else event.currentTarget.value = artwork.color || "#1b4075";
+                          }} />
+                        </span>
+                      </label>
+                    )}
+                    <LayerOpacityControl value={artwork.opacity ?? 1} label={`${t("Opacity")}: ${t(artwork.name || (artwork.type === "text" ? "Text" : artwork.type === "overlay" ? "Color layer" : "Added image"))}`} onChange={(opacity) => changeLayer(artwork.id, { opacity })} />
+                    <div className="social-layer-dimensions">
+                      {(["x", "y", "width", ...(artwork.type === "overlay" ? ["height"] : [])] as ("x" | "y" | "width" | "height")[]).map((field) => (
+                        <label key={field}>
+                          {t({ x: "Left", y: "Top", width: "Width", height: "Height" }[field])} · %
+                          <input type="number" min={field === "width" || field === "height" ? 1 : 0} max={100} step={1} aria-label={`${t({ x: "Layer X position", y: "Layer Y position", width: "Layer width", height: "Layer height" }[field])}: ${t(artwork.name || "Added image")}`} value={artwork[field] ?? (field === "height" ? 35 : 0)} onChange={(event) => changeLayer(artwork.id, { [field]: Math.max(field === "width" || field === "height" ? 1 : 0, Math.min(100, Number(event.target.value))) })} />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                   <div className="social-layer-actions">
                     <button
                       type="button"
@@ -2459,7 +2518,7 @@ export function SocialStudio({
                     >
                       <EditorIcon name="chevron-down" />
                     </button>
-                    {artwork.type !== "text" && (
+                    {artwork.type !== "text" && artwork.type !== "overlay" && (
                       <button
                         type="button"
                         aria-label={`${t("Manage image")}: ${artwork.name || t("Added image")}`}
@@ -2501,6 +2560,13 @@ export function SocialStudio({
                   </div>
                 </section>
               ))}
+          </div>
+          </div>
+          <aside className="social-layer-preview" aria-label={t("Layer preview")} style={{ "--social-layer-preview-width": `${Math.round(28 * dims.width / dims.height)}vh` } as React.CSSProperties}>
+            <strong>{t("Layer preview")}</strong>
+            <p>{t("Changes appear immediately in the preview.")}</p>
+            <PostCanvas post={post} maxWidth={`min(100%, ${Math.round(52 * dims.width / dims.height)}vh)`} previewCutouts={previewCutouts} />
+          </aside>
           </div>
         </Modal>
       )}
@@ -3379,6 +3445,8 @@ export function SocialStudio({
                     <div className="social-artwork-row" key={artwork.id}>
                       {artwork.type === "text" ? (
                         <b aria-hidden="true">T</b>
+                      ) : artwork.type === "overlay" ? (
+                        <i className="social-layer-color-swatch" aria-hidden="true" style={{ backgroundColor: validBackgroundColor(artwork.color) || "#1b4075" }} />
                       ) : (
                         <img src={artwork.image} alt="" />
                       )}
@@ -3475,6 +3543,9 @@ export function SocialStudio({
                   >
                     <button type="button" onClick={() => setImageLayerPicker(true)}>
                       <EditorIcon name="layers" /> {t("Add image layer")}
+                    </button>
+                    <button type="button" onClick={addColorLayer}>
+                      <EditorIcon name="layers" /> {t("Add color layer")}
                     </button>
                     <FileUpload
                       aria-label={t("Upload images to post")}
@@ -3710,7 +3781,11 @@ export function SocialStudio({
                 onEditBranding={editingCanvas ? setBrandingPicker : undefined}
                 onRemoveBranding={editingCanvas ? (kind) => update((draft) => {draft[brandingVisibility[kind]]=false;}) : undefined}
                 onPlaceBrandFooter={editingCanvas ? (value) => update((draft) => {(draft.logoCoords ||= {}).footer=value;}) : undefined}
-                onEditArtwork={editingCanvas ? (artworkId) => setBrandingPicker({artworkId}) : undefined}
+                onEditArtwork={editingCanvas ? (artworkId) => {
+                  const artwork = post.artworks?.find((item) => item.id === artworkId);
+                  if (artwork?.type === "overlay") setShowLayers(true);
+                  else setBrandingPicker({artworkId});
+                } : undefined}
                 onPlaceText={
                   !previewMode && canvasTool === "text" ? addText : undefined
                 }
