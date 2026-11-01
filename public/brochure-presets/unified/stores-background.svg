@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 842 1191" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2796cd"/><stop offset="1" stop-color="#136cae"/></linearGradient>
+    <radialGradient id="sky" cx="1" cy="0" r="1"><stop stop-color="#8ac5e7"/><stop offset=".43" stop-color="#72b7df" stop-opacity=".62"/><stop offset="1" stop-color="#72b7df" stop-opacity="0"/></radialGradient>
+    <radialGradient id="navy" cx="1" cy="1" r="1"><stop stop-color="#1d3b6d"/><stop offset=".4" stop-color="#1d3b6d" stop-opacity=".8"/><stop offset="1" stop-color="#1d3b6d" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#blue)" d="M0 0h842v1191H0z"/>
+  <path fill="url(#sky)" d="M0 0h842v1191H0z"/>
+  <path fill="url(#navy)" d="M0 0h842v1191H0z"/>
+</svg>

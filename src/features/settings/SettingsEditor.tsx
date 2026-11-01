@@ -392,97 +392,58 @@ export function SettingsEditor({
     }
   }
   const props = { draft, update, pageArea: area };
-  return (
-    <div className={`ns-settings ${designScope ? "ns-preset-settings" : ""}`}>
-      <header>
-        {!designScope && (
-          <div>
-            <span className="ns-kicker">NEPTUN · WORKSPACE</span>
-            <h1>{t("Settings")}</h1>
-            <p>
-              {t(
-                "Choose the starting defaults for new brochures. Every brochure can be edited separately.",
-              )}
-            </p>
-          </div>
+  const saveActions = (
+    <div className="ns-save-actions">
+      <span role="status">
+        {t(
+          saving
+            ? "Saving…"
+            : uploads
+              ? "Uploading artwork…"
+              : dirty
+                ? "Unsaved changes"
+                : "All changes saved",
         )}
-        <div className="ns-save-actions">
-          <span role="status">
-            {t(
-              saving
-                ? "Saving…"
-                : uploads
-                  ? "Uploading artwork…"
-                  : dirty
-                    ? "Unsaved changes"
-                    : "All changes saved",
-            )}
-          </span>
+      </span>
+      <button
+        className="cs-button primary"
+        type="button"
+        disabled={!dirty || externalBusy || saving || uploads > 0}
+        onClick={() => {
+          void save();
+        }}
+      >
+        {t(saving ? "Saving…" : designScope ? "Save design" : "Save settings")}
+      </button>
+      {designScope ? (
+        <button
+          type="button"
+          disabled={externalBusy || saving || uploads > 0}
+          onClick={designScope.onCancel}
+        >
+          {t("Cancel")}
+        </button>
+      ) : (
+        dirty && (
           <button
-            className="cs-button primary"
             type="button"
-            disabled={!dirty || externalBusy || saving || uploads > 0}
+            disabled={externalBusy || saving || uploads > 0}
             onClick={() => {
-              void save();
+              clearSettingsDraft(draftKey);
+              setDraft(structuredClone(initial));
+              setBaseline(JSON.stringify(initial));
+              setError("");
+              setMessage("Changes discarded.");
             }}
           >
-            {t(
-              saving
-                ? "Saving…"
-                : designScope
-                  ? "Save design"
-                  : "Save settings",
-            )}
+            {t("Discard changes")}
           </button>
-          {designScope ? (
-            <button
-              type="button"
-              disabled={externalBusy || saving || uploads > 0}
-              onClick={designScope.onCancel}
-            >
-              {t("Cancel")}
-            </button>
-          ) : (
-            dirty && (
-              <button
-                type="button"
-                disabled={externalBusy || saving || uploads > 0}
-                onClick={() => {
-                  clearSettingsDraft(draftKey);
-                  setDraft(structuredClone(initial));
-                  setBaseline(JSON.stringify(initial));
-                  setError("");
-                  setMessage("Changes discarded.");
-                }}
-              >
-                {t("Discard changes")}
-              </button>
-            )
-          )}
-        </div>
-      </header>
-      {error && (
-        <div role="alert" className="ns-error">
-          <p>{t(error)}</p>
-          {onReload && (
-            <button
-              type="button"
-              disabled={externalBusy || saving || uploads > 0}
-              onClick={() => {
-                clearSettingsDraft(draftKey);
-                onReload();
-              }}
-            >
-              {t("Reload saved settings and discard this draft")}
-            </button>
-          )}
-        </div>
+        )
       )}
-      {message && (
-        <p role="status" className="ns-success">
-          {t(message)}
-        </p>
-      )}
+    </div>
+  );
+  const navigation = (
+    <>
       <div
         role="tablist"
         aria-label={t("Settings page areas")}
@@ -567,61 +528,110 @@ export function SettingsEditor({
           </button>
         ))}
       </div>
-      <div className="ns-settings-workspace">
-        <div
-          role="tabpanel"
-          id={`${rootId}-panel`}
-          aria-labelledby={`${rootId}-${tab}`}
-          tabIndex={0}
-        >
-          <UploadStateContext.Provider value={uploadState}>
-            <SettingsPreviewContext.Provider value={previewPage}>
-              <fieldset
-                className="ns-tab-content"
-                disabled={externalBusy || saving || uploads > 0}
-              >
-                {tab === "presets" && (
-                  <BrochurePresetsTab
-                    {...props}
-                    update={updateLibrary}
-                    selectedId={selectedPresetId}
-                    facets={facets}
-                    facetsError={facetsError}
-                    brands={brands}
-                    previewProducts={previewProducts}
-                    onSelect={(id) => {
-                      setSelectedPresetId(id);
-                      setCaptureOnSave(false);
-                    }}
-                  />
+    </>
+  );
+  const settingsPanel = (
+    <div
+      role="tabpanel"
+      id={`${rootId}-panel`}
+      aria-labelledby={`${rootId}-${tab}`}
+      tabIndex={0}
+    >
+      <UploadStateContext.Provider value={uploadState}>
+        <SettingsPreviewContext.Provider value={previewPage}>
+          <fieldset
+            className="ns-tab-content"
+            disabled={externalBusy || saving || uploads > 0}
+          >
+            {tab === "presets" && (
+              <BrochurePresetsTab
+                {...props}
+                update={updateLibrary}
+                selectedId={selectedPresetId}
+                facets={facets}
+                facetsError={facetsError}
+                brands={brands}
+                previewProducts={previewProducts}
+                onSelect={(id) => {
+                  setSelectedPresetId(id);
+                  setCaptureOnSave(false);
+                }}
+              />
+            )}
+            {tab === "design" && <DesignTab {...props} />}
+            {tab === "images" && <ImagesTab {...props} />}
+            {tab === "logos" && <LogosTab {...props} brands={brands} />}
+            {tab === "brands" && <BrandsTab {...props} brands={brands} />}
+            {tab === "stores" && <StoresTab {...props} />}
+            {tab === "offers" && (
+              <OffersTab {...props} facets={facets} facetsError={facetsError} />
+            )}
+            {tab === "categories" && (
+              <CategoryDefaultsTab
+                {...props}
+                facets={facets}
+                facetsError={facetsError}
+                onPreviewCategory={setPreviewCategory}
+              />
+            )}
+            {tab === "products" && <ProductDesignTab {...props} />}
+            {tab === "formats" && <FormatsTab {...props} />}
+            {tab === "types" && <CampaignTypesTab {...props} />}
+          </fieldset>
+        </SettingsPreviewContext.Provider>
+      </UploadStateContext.Provider>
+    </div>
+  );
+  return (
+    <div className={`ns-settings ${designScope ? "ns-preset-settings" : ""}`}>
+      {!designScope && (
+        <header>
+          {!designScope && (
+            <div>
+              <span className="ns-kicker">NEPTUN · WORKSPACE</span>
+              <h1>{t("Settings")}</h1>
+              <p>
+                {t(
+                  "Choose the starting defaults for new brochures. Every brochure can be edited separately.",
                 )}
-                {tab === "design" && <DesignTab {...props} />}
-                {tab === "images" && <ImagesTab {...props} />}
-                {tab === "logos" && <LogosTab {...props} brands={brands} />}
-                {tab === "brands" && <BrandsTab {...props} brands={brands} />}
-                {tab === "stores" && <StoresTab {...props} />}
-                {tab === "offers" && (
-                  <OffersTab
-                    {...props}
-                    facets={facets}
-                    facetsError={facetsError}
-                  />
-                )}
-                {tab === "categories" && (
-                  <CategoryDefaultsTab
-                    {...props}
-                    facets={facets}
-                    facetsError={facetsError}
-                    onPreviewCategory={setPreviewCategory}
-                  />
-                )}
-                {tab === "products" && <ProductDesignTab {...props} />}
-                {tab === "formats" && <FormatsTab {...props} />}
-                {tab === "types" && <CampaignTypesTab {...props} />}
-              </fieldset>
-            </SettingsPreviewContext.Provider>
-          </UploadStateContext.Provider>
+              </p>
+            </div>
+          )}
+          {saveActions}
+        </header>
+      )}
+      {error && (
+        <div role="alert" className="ns-error">
+          <p>{t(error)}</p>
+          {onReload && (
+            <button
+              type="button"
+              disabled={externalBusy || saving || uploads > 0}
+              onClick={() => {
+                clearSettingsDraft(draftKey);
+                onReload();
+              }}
+            >
+              {t("Reload saved settings and discard this draft")}
+            </button>
+          )}
         </div>
+      )}
+      {message && (
+        <p role="status" className="ns-success">
+          {t(message)}
+        </p>
+      )}
+      {!designScope && navigation}
+      <div className="ns-settings-workspace">
+        {designScope ? (
+          <div className="ns-preset-controls">
+            {navigation}
+            {settingsPanel}
+          </div>
+        ) : (
+          settingsPanel
+        )}
         <SettingsPreview
           pageRequest={previewRequest}
           draft={draft}
@@ -632,6 +642,7 @@ export function SettingsEditor({
           categoryPath={tab === "categories" ? previewCategory : ""}
         />
       </div>
+      {designScope && <div className="ns-preset-savebar">{saveActions}</div>}
     </div>
   );
 }

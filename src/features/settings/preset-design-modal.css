@@ -1,51 +1,254 @@
 .cs-preset-editor-modal .cs-modal {
   display: flex;
   flex-direction: column;
-  width: min(1440px, calc(100vw - 28px));
+  width: min(1440px, calc(100vw - 32px));
+  height: min(900px, calc(100dvh - 32px));
   max-height: calc(100dvh - 32px);
   overflow: hidden;
   color: var(--np-text, #183852);
   background: var(--np-surface, #fff);
 }
-.cs-preset-editor-modal .cs-modal-head {
-  flex: none;
-  margin-bottom: 12px;
-}
-.cs-preset-editor-modal .cs-modal-body {
+.cs-preset-editor-modal .cs-modal > .cs-modal-head {
+  flex: 0 0 auto;
+  align-items: center;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  margin: 0;
+  padding: 16px 22px;
+}
+.cs-preset-editor-modal .cs-modal-head h2 {
+  margin-top: 4px;
+  font-size: 25px;
+}
+.cs-preset-editor-modal .cs-modal > .cs-modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px 22px 0;
+  overflow: hidden;
+}
+.cs-preset-editor-intro {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 18px;
+  min-width: 0;
+}
+.cs-preset-editor-intro > .ns-field {
+  margin: 0;
+}
+.cs-preset-editor-intro .ns-field > span {
+  font-size: 12px;
+}
+.cs-preset-editor-intro .ns-field input {
+  min-height: 38px;
+  padding-block: 7px;
 }
 .cs-preset-editor-note {
-  margin: 0 0 14px;
+  margin: 0;
   color: var(--np-muted, #607a90);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .ns-settings.ns-preset-settings {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
   padding: 0;
   color: inherit;
 }
-.ns-preset-settings > header {
-  position: sticky;
-  top: 0;
-  z-index: 12;
-  margin: 0 0 16px;
-  padding: 10px 0;
-  background: var(--np-surface, #fff);
-  border-bottom: 1px solid var(--np-border, #e1e9ef);
+.ns-preset-settings > .ns-settings-workspace {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 36%);
+  align-items: stretch;
+  gap: 18px;
+  min-height: 0;
+  overflow: hidden;
+}
+.ns-preset-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.ns-preset-controls > .ns-page-areas,
+.ns-preset-controls > .ns-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: auto;
+  min-height: 43px;
+  max-height: none;
+  margin: 0;
+  padding: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.ns-preset-controls > .ns-page-areas button,
+.ns-preset-controls > .ns-tabs button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.ns-preset-controls > .ns-tabs {
+  min-height: 38px;
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--np-border, #d5dfe7);
+}
+.ns-preset-controls > .ns-tabs button {
+  min-height: 32px;
+  padding: 6px 9px;
+}
+.ns-preset-controls > [role="tabpanel"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.ns-preset-settings .ns-section {
+  padding: 18px;
+}
+.ns-preset-settings .ns-section h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+.ns-preset-settings .ns-field {
+  margin-block: 12px;
+}
+.ns-preset-settings .ns-cover-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 560px;
+  margin: 12px 0 18px;
+}
+.ns-preset-settings .ns-cover-options button {
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 60px;
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.ns-preset-settings .ns-cover-options img {
+  width: 34px;
+  height: 42px;
+  aspect-ratio: auto;
+  border: 1px solid var(--np-border, #cbdce7);
+  border-radius: 4px;
+}
+.ns-preset-settings .ns-cover-options button.selected {
+  outline: 0;
+  border-color: var(--np-accent, #267eb9);
+  box-shadow: inset 0 0 0 1px var(--np-accent, #267eb9);
+  background: var(--np-selected, #ecf3fa);
+}
+.ns-preset-settings .ns-settings-workspace > .ns-live-preview {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 7px;
+  width: 100%;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+.ns-preset-settings .ns-preview-heading > .ns-kicker,
+.ns-preset-settings .ns-preview-heading > p {
+  display: none;
+}
+.ns-preset-settings .ns-preview-heading h2 {
+  margin: 0 0 2px;
+  font-size: 17px;
+}
+.ns-preset-settings .ns-preview-switch,
+.ns-preset-settings .ns-preview-pages {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 3px;
 }
 .ns-preset-settings .ns-preview-switch button,
 .ns-preset-settings .ns-preview-pages button {
   min-width: 0;
-  padding: 8px 4px;
+  min-height: 31px;
+  padding: 5px 4px;
   font-size: 11px;
-  line-height: 1.35;
+  line-height: 1.3;
   white-space: normal;
-  overflow-wrap: normal;
+}
+.ns-preset-settings .ns-preview-paper-slot {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: start;
+  justify-items: center;
+  min-height: 0;
+  container-type: size;
+}
+.ns-preset-settings .ns-preview-paper-slot > .ns-preview-page {
+  width: min(100cqw, calc(100cqh * var(--ns-preview-ratio, 0.8)));
+}
+.ns-preset-settings .ns-live-preview > .ns-preview-note {
+  display: none;
+}
+.ns-preset-settings > .ns-preset-savebar {
+  flex: 0 0 auto;
+  margin-top: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--np-border, #e1e9ef);
+  background: var(--np-surface, #fff);
 }
 .ns-preset-settings .ns-save-actions {
-  margin-left: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.ns-preset-settings .ns-save-actions [role="status"] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  margin-right: auto;
+  color: var(--np-muted, #607a90);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+}
+.ns-preset-settings .ns-save-actions button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+.ns-preset-settings .ns-save-actions button.primary {
+  order: 2;
 }
 .cs-preset-management .cs-preset-cards {
   gap: 12px;
@@ -64,32 +267,97 @@
   font-size: 11px;
   min-height: 52px;
 }
-@media (max-width: 700px) {
+@media (max-width: 760px) {
   .cs-preset-editor-modal .cs-modal {
     width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
     max-height: calc(100dvh - 16px);
+  }
+  .cs-preset-editor-modal .cs-modal > .cs-modal-head {
+    padding: 12px 14px;
+  }
+  .cs-preset-editor-modal .cs-modal-head h2 {
+    font-size: 21px;
+  }
+  .cs-preset-editor-modal .cs-modal > .cs-modal-body {
+    gap: 10px;
+    padding: 12px 12px 0;
+  }
+  .cs-preset-editor-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+  .cs-preset-editor-note {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .ns-preset-settings > .ns-settings-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+  .ns-preset-settings .ns-settings-workspace > .ns-live-preview {
+    order: -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 110px;
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+    align-content: start;
+    gap: 5px 9px;
+    max-height: 172px;
+    padding: 9px;
+  }
+  .ns-preset-settings .ns-live-preview > :not(.ns-preview-paper-slot) {
+    grid-column: 1;
+  }
+  .ns-preset-settings .ns-preview-heading h2 {
+    font-size: 14px;
+  }
+  .ns-preset-settings .ns-preview-switch button,
+  .ns-preset-settings .ns-preview-pages button {
+    min-height: 27px;
+    padding: 4px 2px;
+    font-size: 9px;
+  }
+  .ns-preset-settings .ns-preview-paper-slot {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    align-self: start;
+    width: 110px;
+    height: 137.5px;
+    container-type: inline-size;
+  }
+  .ns-preset-settings .ns-preview-paper-slot > .ns-preview-page {
+    width: 100%;
+  }
+  .ns-preset-settings .ns-live-preview > .ns-preview-enlarge {
+    min-height: 27px;
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  .ns-preset-settings .ns-section {
     padding: 14px;
   }
-  .ns-preset-settings > header {
-    padding: 8px 0;
+  .ns-preset-settings .ns-section h2 {
+    font-size: 18px;
   }
-  .ns-preset-settings .ns-save-actions {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+  .ns-preset-settings > .ns-preset-savebar {
+    margin-top: 8px;
+    padding-block: 10px;
   }
-  .ns-preset-settings .ns-save-actions > span {
-    flex: 1;
-    min-width: 110px;
+  .ns-preset-settings .ns-save-actions [role="status"] {
+    font-size: 11px;
   }
-  .ns-preset-settings .ns-settings-workspace {
-    display: flex;
-    flex-direction: column-reverse;
+  .ns-preset-settings .ns-save-actions button {
+    padding: 8px 10px;
+    white-space: nowrap;
   }
-  .ns-preset-settings .ns-settings-workspace > * {
-    width: 100%;
+}
+@media (max-height: 650px) {
+  .cs-preset-editor-note {
+    display: none;
   }
-  .ns-preset-settings .ns-live-preview {
-    max-width: 280px;
+  .cs-preset-editor-intro {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

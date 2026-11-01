@@ -1,4 +1,4 @@
-import type { Campaign, Store, Placement } from "../../domain/models";
+import type { Campaign, Store, Placement, Box } from "../../domain/models";
 import { orderedStoreIndexes } from "./brochureLayout";
 import { includesOnlineStore, selectedStoreIndexes } from "./storesSelection";
 import { pageBackgroundReadability } from "./pageBackground";
@@ -149,4 +149,35 @@ export function withoutFooterStorePlacements(
   return Object.fromEntries(
     Object.entries(placements).filter(([kind]) => !kind.startsWith("store-")),
   );
+}
+
+/** The unified back page follows the supplied stores artwork. Saved placements
+ * still take precedence through StoresElement, including custom design copies. */
+export function isReferenceStoresDesign(campaign: Partial<Campaign>) {
+  return (
+    campaign.brochurePresetId === "neptun-current" ||
+    campaign.brochurePresetId === "neptun-gradient-all" ||
+    campaign.storesBackgroundImage ===
+      "/brochure-presets/unified/stores-background.svg"
+  );
+}
+
+const unifiedPlacements: Record<string, Box> = {
+  heading: { x: 0, y: 2.5, width: 40.8, height: 3.55 },
+  hajde: { x: 18.6, y: 10.8, width: 38.5, height: 7.6 },
+  awards: { x: 61.5, y: 11.1, width: 19.7, height: 7 },
+  locations: { x: 1, y: 24.2, width: 98, height: 61.2 },
+  disclaimer: { x: 1.7, y: 87, width: 55.1, height: 6.2 },
+  service: { x: 60.2, y: 87, width: 15.7, height: 6.2 },
+  balfin: { x: 79.6, y: 87, width: 17.4, height: 5.7 },
+  social: { x: 1.7, y: 94.8, width: 96.6, height: 2.4 },
+};
+export function storesReferencePlacement(
+  campaign: Partial<Campaign>,
+  kind: string,
+  fallback: Box,
+): Box {
+  return isReferenceStoresDesign(campaign)
+    ? { ...(unifiedPlacements[kind] || fallback) }
+    : fallback;
 }

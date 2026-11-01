@@ -19,20 +19,24 @@ describe("independent brochure preset snapshots", () => {
     const settings = resolveSettings(null);
     const presets = availableBrochurePresets(settings);
     expect(settings.defaultBrochurePresetId).toBe("neptun-current");
-    expect(presets[1]!.name).toBe("UUU · Brand Edition");
+    expect(presets.find((preset) => preset.id === "neptun-october")!.name).toBe(
+      "UUU · Brand Edition",
+    );
     expect(presets.map((preset) => preset.id)).toEqual([
       "neptun-current",
-      "neptun-october",
       "neptun-uuu-gray",
       "neptun-gradient-all",
       "neptun-online",
+      "neptun-october",
     ]);
     expect(presets[0]!.design).toMatchObject({
       layout: "feature3",
       offerStyle: "current",
       showCoverBand: false,
     });
-    expect(presets[1]!.design).toMatchObject({
+    expect(
+      presets.find((preset) => preset.id === "neptun-october")!.design,
+    ).toMatchObject({
       brochureVisualStyle: "october",
       layout: "duo4",
       autoProductLayout: true,
@@ -52,7 +56,9 @@ describe("independent brochure preset snapshots", () => {
     settings.productDesign.details.placement = "bottom";
     settings.savingMode = "percentage";
     settings.categoryPathSavingModes.TV = "percentage";
-    const design = availableBrochurePresets(settings)[1]!.design;
+    const design = availableBrochurePresets(settings).find(
+      (preset) => preset.id === "neptun-october",
+    )!.design;
     expect(design).toMatchObject({
       savingMode: "amount",
       automaticSavings: {
@@ -113,7 +119,9 @@ describe("independent brochure preset snapshots", () => {
       },
     ];
     expect(
-      availableBrochurePresets(settings)[1]!.design.automaticSavings,
+      availableBrochurePresets(settings).find(
+        (preset) => preset.id === "neptun-october",
+      )!.design.automaticSavings,
     ).toEqual({
       enabled: false,
       amountThreshold: 12,
@@ -131,7 +139,9 @@ describe("independent brochure preset snapshots", () => {
     const oldProducts = campaign.products;
     applyBrochurePreset(
       campaign,
-      availableBrochurePresets(resolveSettings(null))[1]!,
+      availableBrochurePresets(resolveSettings(null)).find(
+        (preset) => preset.id === "neptun-october",
+      )!,
     );
     expect(campaign).toMatchObject({
       id: "keep-id",
@@ -177,9 +187,15 @@ describe("independent brochure preset snapshots", () => {
     settings.brochurePresets[1]!.design.productBackgroundColor = "#ffffff";
     expect(campaign.productBackgroundColor).toBe("#ccddee");
     expect(campaign.brochureVisualStyle).toBe("october");
-    expect(availableBrochurePresets(settings)[1]!.name).toBe("Blue edited");
     expect(
-      availableBrochurePresets(settings)[1]!.design.productBackgroundColor,
+      availableBrochurePresets(settings).find(
+        (preset) => preset.id === "neptun-october",
+      )!.name,
+    ).toBe("Blue edited");
+    expect(
+      availableBrochurePresets(settings).find(
+        (preset) => preset.id === "neptun-october",
+      )!.design.productBackgroundColor,
     ).toBe("#ddeeff");
   });
   it("validates design content and decorations while migrating the old price choices", () => {

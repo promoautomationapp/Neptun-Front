@@ -85,6 +85,8 @@ export type CampaignMutator = (draft: Campaign) => void;
 export interface BrochureFooterDesign {
   style?: "bar" | "reference";
   visible?: boolean;
+  fadeEnd?: boolean;
+  showAwards?: boolean;
   dateText?: string;
   bottom?: number;
   height?: number;
@@ -134,6 +136,7 @@ export interface Campaign {
   pageArtworks?: Record<string, Artwork[]>;
   coverElementPlacements?: Record<string, Placement>;
   coverOverlayGradient?: Partial<Gradient> & { opacity?: number };
+  coverRibbonColors?: Pick<Gradient, "from" | "to">;
   coverProductLayout?: string;
   coverBannerProductCode?: string;
   coverTextColorOverrides?: Record<string, boolean>;

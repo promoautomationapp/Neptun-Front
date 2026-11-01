@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { t } from "../features/brochure/i18n";
-import { CloseIcon } from "./CloseIcon";
+import { CloseButton } from "./CloseButton";
 import "./dialogs.css";
 
 export interface ConfirmDialogOptions {
@@ -234,14 +234,11 @@ function AppDialog({
             </svg>
           </span>
           <h2 id={`${id}-title`}>{options.title}</h2>
-          <button
-            type="button"
+          <CloseButton
             className="np-dialog-close"
             aria-label={t("Close")}
             onClick={() => onComplete(cancelResult)}
-          >
-            <CloseIcon />
-          </button>
+          />
         </header>
         <div className="np-dialog-body">
           <p id={`${id}-message`}>{options.message}</p>

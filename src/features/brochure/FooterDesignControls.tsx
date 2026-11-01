@@ -50,6 +50,26 @@ export function FooterDesignControls({
         />
         {t("Show brochure footer")}
       </label>
+      {!reference && (
+        <>
+          <label className="cs-store-page-switch">
+            <input
+              type="checkbox"
+              checked={design.fadeEnd === true}
+              onChange={(event) => update("fadeEnd", event.target.checked)}
+            />
+            {t("Fade into the cover background")}
+          </label>
+          <label className="cs-store-page-switch">
+            <input
+              type="checkbox"
+              checked={design.showAwards !== false}
+              onChange={(event) => update("showAwards", event.target.checked)}
+            />
+            {t("Show award logos")}
+          </label>
+        </>
+      )}
       <label>
         {t("Brochure dates text")}
         <input
@@ -107,14 +127,16 @@ export function FooterDesignControls({
             onChange={(event) => update("from", event.target.value)}
           />
         </label>
-        <label>
-          {t("End color")}
-          <input
-            type="color"
-            value={design.to || "#205785"}
-            onChange={(event) => update("to", event.target.value)}
-          />
-        </label>
+        {!design.fadeEnd && (
+          <label>
+            {t("End color")}
+            <input
+              type="color"
+              value={design.to || "#205785"}
+              onChange={(event) => update("to", event.target.value)}
+            />
+          </label>
+        )}
       </div>
       <label>
         {t("Text color")}

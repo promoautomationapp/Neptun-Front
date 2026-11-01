@@ -63,20 +63,22 @@ export function PresetDesignModal({
           if (!busy) onClose();
         }}
       >
-        <p className="cs-preset-editor-note">
-          {t(
-            "Edit this design with a live preview. Other designs and existing brochures keep their settings.",
-          )}
-        </p>
-        <Field label="Design name">
-          <input
-            aria-label={t("Design name")}
-            value={name}
-            maxLength={120}
-            disabled={busy}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </Field>
+        <div className="cs-preset-editor-intro">
+          <Field label="Design name">
+            <input
+              aria-label={t("Design name")}
+              value={name}
+              maxLength={120}
+              disabled={busy}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </Field>
+          <p className="cs-preset-editor-note">
+            {t(
+              "Edit this design with a live preview. Other designs and existing brochures keep their settings.",
+            )}
+          </p>
+        </div>
         <SettingsEditor
           initial={initial}
           designScope={{

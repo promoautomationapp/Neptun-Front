@@ -38,7 +38,9 @@ const campaign = (products: Product[]): Campaign => {
   const value: Campaign = { id: "october", name: "October", products };
   applyBrochurePreset(
     value,
-    availableBrochurePresets(resolveSettings(null))[1]!,
+    availableBrochurePresets(resolveSettings(null)).find(
+      (preset) => preset.id === "neptun-october",
+    )!,
   );
   return value;
 };

@@ -18,7 +18,12 @@ import {
   makeCoverImageLayer,
 } from "./coverPresentation";
 import { readImage } from "./utils";
-import { coverElementPlacement, COVER_GRADIENT_REGIONS } from "./coverElements";
+import {
+  coverElementPlacement,
+  coverRibbonColors,
+  COVER_GRADIENT_REGIONS,
+} from "./coverElements";
+import { isOctoberBrochure } from "./octoberDesign";
 import "../../styles/cover-elements.css";
 
 const toggles = [
@@ -55,8 +60,17 @@ export function CoverDesignControls({
       ) {
         resetCoverProductPositions(draft);
         if (field === "showCoverBand" && value) {
-          const photo = draft.pageArtworks?.cover?.find((item) => item.id === "cover-lifestyle");
-          if (photo && photo.x === 4 && photo.width === 92) Object.assign(photo, { x: 0, y: 0, width: 100, height: 49, imageFit: "cover" });
+          const photo = draft.pageArtworks?.cover?.find(
+            (item) => item.id === "cover-lifestyle",
+          );
+          if (photo && photo.x === 4 && photo.width === 92)
+            Object.assign(photo, {
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 49,
+              imageFit: "cover",
+            });
         }
         if (field === "showCoverBand" && value)
           draft.coverBannerProductCode = "";
@@ -250,12 +264,49 @@ export function CoverDesignControls({
       )}
       <details>
         <summary>UUU artwork & gradient</summary>
+        {isOctoberBrochure(campaign) && (
+          <fieldset>
+            <legend>{t("Message ribbon colors")}</legend>
+            <p>
+              {t(
+                "The ribbon runs from left to right, separately from the cover background.",
+              )}
+            </p>
+            <div className="cs-cover-gradient-colors">
+              {(["from", "to"] as const).map((key) => (
+                <label key={key}>
+                  {t(
+                    key === "from" ? "Ribbon start color" : "Ribbon end color",
+                  )}
+                  <input
+                    type="color"
+                    aria-label={t(
+                      key === "from"
+                        ? "Ribbon start color"
+                        : "Ribbon end color",
+                    )}
+                    value={coverRibbonColors(campaign)[key]}
+                    onChange={(event) =>
+                      update("coverRibbonColors", {
+                        ...coverRibbonColors(campaign),
+                        [key]: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         <FileUpload
           accept="image/*"
           aria-label="Upload UUU artwork"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file?.type.startsWith("image/") && file.size <= 12 * 1024 * 1024)
+            if (
+              file?.type.startsWith("image/") &&
+              file.size <= 12 * 1024 * 1024
+            )
               readImage(file)
                 .then((image) =>
                   onUpdate((draft: Campaign) => {

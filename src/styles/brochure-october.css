@@ -296,6 +296,10 @@
 .brochure-page.brochure-october.cover-editable-elements .october-cover-photo {
   z-index: 1;
 }
+/* Stop the default photograph at the ribbon's rising upper edge. */
+.october-cover-photo-default > :is(img, .october-cover-upload) {
+  clip-path: polygon(0 0, 100% 0, 100% 74.662642%, 0 83.382551%);
+}
 .october-cover-photo > img {
   width: 100%;
   height: 100%;

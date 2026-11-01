@@ -178,6 +178,14 @@ export function pageBackgroundReadability(
   page?: BackgroundPage,
 ) {
   const context = pageImageBackgroundContext(campaign, kind, page);
+  // This bundled back-page artwork uses the original white lettering throughout.
+  // Other uploaded images still receive contrast surfaces automatically.
+  if (
+    kind === "stores" &&
+    context.kind === "image" &&
+    context.image === "/brochure-presets/unified/stores-background.svg"
+  )
+    return backgroundReadability({ kind: "solid", color: "#1c4075" });
   if (
     context.kind === "gradient" &&
     context.gradient.from.toLowerCase() === "#234173" &&

@@ -1,3 +1,4 @@
+import { CloseButton } from "../../components/CloseButton";
 import { FileUpload } from "../../components/FileUpload";
 import { NavIcon } from "../studio/NavIcon";
 import { CloseIcon } from "../../components/CloseIcon";
@@ -1330,14 +1331,11 @@ function ProductPicker({
                 : "Choose products from a shared brochure."}
             </p>
           </div>
-          <button
-            type="button"
+          <CloseButton
             className="social-modal-close"
-            onClick={onClose}
             aria-label={t("Close product picker")}
-          >
-            <CloseIcon />
-          </button>
+            onClick={onClose}
+          />
         </header>
         <div className="social-picker-controls">
           <StudioSelect

@@ -84,7 +84,11 @@ import {
 import { NeptunWordmark } from "./NeptunWordmark";
 import { PageArtwork } from "./PageArtwork";
 import { CoverElement } from "./CoverElement";
-import { coverGradientFill, coverProductPlacement } from "./coverElements";
+import {
+  coverGradientFill,
+  coverProductPlacement,
+  coverRibbonColors,
+} from "./coverElements";
 import {
   cardSize,
   occupiedProductRows,
@@ -140,6 +144,8 @@ import {
   storePageEntries,
   storePlacement,
   storesPageIsLight,
+  isReferenceStoresDesign,
+  storesReferencePlacement,
 } from "./storesDesign";
 import {
   compactStoresFooterScale,
@@ -194,7 +200,7 @@ export const paymentTextFor = (
   campaign.paymentText?.trim() &&
   campaign.paymentText.trim() !== DEFAULT_PAYMENT_TEXT
     ? campaign.paymentText.trim()
-    : `${campaign.brochureFooter?.style === "reference" ? "Paguani" : "Paguan"} deri në ${installmentCount(campaign)} këste me 0% interes.`;
+    : `${campaign.brochureFooter?.style === "reference" || campaign.brochureFooter?.fadeEnd ? "Paguani" : "Paguan"} deri në ${installmentCount(campaign)} këste me 0% interes.`;
 /** Selectable styles contain only logo-free artwork. Legacy photo remains render-only. */
 export const COVER_TEMPLATES = COVER_OPTIONS.map(({ image, ...option }) => ({
   ...option,
@@ -1550,12 +1556,26 @@ function StandardProductCard({
       const pageWidth =
         area.closest(".brochure-page")?.getBoundingClientRect().width ||
         wrap.width;
-      setScreenCorner(otherScreenAnnotationBaseBox({
-        left: (box.left - wrap.left + (box.width - contentWidth) / 2 + (visible?.left || 0) * contentWidth) / visualScale,
-        top: contentTop / visualScale,
-        width: contentWidth * (visible ? visible.right - visible.left : 1) / visualScale,
-        height: contentHeight * (visible ? visible.bottom - visible.top : 1) / visualScale,
-      }, pageWidth / visualScale));
+      setScreenCorner(
+        otherScreenAnnotationBaseBox(
+          {
+            left:
+              (box.left -
+                wrap.left +
+                (box.width - contentWidth) / 2 +
+                (visible?.left || 0) * contentWidth) /
+              visualScale,
+            top: contentTop / visualScale,
+            width:
+              (contentWidth * (visible ? visible.right - visible.left : 1)) /
+              visualScale,
+            height:
+              (contentHeight * (visible ? visible.bottom - visible.top : 1)) /
+              visualScale,
+          },
+          pageWidth / visualScale,
+        ),
+      );
     };
     const area = wrapRef.current;
     const card = area.closest(".brochure-product");
@@ -1778,9 +1798,7 @@ function StandardProductCard({
               }
               className="brochure-inch-label"
               style={
-                screenCorner
-                  ? { ...screenCorner }
-                  : { visibility: "hidden" }
+                screenCorner ? { ...screenCorner } : { visibility: "hidden" }
               }
             />
           )}
@@ -2443,6 +2461,9 @@ function CoverPageContent({
   const ribbonGradientId = `cover-ribbon-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
   const defaultRibbon = !campaign.coverElementPlacements?.["campaign-ribbon"];
+  const ribbonColors = coverRibbonColors(campaign);
+  const defaultPhoto =
+    defaultRibbon && !campaign.coverElementPlacements?.["campaign-photo"];
   const classicCover =
     !october &&
     campaign.brochureFooter?.style === "reference" &&
@@ -2526,11 +2547,21 @@ function CoverPageContent({
           campaign={campaign}
           kind="campaign-photo"
           defaultPlacement={{ x: 0, y: 0, width: 100, height: 56.32 }}
-          className="october-cover-photo"
+          className={`october-cover-photo ${defaultPhoto ? "october-cover-photo-default" : ""}`}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
           onReplaceFile={onReplaceCoverPhoto}
-          onChooseImage={chooseImage && onCoverImageChange ? () => chooseImage({source: coverArt, kind: "image", title: t("Manage image"), onSelect: onCoverImageChange}) : undefined}
+          onChooseImage={
+            chooseImage && onCoverImageChange
+              ? () =>
+                  chooseImage({
+                    source: coverArt,
+                    kind: "image",
+                    title: t("Manage image"),
+                    onSelect: onCoverImageChange,
+                  })
+              : undefined
+          }
         >
           {coverArt ? (
             <img src={coverArt} alt={t("Cover photograph")} draggable={false} />
@@ -2591,30 +2622,13 @@ function CoverPageContent({
               <defs>
                 <linearGradient
                   id={ribbonGradientId}
-                  x1="0"
-                  y1="0"
-                  x2={
-                    campaign.coverBackgroundGradient?.angle === 180 ? "0" : "1"
-                  }
-                  y2={
-                    campaign.coverBackgroundGradient?.angle === 180 ? "1" : "0"
-                  }
+                  x1="35%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
                 >
-                  <stop
-                    stopColor={
-                      campaign.coverBackgroundGradient?.from ||
-                      campaign.coverBackgroundColor ||
-                      "#1b4075"
-                    }
-                  />
-                  <stop
-                    offset="1"
-                    stopColor={
-                      campaign.coverBackgroundGradient?.to ||
-                      campaign.coverBackgroundColor ||
-                      "#1b4075"
-                    }
-                  />
+                  <stop stopColor={ribbonColors.from} />
+                  <stop offset="1" stopColor={ribbonColors.to} />
                 </linearGradient>
               </defs>
               <path
@@ -2748,7 +2762,22 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="band"
-          onChooseImage={chooseImage && onCampaignAssetChange ? () => chooseImage({source: campaign.campaignAssets?.["cover-band"]?.image || (october ? OCTOBER_ASSETS.uuu : brochureAssetSource(campaign, "coverBand")), kind: "image", title: t("Manage image"), onSelect: (image) => onCampaignAssetChange("cover-band", {image})}) : undefined}
+          onChooseImage={
+            chooseImage && onCampaignAssetChange
+              ? () =>
+                  chooseImage({
+                    source:
+                      campaign.campaignAssets?.["cover-band"]?.image ||
+                      (october
+                        ? OCTOBER_ASSETS.uuu
+                        : brochureAssetSource(campaign, "coverBand")),
+                    kind: "image",
+                    title: t("Manage image"),
+                    onSelect: (image) =>
+                      onCampaignAssetChange("cover-band", { image }),
+                  })
+              : undefined
+          }
           onReplaceFile={
             onReplaceCoverArtwork
               ? (file) => onReplaceCoverArtwork("cover-band", file)
@@ -2789,7 +2818,20 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="october-hajde"
-          onChooseImage={chooseImage && onCampaignAssetChange ? () => chooseImage({source: campaign.campaignAssets?.["cover-hajde"]?.image || OCTOBER_ASSETS.hajdeWhite, kind: "image", title: t("Manage image"), onSelect: (image) => onCampaignAssetChange("cover-hajde", {image})}) : undefined}
+          onChooseImage={
+            chooseImage && onCampaignAssetChange
+              ? () =>
+                  chooseImage({
+                    source:
+                      campaign.campaignAssets?.["cover-hajde"]?.image ||
+                      OCTOBER_ASSETS.hajdeWhite,
+                    kind: "image",
+                    title: t("Manage image"),
+                    onSelect: (image) =>
+                      onCampaignAssetChange("cover-hajde", { image }),
+                  })
+              : undefined
+          }
           onReplaceFile={
             onReplaceCoverArtwork
               ? (file) => onReplaceCoverArtwork("cover-hajde", file)
@@ -2920,17 +2962,20 @@ function CoverPageContent({
           )}
         </div>
       </div>
-      {october && (
-        <CoverElement
-          campaign={campaign}
-          kind="october-awards"
-          defaultPlacement={{ x: 79.1, y: 92.68, width: 17.08, height: 6.74 }}
-          onChange={onCoverElementChange}
-          onHide={onCoverElementHide}
-        >
-          <AwardBadges campaign={campaign} onChange={onCampaignAssetChange} />
-        </CoverElement>
-      )}
+      {october &&
+        campaign.brochureFooter?.showAwards !== false &&
+        (campaign.brochureFooter?.visible === false ||
+          campaign.brochureFooter?.style === "reference") && (
+          <CoverElement
+            campaign={campaign}
+            kind="october-awards"
+            defaultPlacement={{ x: 79.1, y: 92.68, width: 17.08, height: 6.74 }}
+            onChange={onCoverElementChange}
+            onHide={onCoverElementHide}
+          >
+            <AwardBadges campaign={campaign} onChange={onCampaignAssetChange} />
+          </CoverElement>
+        )}
       <BrochureFooter
         campaign={campaign}
         onChange={onCampaignAssetChange}
@@ -2941,7 +2986,12 @@ function CoverPageContent({
   );
 }
 
-function formatDates(start?: string, end?: string, includeYear = true) {
+function formatDates(
+  start?: string,
+  end?: string,
+  includeYear = true,
+  compactSameMonth = false,
+) {
   if (!start && !end) return "Datat e fushatës";
   const months = [
     "janar",
@@ -2962,6 +3012,15 @@ function formatDates(start?: string, end?: string, includeYear = true) {
     const [year, month, day] = date.split("-").map(Number);
     return `${day} ${months[(month ?? 0) - 1] || ""}${includeYear ? ` ${year}` : ""}`;
   };
+  if (
+    compactSameMonth &&
+    start &&
+    end &&
+    start !== end &&
+    start.slice(0, 7) === end.slice(0, 7)
+  ) {
+    return `${Number(start.slice(8, 10))} – ${fmt(end)}`;
+  }
   return start === end ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
 }
 
@@ -3161,6 +3220,9 @@ export function StoresPage({
     campaign,
     campaign.storesSnapshot?.contact || settings.contact || {},
   );
+  const servicePhones = isReferenceStoresDesign(campaign)
+    ? String(contact.servicePhones || "").replace(/\s*[·;]\s*/g, "\n")
+    : contact.servicePhones;
   const element = (
     kind: string,
     placement: Box,
@@ -3172,7 +3234,7 @@ export function StoresPage({
       kind={kind}
       onChange={onElementChange}
       onHide={onElementHide}
-      defaultPlacement={placement}
+      defaultPlacement={storesReferencePlacement(campaign, kind, placement)}
       className={className}
     >
       {children}
@@ -3206,7 +3268,7 @@ export function StoresPage({
   return (
     <BrochureFormatFrame campaign={campaign} kind="stores">
       <section
-        className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
+        className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
         style={{
           ...brochureFormatStyle(campaign),
           ...backgroundReadabilityStyle(
@@ -3368,11 +3430,17 @@ export function StoresPage({
                       </b>
                     )}
                     {lines.address && (
-                      <span {...editableText(lines.address, save("address"))}>
+                      <span
+                        className="store-address"
+                        {...editableText(lines.address, save("address"))}
+                      >
                         {lines.address}
                       </span>
                     )}
-                    <span {...editableText(lines.phone, save("phone"))}>
+                    <span
+                      className="store-phone"
+                      {...editableText(lines.phone, save("phone"))}
+                    >
                       {lines.phone}
                     </span>
                   </div>
@@ -3432,12 +3500,12 @@ export function StoresPage({
             </span>
             <span
               {...editableText(
-                contact.servicePhones,
+                servicePhones,
                 onContactChange &&
                   ((value: string) => onContactChange("servicePhones", value)),
               )}
             >
-              {contact.servicePhones}
+              {servicePhones}
             </span>
           </div>,
         )}
@@ -3532,6 +3600,8 @@ export function BrochureFooter({
         }
       : {};
   const reference = design.style === "reference";
+  const showAwards = design.showAwards !== false;
+  const fadeEnd = !reference && design.fadeEnd === true;
   const height = design.height ?? (reference ? 5 : 4);
   const dates = (
     <span
@@ -3540,7 +3610,7 @@ export function BrochureFooter({
       style={{ fontSize: `${design.dateSize ?? (reference ? 2 : 1.9)}cqw` }}
       {...editable("dateText")}
     >
-      {reference ? (
+      {reference || fadeEnd ? (
         <ReferenceFooterValidity
           text={design.dateText ?? footerDateText(campaign)}
         />
@@ -3556,7 +3626,7 @@ export function BrochureFooter({
       style={{ fontSize: `${design.paymentSize ?? (reference ? 2 : 1.45)}cqw` }}
       {...editable("paymentText")}
     >
-      {reference ? (
+      {reference || fadeEnd ? (
         <ReferenceFooterPayment text={paymentTextFor(campaign)} />
       ) : (
         paymentTextFor(campaign)
@@ -3577,17 +3647,23 @@ export function BrochureFooter({
       onChange={onPlacementChange}
     >
       <div
-        className={`brochure-offer-footer ${reference ? "reference-offer-footer" : ""}`}
+        className={`brochure-offer-footer ${reference ? "reference-offer-footer" : ""} ${!showAwards ? "brochure-footer-no-awards" : ""} ${fadeEnd ? "brochure-footer-fading" : ""}`}
         style={{
           color: coverTextColor(campaign, "coverFooterColor"),
           ...(!reference
-            ? { gridTemplateColumns: `${design.dateWidth ?? 34}% 1fr 20%` }
-            : {}),
-          ...(design.from || design.to
             ? {
-                background: `linear-gradient(90deg, ${design.from || "#f3432b"} 0%, ${design.from || "#f3432b"} 38%, ${design.to || "#205785"} 100%)`,
+                gridTemplateColumns: `${design.dateWidth ?? 34}% 1fr${showAwards ? " 20%" : ""}`,
               }
             : {}),
+          ...(fadeEnd
+            ? {
+                background: `linear-gradient(90deg, ${design.from || "#ff4228"} 0%, ${design.from || "#ff4228"} 58%, ${design.from || "#ff4228"}00 100%)`,
+              }
+            : design.from || design.to
+              ? {
+                  background: `linear-gradient(90deg, ${design.from || "#f3432b"} 0%, ${design.from || "#f3432b"} 38%, ${design.to || "#205785"} 100%)`,
+                }
+              : {}),
         }}
       >
         {reference ? (
@@ -3598,7 +3674,9 @@ export function BrochureFooter({
           <>
             {dates}
             {payment}
-            <AwardBadges campaign={campaign} onChange={onChange} />
+            {showAwards && (
+              <AwardBadges campaign={campaign} onChange={onChange} />
+            )}
           </>
         )}
       </div>
@@ -3608,11 +3686,12 @@ export function BrochureFooter({
 
 function footerDateText(campaign: Campaign) {
   const reference = campaign.brochureFooter?.style === "reference";
+  const compact = reference || campaign.brochureFooter?.fadeEnd === true;
   const sameYear =
     !campaign.startDate ||
     !campaign.endDate ||
     campaign.startDate.slice(0, 4) === campaign.endDate.slice(0, 4);
-  return `Vlen ${formatDates(campaign.startDate, campaign.endDate, !reference || !sameYear)}${reference ? ", në dyqane dhe online." : ""}`;
+  return `Vlen ${formatDates(campaign.startDate, campaign.endDate, !compact || !sameYear, campaign.brochureFooter?.fadeEnd)}${reference ? ", në dyqane dhe online." : ""}`;
 }
 
 function AwardBadges({
@@ -3628,7 +3707,11 @@ function AwardBadges({
     id: string,
     label: string,
     children: React.ReactNode,
-    width = isOctoberBrochure(campaign) ? "8.2cqw" : "4cqw",
+    width = scope === "stores" && isReferenceStoresDesign(campaign)
+      ? "9.6cqw"
+      : isOctoberBrochure(campaign)
+        ? "8.2cqw"
+        : "4cqw",
   ) => (
     <CampaignAssetArtwork
       campaign={campaign}

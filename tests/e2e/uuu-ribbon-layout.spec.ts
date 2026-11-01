@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-test("UUU ribbon joins its cover gradient along one diagonal at editing and thumbnail sizes", async ({
+test("UUU ribbon stays distinct, slopes upward and ends the photograph at editing and thumbnail sizes", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -70,10 +70,24 @@ test("UUU ribbon joins its cover gradient along one diagonal at editing and thum
           left.y + ((x - left.x) / (right.x - left.x)) * (right.y - left.y)
         );
       };
+      const photograph = element.querySelector(".october-cover-photo > img")!;
+      const photoRect = photograph.getBoundingClientRect();
+      const photoPoints = getComputedStyle(photograph)
+        .clipPath.match(/[\d.]+/g)!
+        .map(Number);
+      const paint = ribbon.querySelector("linearGradient")!;
       const message = element.querySelector(".cover-element-message > p")!;
       const style = getComputedStyle(message);
       const matrix = new DOMMatrix(style.transform);
       return {
+        photoLeft: photoRect.top + (photoRect.height * photoPoints[7]!) / 100,
+        photoRight: photoRect.top + (photoRect.height * photoPoints[5]!) / 100,
+        ribbonUpperLeft: ribbonPoint(0, 70).y,
+        ribbonUpperRight: ribbonPoint(1080, 0).y,
+        paint: ["x1", "y1", "x2", "y2"].map((a) => paint.getAttribute(a)),
+        colors: Array.from(paint.querySelectorAll("stop"), (s) =>
+          s.getAttribute("stop-color"),
+        ),
         bodyLeft: bodyRect.top + (bodyRect.height * points[1]!) / 100,
         bodyRight: bodyRect.top + (bodyRect.height * points[3]!) / 100,
         ribbonLeft: lowerEdgeAt(bodyRect.left),
@@ -98,6 +112,15 @@ test("UUU ribbon joins its cover gradient along one diagonal at editing and thum
     expect(Math.abs(geometry.artRight - geometry.artRibbonRight)).toBeLessThan(
       0.1,
     );
+    expect(geometry.paint).toEqual(["35%", "0%", "100%", "0%"]);
+    expect(geometry.colors).toEqual(["#144c83", "#70acdc"]);
+    expect(
+      Math.abs(geometry.photoLeft - geometry.ribbonUpperLeft),
+    ).toBeLessThan(0.1);
+    expect(
+      Math.abs(geometry.photoRight - geometry.ribbonUpperRight),
+    ).toBeLessThan(0.1);
+    expect(geometry.ribbonUpperLeft).toBeGreaterThan(geometry.ribbonUpperRight);
     expect(geometry.bodyLeft).toBeGreaterThan(geometry.bodyRight);
     expect(geometry.angle).toBeCloseTo(-3.18, 2);
     expect(geometry.alignment).toBe("left");

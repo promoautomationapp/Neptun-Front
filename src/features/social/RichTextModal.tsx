@@ -1,3 +1,4 @@
+import { CloseButton } from "../../components/CloseButton";
 import React, { useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -126,14 +127,11 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
               )}
             </p>
           </div>
-          <button
-            type="button"
+          <CloseButton
             className="social-modal-close"
             aria-label={t("Close")}
             onClick={onClose}
-          >
-            ×
-          </button>
+          />
         </header>
         <div
           className="social-rich-toolbar"

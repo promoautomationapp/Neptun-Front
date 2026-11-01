@@ -991,6 +991,25 @@ html[data-theme="dark"] body .cs-inline-price-editor input[type="number"] {
 .reference-offer-footer .brochure-footer-dates {
   font-weight: 700;
 }
+.brochure-footer-no-awards .brochure-footer-dates {
+  padding-left: 3.3cqw;
+}
+.brochure-footer-no-awards .brochure-footer-payment {
+  justify-self: end;
+  width: 100%;
+  max-width: 29.5cqw;
+  padding: 0 2cqw 0 0;
+  text-align: left;
+}
+.brochure-footer-fading .brochure-footer-dates {
+  font-family: "Cera Pro", SkolaSans, Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.brochure-footer-fading .brochure-footer-payment {
+  font-weight: 300;
+  line-height: 1.12;
+}
 .cs-screen-editor-grid {
   grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.75fr);
 }

@@ -1,0 +1,35 @@
+button.np-close-button.np-close-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  flex: 0 0 40px;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  text-indent: 0;
+  letter-spacing: normal;
+}
+button.np-close-button.np-close-button > svg {
+  position: static;
+  display: block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  margin: 0;
+  padding: 0;
+  transform: none;
+  pointer-events: none;
+}

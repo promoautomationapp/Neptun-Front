@@ -1615,6 +1615,8 @@ const translations: Record<string, string> = {
   "Reference · payment and dates": "Modeli referencë · këstet dhe datat",
   "Orange gradient bar": "Shiriti portokalli me gradient",
   "Show brochure footer": "Shfaq fundfaqen e broshurës",
+  "Fade into the cover background": "Zbehe drejt sfondit të kopertinës",
+  "Show award logos": "Shfaq logot e çmimeve të fituara",
   "Three offers · one above two": "Tre produkte · një sipër dhe dy poshtë",
   "One featured offer above two products":
     "Një produkt kryesor sipër dy produkteve",
@@ -1680,6 +1682,10 @@ const translations: Record<string, string> = {
   "Upload products": "Ngarko produktet",
   "Customize design (optional)": "Përshtat dizajnin (opsionale)",
   "Cover design": "Dizajni i kopertinës",
+  "Message ribbon colors": "Ngjyrat e shiritit të mesazhit",
+  "Ribbon start color": "Ngjyra e fillimit të shiritit",
+  "Ribbon end color": "Ngjyra e fundit të shiritit",
+  "The ribbon runs from left to right, separately from the cover background.": "Shiriti kalon nga e majta në të djathtë, veçmas nga sfondi i kopertinës.",
   "Images, text & layers": "Imazhe, tekst dhe shtresa",
   "Change spreadsheet columns (optional)":
     "Ndrysho kolonat e skedarit (opsionale)",

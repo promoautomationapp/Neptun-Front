@@ -47,6 +47,18 @@ export function coverGradientFill(
   return `linear-gradient(${Number.isFinite(Number(value.angle)) ? Number(value.angle) : 90}deg, ${color(value.from, "#0d5192")}, ${color(value.to, "#58a5ce")})`;
 }
 
+/** The campaign ribbon has its own horizontal paint, independent of the page. */
+export function coverRibbonColors(
+  campaign: Pick<Campaign, "coverRibbonColors">,
+) {
+  const color = (value: string | undefined, fallback: string) =>
+    /^#[\da-f]{6}$/i.test(value || "") ? value! : fallback;
+  return {
+    from: color(campaign.coverRibbonColors?.from, "#144c83"),
+    to: color(campaign.coverRibbonColors?.to, "#70acdc"),
+  };
+}
+
 export function coverProductPlacement(
   campaign: Campaign,
   index: number,

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { t } from "../features/brochure/i18n";
-import { CloseIcon } from "./CloseIcon";
+import { CloseButton } from "./CloseButton";
 
 export function Modal({
   title,
@@ -57,14 +57,11 @@ export function Modal({
             <span className="cs-eyebrow">{kicker}</span>
             <h2>{title}</h2>
           </div>
-          <button
+          <CloseButton
             className="cs-icon-button"
-            type="button"
             onClick={onClose}
             aria-label={t("Close")}
-          >
-            <CloseIcon />
-          </button>
+          />
         </div>
         <div className="cs-modal-body">{content}</div>
         {footer && <div className="cs-modal-footer">{footer}</div>}
