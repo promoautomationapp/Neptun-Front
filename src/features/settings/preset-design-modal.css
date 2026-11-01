@@ -1,10 +1,11 @@
-.cs-preset-editor-modal .cs-modal {
+.cs-preset-editor-modal .cs-modal.wide {
   display: flex;
   flex-direction: column;
   width: min(1440px, calc(100vw - 32px));
   height: min(900px, calc(100dvh - 32px));
   max-height: calc(100dvh - 32px);
   overflow: hidden;
+  padding: 0;
   color: var(--np-text, #183852);
   background: var(--np-surface, #fff);
 }
@@ -52,7 +53,7 @@
   font-size: 12px;
   line-height: 1.5;
 }
-.ns-settings.ns-preset-settings {
+.cs-preset-editor-modal .ns-settings.ns-preset-settings {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -65,7 +66,7 @@
   padding: 0;
   color: inherit;
 }
-.ns-preset-settings > .ns-settings-workspace {
+.cs-preset-editor-modal .ns-preset-settings > .ns-settings-workspace {
   display: grid;
   flex: 1 1 auto;
   grid-template-columns: minmax(0, 1fr) minmax(270px, 36%);
@@ -86,7 +87,7 @@
 .ns-preset-controls > .ns-tabs {
   display: flex;
   flex: 0 0 auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   width: 100%;
@@ -95,8 +96,8 @@
   max-height: none;
   margin: 0;
   padding: 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: visible;
+  overflow-y: visible;
   scrollbar-width: thin;
 }
 .ns-preset-controls > .ns-page-areas button,
@@ -268,7 +269,7 @@
   min-height: 52px;
 }
 @media (max-width: 760px) {
-  .cs-preset-editor-modal .cs-modal {
+  .cs-preset-editor-modal .cs-modal.wide {
     width: calc(100vw - 16px);
     height: calc(100dvh - 16px);
     max-height: calc(100dvh - 16px);
@@ -291,7 +292,7 @@
     font-size: 11px;
     line-height: 1.35;
   }
-  .ns-preset-settings > .ns-settings-workspace {
+  .cs-preset-editor-modal .ns-preset-settings > .ns-settings-workspace {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     gap: 10px;
@@ -334,6 +335,12 @@
     min-height: 27px;
     padding: 4px 6px;
     font-size: 10px;
+  }
+  .ns-preset-controls > .ns-page-areas,
+  .ns-preset-controls > .ns-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   .ns-preset-settings .ns-section {
     padding: 14px;

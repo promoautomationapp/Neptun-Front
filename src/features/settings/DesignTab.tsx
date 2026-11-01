@@ -6,6 +6,7 @@ import { resolveAsset } from "../../api/client";
 import { Field, Toggle } from "./components";
 import { COVER_OPTIONS } from "./options";
 import { BACKGROUND_PRESETS } from "../brochure/pageBackground";
+import { coverRibbonColors } from "../brochure/coverElements";
 import {
   availableBrochureFormats,
   DEFAULT_BROCHURE_FORMAT,
@@ -331,6 +332,38 @@ export function DesignTab({
             })
           }
         />
+        {b.brochureVisualStyle === "october" && (
+          <SettingsGroup title={<>{t("Message ribbon colors")}</>}>
+            <p>
+              {t(
+                "The ribbon runs from left to right, separately from the cover background.",
+              )}
+            </p>
+            <div className="ns-grid">
+              {(["from", "to"] as const).map((key) => (
+                <Field
+                  key={key}
+                  label={t(
+                    key === "from" ? "Ribbon start color" : "Ribbon end color",
+                  )}
+                >
+                  <input
+                    type="color"
+                    value={coverRibbonColors(b)[key]}
+                    onChange={(event) =>
+                      update((next) => {
+                        next.brochure.coverRibbonColors = {
+                          ...coverRibbonColors(next.brochure),
+                          [key]: event.target.value,
+                        };
+                      })
+                    }
+                  />
+                </Field>
+              ))}
+            </div>
+          </SettingsGroup>
+        )}
         <SettingsGroup title={<> {t("Cover text colors")} </>}>
           <div className="ns-grid">
             {(

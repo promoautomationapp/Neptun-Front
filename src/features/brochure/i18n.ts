@@ -1682,6 +1682,7 @@ const translations: Record<string, string> = {
   "Upload products": "Ngarko produktet",
   "Customize design (optional)": "Përshtat dizajnin (opsionale)",
   "Cover design": "Dizajni i kopertinës",
+  "Cover background": "Sfondi i kopertinës",
   "Message ribbon colors": "Ngjyrat e shiritit të mesazhit",
   "Ribbon start color": "Ngjyra e fillimit të shiritit",
   "Ribbon end color": "Ngjyra e fundit të shiritit",

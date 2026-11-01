@@ -16,6 +16,7 @@ import {
   workspaceSettingsSchema,
 } from "../../src/features/settings/settings.schema";
 import { campaignDefaults } from "../../src/features/settings/campaign-defaults";
+import { DesignTab } from "../../src/features/settings/DesignTab";
 import { setLanguage } from "../../src/features/brochure/i18n";
 afterEach(cleanup);
 
@@ -134,4 +135,51 @@ it("preserves custom photograph and ribbon placements", () => {
     photo.style.width,
     photo.style.height,
   ]).toEqual(["2%", "3%", "96%", "40%"]);
+});
+
+it("updates the preset ribbon colors in the same preview without changing the page gradient", () => {
+  setLanguage("en");
+  function PresetEditor() {
+    const [settings, setSettings] = useState(() =>
+      resolveSettings({ brochure: { brochureVisualStyle: "october" } }),
+    );
+    return (
+      <>
+        <DesignTab
+          draft={settings}
+          update={(mutate) =>
+            setSettings((current) => {
+              const next = structuredClone(current);
+              mutate(next);
+              return next;
+            })
+          }
+        />
+        <CoverPage
+          campaign={{
+            id: "preview",
+            name: "Offer",
+            products: [],
+            ...campaignDefaults(settings),
+          }}
+        />
+      </>
+    );
+  }
+  const view = render(<PresetEditor />);
+  const background =
+    view.container.querySelector<HTMLElement>(".brochure-cover")!.style
+      .background;
+  fireEvent.change(view.getByLabelText("Ribbon end color"), {
+    target: { value: "#aabbcc" },
+  });
+  expect(
+    view.container
+      .querySelector(".october-cover-ribbon stop[offset='1']")!
+      .getAttribute("stop-color"),
+  ).toBe("#aabbcc");
+  expect(
+    view.container.querySelector<HTMLElement>(".brochure-cover")!.style
+      .background,
+  ).toBe(background);
 });
