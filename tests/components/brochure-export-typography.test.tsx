@@ -53,6 +53,19 @@ it("reports missing font resources instead of downloading silently substituted t
   ).rejects.toThrow("Brochure fonts could not be loaded");
   expect(root.querySelector('[data-export-hide="true"]')).toBeNull();
 });
+it("requires the original Cera Pro headline font to be embedded for cover exports", async () => {
+  const root = document.createElement("section");
+  root.style.fontFamily = '"Cera Pro"';
+  root.style.fontWeight = "700";
+  root.textContent = "Çmimet flasin vetë!";
+  document.body.append(root);
+  await expect(brochureExportFontCSS(root, async () => "")).rejects.toThrow(
+    "Brochure fonts could not be loaded",
+  );
+  const css =
+    '@font-face{font-family:"Cera Pro";font-weight:700;src:url(data:font/otf;base64,font)}';
+  expect(await brochureExportFontCSS(root, async () => css)).toBe(css);
+});
 it.each([false, true])(
   "pins SVG weight, family and exact size during capture and restores them after failure=%s",
   async (fail) => {

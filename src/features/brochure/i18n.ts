@@ -2783,6 +2783,9 @@ const translations: Record<string, string> = {
   "Page layer color code": "Kodi i ngjyrës së shtresës së faqes",
   "Choose a color or enter its code, such as #1B4075.":
     "Zgjidhni një ngjyrë ose shënoni kodin e saj, si p.sh. #1B4075.",
+  "Current team": "Ekipi aktual",
+  "Invitation cancelled": "Ftesa e anuluar",
+  "Cancelled invitations and disabled users are hidden from the Neptun team. Select Disabled to manage these records as support.": "Ftesat e anuluara dhe përdoruesit e çaktivizuar nuk shihen nga ekipi Neptun. Zgjidhni Të çaktivizuar për t’i menaxhuar si mbështetje.",
 };
 
 let language =

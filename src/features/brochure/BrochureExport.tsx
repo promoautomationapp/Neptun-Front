@@ -193,7 +193,7 @@ export async function brochureExportFontCSS(
     const css = await embed(root);
     if (
       /url\(\s*["']?\s*["']?\s*\)/i.test(css) ||
-      (!css && [...families].some((family) => /TSTAR|SkolaSans/i.test(family)))
+      (!css && [...families].some((family) => /TSTAR|SkolaSans|Cera Pro/i.test(family)))
     )
       throw new Error(
         t("Brochure fonts could not be loaded. Please retry the download."),

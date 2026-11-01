@@ -13,7 +13,10 @@ const tones: Record<string, string> = {
 export function isStatusOptions(values: readonly (string | number)[]): boolean {
   return (
     values.some((value) => Boolean(tones[String(value)])) &&
-    values.every((value) => value === "all" || Boolean(tones[String(value)]))
+    values.every(
+      (value) =>
+        value === "all" || value === "current" || Boolean(tones[String(value)]),
+    )
   );
 }
 export function statusTone(value: string | number): string | undefined {

@@ -421,16 +421,11 @@
   line-height: 1.16;
   font-weight: 500;
 }
-@font-face {
-  font-family: OctoberCera;
-  src: url("/brochure-presets/october/CeraPro-Bold.otf") format("opentype");
-  font-weight: 900;
-  font-display: swap;
-}
 .brochure-page.brochure-october.cover-editable-elements
   .cover-element-message
   p {
-  font-family: OctoberCera, SkolaSans, Arial, sans-serif;
+  font-family: "Cera Pro", SkolaSans, Arial, sans-serif;
+  font-weight: 700;
 }
 .brochure-page.brochure-october
   .brochure-product:not(.details-left)

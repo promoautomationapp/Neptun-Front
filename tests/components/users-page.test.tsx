@@ -86,7 +86,7 @@ it("hides support accounts from Neptun admins and invites new staff by default",
   expect(view.queryByText("Deleted colleague")).toBeNull();
   fireEvent.click(view.getByRole("combobox", { name: "Status" }));
   expect(view.queryByRole("option", { name: "Disabled" })).toBeNull();
-  fireEvent.keyDown(view.getByRole("searchbox", { name: "Search options" }), {
+  fireEvent.keyDown(view.getByRole("combobox", { name: "Status" }), {
     key: "Escape",
   });
   expect(view.queryByText("support@example.test")).toBeNull();
@@ -224,6 +224,7 @@ it("restores a verified disabled colleague while email delivery is unavailable",
       currentUser={{ ...admin, role: "superadmin", isSupport: true }}
     />,
   );
+  selectSetting(view, "Status", "disabled");
   const button = await view.findByRole("button", { name: "Restore access" });
   expect((button as HTMLButtonElement).disabled).toBe(false);
   fireEvent.click(button);
@@ -314,6 +315,9 @@ it("offers a new invitation, rather than restoring unverified cancelled accounts
       currentUser={{ ...admin, role: "superadmin", isSupport: true }}
     />,
   );
+  await view.findByText(/Cancelled invitations and disabled users are hidden/);
+  expect(view.queryByText(staff.email)).toBeNull();
+  selectSetting(view, "Status", "disabled");
   expect(
     await view.findByRole("button", { name: "Invite again" }),
   ).toBeTruthy();

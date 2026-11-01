@@ -72,7 +72,7 @@ export function UsersPage({
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("current");
   const [inviting, setInviting] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -125,7 +125,10 @@ export function UsersPage({
               .toLowerCase()
               .includes(query.toLowerCase())) &&
           (role === "all" || user.role === role) &&
-          (status === "all" || user.status === status),
+          (status === "all" ||
+            (status === "current"
+              ? user.status !== "disabled"
+              : user.status === status)),
       ),
     [users, query, role, status],
   );
@@ -507,8 +510,10 @@ export function UsersPage({
             {t("Status")}
             <SearchableSelect
               value={status}
+              searchable={false}
               onChange={(event) => setStatus(event.target.value)}
             >
+              <option value="current">{t("Current team")}</option>
               <option value="all">{t("All statuses")}</option>
               <option value="active">{t("Active")}</option>
               <option value="invited">{t("Invited")}</option>
@@ -581,7 +586,9 @@ export function UsersPage({
                           user.status === "invited"
                             ? "Invitation pending"
                             : user.status === "disabled"
-                              ? "Disabled"
+                              ? user.emailVerified
+                                ? "Disabled"
+                                : "Invitation cancelled"
                               : "Active",
                         )}
                       </span>
@@ -713,6 +720,9 @@ export function UsersPage({
       </div>
       {currentUser.role === "superadmin" && (
         <p className="na-support-note">
+          {t(
+            "Cancelled invitations and disabled users are hidden from the Neptun team. Select Disabled to manage these records as support.",
+          )}{" "}
           {t(
             "Support accounts are visible only to Promo Automation superadmins and are managed separately from the Neptun team.",
           )}
