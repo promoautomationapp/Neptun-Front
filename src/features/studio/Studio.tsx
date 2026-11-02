@@ -1,3 +1,9 @@
+import {
+  readWorkspaceRoute,
+  workspaceRouteUrl,
+  sameWorkspaceRoute,
+  type WorkspaceRoute,
+} from "../../app/workspaceRoute";
 import { confirmDialog } from "../../components/dialogs";
 import { ActionMenu } from "../brochure/ActionMenu";
 import { BrochurePreview } from "../brochure/BrochurePreview";
@@ -292,11 +298,14 @@ interface ProductEditorProps extends CampaignControlsProps {
 interface BrochureEditorProps extends StoreControlsProps {
   canMakeSocial?: boolean;
   canUseCatalog?: boolean;
+  initialPage?: number;
+  onPageChange?: (page: number) => void;
   notificationTarget?: {
     id: string;
     campaignId: string;
     pageIndex: number;
     commentId?: string | null;
+    openComments?: boolean;
   } | null;
   onPreparePhotos?: (
     snapshot: Campaign,
@@ -2083,13 +2092,26 @@ export function BrochureEditor({
   onMakeSocial,
   onPreparePhotos,
   notificationTarget,
+  initialPage = 0,
+  onPageChange,
 }: BrochureEditorProps) {
   const pages = splitPages(campaign);
   const pageFormat = resolveBrochureFormat(campaign);
   const formatGeometry = brochureExportGeometry(pageFormat);
   const televisions = campaignTelevisions(campaign);
   const hasStoresPage = includesStoresPage(campaign);
-  const [selected, setSelected] = useState(-1);
+  const [selected, setSelected] = useState(() =>
+    Math.max(
+      -1,
+      Math.min(
+        initialPage - 1,
+        hasStoresPage ? pages.length : Math.max(-1, pages.length - 1),
+      ),
+    ),
+  );
+  useEffect(() => {
+    onPageChange?.(selected + 1);
+  }, [selected, onPageChange]);
   const [moveTarget, setMoveTarget] = useState<Product | null>(null);
   const [movePage, setMovePage] = useState(-1);
   const [movePosition, setMovePosition] = useState("start");
@@ -2152,7 +2174,7 @@ export function BrochureEditor({
         ),
       ),
     );
-    setCommentMode(true);
+    setCommentMode(notificationTarget.openComments !== false);
     setPreviewMode(false);
     setShowSettings(false);
   }, [notificationTarget?.id, campaign.id]);
@@ -2340,7 +2362,11 @@ export function BrochureEditor({
     onToast(t("Artwork added. Drag it to position it on this page."));
   }
   function addImageLayer(source: string) {
-    addSavedPageArtwork({id: crypto.randomUUID(), name: t("Image"), url: source});
+    addSavedPageArtwork({
+      id: crypto.randomUUID(),
+      name: t("Image"),
+      url: source,
+    });
   }
   async function addPageArtwork(
     file: File,
@@ -2894,24 +2920,39 @@ export function BrochureEditor({
         />
       )}
       {showLayers && (
-        <Modal wide title={t("Layers")} kicker={title} onClose={() => setShowLayers(false)}>
+        <Modal
+          wide
+          title={t("Layers")}
+          kicker={title}
+          onClose={() => setShowLayers(false)}
+        >
           <div className="cs-layer-workspace">
-          <div>
-          <PageLayersControls
-            key={artworkPageKey}
-            campaign={campaign}
-            pageKey={artworkPageKey}
-            onUpdate={onUpdate}
-            onToast={onToast}
-          />
-          </div>
-          <aside className="cs-layer-preview" aria-label={t("Layer preview")}>
-            <strong>{t("Layer preview")}</strong>
-            <p>{t("Changes appear immediately in the preview.")}</p>
-            <div className="cs-layer-preview-paper">
-              {selected === -1 ? <CoverPage campaign={campaign} settings={settings} /> : page ? <ProductPage campaign={campaign} settings={settings} page={page} /> : <StoresPage campaign={campaign} settings={settings} />}
+            <div>
+              <PageLayersControls
+                key={artworkPageKey}
+                campaign={campaign}
+                pageKey={artworkPageKey}
+                onUpdate={onUpdate}
+                onToast={onToast}
+              />
             </div>
-          </aside>
+            <aside className="cs-layer-preview" aria-label={t("Layer preview")}>
+              <strong>{t("Layer preview")}</strong>
+              <p>{t("Changes appear immediately in the preview.")}</p>
+              <div className="cs-layer-preview-paper">
+                {selected === -1 ? (
+                  <CoverPage campaign={campaign} settings={settings} />
+                ) : page ? (
+                  <ProductPage
+                    campaign={campaign}
+                    settings={settings}
+                    page={page}
+                  />
+                ) : (
+                  <StoresPage campaign={campaign} settings={settings} />
+                )}
+              </div>
+            </aside>
           </div>
           <div className="cs-modal-actions">
             <Button onClick={() => setShowLayers(false)}>{t("Done")}</Button>
@@ -3009,7 +3050,11 @@ export function BrochureEditor({
               </ActionMenu>
             )}
             {canEditCanvas && (
-              <button type="button" className="cs-canvas-layers-button" onClick={() => setShowLayers(true)}>
+              <button
+                type="button"
+                className="cs-canvas-layers-button"
+                onClick={() => setShowLayers(true)}
+              >
                 <EditorIcon name="layers" /> {t("Layers")}
               </button>
             )}
@@ -3139,7 +3184,14 @@ export function BrochureEditor({
                       }
                     : undefined
                 }
-                onCoverImageChange={canEditCanvas ? (source) => onUpdate((draft) => {draft.coverImage = source;}) : undefined}
+                onCoverImageChange={
+                  canEditCanvas
+                    ? (source) =>
+                        onUpdate((draft) => {
+                          draft.coverImage = source;
+                        })
+                    : undefined
+                }
                 onStoresFooterChange={
                   canEditCanvas
                     ? (kind: string, value: Placement) =>
@@ -3934,6 +3986,28 @@ export default function App({
   initialUser?: SessionUser;
   onAuthChange?: (user: SessionUser | null, notice?: string) => void;
 } = {}) {
+  const [initialRoute] = useState(() => readWorkspaceRoute(window.location));
+  const routeRef = useRef(initialRoute);
+  const routeWriteMode = useRef<"push" | "replace">("push");
+  const historyTracker = useRef({
+    index: Number.isInteger(window.history.state?.neptunWorkspaceIndex)
+      ? Number(window.history.state.neptunWorkspaceIndex)
+      : 0,
+    url:
+      window.location.pathname + window.location.search + window.location.hash,
+    restoring: false,
+    allow: false,
+  });
+  const [navigationError, setNavigationError] = useState("");
+  const [routePostId, setRoutePostId] = useState(initialRoute.postId);
+  const [routePage, setRoutePage] = useState({
+    campaignId: initialRoute.campaignId,
+    index: initialRoute.pageIndex,
+  });
+  const routeComment = useRef(initialRoute.commentId);
+  const routeCommentDocument = useRef(
+    initialRoute.campaignId || initialRoute.postId,
+  );
   const [language, setLocale] = useState(getLanguage);
   const [, setBrandLogoRevision] = useState(0);
   useEffect(() => {
@@ -3992,18 +4066,24 @@ export default function App({
       ),
     [sourcePathsSnapshot, access],
   );
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(
+    initialRoute.campaignId,
+  );
   const [notificationTarget, setNotificationTarget] =
     useState<BrochureEditorProps["notificationTarget"]>(null);
   const [notificationPostTarget, setNotificationPostTarget] = useState<{
     postId: string;
     commentId: string | null;
-  } | null>(null);
+  } | null>(
+    initialRoute.postId
+      ? { postId: initialRoute.postId, commentId: initialRoute.commentId }
+      : null,
+  );
   const notificationRequest = useRef<AbortController | null>(null);
   const emailLinkHandled = useRef(false);
 
   const campaignNow = useCampaignClock();
-  const [section, setSectionValue] = useState("campaigns");
+  const [section, setSectionValue] = useState<string>(initialRoute.section);
   useEffect(
     () => () => notificationRequest.current?.abort(),
     [section, activeId],
@@ -4011,20 +4091,20 @@ export default function App({
   useEffect(() => {
     if (!user || emailLinkHandled.current) return;
     emailLinkHandled.current = true;
-    const params = new URLSearchParams(window.location.search);
-    const postId = params.get("post");
-    const id = postId || params.get("campaign");
-    if (!id || id.length > 150) return;
-    const rawPage = Number(params.get("page") || 0);
+    const { campaignId, postId, commentId, pageIndex } = initialRoute;
+    const id = postId || campaignId;
+    if (!id) return;
     void openReviewNotification({
-      id: `email:${id}:${params.get("comment") || ""}`,
+      id: `url:${id}:${commentId || ""}`,
       campaignId: id,
       documentKind: postId ? "post" : "campaign",
-      pageIndex:
-        Number.isInteger(rawPage) && rawPage >= 0 && rawPage <= 200
-          ? rawPage
-          : 0,
-      commentId: params.get("comment"),
+      pageIndex,
+      commentId,
+      openComments:
+        Boolean(commentId) ||
+        !new URLSearchParams(window.location.search).has("tab"),
+    }).then(() => {
+      if (campaignId) setEditorTab(initialRoute.editorTab);
     });
   }, [user?.id]);
 
@@ -4074,10 +4154,179 @@ export default function App({
     setSectionValue(next);
     return true;
   }
+  const settingsNavigationGuard = useRef({
+    section,
+    settingsDirty,
+    settingsBusy,
+    canLeaveSettings,
+  });
+  settingsNavigationGuard.current = {
+    section,
+    settingsDirty,
+    settingsBusy,
+    canLeaveSettings,
+  };
   const [socialSeed, setSocialSeed] = useState<SocialSeed | null>(null);
   const activeEditorRef = useRef({ activeId, section });
   activeEditorRef.current = { activeId, section };
-  const [editorTab, setEditorTab] = useState("brochure");
+  const [editorTab, setEditorTab] = useState<string>(initialRoute.editorTab);
+  const rememberBrochurePage = React.useCallback(
+    (index: number) => {
+      if (
+        routeRef.current.campaignId === activeId &&
+        routeRef.current.pageIndex !== index
+      )
+        routeComment.current = null;
+      setRoutePage((current) =>
+        current.campaignId === activeId && current.index === index
+          ? current
+          : { campaignId: activeId, index },
+      );
+    },
+    [activeId],
+  );
+  useEffect(() => {
+    window.history.replaceState(
+      {
+        ...window.history.state,
+        neptunWorkspaceIndex: historyTracker.current.index,
+      },
+      "",
+      historyTracker.current.url,
+    );
+    const restore = async (event: PopStateEvent) => {
+      const tracker = historyTracker.current;
+      if (tracker.restoring) {
+        tracker.restoring = false;
+        return;
+      }
+      const next = readWorkspaceRoute(window.location);
+      const targetUrl =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+      const targetIndex = Number.isInteger(event.state?.neptunWorkspaceIndex)
+        ? Number(event.state.neptunWorkspaceIndex)
+        : tracker.index - 1;
+      const guard = settingsNavigationGuard.current;
+      if (
+        !tracker.allow &&
+        guard.section === "stores" &&
+        (guard.settingsDirty || guard.settingsBusy)
+      ) {
+        const delta = tracker.index - targetIndex;
+        tracker.restoring = delta !== 0;
+        if (delta) window.history.go(delta);
+        else
+          window.history.replaceState(
+            { ...window.history.state, neptunWorkspaceIndex: tracker.index },
+            "",
+            tracker.url,
+          );
+        if (!(await guard.canLeaveSettings())) return;
+        tracker.allow = true;
+        if (delta) {
+          window.history.go(-delta);
+          return;
+        }
+        window.history.replaceState(
+          { ...window.history.state, neptunWorkspaceIndex: targetIndex },
+          "",
+          targetUrl,
+        );
+      }
+      tracker.allow = false;
+      tracker.index = targetIndex;
+      tracker.url = targetUrl;
+      setNavigationError("");
+      routeRef.current = next;
+      routeComment.current = next.commentId;
+      routeCommentDocument.current = next.campaignId || next.postId;
+      setSectionValue(next.section);
+      setActiveId(next.campaignId);
+      setRoutePostId(next.postId);
+      setEditorTab(next.editorTab);
+      setRoutePage({ campaignId: next.campaignId, index: next.pageIndex });
+      setNotificationPostTarget(
+        next.postId ? { postId: next.postId, commentId: next.commentId } : null,
+      );
+      setNotificationTarget(
+        next.campaignId
+          ? {
+              id: `history:${crypto.randomUUID()}`,
+              campaignId: next.campaignId,
+              pageIndex: next.pageIndex,
+              commentId: next.commentId,
+              openComments: Boolean(next.commentId),
+            }
+          : null,
+      );
+      setModal(null);
+    };
+    const updated = () => {
+      historyTracker.current.url =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+    };
+    window.addEventListener("neptun:workspace-url-changed", updated);
+    window.addEventListener("popstate", restore);
+    return () => {
+      window.removeEventListener("popstate", restore);
+      window.removeEventListener("neptun:workspace-url-changed", updated);
+    };
+  }, []);
+  useEffect(() => {
+    if (!user) return;
+    const next: WorkspaceRoute = {
+      section: section as WorkspaceRoute["section"],
+      campaignId: section === "editor" ? activeId : null,
+      postId: section === "social" ? routePostId : null,
+      pageIndex:
+        section === "editor" && routePage.campaignId === activeId
+          ? routePage.index
+          : 0,
+      editorTab:
+        section === "editor" && editorTab === "products"
+          ? "products"
+          : "brochure",
+      commentId:
+        routeCommentDocument.current ===
+        (section === "editor"
+          ? activeId
+          : section === "social"
+            ? routePostId
+            : null)
+          ? routeComment.current
+          : null,
+    };
+    if (!sameWorkspaceRoute(routeRef.current, next)) {
+      const url = workspaceRouteUrl(next, window.location);
+      if (
+        url !==
+        window.location.pathname + window.location.search + window.location.hash
+      ) {
+        const tracker = historyTracker.current;
+        if (routeWriteMode.current === "replace")
+          window.history.replaceState(
+            { ...window.history.state, neptunWorkspaceIndex: tracker.index },
+            "",
+            url,
+          );
+        else {
+          tracker.index += 1;
+          window.history.pushState(
+            { ...window.history.state, neptunWorkspaceIndex: tracker.index },
+            "",
+            url,
+          );
+        }
+        tracker.url = url;
+      }
+      routeWriteMode.current = "push";
+      routeRef.current = next;
+    }
+  }, [section, activeId, editorTab, routePage, routePostId, user?.id]);
   const [brochurePreviewVersion, setBrochurePreviewVersion] = useState(0);
   const [modal, setModal] = useState<string | null>(null);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
@@ -4137,8 +4386,10 @@ export default function App({
         user &&
         !canManageUsers(user)) ||
       (section === "insights" && user?.role !== "superadmin")
-    )
+    ) {
+      routeWriteMode.current = "replace";
       setSectionValue("campaigns");
+    }
     if (!access.canViewSocialPosts) setSocialSeed(null);
     if (!access.canDisableBrochures) setDeleteTarget(null);
     if (!access.canViewCatalog)
@@ -4411,7 +4662,7 @@ export default function App({
     target: Pick<
       WorkspaceNotification,
       "id" | "campaignId" | "pageIndex" | "commentId" | "documentKind"
-    >,
+    > & { openComments?: boolean },
   ) {
     if (section === "stores" && !(await canLeaveSettings())) return;
     if (target.documentKind === "post") {
@@ -4419,6 +4670,9 @@ export default function App({
         setToast(t("You do not have access to social posts."));
         return;
       }
+      setRoutePostId(target.campaignId);
+      routeComment.current = target.commentId;
+      routeCommentDocument.current = target.campaignId;
       setNotificationPostTarget({
         postId: target.campaignId,
         commentId: target.commentId,
@@ -4436,6 +4690,8 @@ export default function App({
       const fresh = await getCampaign(target.campaignId, request.signal);
       if (request.signal.aborted) return;
       if (fresh.disabledAt) {
+        if (activeEditorRef.current.activeId === target.campaignId)
+          setNavigationError(t("This brochure has been deleted."));
         setToast(t("This brochure has been deleted."));
         return;
       }
@@ -4452,20 +4708,39 @@ export default function App({
           section === "editor",
         ),
       );
+      setNavigationError("");
       setNotificationTarget({
         id: `${target.id}:${crypto.randomUUID()}`,
         campaignId: fresh.id,
+        openComments: target.openComments,
         pageIndex: thread?.pageIndex ?? target.pageIndex ?? 0,
         commentId: target.commentId,
       });
       setActiveId(fresh.id);
+      setRoutePage({
+        campaignId: fresh.id,
+        index: thread?.pageIndex ?? target.pageIndex ?? 0,
+      });
+      routeComment.current = target.commentId;
+      routeCommentDocument.current = target.campaignId;
       setEditorTab("brochure");
       setModal(null);
       setSettingsDirty(false);
       setSectionValue("editor");
       setMobileMenuOpen(false);
     } catch (error) {
-      if (!request.signal.aborted) setToast(errorMessage(error));
+      if (!request.signal.aborted) {
+        const requestedEditor =
+          activeEditorRef.current.section === "editor" &&
+          activeEditorRef.current.activeId === target.campaignId;
+        const message = requestedEditor
+          ? t(
+              "This brochure could not be opened. It may be unavailable or you may not have access.",
+            )
+          : errorMessage(error);
+        if (requestedEditor) setNavigationError(message);
+        setToast(message);
+      }
     }
   }
   async function runReviewAction(
@@ -5372,7 +5647,8 @@ export default function App({
               }
             >
               <SocialStudio
-                initialPostId={notificationPostTarget?.postId}
+                initialPostId={routePostId}
+                onActivePostChange={setRoutePostId}
                 focusedCommentId={notificationPostTarget?.commentId}
                 user={user}
                 members={members}
@@ -5429,13 +5705,28 @@ export default function App({
             onBusyChange={setSettingsBusy}
           />
         )}
+        {section === "not-found" && (
+          <div className="cs-main-panel cs-empty">
+            <h2>{t("Page not found")}</h2>
+            <Button onClick={() => setSection("campaigns")}>
+              {t("All campaigns")}
+            </Button>
+          </div>
+        )}
         {section === "editor" && !campaign && (
           <div className="cs-main-panel cs-empty">
-            <h2>{t("Campaign is loading")}</h2>
-            <p>
+            <h2>
               {t(
-                "Your campaign is being saved or refreshed. You can return to the campaign list and reopen it.",
+                navigationError
+                  ? "Brochure unavailable"
+                  : "Campaign is loading",
               )}
+            </h2>
+            <p>
+              {navigationError ||
+                t(
+                  "Your campaign is being saved or refreshed. You can return to the campaign list and reopen it.",
+                )}
             </p>
             <Button
               onClick={() => {
@@ -5623,6 +5914,10 @@ export default function App({
                 members={members}
                 onReviewAction={runReviewAction}
                 notificationTarget={notificationTarget}
+                initialPage={
+                  routePage.campaignId === campaign.id ? routePage.index : 0
+                }
+                onPageChange={rememberBrochurePage}
                 onUpdate={updateCampaign}
                 onPreparePhotos={prepareProductPhotos}
                 onToast={setToast}

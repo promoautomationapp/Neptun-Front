@@ -1682,11 +1682,15 @@ const translations: Record<string, string> = {
   "Upload products": "Ngarko produktet",
   "Customize design (optional)": "Përshtat dizajnin (opsionale)",
   "Cover design": "Dizajni i kopertinës",
+  "Page not found": "Faqja nuk u gjet",
+  "Brochure unavailable": "Broshura nuk është në dispozicion",
+  "This brochure could not be opened. It may be unavailable or you may not have access.": "Broshura nuk u hap. Mund të mos jetë në dispozicion ose nuk keni qasje në të.",
   "Cover background": "Sfondi i kopertinës",
   "Message ribbon colors": "Ngjyrat e shiritit të mesazhit",
   "Ribbon start color": "Ngjyra e fillimit të shiritit",
   "Ribbon end color": "Ngjyra e fundit të shiritit",
-  "The ribbon runs from left to right, separately from the cover background.": "Shiriti kalon nga e majta në të djathtë, veçmas nga sfondi i kopertinës.",
+  "The ribbon runs from left to right, separately from the cover background.":
+    "Shiriti kalon nga e majta në të djathtë, veçmas nga sfondi i kopertinës.",
   "Images, text & layers": "Imazhe, tekst dhe shtresa",
   "Change spreadsheet columns (optional)":
     "Ndrysho kolonat e skedarit (opsionale)",
@@ -2792,7 +2796,18 @@ const translations: Record<string, string> = {
     "Zgjidhni një ngjyrë ose shënoni kodin e saj, si p.sh. #1B4075.",
   "Current team": "Ekipi aktual",
   "Invitation cancelled": "Ftesa e anuluar",
-  "Cancelled invitations and disabled users are hidden from the Neptun team. Select Disabled to manage these records as support.": "Ftesat e anuluara dhe përdoruesit e çaktivizuar nuk shihen nga ekipi Neptun. Zgjidhni Të çaktivizuar për t’i menaxhuar si mbështetje.",
+  "Cancelled invitations and disabled users are hidden from the Neptun team. Select Disabled to manage these records as support.":
+    "Ftesat e anuluara dhe përdoruesit e çaktivizuar nuk shihen nga ekipi Neptun. Zgjidhni Të çaktivizuar për t’i menaxhuar si mbështetje.",
+  "New social post": "Postim i ri në rrjete sociale",
+  "Open post": "Hap postimin",
+  "Download post": "Shkarko postimin",
+  "Duplicate post": "Dyfisho postimin",
+  "Download PNG": "Shkarko PNG",
+  "Post duplicated.": "Postimi u dyfishua.",
+  "Preparing download…": "Duke përgatitur shkarkimin…",
+  "Download is ready.": "Shkarkimi është gati.",
+  "Download again": "Shkarko përsëri",
+  "Download options": "Opsionet e shkarkimit",
 };
 
 let language =

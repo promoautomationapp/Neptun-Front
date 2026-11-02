@@ -67,6 +67,18 @@ const areas = [
     tabs: ["types", "formats"],
   },
 ] as const;
+function settingsNavigation() {
+  const params = new URLSearchParams(window.location.search);
+  const group =
+    areas.find((item) => item.id === params.get("settingsArea")) || areas[1]!;
+  const requestedTab = params.get("settingsTab");
+  return {
+    area: group.id,
+    tab: (group.tabs as readonly string[]).includes(requestedTab || "")
+      ? (requestedTab as TabId)
+      : (group.tabs[0] as TabId),
+  };
+}
 export type SettingsArea = (typeof areas)[number]["id"];
 type TabId = (typeof tabs)[number]["id"];
 export interface SettingsTabProps {
@@ -183,8 +195,36 @@ export function SettingsEditor({
   );
   const currentDraftKey = useRef(draftKey);
   currentDraftKey.current = draftKey;
-  const [tab, setTab] = useState<TabId>("design");
-  const [area, setArea] = useState<SettingsArea>("cover");
+  const [initialNavigation] = useState(() =>
+    designScope
+      ? { area: "cover" as SettingsArea, tab: "design" as TabId }
+      : settingsNavigation(),
+  );
+  const [tab, setTab] = useState<TabId>(initialNavigation.tab);
+  const [area, setArea] = useState<SettingsArea>(initialNavigation.area);
+  useEffect(() => {
+    if (designScope) return;
+    const restore = () => {
+      const next = settingsNavigation();
+      setArea(next.area);
+      setTab(next.tab);
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [Boolean(designScope)]);
+  useEffect(() => {
+    if (designScope) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("section") !== "stores") return;
+    params.set("settingsArea", area);
+    params.set("settingsTab", tab);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}?${params}${window.location.hash}`,
+    );
+    window.dispatchEvent(new Event("neptun:workspace-url-changed"));
+  }, [area, tab, Boolean(designScope)]);
   const visibleAreas = designScope
     ? areas.filter((group) => group.id !== "presets")
     : areas;

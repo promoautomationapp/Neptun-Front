@@ -30,6 +30,8 @@ import {
 import { captureSocialPost } from "./socialExport";
 import { ProductBrandArtwork } from "../brochure/ProductBrandArtwork";
 import { getPosts, savePost, removePost, restorePost } from "./socialStorage";
+import { SocialPostCard } from "./SocialPostCard";
+import { duplicateSocialPost, socialPostDisplayName } from "./socialPostLibrary";
 import {
   createPost,
   clearPostImagePreparation,
@@ -248,6 +250,7 @@ interface SocialStudioProps {
   user?: ReviewParticipant | null;
   members?: readonly ReviewParticipant[];
   initialPostId?: string | null;
+  onActivePostChange?: (id: string | null) => void;
   focusedCommentId?: string | null;
   canManageDisabled?: boolean;
   canViewCatalog?: boolean;
@@ -1544,6 +1547,7 @@ export function SocialStudio({
   user,
   members = [],
   initialPostId,
+  onActivePostChange,
   focusedCommentId,
   canManageDisabled = false,
   canViewCatalog = true,
@@ -1556,7 +1560,7 @@ export function SocialStudio({
   }, []);
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [postVisibility, setPostVisibility] = useState("active");
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(initialPostId || null);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [loadRevision, setLoadRevision] = useState(0);
@@ -1574,7 +1578,7 @@ export function SocialStudio({
   const [showLayers, setShowLayers] = useState(false);
   const [brandingPanel, setBrandingPanel] = useState(false);
   const [brandingPicker, setBrandingPicker] = useState<SocialBrandingKind | {artworkId:string} | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<SocialPost | null>(null);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [artworkUpload, setArtworkUpload] = useState<{
@@ -1631,7 +1635,10 @@ export function SocialStudio({
   );
   useEffect(() => {
     if (!initialPostId) {
-      openedLink.current = null;
+      if (openedLink.current) {
+        openedLink.current = null;
+        setActiveId(null);
+      }
       return;
     }
     if (
@@ -1643,6 +1650,9 @@ export function SocialStudio({
     openedLink.current = initialPostId;
     setActiveId(initialPostId);
   }, [initialPostId, loaded, posts]);
+  useEffect(() => {
+    if (loaded) onActivePostChange?.(activeId);
+  }, [activeId, loaded, onActivePostChange]);
   useEffect(() => {
     setExportNotice(null);
     setExportReady(null);
@@ -1988,30 +1998,48 @@ export function SocialStudio({
     });
   }
   async function deleteActive() {
-    if (!post) return;
+    const target = confirmDelete;
+    if (!target || target.disabledAt || busy) return;
     clearTimeout(saveTimer.current);
     setBusy("delete");
     try {
-      if (dirtyRef.current === post.id) {
-        const saved = await savePost(post);
+      let version = target.version;
+      if (dirtyRef.current === target.id) {
+        const saved = await savePost(target);
+        version = saved.version ?? version;
         setPosts((all) =>
           all.map((item) => (item.id === saved.id ? saved : item)),
         );
       }
-      dirtyRef.current = null;
-      setDirtyId(null);
-      await removePost(post.id, post.version);
+      if (dirtyRef.current === target.id) {
+        dirtyRef.current = null;
+        setDirtyId(null);
+      }
+      await removePost(target.id, version);
       const disabled = canManageDisabled
-        ? (await getPosts()).find((item) => item.id === post.id)
+        ? (await getPosts()).find((item) => item.id === target.id)
         : undefined;
       setPosts((all) =>
         disabled
           ? all.map((item) => (item.id === disabled.id ? disabled : item))
-          : all.filter((item) => item.id !== post.id),
+          : all.filter((item) => item.id !== target.id),
       );
-      setActiveId(null);
-      setConfirmDelete(false);
+      if (activeId === target.id) setActiveId(null);
+      setConfirmDelete(null);
       setMessage(t("Post deleted."));
+    } catch (error) {
+      setMessage(errorMessage(error));
+    } finally {
+      setBusy("");
+    }
+  }
+  async function duplicateSavedPost(item: SocialPost) {
+    if (item.disabledAt || busy) return;
+    setBusy(`duplicate:${item.id}`);
+    try {
+      const saved = await savePost(duplicateSocialPost(item));
+      setPosts((all) => [saved, ...all]);
+      setMessage(t("Post duplicated."));
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
@@ -2155,8 +2183,9 @@ export function SocialStudio({
     });
     setReview((all) => all.filter((item) => !changes.includes(item)));
   }
-  async function exportPost(format: string) {
-    if (!post || !canvasRef.current) {
+  async function exportPost(format: string, target: SocialPost | null = post) {
+    if (busy) return;
+    if (!target) {
       setExportNotice({
         kind: "error",
         text: "The post preview is not ready. Try again after it appears.",
@@ -2169,11 +2198,11 @@ export function SocialStudio({
     setBusy(`export-${format}`);
     setExportNotice({
       kind: "working",
-      text: `Preparing ${format.toUpperCase()} download…`,
+      text: `${t("Preparing download…")} ${format.toUpperCase()}`,
     });
     try {
       await document.fonts.ready;
-      const { width, height } = outputDimensions(post);
+      const { width, height } = outputDimensions(target);
       if (width * height > 67_000_000)
         throw new Error(
           "This size exceeds the browser canvas limit. Choose a smaller size or aspect ratio.",
@@ -2190,7 +2219,7 @@ export function SocialStudio({
         flushSync(() =>
           exportRoot.render(
             <PostCanvas
-              post={structuredClone(post)}
+              post={structuredClone(target)}
               previewCutouts={{ ...previewCutouts }}
               canvasRef={exportRef}
             />,
@@ -2222,7 +2251,7 @@ export function SocialStudio({
           0.96,
         ),
       );
-      const base = String(post.name || "neptun-post")
+      const base = String(socialPostDisplayName(target) || "neptun-post")
         .normalize("NFKD")
         .replace(/[^a-z0-9]+/gi, "-")
         .toLowerCase()
@@ -2261,7 +2290,7 @@ export function SocialStudio({
       canvas.height = 0;
       setExportNotice({
         kind: "success",
-        text: `Sent ${filename} to your browser downloads. If it does not appear, use the direct link below or allow downloads for this site.`,
+        text: `${t("Download is ready.")} ${filename}`,
       });
     } catch (error) {
       if (exportUrlRef.current) URL.revokeObjectURL(exportUrlRef.current);
@@ -2323,7 +2352,7 @@ export function SocialStudio({
           <div className="social-library-toolbar">
             <h2>{t("Saved posts")}</h2>
             <span>
-              {visiblePosts.length}
+              {visiblePosts.length}{" "}
               {t("posts")}
             </span>
             {canManageDisabled && (
@@ -2346,59 +2375,24 @@ export function SocialStudio({
                 : t("No social media posts.")}
             </div>
           )}
+          {exportNotice && (
+            <div className={`social-export-notice social-export-notice-${exportNotice.kind}`} role={exportNotice.kind === "error" ? "alert" : "status"}>{t(exportNotice.text)}</div>
+          )}
+          {exportReady && <a className="social-export-direct" href={exportReady.url} download={exportReady.filename}>{t("Download again")}: {exportReady.filename}</a>}
           <div className="social-post-cards">
-            {visiblePosts.map((item) =>
-              item.disabledAt ? (
-                <article className="social-disabled-card" key={item.id}>
-                  <span className="social-disabled-badge">{t("Deleted")}</span>
-                  <div
-                    className="social-card-preview"
-                    style={{ background: cssBackground(item.background) }}
-                  >
-                    {item.products?.[0]?.image && <img src={imageSource(item.products[0].image)} alt="" />}
-                  </div>
-                  <strong>{item.name}</strong>
-                  <small>
-                    {t("Only superadmins can see this deleted post.")}
-                  </small>
-                  <button
-                    className="social-restore"
-                    type="button"
-                    disabled={Boolean(busy)}
-                    onClick={() => enablePost(item)}
-                  >
-                    <NavIcon name="refresh" size={17} />
-                    {t(
-                      busy === `restore:${item.id}`
-                        ? "Restoring…"
-                        : "Restore post",
-                    )}
-                  </button>
-                </article>
-              ) : (
-                <button
-                  type="button"
-                  key={item.id}
-                  onClick={() => setActiveId(item.id)}
-                >
-                  <div
-                    className="social-card-preview"
-                    style={{ background: cssBackground(item.background) }}
-                  >
-                    <img src={imageSource(item.products?.[0]?.image)} alt="" />
-                  </div>
-                  <strong>{item.name}</strong>
-                  <small>
-                    {item.products?.length || 0}
-                    {t("products ·")}{" "}
-                    {
-                      SOCIAL_PRESETS.find((preset) => preset.id === item.preset)
-                        ?.label
-                    }
-                  </small>
-                </button>
-              ),
-            )}
+            {visiblePosts.map((item) => (
+              <SocialPostCard
+                key={item.id}
+                post={item}
+                preview={<PostCanvas post={item} maxWidth="100%" />}
+                busy={Boolean(busy)}
+                onOpen={() => setActiveId(item.id)}
+                onDownload={(format) => void exportPost(format, item)}
+                onDuplicate={() => void duplicateSavedPost(item)}
+                onDelete={() => setConfirmDelete(item)}
+                onRestore={() => void enablePost(item)}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -2786,7 +2780,7 @@ export function SocialStudio({
             <button
               type="button"
               className="social-danger"
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => setConfirmDelete(post)}
               disabled={Boolean(busy)}
             >
               <NavIcon name="trash" size={17} />
@@ -4549,13 +4543,13 @@ export function SocialStudio({
           </div>
         </div>
       )}
-      {confirmDelete && post && (
+      {confirmDelete && (
         <div
           className="social-modal-backdrop"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !busy)
-              setConfirmDelete(false);
+              setConfirmDelete(null);
           }}
         >
           <section
@@ -4569,7 +4563,7 @@ export function SocialStudio({
             </div>
             <h2>{t("Delete this post?")}</h2>
             <p>
-              <strong>{post.name}</strong>
+              <strong>{socialPostDisplayName(confirmDelete)}</strong>
               <br />
               {t("This post will be removed from your posts.")}
             </p>
@@ -4583,7 +4577,7 @@ export function SocialStudio({
             <div>
               <button
                 type="button"
-                onClick={() => setConfirmDelete(false)}
+                onClick={() => setConfirmDelete(null)}
                 disabled={Boolean(busy)}
               >
                 {t("Keep post")}

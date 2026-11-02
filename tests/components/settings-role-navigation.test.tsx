@@ -7,6 +7,7 @@ import { resolveSettings } from "../../src/features/settings/settings.schema";
 
 afterEach(() => {
   cleanup();
+  window.history.replaceState({}, "", "/");
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });

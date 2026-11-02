@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ApiError } from "../../api/client";
+import { ApiError, SESSION_EXPIRED_EVENT } from "../../api/client";
 import { getSession, userSchema, type User } from "./auth.api";
 
 const sessionKey = (user: User | null) =>
@@ -39,11 +39,14 @@ export function useLiveSession(
       }
     }
     const timer = setInterval(() => void refresh(), 60_000);
+    const expire = () => current.current.onChange(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, expire);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       controller.abort();
       clearInterval(timer);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, expire);
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };

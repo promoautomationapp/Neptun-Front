@@ -349,3 +349,34 @@ it("keeps the current workspace when notification access is rejected", async () 
     view.queryByRole("region", { name: "Page review comments" }),
   ).toBeNull();
 });
+
+it("refreshes a normal brochure URL on the same product page without opening review mode", async () => {
+  mockServer();
+  window.history.replaceState(
+    {},
+    "",
+    `/?campaign=${campaign.id}&page=1&tab=brochure`,
+  );
+  let view = render(<App />);
+  await waitFor(() =>
+    expect(
+      view.container.querySelector(".cs-pages-sidebar button.active")
+        ?.textContent,
+    ).toContain("Page 2"),
+  );
+  expect(
+    view.queryByRole("region", { name: "Page review comments" }),
+  ).toBeNull();
+  view.unmount();
+  view = render(<App />);
+  await waitFor(() =>
+    expect(
+      view.container.querySelector(".cs-pages-sidebar button.active")
+        ?.textContent,
+    ).toContain("Page 2"),
+  );
+  expect(new URLSearchParams(window.location.search).get("page")).toBe("1");
+  expect(
+    view.queryByRole("region", { name: "Page review comments" }),
+  ).toBeNull();
+});

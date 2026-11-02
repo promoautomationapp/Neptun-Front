@@ -12,6 +12,7 @@ import { setLanguage } from "../../src/features/brochure/i18n";
 
 afterEach(() => {
   cleanup();
+  window.history.replaceState({}, "", "/");
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });

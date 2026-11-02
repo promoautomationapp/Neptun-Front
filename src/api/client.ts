@@ -3,6 +3,18 @@ export const API_URL = String(import.meta.env.VITE_API_URL || "").replace(
   /\/$/,
   "",
 );
+export const SESSION_EXPIRED_EVENT = "neptun:session-expired";
+function sessionExpired(path: string, response: Response, message?: string) {
+  if (
+    response.status === 401 &&
+    path.startsWith("/api/") &&
+    (!/^\/api\/team\/(?:login|change-password|invitations?|reset-password|forgot-password)(?:\/|\?|$)/.test(
+      path,
+    ) ||
+      message === "Sign in to continue.")
+  )
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+}
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -73,6 +85,11 @@ export async function request<T>(
       const error = z
         .object({ error: z.string().optional(), code: z.string().optional() })
         .safeParse(result);
+      sessionExpired(
+        path,
+        response,
+        error.success ? error.data.error : undefined,
+      );
       throw new ApiError(
         error.success
           ? (error.data.error ?? `Request failed (${response.status})`)
@@ -102,7 +119,7 @@ export function resolveAsset(path: string): string {
     return `${API_URL}/api/assets/legacy${path}`;
   return path.startsWith("/api/") ? `${API_URL}${path}` : path;
 }
-export function apiFetch(
+export async function apiFetch(
   input: RequestInfo | URL,
   options: RequestInit = {},
 ): Promise<Response> {
@@ -113,10 +130,12 @@ export function apiFetch(
         ? input.toString()
         : input.url;
   const api = path.startsWith("/api/");
-  return fetch(api ? `${API_URL}${path}` : input, {
+  const response = await fetch(api ? `${API_URL}${path}` : input, {
     ...options,
     ...(api ? { credentials: "include" as const } : {}),
   });
+  if (api) sessionExpired(path, response);
+  return response;
 }
 export async function uploadImage(file: File): Promise<string> {
   const intent = await request(
