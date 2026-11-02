@@ -4103,8 +4103,8 @@ export default function App({
       openComments:
         Boolean(commentId) ||
         !new URLSearchParams(window.location.search).has("tab"),
-    }).then(() => {
-      if (campaignId) setEditorTab(initialRoute.editorTab);
+      preserveNavigation:
+        !commentId && new URLSearchParams(window.location.search).has("tab"),
     });
   }, [user?.id]);
 
@@ -4662,7 +4662,7 @@ export default function App({
     target: Pick<
       WorkspaceNotification,
       "id" | "campaignId" | "pageIndex" | "commentId" | "documentKind"
-    > & { openComments?: boolean },
+    > & { openComments?: boolean; preserveNavigation?: boolean },
   ) {
     if (section === "stores" && !(await canLeaveSettings())) return;
     if (target.documentKind === "post") {
@@ -4709,6 +4709,10 @@ export default function App({
         ),
       );
       setNavigationError("");
+      // An ordinary refreshed editor URL is already restored before data loads.
+      // A late validation response must not replay its initial page or tab over
+      // a newer choice the user made while the request was in progress.
+      if (target.preserveNavigation) return;
       setNotificationTarget({
         id: `${target.id}:${crypto.randomUUID()}`,
         campaignId: fresh.id,
