@@ -124,6 +124,7 @@ const translations: Record<string, string> = {
   "e.g. warm living room with clear wall space for an air conditioner":
     "p.sh. dhomë ndenjeje e ngrohtë me hapësirë të lirë në mur për kondicioner",
   posts: "postime",
+  post: "postim",
   "products ·": "produkte ·",
   "px · Image sharpness also depends on the source photos.":
     "px · Qartësia varet edhe nga fotografitë origjinale.",

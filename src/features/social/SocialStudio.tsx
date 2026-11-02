@@ -2353,7 +2353,7 @@ export function SocialStudio({
             <h2>{t("Saved posts")}</h2>
             <span>
               {visiblePosts.length}{" "}
-              {t("posts")}
+              {t(visiblePosts.length === 1 ? "post" : "posts")}
             </span>
             {canManageDisabled && (
               <StudioSelect

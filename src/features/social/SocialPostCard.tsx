@@ -65,7 +65,7 @@ export function SocialPostCard({
       <div className="social-post-card-info">
         <h3>{name}</h3>
         <p>
-          {post.products?.length || 0} {t("products")} ·{" "}
+          {post.products?.length || 0} {t(post.products?.length === 1 ? "product" : "products")} ·{" "}
           {preset?.channel || t("Custom size")}
         </p>
         <small>
