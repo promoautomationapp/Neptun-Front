@@ -417,3 +417,14 @@
   height: 17px;
   flex-shrink: 0;
 }
+
+/* Dense automatic covers retain every chosen offer. Scale their default copy,
+   prices and badges together with their frame; saved regions keep their size. */
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product[data-default-layout="true"] {
+  width: calc(100% / var(--cover-card-scale, 1));
+  height: calc(100% / var(--cover-card-scale, 1));
+  transform: scale(var(--cover-card-scale, 1));
+  transform-origin: top left;
+}

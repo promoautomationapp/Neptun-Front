@@ -73,7 +73,7 @@ const pageCodes = (campaign: Campaign) =>
   );
 
 describe("October brochure automatic layouts", () => {
-  it("keeps the two-offer cover when its campaign band is hidden", () => {
+  it("defaults to two cover offers while retaining explicit page-one assignments", () => {
     const offers = [tv("one"), tv("two"), tv("three")];
     const value = brochure(offers, { showCoverBand: false });
     expect(coverProducts(value).map((item) => item.code)).toEqual([
@@ -87,9 +87,34 @@ describe("October brochure automatic layouts", () => {
     expect(coverProducts(value).map((item) => item.code)).toEqual([
       "cover-1",
       "cover-2",
+      "one",
     ]);
-    expect(pageCodes(value)).toEqual(offers.map((item) => item.code));
+    expect(pageCodes(value)).toEqual(["two", "three"]);
   });
+
+  it.each([false, true])(
+    "retains all explicitly selected cover offers through materialization (positioned=%s)",
+    (positioned) => {
+      const covers = Array.from({ length: 8 }, (_, index) =>
+        product(`cover-${index}`, positioned ? { brochurePage: 1 } : {}),
+      );
+      const interior = product(
+        "interior",
+        positioned ? { brochurePage: 2 } : {},
+      );
+      const value = brochure([], {
+        products: [...covers, interior],
+        coverProductCodes: covers.map((item) => item.code),
+      });
+      const codes = covers.map((item) => item.code);
+      expect(coverProducts(value).map((item) => item.code)).toEqual(codes);
+      expect(pageCodes(value)).toEqual(["interior"]);
+      materializeProductPages(value);
+      expect(coverProducts(value).map((item) => item.code)).toEqual(codes);
+      expect(covers.every((item) => item.brochurePage === 1)).toBe(true);
+      expect(pageCodes(value)).toEqual(["interior"]);
+    },
+  );
   it("uses four larger TV offers per page, while the reference preset keeps its eight-TV grid", () => {
     const offers = Array.from({ length: 9 }, (_, i) => tv(String(i)));
     expect(

@@ -87,6 +87,7 @@ import { CoverElement } from "./CoverElement";
 import {
   coverGradientFill,
   coverProductPlacement,
+  coverProductDensity,
   coverRibbonColors,
 } from "./coverElements";
 import {
@@ -2953,6 +2954,19 @@ function CoverPageContent({
                 productIndex,
                 products.length,
               )}
+              style={
+                {
+                  "--cover-card-scale": campaign.coverElementPlacements?.[
+                    `product-${product.code}`
+                  ]
+                    ? 1
+                    : coverProductDensity(
+                        campaign,
+                        productIndex,
+                        products.length,
+                      ),
+                } as React.CSSProperties
+              }
               onChange={onCoverElementChange}
             >
               <ProductCard

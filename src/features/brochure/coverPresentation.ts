@@ -1,6 +1,7 @@
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 import type { Campaign } from "../../domain/models";
 import { coverProducts } from "./campaignPages";
+import { isOctoberBrochure } from "./octoberDesign";
 
 export const COVER_TEXT_COLORS = [
   ["coverMessageColor", "Message color"],
@@ -13,13 +14,22 @@ export function coverTextColor(
   field: (typeof COVER_TEXT_COLORS)[number][0],
 ) {
   const value = campaign[field];
-  if (/^#[0-9a-f]{6}$/i.test(value || "") &&
-      (campaign.coverTextColorOverrides?.[field] || value?.toLowerCase() !== "#ffffff")) return value;
-  return field !== "coverFooterColor" && lightBackground(pageBackgroundContrastColor(campaign, "cover")) ? "#1c4075" : "#ffffff";
+  if (
+    /^#[0-9a-f]{6}$/i.test(value || "") &&
+    (campaign.coverTextColorOverrides?.[field] ||
+      value?.toLowerCase() !== "#ffffff")
+  )
+    return value;
+  return field !== "coverFooterColor" &&
+    lightBackground(pageBackgroundContrastColor(campaign, "cover"))
+    ? "#1c4075"
+    : "#ffffff";
 }
 export function coverMessageVisible(campaign: Partial<Campaign>) {
-  return campaign.showCoverMessage === true ||
-    (campaign.showCoverMessage !== false && Boolean(campaign.tagline?.trim()));
+  return (
+    campaign.showCoverMessage === true ||
+    (campaign.showCoverMessage !== false && Boolean(campaign.tagline?.trim()))
+  );
 }
 export function resetCoverProductPositions(campaign: Campaign) {
   for (const key of Object.keys(campaign.coverElementPlacements || {}))
@@ -68,7 +78,8 @@ export function isFeaturedCoverProduct(
   index: number,
   count: number,
 ) {
-  if (campaign.showCoverBand === true) return false;
+  if (campaign.showCoverBand === true || isOctoberBrochure(campaign))
+    return false;
   return campaign.coverBannerProductCode
     ? String(code) === String(campaign.coverBannerProductCode)
     : count >= 3 &&

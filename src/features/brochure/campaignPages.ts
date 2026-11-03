@@ -17,20 +17,18 @@ export interface BrochurePage {
 
 export function coverProducts(campaign: Campaign) {
   const products = campaign?.products || [];
-  // The UUU band occupies the middle of the cover. With it visible, two
-  // product frames fit below it; remaining offers continue on product pages.
+  // Use a small default cover selection, while retaining every product that
+  // the user explicitly assigned to the cover.
   const october =
     campaign.brochureVisualStyle === "october" ||
     campaign.brochurePresetId === "neptun-october";
   const limit = october || campaign.showCoverBand === true ? 2 : 3;
   if (products.some((product) => Number.isInteger(product.brochurePage)))
-    return products
-      .filter((product) => product.brochurePage === 1)
-      .slice(0, limit);
+    return products.filter((product) => product.brochurePage === 1);
   const chosenCodes = new Set((campaign?.coverProductCodes || []).map(String));
-  const chosen = products
-    .filter((product) => chosenCodes.has(String(product.code)))
-    .slice(0, limit);
+  const chosen = products.filter((product) =>
+    chosenCodes.has(String(product.code)),
+  );
   return chosen.length ? chosen : products.slice(0, limit);
 }
 

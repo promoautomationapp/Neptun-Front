@@ -1383,6 +1383,8 @@ const translations: Record<string, string> = {
     "Importohet vetëm fleta e zgjedhur. Zgjidhni fletën me produktet dhe pozicionet që dëshironi të përdorni.",
   "1.1, 1.2, 1.3 are separate offers on the cover. Repeated 1.1 positions form one grouped offer.":
     "1.1, 1.2, 1.3 janë oferta të veçanta në kopertinë. Pozicionet e përsëritura 1.1 formojnë një ofertë të grupuar.",
+  "Fill screen crops the image to cover the whole display. Choose Show whole image to keep every edge visible.":
+    "Mbush ekranin e pret imazhin për të mbuluar gjithë ekranin. Zgjidh Shfaq imazhin e plotë për t’i mbajtur të dukshme të gjitha skajet.",
   "Replace previous spreadsheet products":
     "Zëvendëso produktet e importuara më parë",
   "Uses this sheet as the product list and keeps manually added products. Uncheck to add or update instead.":

@@ -1,7 +1,6 @@
 import { coverMessageVisible } from "./coverPresentation";
 import type { Campaign, Placement } from "../../domain/models";
 import { coverProducts } from "./campaignPages";
-import { productPageChunk } from "./brochureLayout";
 import { isOctoberBrochure } from "./octoberDesign";
 type CoverPlacement = Placement & { x: number; y: number; width: number };
 export const COVER_ELEMENT_DEFAULTS: Record<string, CoverPlacement> = {
@@ -59,11 +58,126 @@ export function coverRibbonColors(
   };
 }
 
+interface CoverGridArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Balanced rows keep their final row centered and leave room between cards. */
+function gridPlacement(
+  area: CoverGridArea,
+  index: number,
+  count: number,
+  columns: number,
+) {
+  const rows = Math.ceil(count / columns);
+  const gap = Math.min(
+    2.5,
+    area.width / Math.max(1, columns * 8),
+    area.height / Math.max(1, rows * 8),
+  );
+  const width = (area.width - gap * (columns - 1)) / columns;
+  const height = (area.height - gap * (rows - 1)) / rows;
+  const row = Math.floor(index / columns);
+  const rowCount = Math.min(columns, count - row * columns);
+  const inset = (area.width - (rowCount * width + (rowCount - 1) * gap)) / 2;
+  return {
+    x: area.x + inset + (index % columns) * (width + gap),
+    y: area.y + row * (height + gap),
+    width,
+    height,
+  };
+}
+function balancedColumns(area: CoverGridArea, count: number) {
+  let best = 1,
+    cost = Infinity;
+  for (let columns = 1; columns <= count; columns++) {
+    const rows = Math.ceil(count / columns);
+    const frame = gridPlacement(area, 0, count, columns);
+    const aspect = (frame.width * 0.8) / frame.height;
+    const candidate =
+      Math.abs(Math.log(aspect)) +
+      ((rows * columns - count) / count) * 1.4 +
+      rows * 0.02;
+    if (candidate < cost) {
+      best = columns;
+      cost = candidate;
+    }
+  }
+  return best;
+}
+function featuredPlacement(
+  area: CoverGridArea,
+  index: number,
+  count: number,
+  main: number,
+) {
+  const secondaryCount = count - 1;
+  const columns =
+    secondaryCount <= 3 ? secondaryCount : Math.ceil(Math.sqrt(secondaryCount));
+  const rows = Math.ceil(secondaryCount / columns);
+  const gap = Math.min(4, area.height / (rows + 1) / 6);
+  const height = (area.height - gap * rows) / (rows + 1);
+  if (index === main) return { ...area, height };
+  return gridPlacement(
+    { ...area, y: area.y + height + gap, height: area.height - height - gap },
+    index > main ? index - 1 : index,
+    secondaryCount,
+    columns,
+  );
+}
+
 export function coverProductPlacement(
   campaign: Campaign,
   index: number,
   count: number,
 ) {
+  const band = isOctoberBrochure(campaign) || campaign.showCoverBand === true;
+  if (band && count > 2) {
+    const area = isOctoberBrochure(campaign)
+      ? { x: 3.85, y: 56.8, width: 92.5, height: 35.2 }
+      : { x: 4, y: 54, width: 92, height: 36 };
+    return gridPlacement(
+      area,
+      index,
+      count,
+      count === 3 ? 3 : balancedColumns(area, count),
+    );
+  }
+  if (!band && count > 3) {
+    const covers = campaign.coverBannerProductCode
+      ? coverProducts(campaign)
+      : [];
+    const chosen = covers.findIndex(
+      (product) =>
+        String(product.code) === String(campaign.coverBannerProductCode),
+    );
+    const featured =
+      chosen >= 0 || (campaign.coverProductLayout || "hero") === "hero";
+    const reference =
+      campaign.coverBandVariant === "hajde" ||
+      campaign.brochureFooter?.style === "reference";
+    const top = reference
+      ? 12
+      : coverMessageVisible(campaign)
+        ? campaign.showCoverHeadline === false
+          ? 24
+          : 34
+        : campaign.showCoverHeadline === false
+          ? 18
+          : 26;
+    const area = {
+      x: reference ? 2.25 : 4,
+      y: top,
+      width: reference ? 95.5 : 92,
+      height: 92 - top,
+    };
+    return featured
+      ? featuredPlacement(area, index, count, Math.max(0, chosen))
+      : gridPlacement(area, index, count, balancedColumns(area, count));
+  }
   if (campaign.coverBandVariant === "hajde" && count >= 3) {
     return index === 0
       ? { x: 3, y: 19, width: 94, height: 35 }
@@ -164,8 +278,16 @@ function coverFrame(
   fallback: CoverFrame,
 ): CoverFrame {
   const data = { ...fallback, ...value };
-  const width = clamp(Number(data.width) || fallback.width, 20, 92);
-  const height = clamp(Number(data.height) || fallback.height, 18, 88);
+  const width = clamp(
+    Number(data.width) || fallback.width,
+    Math.min(20, fallback.width),
+    Math.max(92, fallback.width),
+  );
+  const height = clamp(
+    Number(data.height) || fallback.height,
+    Math.min(18, fallback.height),
+    88,
+  );
   return {
     x: clamp(
       Number.isFinite(Number(data.x)) ? Number(data.x) : fallback.x,
@@ -233,26 +355,9 @@ function nextClearFrame(
   return null;
 }
 
-function nextProductPage(
-  campaign: Campaign,
-  product: Campaign["products"][number],
-): number {
-  for (let page = 2; page <= campaign.products.length + 2; page += 1) {
-    const current = campaign.products.filter(
-      (item) => item.brochurePage === page,
-    );
-    const proposed = [...current, product];
-    if (
-      productPageChunk(campaign, proposed, page - 2).products.length ===
-      proposed.length
-    )
-      return page;
-  }
-  return campaign.products.length + 2;
-}
-
 // Cover products use free-positioned frames, so CSS grid reflow cannot keep
-// them apart. Pack around the edited frame and send overflow to product pages.
+// them apart. Pack around the edited frame; if space runs out, reflow the
+// cover instead of silently changing the products assigned to page one.
 export function applyCoverProductPlacement(
   campaign: Campaign,
   kind: string,
@@ -278,7 +383,6 @@ export function applyCoverProductPlacement(
   };
   const anchor = frameFor(covers[editedIndex]!, editedIndex);
   const placed = [anchor];
-  const kept = new Set([code]);
   campaign.coverElementPlacements[kind] = anchor;
   const overflow: typeof covers = [];
   covers.forEach((product, index) => {
@@ -287,7 +391,6 @@ export function applyCoverProductPlacement(
     const next = nextClearFrame(frameFor(product, index), placed);
     if (next) {
       placed.push(next);
-      kept.add(String(product.code));
       campaign.coverElementPlacements![key] = next;
     } else {
       overflow.push(product);
@@ -295,18 +398,10 @@ export function applyCoverProductPlacement(
     }
   });
   if (overflow.length) {
-    const positioned = campaign.products.some((product) =>
-      Number.isInteger(product.brochurePage),
-    );
-    if (positioned)
-      overflow.forEach((product) => {
-        product.brochurePage = nextProductPage(campaign, product);
-        delete product.brochureOrder;
-      });
-    else
-      campaign.coverProductCodes = covers
-        .filter((product) => kept.has(String(product.code)))
-        .map((product) => String(product.code));
+    covers.forEach((product, index) => {
+      campaign.coverElementPlacements![`product-${product.code}`] =
+        coverProductPlacement(campaign, index, covers.length);
+    });
   }
   return true;
 }
@@ -316,6 +411,17 @@ export function applyCoverProductPlacement(
 export function repairCoverProductLayout(campaign: Campaign): Campaign {
   const covers = coverProducts(campaign);
   if (!covers.length) return campaign;
+  const savedFrames = covers.some(
+    (product) => campaign.coverElementPlacements?.[`product-${product.code}`],
+  );
+  // Automatic grids already fit their reserved region. Do not clamp/repack
+  // dense cards or rewrite valid manual arrangements just by opening a file.
+  if (
+    !savedFrames ||
+    covers.length >
+      (isOctoberBrochure(campaign) || campaign.showCoverBand === true ? 2 : 3)
+  )
+    return campaign;
   const frames = covers.map((product, index) => {
     const key = `product-${product.code}`;
     return coverFrame(
@@ -352,4 +458,31 @@ export function repairCoverProductLayout(campaign: Campaign): Campaign {
     repaired[0]!,
   );
   return result;
+}
+
+/** Scale default card typography/details with the available frame, without
+ * changing saved content-region positions or the physical product photograph. */
+export function coverProductDensity(
+  campaign: Campaign,
+  index: number,
+  count: number,
+) {
+  if (
+    count <=
+    (isOctoberBrochure(campaign) || campaign.showCoverBand === true ? 2 : 3)
+  )
+    return 1;
+  const frame = coverProductPlacement(campaign, index, count);
+  const featured =
+    !(isOctoberBrochure(campaign) || campaign.showCoverBand === true) &&
+    (campaign.coverProductLayout || "hero") === "hero" &&
+    (campaign.coverBannerProductCode
+      ? String(coverProducts(campaign)[index]?.code) ===
+        String(campaign.coverBannerProductCode)
+      : index === 0);
+  return Math.min(
+    1,
+    frame.width / (featured ? 95.5 : 44.5),
+    frame.height / (featured ? 38 : 35.2),
+  );
 }
