@@ -267,7 +267,7 @@ function mockPageMeasurement(previewScale = 0.5) {
       const brand = region.classList.contains("large-bundle-brand-artwork");
       const width =
         ((Number.parseFloat(region.style.width) ||
-          (price ? 20.5 : brand ? 21 : 13)) *
+          (price ? 20.5 : brand ? 16.8 : 13)) *
           card.width) /
         100;
       const height = price ? width * 0.51 : brand ? card.height * 0.15 : width;
@@ -375,8 +375,8 @@ it("keeps all member images editable and moves/resizes shared regions and member
   };
   const brand = resize(".large-bundle-brand-artwork", 2);
   expect(brand?.[1]).toBe("brand");
-  expect(brand?.[2].width).toBeGreaterThan(21);
-  expect(brand?.[2].width).toBeLessThan(22);
+  expect(brand?.[2].width).toBeGreaterThan(16.8);
+  expect(brand?.[2].width).toBeLessThan(18);
   const saving = resize(".brochure-red-reference-saving", -2);
   expect(saving?.[1]).toBe("saving");
   expect(saving?.[2].width).toBeGreaterThan(12);

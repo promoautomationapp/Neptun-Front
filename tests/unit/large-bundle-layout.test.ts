@@ -7,6 +7,7 @@ import {
   largeBundleLayout,
   largeBundlePanelColors,
   reflowDefaultLargeBundleImages,
+  measuredBundleSeparators,
 } from "../../src/features/brochure/largeBundleLayout";
 import { effectiveProductArtworks } from "../../src/features/brochure/productArtwork";
 import { cardSize } from "../../src/features/brochure/brochureLayout";
@@ -50,6 +51,36 @@ it("uses the new panel only for three or more members and preserves the two-prod
     { x: 36, y: 1, width: 61, height: 69 },
   ]);
   expect(two[0]?.usesPrimaryImage).toBe(true);
+});
+
+it("centers the plus in visible TV/phone gaps and follows saved image movement", () => {
+  const layout = largeBundleLayout(3)!;
+  const tv = { x: 3, y: 10, width: 20, height: 20 };
+  const phone = { x: 30, y: 3, width: 12, height: 34 };
+  const last = { x: 55, y: 6, width: 14, height: 30 };
+  const bounds = [tv, phone, last];
+  const before = structuredClone(bounds);
+  const pluses = measuredBundleSeparators(layout, bounds);
+  expect(pluses[0]).toEqual({ x: 26.5, y: 20 });
+  expect(pluses[1]).toEqual({ x: 48.5, y: 21 });
+  expect(
+    measuredBundleSeparators(layout, [tv, { ...phone, x: 35, y: 13 }, last])[0],
+  ).toEqual({ x: 29, y: 21.5 });
+  expect(bounds).toEqual(before);
+  expect(measuredBundleSeparators(layout, [null, null, null])).toEqual(
+    layout.separators,
+  );
+});
+
+it("places the wrap plus before the first visible photo in the new row", () => {
+  const layout = largeBundleLayout(5)!;
+  const bounds = layout.members.map((member) => member.image);
+  bounds[3] = { x: 21, y: 57, width: 10, height: 18 };
+  expect(measuredBundleSeparators(layout, bounds)[2]).toEqual({
+    x: 18,
+    y: 66,
+    startsRow: true,
+  });
 });
 
 it("uses readable member rows with aligned image/copy cells and keeps the summary rail clear", () => {

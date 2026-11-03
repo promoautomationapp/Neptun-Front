@@ -642,6 +642,9 @@ export function ProductArtworkLayer({
           <div
             key={key}
             className={`product-artwork-item${artwork.type === "bundle-product" ? " bundle-product-image" : ""}${selected === key ? " selected" : ""}`}
+            data-bundle-artwork-code={
+              artwork.type === "bundle-product" ? artwork.memberCode : undefined
+            }
             data-monochrome-badge={
               artwork.type === "wifi" &&
               artwork.image?.includes("/product-badges/wifi.svg")

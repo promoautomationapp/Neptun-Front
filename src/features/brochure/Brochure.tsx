@@ -1065,7 +1065,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
                   kind="brand"
                   placement={contentPlacement.brand}
                   onChange={onLayoutRegion}
-                  baseWidth={21}
+                  baseWidth={16.8}
                   minimumWidth={2}
                   containWithinCard
                 />

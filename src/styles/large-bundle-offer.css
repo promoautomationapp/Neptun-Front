@@ -47,16 +47,31 @@
 .large-bundle-price-slot > * {
   pointer-events: auto;
 }
+.large-bundle-separators {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
 .large-bundle-offer .large-bundle-plus {
   position: absolute;
   z-index: 3;
   transform: translate(-50%, -50%);
-  font-family: SkolaSans, sans-serif;
-  font-size: 2.5cqw;
-  font-weight: 700;
-  line-height: 1;
+  display: block;
+  width: 2.5cqw;
+  height: 2.5cqw;
+  line-height: 0;
   color: inherit;
   pointer-events: none;
+}
+.large-bundle-plus svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.large-bundle-offer .large-bundle-plus.starts-row {
+  width: 1.6cqw;
+  height: 1.6cqw;
 }
 .large-bundle-offer .large-bundle-member-copy {
   position: absolute;
@@ -177,7 +192,7 @@
   position: absolute;
   top: 4.5%;
   right: 3%;
-  width: 21%;
+  width: 16.8%;
   height: 15%;
   margin: 0;
   color: inherit;
@@ -213,6 +228,7 @@
   img {
   display: block;
   width: 100%;
+  margin-left: auto;
   height: 100%;
   max-width: none;
   max-height: none;

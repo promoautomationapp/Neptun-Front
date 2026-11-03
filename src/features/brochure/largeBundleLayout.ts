@@ -18,7 +18,12 @@ export interface LargeBundleLayout {
   columns: number;
   rows: number;
   members: LargeBundleMemberLayout[];
-  separators: Array<{ x: number; y: number }>;
+  separators: BundleSeparator[];
+}
+export interface BundleSeparator {
+  x: number;
+  y: number;
+  startsRow?: boolean;
 }
 
 export function isLargeBundleOffer(
@@ -72,11 +77,43 @@ export function largeBundleLayout(count: number): LargeBundleLayout | null {
           y: member.image.y + member.image.height / 2,
         }
       : {
-          x: content.x + content.width + gapX / 2,
-          y: member.image.y - gapY / 2,
+          x: Math.max(1.5, member.image.x - 3),
+          y: member.image.y + member.image.height / 2,
+          startsRow: true,
         };
   });
   return { photoArea, columns, rows, members, separators };
+}
+
+/** The object-fit photograph can be narrower than its editable image frame. */
+export function measuredBundleSeparators(
+  layout: LargeBundleLayout,
+  bounds: Array<BundlePanelRect | null>,
+): BundleSeparator[] {
+  return layout.separators.map((fallback, index) => {
+    const after = bounds[index + 1];
+    if (!after) return fallback;
+    if (fallback.startsRow)
+      return {
+        x: Math.max(1.5, after.x - 3),
+        y: after.y + after.height / 2,
+        startsRow: true,
+      };
+    const before = bounds[index];
+    if (!before) return fallback;
+    const overlapTop = Math.max(before.y, after.y);
+    const overlapBottom = Math.min(
+      before.y + before.height,
+      after.y + after.height,
+    );
+    return {
+      x: (before.x + before.width + after.x) / 2,
+      y:
+        overlapBottom > overlapTop
+          ? (overlapTop + overlapBottom) / 2
+          : (before.y + before.height / 2 + after.y + after.height / 2) / 2,
+    };
+  });
 }
 
 /** These defaults are deliberately separate from the two-member oven/hob composite. */
