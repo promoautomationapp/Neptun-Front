@@ -179,6 +179,7 @@ export function selectImportTable(
   options: { sheetName?: string; headerIndex?: number } = {},
 ): ImportTable | null {
   let best: ImportTable | null = null;
+  let brochureTable: ImportTable | null = null;
   const lookup = catalogByCode(catalog);
   for (const sheet of sheets) {
     if (options.sheetName && sheet.name !== options.sheetName) continue;
@@ -256,23 +257,42 @@ export function selectImportTable(
         brochureRows * 8 +
         (namedHeader ? 40 : 0) -
         Math.max(0, headerIndex) / 10;
-      if (!best || score > best.score)
-        best = {
-          sheetName: sheet.name,
-          headers,
-          rows,
-          headerIndex,
-          rowOffset: (sheet.startRow || 0) + headerIndex + 2,
-          codeCol: inferred.codeCol,
-          priceCol: inferred.priceCol,
-          setCol: inferred.setCol,
-          matchedCount: inferred.codeMatches,
-          validPriceCount: inferred.validPrices,
-          score,
-        };
+      const candidate: ImportTable = {
+        sheetName: sheet.name,
+        headers,
+        rows,
+        headerIndex,
+        rowOffset: (sheet.startRow || 0) + headerIndex + 2,
+        codeCol: inferred.codeCol,
+        priceCol: inferred.priceCol,
+        setCol: inferred.setCol,
+        matchedCount: inferred.codeMatches,
+        validPriceCount: inferred.validPrices,
+        score,
+      };
+      if (!best || score > best.score) best = candidate;
+      // A later duplicate must not win just because it contains more rows or
+      // more catalog matches. Use the first clearly identified brochure tab;
+      // users can explicitly select any other sheet in the import dialog.
+      const namedBrochure =
+        brochureRows > 0 &&
+        headerScore(headers[inferred.codeCol], "code") > 0 &&
+        headerScore(headers[inferred.priceCol], "price") > 0 &&
+        rows.some(
+          (row) =>
+            String(row[inferred.codeCol] ?? "").trim() &&
+            parsePrice(row[inferred.priceCol]) > 0,
+        );
+      if (
+        namedBrochure &&
+        (!brochureTable ||
+          (brochureTable.sheetName === sheet.name &&
+            score > brochureTable.score))
+      )
+        brochureTable = candidate;
     }
   }
-  return best;
+  return brochureTable || best;
 }
 
 export function analyzeImportRows(

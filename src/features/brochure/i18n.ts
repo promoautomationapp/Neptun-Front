@@ -1379,6 +1379,14 @@ const translations: Record<string, string> = {
   waiting: "në pritje",
   "Your brochure stays editable. Each finished photo is saved automatically. Prepared images are reused when available.":
     "Broshurën mund ta redaktoni gjatë përgatitjes. Çdo fotografi e përfunduar ruhet automatikisht. Imazhet e përgatitura ripërdoren kur janë të disponueshme.",
+  "Only the selected tab is imported. Choose the tab whose products and positions you want to use.":
+    "Importohet vetëm fleta e zgjedhur. Zgjidhni fletën me produktet dhe pozicionet që dëshironi të përdorni.",
+  "1.1, 1.2, 1.3 are separate offers on the cover. Repeated 1.1 positions form one grouped offer.":
+    "1.1, 1.2, 1.3 janë oferta të veçanta në kopertinë. Pozicionet e përsëritura 1.1 formojnë një ofertë të grupuar.",
+  "Replace previous spreadsheet products":
+    "Zëvendëso produktet e importuara më parë",
+  "Uses this sheet as the product list and keeps manually added products. Uncheck to add or update instead.":
+    "Përdor produktet e kësaj flete dhe ruan produktet e shtuara manualisht. Hiqni shenjën për t'i shtuar ose përditësuar pa zëvendësuar listën.",
   "Retrying photo": "Po provojmë sërish fotografinë",
   "Retrying some product photos…":
     "Po provojmë sërish disa fotografi të produkteve…",

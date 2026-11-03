@@ -249,23 +249,44 @@ function catalogByName(catalog: Product[]) {
   return byName;
 }
 
-/** A shared page.order means one offer. Color variants remain a single model;
- * different products become an editable bundle with one shared Excel price. */
+/** The complete page.order identifies an offer. Different order numbers on the
+ * same page stay separate; repeated positions group distinct product codes. */
 function groupPositionOffers(
   rows: readonly ImportRow[],
   columns: BrochureImportColumns,
-  lookup: Map<string, Product>,
 ) {
-  const original = groupImportRows(rows, columns.setCol ?? -1);
+  const original = groupImportRows(rows, columns.setCol ?? -1).flatMap(
+    (group) => {
+      if (!group.set) return [group];
+      const parts: ImportRowGroup[] = [];
+      let previousPosition: string | undefined;
+      for (const source of group.sources) {
+        const position = parseBrochurePosition(
+          source.row[columns.positionCol],
+        )?.label;
+        if (
+          !parts.length ||
+          (position && previousPosition && position !== previousPosition)
+        )
+          parts.push({ set: true, sources: [] });
+        parts.at(-1)!.sources.push(source);
+        if (position) previousPosition = position;
+      }
+      return parts.map((part) =>
+        part.sources.length === 1 &&
+        parseBrochurePosition(part.sources[0]!.row[columns.positionCol])
+          ? { ...part, set: false }
+          : part,
+      );
+    },
+  );
   const positions = new Map<string, ImportRowGroup[]>();
   for (const group of original) {
-    const source = group.sources[0];
-    if (
-      group.set ||
-      !source ||
-      !String(source.row[columns.codeCol] ?? "").trim()
-    )
-      continue;
+    const source =
+      group.sources.find((source) =>
+        parseBrochurePosition(source.row[columns.positionCol]),
+      ) || group.sources[0];
+    if (!source || !String(source.row[columns.codeCol] ?? "").trim()) continue;
     const position = parseBrochurePosition(source.row[columns.positionCol]);
     if (position)
       positions.set(position.label, [
@@ -279,23 +300,11 @@ function groupPositionOffers(
     if (groups.length < 2) continue;
     // Different descriptions of a repeated source SKU do not make a bundle.
     const codes = new Set(
-      groups.map((group) => importCode(group.sources[0]!.row[columns.codeCol])),
+      groups.flatMap((group) =>
+        group.sources.map((source) => importCode(source.row[columns.codeCol])),
+      ),
     );
     if (codes.size < 2) continue;
-    const families = new Set(
-      groups.map((group) => {
-        const row = group.sources[0]!.row;
-        const resolved = resolveExcelOffer(
-          String(row[columns.codeCol] ?? ""),
-          row,
-          lookup,
-          columns,
-          group.sources[0]!.index,
-        );
-        return `${normalize(resolved.product?.brand || "")}:${familyName(String(row[columns.nameCol] || resolved.product?.name || row[columns.codeCol] || ""))}`;
-      }),
-    );
-    if (families.size < 2) continue;
     replacements.set(groups[0]!, {
       set: true,
       positionGrouped: true,
@@ -321,7 +330,7 @@ export function analyzeBrochureRows(
   const warnings: BrochureWarning[] = [];
   const incompleteProducts: Product[] = [];
   let ignored = 0;
-  groupPositionOffers(rows, columns, codeLookup).forEach((group) => {
+  groupPositionOffers(rows, columns).forEach((group) => {
     const first = group.sources[0];
     if (!first) return;
     const { row, index } = first;
@@ -695,4 +704,15 @@ export function analyzeBrochureRows(
     ignored,
     matchedRows: entries.reduce((sum, entry) => sum + entry.sourceRows, 0),
   };
+}
+
+/** Merge complete and incomplete rows without changing spreadsheet placement. */
+export function sortBrochureProducts(products: readonly Product[]) {
+  return [...products].sort(
+    (a, b) =>
+      (a.brochurePage ?? 999) - (b.brochurePage ?? 999) ||
+      (a.brochureOrder ?? 999) - (b.brochureOrder ?? 999) ||
+      (a.excelSource?.row ?? a.setSourceRows?.[0] ?? 0) -
+        (b.excelSource?.row ?? b.setSourceRows?.[0] ?? 0),
+  );
 }

@@ -146,7 +146,7 @@ describe("shared brochure positions are one collaboration offer", () => {
     expect(result.matchedRows).toBe(4);
   });
 
-  it("still merges equal-price model color variants without a shared-order notice", () => {
+  it("groups distinct color SKUs at the same exact position as an editable offer", () => {
     const result = analyzeBrochureRows(
       [
         ["84066096", "A37 5G 6/128 GREEN", "1.1", 299, "", "GREEN"],
@@ -157,7 +157,7 @@ describe("shared brochure positions are one collaboration offer", () => {
     );
     expect(result.products).toHaveLength(1);
     expect(
-      result.products[0]!.brochureVariants?.map((variant) => variant.code),
+      result.products[0]!.bundleProducts?.map((variant) => variant.code),
     ).toEqual(["84066096", "84066097"]);
     expect(result.warnings).toEqual([]);
   });
@@ -186,7 +186,7 @@ describe("shared brochure positions are one collaboration offer", () => {
     expect(renamed.skipped).toEqual([]);
   });
 
-  it("keeps conflicting positions within a Set as an actionable warning and preserves all members", () => {
+  it("honors different positions over Set labels, keeping missing prices editable", () => {
     const result = analyzeBrochureRows(
       [
         ["TV", "Beko TV 65 inch", "2.1", 599, "", "", "Set"],
@@ -197,23 +197,20 @@ describe("shared brochure positions are one collaboration offer", () => {
       20,
     );
     expect(result.products).toHaveLength(1);
-    expect(
-      result.products[0]!.bundleProducts?.map((product) => product.code),
-    ).toEqual(["TV", "SPEAKER"]);
     expect(result.products[0]).toMatchObject({
+      code: "TV",
       brochurePage: 2,
       brochureOrder: 1,
       sale: "599",
     });
-    expect(result.warnings[0]).toMatchObject({
-      kind: "set-position-conflict",
-      severity: "warning",
-      relatedRows: [20, 21],
-      positions: ["2.1", "3.1"],
+    expect(result.incompleteProducts).toHaveLength(1);
+    expect(result.incompleteProducts[0]).toMatchObject({
+      code: "SPEAKER",
+      brochurePage: 3,
+      brochureOrder: 1,
     });
-    expect(
-      brochureImportNotices(result.warnings, result.products)[0]!.severity,
-    ).toBe("warning");
+    expect(result.products[0]!.bundleProducts).toBeUndefined();
+    expect(result.warnings).toEqual([]);
   });
 
   it("recognizes old shared-order messages as information and hides them after an offer moves or its order changes", () => {

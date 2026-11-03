@@ -159,6 +159,7 @@ import {
   confirmMissingCampaign,
 } from "../brochure/mergeCampaignSnapshots";
 import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
+import { mergeBrochureImportProducts } from "../brochure/brochureReimport";
 import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
 import {
   placeProductOnPage,
@@ -340,6 +341,7 @@ interface SocialSeed {
 }
 interface ImportOptions {
   brochureImport?: boolean;
+  replaceImported?: boolean;
   warnings?: Campaign["brochureImportWarnings"];
 }
 interface DetailSelection {
@@ -5082,41 +5084,27 @@ export default function App({
     const targets = missingImageTargets(products);
     const started: MissingImageTarget[] = [];
     const updated = updateCampaign((draft: Campaign) => {
-      const byCode = new Map(draft.products.map((p) => [p.code, p]));
-      products.forEach((product: Product) =>
-        byCode.set(product.code, {
-          ...byCode.get(product.code),
-          ...retainPreparedProductPhoto(byCode.get(product.code), product),
-        }),
-      );
       if (importOptions?.brochureImport) {
-        const imported = new Set(
-          products.map((product: Product) => String(product.code)),
+        draft.products = mergeBrochureImportProducts(
+          draft.products,
+          products,
+          importOptions.replaceImported !== false,
         );
-        const lastPage = Math.max(
-          1,
-          ...products.map((product: Product) => product.brochurePage || 1),
-        );
-        const remaining = [...byCode.values()].filter(
-          (product: Product) => !imported.has(String(product.code)),
-        );
-        remaining.forEach((product: Product) => {
-          if (!Number.isInteger(product.brochurePage))
-            product.brochurePage = lastPage + 1;
-        });
-        draft.products = [
-          ...products.flatMap((product) => {
-            const merged = byCode.get(product.code);
-            return merged ? [merged] : [];
-          }),
-          ...remaining,
-        ];
         draft.coverProductCodes = products
           .filter((product: Product) => product.brochurePage === 1)
           .map((product: Product) => String(product.code));
         draft.brochureImportWarnings = importOptions.warnings || [];
         materializeProductPages(draft);
-      } else draft.products = [...byCode.values()];
+      } else {
+        const byCode = new Map(draft.products.map((p) => [p.code, p]));
+        products.forEach((product: Product) =>
+          byCode.set(product.code, {
+            ...byCode.get(product.code),
+            ...retainPreparedProductPhoto(byCode.get(product.code), product),
+          }),
+        );
+        draft.products = [...byCode.values()];
+      }
       for (const target of targets) {
         const liveOffer = draft.products.find(
           (product) => product.code === target.offerCode,

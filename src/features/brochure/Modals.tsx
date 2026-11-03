@@ -29,7 +29,12 @@ import type { ImportTable, ImportSheet } from "./importAnalysis";
 import type { ImportRow } from "./importRowGroups";
 import type { BrochureImportColumns } from "./brochureImport";
 import { analyzeImportRows, selectImportTable } from "./importAnalysis";
-import { analyzeBrochureRows, inferBrochureColumns } from "./brochureImport";
+import {
+  analyzeBrochureRows,
+  inferBrochureColumns,
+  parseBrochurePosition,
+  sortBrochureProducts,
+} from "./brochureImport";
 import { discount, money, validSale } from "./Brochure";
 import { normalize, readImage } from "./utils";
 import {
@@ -688,6 +693,7 @@ export interface ImportSalesProps {
     skipped?: number,
     metadata?: {
       brochureImport: boolean;
+      replaceImported?: boolean;
       warnings: BrochureImportWarning[];
     } | null,
   ) => void;
@@ -727,6 +733,7 @@ export function ImportSales({
   });
   const [includeHigher, setIncludeHigher] = useState(false);
   const [includeIncomplete, setIncludeIncomplete] = useState(true);
+  const [replaceImported, setReplaceImported] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const activeSheet = sheets.find((sheet) => sheet.name === sheetName);
@@ -835,11 +842,10 @@ export function ImportSales({
           ),
     [rows, brochureColumns, codeCol, priceCol, catalog, rowOffset],
   );
-  const isBrochureImport = Boolean(
-    brochureAnalysis?.products.length ||
-    brochureAnalysis?.incompleteProducts.length,
-  );
-  const ready = [
+  const isBrochureImport =
+    brochureColumns.positionCol >= 0 &&
+    rows.some((row) => parseBrochurePosition(row[brochureColumns.positionCol]));
+  const candidates = [
     ...(isBrochureImport && includeIncomplete
       ? brochureAnalysis.incompleteProducts
       : []),
@@ -858,6 +864,9 @@ export function ImportSales({
         }))
       : []),
   ];
+  const ready = isBrochureImport
+    ? sortBrochureProducts(candidates)
+    : candidates;
   return (
     <Modal
       title={t("Import sale prices")}
@@ -920,6 +929,54 @@ export function ImportSales({
               </small>
             </div>
           </div>
+          {sheets.length > 1 && (
+            <div className="cs-import-sheet-picker">
+              <Field label={t("Spreadsheet tab")}>
+                <SearchableSelect
+                  value={sheetName}
+                  onChange={(event) => {
+                    const table = selectImportTable(sheets, catalog, {
+                      sheetName: event.target.value,
+                    });
+                    if (table) applyTable(table);
+                  }}
+                >
+                  {sheets.map((sheet) => (
+                    <option key={sheet.name} value={sheet.name}>
+                      {sheet.name}
+                    </option>
+                  ))}
+                </SearchableSelect>
+              </Field>
+              <small>
+                {t(
+                  "Only the selected tab is imported. Choose the tab whose products and positions you want to use.",
+                )}
+              </small>
+            </div>
+          )}
+          {isBrochureImport && (
+            <div className="cs-import-sheet-rules">
+              <p>
+                {t(
+                  "1.1, 1.2, 1.3 are separate offers on the cover. Repeated 1.1 positions form one grouped offer.",
+                )}
+              </p>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={replaceImported}
+                  onChange={(event) => setReplaceImported(event.target.checked)}
+                />
+                <span>{t("Replace previous spreadsheet products")}</span>
+              </label>
+              <small>
+                {t(
+                  "Uses this sheet as the product list and keeps manually added products. Uncheck to add or update instead.",
+                )}
+              </small>
+            </div>
+          )}
           <details
             className="cs-create-options cs-import-mapping"
             open={
@@ -933,25 +990,6 @@ export function ImportSales({
           >
             <summary>{t("Change spreadsheet columns (optional)")}</summary>
             <div className="cs-import-source-options">
-              {sheets.length > 1 && (
-                <Field label={t("Spreadsheet tab")}>
-                  <SearchableSelect
-                    value={sheetName}
-                    onChange={(event) => {
-                      const table = selectImportTable(sheets, catalog, {
-                        sheetName: event.target.value,
-                      });
-                      if (table) applyTable(table);
-                    }}
-                  >
-                    {sheets.map((sheet) => (
-                      <option key={sheet.name} value={sheet.name}>
-                        {sheet.name}
-                      </option>
-                    ))}
-                  </SearchableSelect>
-                </Field>
-              )}
               <Field label={t("Header row")}>
                 <SearchableSelect
                   value={headerIndex}
@@ -1342,7 +1380,11 @@ export function ImportSales({
                     analysis.unchanged.length +
                     (includeHigher ? 0 : analysis.higher.length),
               isBrochureImport
-                ? { brochureImport: true, warnings: brochureAnalysis.warnings }
+                ? {
+                    brochureImport: true,
+                    replaceImported,
+                    warnings: brochureAnalysis.warnings,
+                  }
                 : null,
             )
           }

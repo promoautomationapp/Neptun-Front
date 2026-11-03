@@ -257,7 +257,7 @@ describe("Set brochure placement and details", () => {
     expect(result.skipped).toEqual([]);
   });
 
-  it("keeps separated same-code Sets at different positions and reviews conflicting positions instead of dropping members", () => {
+  it("keeps different positions separate even when consecutive rows say Set", () => {
     const rows = [
       ["A100", "", 349, "Set", "2.1"],
       ["B200", "", "", "Set", "2.2"],
@@ -268,21 +268,20 @@ describe("Set brochure placement and details", () => {
     const result = analyzeBrochureRows(rows, columns, catalog);
     expect(result.products).toHaveLength(2);
     expect(
-      new Set(result.products.map((offer: Product) => offer.code)).size,
-    ).toBe(2);
-    expect(
-      result.products.map((offer: Product) => [
-        offer.brochurePage,
-        offer.brochureOrder,
-      ]),
+      result.products.map((offer) => [offer.brochurePage, offer.brochureOrder]),
     ).toEqual([
       [2, 1],
       [3, 1],
     ]);
-    expect(result.warnings[0]?.message).toMatch(
-      /Set rows have different brochure positions/,
-    );
-    expect(result.matchedRows).toBe(4);
+    expect(result.products[0]?.code).toBe("A100");
+    expect(result.products[0]?.bundleProducts).toBeUndefined();
+    expect(result.incompleteProducts[0]).toMatchObject({
+      code: "B200",
+      brochurePage: 2,
+      brochureOrder: 2,
+    });
+    expect(result.warnings).toEqual([]);
+    expect(result.matchedRows).toBe(3);
     expect(result.ignored).toBe(1);
   });
 
@@ -400,7 +399,7 @@ describe("Set brochure placement and details", () => {
     expect(phone.brochureDetails).toEqual(saved);
   });
 
-  it("does not merge a marked singleton Set into ordinary color variants sharing its position", () => {
+  it("groups matching positions regardless of whether only one row is marked Set", () => {
     const phones: Product[] = [
       {
         code: "P400",
@@ -423,11 +422,9 @@ describe("Set brochure placement and details", () => {
       columns,
       phones,
     );
-    expect(result.products.map((product: Product) => product.code)).toEqual([
-      "P400 [Set row 2]",
-      "P401",
-    ]);
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0]?.bundleCodes).toEqual(["P400", "P401"]);
     expect(result.matchedRows).toBe(2);
-    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings).toEqual([]);
   });
 });
