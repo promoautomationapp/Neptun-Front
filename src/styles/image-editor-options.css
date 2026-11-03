@@ -1,4 +1,5 @@
 .cs-image-source-tabs,
+.cs-image-version-options,
 .cs-screen-source-options {
   display: flex;
   flex-wrap: wrap;
@@ -7,6 +8,7 @@
   margin: 0 0 16px;
 }
 .cs-image-source-tabs > button,
+.cs-image-version-options > button,
 .cs-screen-source-options > button,
 .cs-screen-source-options .np-upload-button {
   display: inline-flex;
@@ -33,8 +35,10 @@
   width: 100%;
 }
 .cs-image-source-tabs > button[aria-pressed="true"],
+.cs-image-version-options > button[aria-pressed="true"],
 .cs-screen-source-options > button[aria-expanded="true"],
 .cs-image-source-tabs > button:hover,
+.cs-image-version-options > button:hover,
 .cs-screen-source-options > button:hover,
 .cs-screen-source-options .np-upload-button:hover {
   background: var(--np-selected, #e9f3fb);
@@ -199,11 +203,17 @@
   line-height: 1.45;
 }
 .cs-image-source-tabs > button:focus-visible,
+.cs-image-version-options > button:focus-visible,
 .cs-screen-source-options button:focus-visible,
 .cs-editor-saved-image-grid > button:focus-visible,
 .cs-tv-screen-option:focus-visible {
   outline: 2px solid var(--np-accent, #4384b7);
   outline-offset: 2px;
+}
+.cs-image-processing-hint {
+  color: var(--np-muted, #6a8094);
+  font-size: 12px;
+  line-height: 1.5;
 }
 .cs-screen-editor-controls > label,
 .cs-image-editor .cs-image-editor-grid strong {

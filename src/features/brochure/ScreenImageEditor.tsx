@@ -13,16 +13,18 @@ import type {
   Settings,
 } from "../../domain/models";
 import { resolveAsset } from "../../api/client";
+import { requestAi } from "../ai/ai.api";
 import { SavedImageChoices } from "./SavedImageChoices";
 import { EditorIcon } from "./EditorIcon";
 import "../../styles/image-editor-options.css";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Modal } from "./Modals";
 import { readImage } from "./utils";
 import { t } from "./i18n";
 import { isTelevision } from "./tvSpecs";
 import {
   savedScreenBoxForPhoto,
+  detectedTelevisionScreenBox,
   screenPhotoSource,
   televisionScreenBox,
 } from "./screenGeometry";
@@ -40,7 +42,7 @@ interface ScreenImageEditorProps {
   settings?: Settings;
   tvCount?: number;
   televisions?: Product[];
-  onSave: (artwork: ScreenArtwork | null, scope: "one" | "all") => void;
+  onSave: (artwork: ScreenArtwork | null, scope: "one" | "all") => void | Promise<void>;
   onClose: () => void;
 }
 interface ScreenGesture {
@@ -86,14 +88,39 @@ export function ScreenImageEditor({
     null,
   );
   const [adjusting, setAdjusting] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const detection = useRef<AbortController | null>(null);
   const scopeRef = useRef<HTMLElement>(null);
   const [error, setError] = useState("");
   const gesture = useRef<ScreenGesture | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const television = isTelevision(product);
-  function save(scope: "one" | "all", restoring = scopePrompt === "restore") {
-    onSave(restoring ? null : { image: screen, box, detectedFor, fit }, scope);
+  useEffect(() => () => {
+    detection.current?.abort();
+    detection.current = null;
+  }, []);
+  function cancelDetection() {
+    detection.current?.abort();
+    detection.current = null;
+    setDetecting(false);
+  }
+  function close() {
+    cancelDetection();
     onClose();
+  }
+  async function save(scope: "one" | "all", restoring = scopePrompt === "restore") {
+    if (saving || detecting) return;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(restoring ? null : { image: screen, box, detectedFor, fit }, scope);
+      close();
+    } catch (cause) {
+      setError(cause instanceof Error ? t(cause.message) : String(cause));
+    } finally {
+      setSaving(false);
+    }
   }
   function requestSave(restoring = false) {
     if (!television || tvCount <= 1) return save("one", restoring);
@@ -114,6 +141,7 @@ export function ScreenImageEditor({
   ) {
     event.preventDefault();
     event.stopPropagation();
+    cancelDetection();
     const preview = event.currentTarget.closest(".cs-screen-editor-preview");
     if (!preview) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -185,14 +213,43 @@ export function ScreenImageEditor({
   }
   function fitScreen(image = imageRef.current) {
     if (!image?.naturalWidth) return;
+    cancelDetection();
     setBox(
       television
         ? televisionScreenBox({ ...product, screenArtwork: undefined }, image)
         : defaultBox(product),
     );
-    setDetectedFor(screenPhotoSource(product, image));
+    const detected = television ? detectedTelevisionScreenBox({ ...product, screenArtwork: undefined }, image) : defaultBox(product);
+    setDetectedFor(detected ? screenPhotoSource(product, image) : "");
+    setError(detected ? "" : t("The screen could not be identified. Adjust the fit manually or try another photo."));
+  }
+  async function fitWithAi() {
+    if (detection.current || saving) return;
+    const source = screenPhotoSource(product, imageRef.current);
+    if (!source) return;
+    const controller = new AbortController();
+    detection.current = controller;
+    setDetecting(true);
+    setError("");
+    try {
+      const result = await requestAi("ai-detect-screen", { image: source }, controller.signal);
+      if (controller.signal.aborted || detection.current !== controller || source !== screenPhotoSource(product, imageRef.current)) return;
+      if (!result.found || ![result.x, result.y, result.width, result.height].every(Number.isFinite) || result.x < 0 || result.y < 0 || result.width < 0.03 || result.height < 0.03 || result.x + result.width > 1 || result.y + result.height > 1)
+        throw new Error("The screen could not be identified. Adjust the fit manually or try another photo.");
+      setBox({ x: result.x, y: result.y, width: result.width, height: result.height });
+      setDetectedFor(source);
+    } catch (cause) {
+      if (!controller.signal.aborted && detection.current === controller)
+        setError(cause instanceof Error ? t(cause.message) : String(cause));
+    } finally {
+      if (detection.current === controller) {
+        detection.current = null;
+        setDetecting(false);
+      }
+    }
   }
   function change(field: keyof Box, value: string) {
+    cancelDetection();
     setBox((current) => {
       const amount = Number(value) / 100;
       if (field === "x")
@@ -214,7 +271,7 @@ export function ScreenImageEditor({
     <Modal
       title={t(television ? "TV wallpaper" : "Image inside the screen")}
       kicker={`${product.brand || "PRODUCT"} · ${product.code}`}
-      onClose={onClose}
+      onClose={close}
       wide
     >
       <div className="cs-screen-editor">
@@ -404,6 +461,12 @@ export function ScreenImageEditor({
               )}
             </p>
             <Button onClick={() => fitScreen()}>{t("Fit to screen")}</Button>
+            {television && (
+              <Button disabled={detecting || saving || !screenPhotoSource(product, imageRef.current)} onClick={fitWithAi}>
+                {t(detecting ? "Finding the screen…" : "Fit screen with AI")}
+              </Button>
+            )}
+            {(detecting || saving) && <p role="status">{t(detecting ? "Finding the screen…" : "Fitting TV screens…")}</p>}
             <label className="cs-screen-size-control">
               <span>
                 {t("Screen size")}{" "}
@@ -416,6 +479,7 @@ export function ScreenImageEditor({
                 max="100"
                 value={box.width * 100}
                 onChange={(event) => {
+                  cancelDetection();
                   const scale = Number(event.target.value) / 100 / box.width;
                   const safe = Math.min(scale, 1 / box.width, 1 / box.height);
                   const width = box.width * safe,
@@ -509,9 +573,9 @@ export function ScreenImageEditor({
               )}
             </div>
             <div className="cs-tv-scope-actions">
-              <Button onClick={() => setScopePrompt(null)}>{t("Back")}</Button>
-              <Button onClick={() => save("one")}>{t("Only this TV")}</Button>
-              <Button tone="primary" onClick={() => save("all")}>
+              <Button disabled={saving || detecting} onClick={() => setScopePrompt(null)}>{t("Back")}</Button>
+              <Button disabled={saving || detecting} onClick={() => save("one")}>{t("Only this TV")}</Button>
+              <Button disabled={saving || detecting} tone="primary" onClick={() => save("all")}>
                 {t("All TVs")} ({tvCount})
               </Button>
             </div>
@@ -520,7 +584,7 @@ export function ScreenImageEditor({
       </div>
       {!scopePrompt && (
         <div className="cs-modal-actions">
-          <Button onClick={onClose}>{t("Cancel")}</Button>
+          <Button onClick={close}>{t("Cancel")}</Button>
           {product.screenArtwork && (
             <Button onClick={() => requestSave(true)}>
               {t("Use original screen")}
@@ -528,7 +592,7 @@ export function ScreenImageEditor({
           )}
           <Button
             tone="primary"
-            disabled={!screen}
+            disabled={!screen || detecting || saving}
             onClick={() => requestSave()}
           >
             {t(television ? "Apply wallpaper" : "Save screen image")}

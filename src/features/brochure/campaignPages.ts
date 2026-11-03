@@ -25,10 +25,16 @@ export function coverProducts(campaign: Campaign) {
   const limit = october || campaign.showCoverBand === true ? 2 : 3;
   if (products.some((product) => Number.isInteger(product.brochurePage)))
     return products.filter((product) => product.brochurePage === 1);
-  const chosenCodes = new Set((campaign?.coverProductCodes || []).map(String));
-  const chosen = products.filter((product) =>
-    chosenCodes.has(String(product.code)),
+  const chosenCodes = [
+    ...new Set((campaign?.coverProductCodes || []).map(String)),
+  ];
+  const byCode = new Map(
+    products.map((product) => [String(product.code), product]),
   );
+  const chosen = chosenCodes.flatMap((code) => {
+    const product = byCode.get(code);
+    return product ? [product] : [];
+  });
   return chosen.length ? chosen : products.slice(0, limit);
 }
 
@@ -229,6 +235,13 @@ export function materializeProductPages(campaign: Campaign) {
       product.brochurePage = page.index + 2;
       product.brochureOrder = index + 1;
     }),
+  );
+  // Explicit page membership reads cover order from the product array. Keep
+  // the chosen order when materializing without moving any interior slots.
+  const coverSet = new Set(covers);
+  let coverIndex = 0;
+  campaign.products = campaign.products.map((product) =>
+    coverSet.has(product) ? covers[coverIndex++]! : product,
   );
 }
 

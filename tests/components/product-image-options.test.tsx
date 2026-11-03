@@ -71,7 +71,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-it("requires background removal for a saved product photo unless the user explicitly keeps its background", async () => {
+it("uses a selected saved product photo immediately without starting background removal", async () => {
   const save = vi.fn();
   const close = vi.fn();
   const view = render(
@@ -88,19 +88,9 @@ it("requires background removal for a saved product photo unless the user explic
     view.getByRole("button", { name: "Use saved image: Product photograph" }),
   );
   expect(
-    (
-      view.getByRole("checkbox", {
-        name: /Remove background with AI/,
-      }) as HTMLInputElement
-    ).checked,
-  ).toBe(true);
-  expect(
     (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
       .disabled,
-  ).toBe(true);
-  fireEvent.click(
-    view.getByRole("checkbox", { name: /Remove background with AI/ }),
-  );
+  ).toBe(false);
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   await waitFor(() =>
     expect(save).toHaveBeenCalledWith(

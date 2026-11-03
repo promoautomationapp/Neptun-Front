@@ -1389,6 +1389,19 @@ const translations: Record<string, string> = {
     "Zëvendëso produktet e importuara më parë",
   "Uses this sheet as the product list and keeps manually added products. Uncheck to add or update instead.":
     "Përdor produktet e kësaj flete dhe ruan produktet e shtuara manualisht. Hiqni shenjën për t'i shtuar ose përditësuar pa zëvendësuar listën.",
+  "Use the selected photo immediately, or remove its background to preview the result first.":
+    "Përdorni menjëherë fotografinë e zgjedhur ose hiqni sfondin për ta parë rezultatin para përdorimit.",
+  "Original photo": "Fotografia origjinale",
+  "Use original photo": "Përdor fotografinë origjinale",
+  "Select cover products. The cover layout adapts to your selection.":
+    "Zgjidhni produktet e kopertinës. Renditja përshtatet sipas përzgjedhjes suaj.",
+  "Fit screen with AI": "Përshtat ekranin me AI",
+  "Finding the screen…": "Duke identifikuar ekranin…",
+  "The screen could not be identified. Adjust the fit manually or try another photo.":
+    "Ekrani nuk u identifikua. Përshtateni manualisht ose provoni një fotografi tjetër.",
+  "Fitting TV screens…": "Duke përshtatur ekranet e televizorëve…",
+  "Use AI only when automatic screen fitting needs help":
+    "Përdor AI vetëm kur përshtatja automatike e ekranit ka nevojë për ndihmë",
   "Retrying photo": "Po provojmë sërish fotografinë",
   "Retrying some product photos…":
     "Po provojmë sërish disa fotografi të produkteve…",

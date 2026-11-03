@@ -53,8 +53,8 @@ export function placeProductOnPage(
     );
 
   if (pageIndex === -1) {
-    if (cover.length === 3) cover.pop();
-    campaign.coverProductCodes = [...cover, source];
+    campaign.coverProductCodes =
+      position === "start" ? [source, ...cover] : [...cover, source];
     if (cover.length) {
       campaign.products = reorderProducts(
         campaign.products,

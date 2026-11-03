@@ -279,6 +279,16 @@ export function visibleImageBounds(image?: HTMLImageElement | null) {
   return bounds ? { ...bounds } : null;
 }
 
+export function detectedTelevisionScreenBox(
+  product: ProductPhoto = {},
+  image?: HTMLImageElement | null,
+): Box | null {
+  const saved = savedScreenBoxForPhoto(product, image);
+  if (saved) return saved;
+  const screen = sampledGeometry(image)?.screen;
+  return screen ? { ...screen } : null;
+}
+
 export function televisionScreenBox(
   product: ProductPhoto = {},
   image?: HTMLImageElement | null,

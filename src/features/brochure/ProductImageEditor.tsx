@@ -17,8 +17,6 @@ import {
   buildImagePreparationRequest,
   imageBackgroundSignature,
   imagePreparationMetadata,
-  IMAGE_PREPARATION_REVISION,
-  needsImagePreparation,
 } from "./imageReview";
 
 export function ProductImageEditor({
@@ -87,27 +85,14 @@ export function ProductImageEditor({
         : "catalog",
   );
   const backgroundSignature = imageBackgroundSignature(backgroundContext);
-  const savedDeclined =
-    !product.aiOriginalImage &&
-    product.aiReviewedImageSource === source &&
-    product.aiReviewedPreparationRevision === IMAGE_PREPARATION_REVISION &&
-    product.aiReviewedBackgroundSignature === backgroundSignature;
   const [cutout, setCutout] = useState(
-    (!product.skipAiCutout ||
-      Boolean(foundSource && !product.aiOriginalImage)) &&
-      !savedDeclined &&
-      Boolean(choices[0] || product.image),
+    Boolean(product.aiOriginalImage && source === product.aiOriginalImage),
   );
   const [instructions, setInstructions] = useState("");
   const savedPrepared =
-    !instructions.trim() &&
-    cutout &&
-    source === product.aiOriginalImage &&
-    !needsImagePreparation(product, backgroundContext || { kind: "none" })
+    product.aiOriginalImage && source === product.aiOriginalImage
       ? product.image
-      : !cutout && source === product.image
-        ? source
-        : "";
+      : "";
   const [prepared, setPrepared] = useState(savedPrepared ?? "");
   const [preparedMetadata, setPreparedMetadata] = useState<Partial<Product>>(
     {},
@@ -120,30 +105,60 @@ export function ProductImageEditor({
   const [error, setError] = useState("");
   const [draggingUpload, setDraggingUpload] = useState(false);
   const selection = useRef("");
+  const activePreparation = useRef<AbortController | null>(null);
   const uploadInput = useRef<HTMLInputElement>(null);
   const lastFound = useRef(foundSource);
   selection.current = JSON.stringify([
     source,
-    cutout,
     backgroundSignature,
     instructions,
   ]);
+  function cancelPreparation() {
+    const active = activePreparation.current;
+    activePreparation.current = null;
+    selection.current = "";
+    active?.abort();
+    setBusy(false);
+    setRetryProgress(undefined);
+  }
+  function chooseSource(image: string, nextKind: string) {
+    cancelPreparation();
+    setSource(image);
+    setKind(nextKind);
+    setCutout(false);
+    setInstructions("");
+    setError("");
+  }
+  function close() {
+    cancelPreparation();
+    onClose();
+  }
+  useEffect(
+    () => () => {
+      activePreparation.current?.abort();
+      activePreparation.current = null;
+      selection.current = "";
+    },
+    [],
+  );
   useEffect(() => {
     if (!source && choices[0]) {
+      cancelPreparation();
       setSource(choices[0]);
-      setCutout(true);
+      setCutout(false);
     }
     if (foundSource && foundSource !== lastFound.current && kind !== "upload") {
+      cancelPreparation();
       setSource(foundSource);
       setKind("search");
-      setCutout(true);
+      setCutout(false);
     }
     lastFound.current = foundSource;
   }, [choices, source, foundSource, kind]);
   useEffect(() => {
     setPrepared(savedPrepared ?? "");
     setPreparedMetadata(
-      savedPrepared && cutout
+      savedPrepared
         ? Object.fromEntries(
             [
               "aiInchesEmbedded",
@@ -157,7 +172,7 @@ export function ProductImageEditor({
     );
     setError("");
     setRetryProgress(undefined);
-  }, [source, cutout, savedPrepared, backgroundSignature, instructions]);
+  }, [source, savedPrepared, backgroundSignature]);
 
   async function selectUpload(file: File | undefined) {
     if (!file) return;
@@ -170,70 +185,104 @@ export function ProductImageEditor({
       return;
     }
     try {
-      setSource(await readImage(file));
-      setKind("upload");
+      chooseSource(await readImage(file), "upload");
       setSourceMode("upload");
-      setCutout(true);
     } catch {
       setError(t("Could not read this image."));
     }
   }
 
   async function prepare() {
-    if (!source || busy) return;
+    if (!source || activePreparation.current) return;
+    const controller = new AbortController();
+    activePreparation.current = controller;
     setError("");
     setBusy(true);
     setRetryProgress(undefined);
-    setCutout(true);
     const selected = JSON.stringify([
       source,
-      true,
       backgroundSignature,
       instructions,
     ]);
     selection.current = selected;
     try {
       const onRetry = (attempt: number, limit: number) => {
-        if (selection.current === selected)
+        if (
+          activePreparation.current === controller &&
+          !controller.signal.aborted &&
+          selection.current === selected
+        )
           setRetryProgress({ attempt, limit });
       };
+      const orientation = await imageOrientation(source, onRetry);
+      if (
+        controller.signal.aborted ||
+        activePreparation.current !== controller ||
+        selection.current !== selected
+      )
+        return;
       const result = await requestAi(
         "ai-remove-background",
         buildImagePreparationRequest(product, {
           image: source,
           backgroundContext,
-          orientation: await imageOrientation(source, onRetry),
+          orientation,
           retry: Boolean(
             prepared || product.aiOriginalImage || instructions.trim(),
           ),
           instructions,
         }),
-        undefined,
+        controller.signal,
         { onRetry },
       );
-      if (selection.current !== selected) return;
+      if (
+        controller.signal.aborted ||
+        activePreparation.current !== controller ||
+        selection.current !== selected
+      )
+        return;
       setPrepared(result.image);
       setPreparedMetadata(imagePreparationMetadata(result));
+      setCutout(true);
     } catch (cause) {
-      if (selection.current === selected)
+      if (
+        !controller.signal.aborted &&
+        activePreparation.current === controller &&
+        selection.current === selected
+      )
         setError(
           (cause instanceof Error ? t(cause.message) : "") ||
             t("AI could not prepare this image."),
         );
     } finally {
-      setBusy(false);
+      if (activePreparation.current === controller) {
+        activePreparation.current = null;
+        setBusy(false);
+      }
     }
   }
 
-  function apply() {
-    const applicable = prepared || (!cutout ? source : "");
+  function apply(original = false) {
+    const usePrepared = !original && cutout && Boolean(prepared);
+    const applicable = usePrepared ? prepared : source;
     if (!applicable) return;
+    cancelPreparation();
     onSave({
       image: applicable,
       ...(product.showImage === false ? { showImage: true } : {}),
-      aiOriginalImage: cutout ? source : "",
-      skipAiCutout: !cutout,
-      ...(cutout ? preparedMetadata : {}),
+      aiOriginalImage: usePrepared ? source : "",
+      skipAiCutout: !usePrepared,
+      ...(usePrepared
+        ? preparedMetadata
+        : {
+            aiInchesEmbedded: false,
+            aiAnnotationStyle: "none",
+            aiPreparedScreenInches: null,
+            aiPreparationRevision: 0,
+            aiBackgroundSignature: "",
+            aiCutoutProvider: "",
+            aiAnnotationCleanup: false,
+          }),
     });
     onClose();
   }
@@ -243,9 +292,7 @@ export function ProductImageEditor({
       wide
       title={t("Change product image")}
       kicker={`${product.brand || "PRODUCT"} · ${product.code}`}
-      onClose={() => {
-        if (!busy) onClose();
-      }}
+      onClose={close}
     >
       <div
         className={`cs-image-editor ${draggingUpload ? "dragging-upload" : ""}`}
@@ -392,9 +439,10 @@ export function ProductImageEditor({
                     type="button"
                     className={source === choice ? "selected" : ""}
                     onClick={() => {
-                      setSource(choice);
-                      setKind(choice === foundSource ? "search" : "catalog");
-                      setCutout(true);
+                      chooseSource(
+                        choice,
+                        choice === foundSource ? "search" : "catalog",
+                      );
                     }}
                     aria-label={`${t("Product photo")} ${index + 1}`}
                     aria-pressed={source === choice}
@@ -420,9 +468,7 @@ export function ProductImageEditor({
                   settings={settings}
                   selected={source}
                   onSelect={(asset) => {
-                    setSource(asset.url);
-                    setKind("library");
-                    setCutout(true);
+                    chooseSource(asset.url, "library");
                   }}
                 />
               </section>
@@ -438,30 +484,20 @@ export function ProductImageEditor({
                 {t("Choose image")}
               </FileUpload>
             </div>
-            <label className="cs-image-cutout">
-              <input
-                type="checkbox"
-                checked={cutout}
-                onChange={(event) => setCutout(event.target.checked)}
-              />
-              <span>
-                <strong>{t("Remove background with AI")}</strong>
-                <small>
-                  {t(
-                    "Product photos are prepared with background removal by default.",
-                  )}
-                </small>
-              </span>
-            </label>
+            <p className="cs-image-processing-hint">
+              {t(
+                "Use the selected photo immediately, or remove its background to preview the result first.",
+              )}
+            </p>
           </div>
           <div className="cs-image-preview-panel">
             <strong>
-              {prepared ? t("Prepared image") : t("Selected image")}
+              {cutout && prepared ? t("Prepared image") : t("Selected image")}
             </strong>
             <div className="cs-image-preview">
-              {prepared || source ? (
+              {(cutout && prepared) || source ? (
                 <img
-                  src={resolveAsset(prepared || source)}
+                  src={resolveAsset((cutout && prepared) || source)}
                   alt={product.name}
                   referrerPolicy="no-referrer"
                 />
@@ -469,6 +505,31 @@ export function ProductImageEditor({
                 <span>{t("Choose a photo")}</span>
               )}
             </div>
+            {prepared && (
+              <div
+                className="cs-image-version-options"
+                role="group"
+                aria-label={t("Image version")}
+              >
+                <button
+                  type="button"
+                  aria-pressed={!cutout}
+                  onClick={() => {
+                    cancelPreparation();
+                    setCutout(false);
+                  }}
+                >
+                  {t("Original photo")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={cutout}
+                  onClick={() => setCutout(true)}
+                >
+                  {t("Background removed")}
+                </button>
+              </div>
+            )}
             {cutout && (
               <small>
                 {t(
@@ -514,8 +575,8 @@ export function ProductImageEditor({
       <div className="cs-modal-actions cs-image-editor-actions">
         {product.image && product.showImage !== false && (
           <Button
-            disabled={busy}
             onClick={() => {
+              cancelPreparation();
               onSave({
                 image: product.image!,
                 aiOriginalImage: product.aiOriginalImage || "",
@@ -535,10 +596,15 @@ export function ProductImageEditor({
               ? t("Remove background again")
               : t("Remove background")}
         </Button>
+        {(busy || (prepared && cutout)) && (
+          <Button onClick={() => apply(true)} disabled={!source}>
+            {t("Use original photo")}
+          </Button>
+        )}
         <Button
           tone="primary"
-          disabled={!(prepared || (!cutout && source)) || busy}
-          onClick={apply}
+          disabled={!source || busy}
+          onClick={() => apply()}
         >
           {t("Use this image")}
         </Button>

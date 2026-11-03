@@ -853,11 +853,25 @@ function ProductEditor({
         String(product.code),
       );
       const key = String(code);
+      const positioned = draft.products.some((product) =>
+        Number.isInteger(product.brochurePage),
+      );
+      const product = draft.products.find((item) => String(item.code) === key);
       if (current.includes(key)) {
         const remaining = current.filter((item: string) => item !== key);
-        if (remaining.length) draft.coverProductCodes = remaining;
-      } else if (current.length < 3) {
+        if (remaining.length) {
+          draft.coverProductCodes = remaining;
+          if (positioned && product) {
+            product.brochurePage = 2;
+            delete product.brochureOrder;
+          }
+        }
+      } else {
         draft.coverProductCodes = [...current, key];
+        if (positioned && product) {
+          product.brochurePage = 1;
+          delete product.brochureOrder;
+        }
       }
     });
   }
@@ -988,7 +1002,7 @@ function ProductEditor({
             <span>
               <strong>{t("Cover products")}</strong> ·{" "}
               {t(
-                "Select up to 3 products. The first 3 appear on the cover by default.",
+                "Select cover products. The cover layout adapts to your selection.",
               )}
             </span>
             {!!campaign.coverProductCodes?.length && (
@@ -1160,9 +1174,8 @@ function ProductEditor({
                           type="checkbox"
                           checked={featuredSet.has(String(product.code))}
                           disabled={
-                            featuredSet.has(String(product.code))
-                              ? featured.length <= 1
-                              : featured.length >= 3
+                            featuredSet.has(String(product.code)) &&
+                            featured.length <= 1
                           }
                           onChange={() => toggleCover(product.code)}
                         />

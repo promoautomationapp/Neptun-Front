@@ -225,7 +225,7 @@ it("allows a persisted interrupted search to resume while keeping an active requ
   expect(requestAi).not.toHaveBeenCalled();
 });
 
-it("defaults an upload to background removal and allows an explicit original photo choice", async () => {
+it("uses an uploaded photo immediately without requesting background removal", async () => {
   const save = vi.fn();
   const close = vi.fn();
   const view = render(
@@ -236,10 +236,6 @@ it("defaults an upload to background removal and allows an explicit original pho
       onFindImage={vi.fn()}
     />,
   );
-  const cutout = view.getByRole("checkbox", {
-    name: /Remove background with AI/,
-  }) as HTMLInputElement;
-  expect(cutout.checked).toBe(false);
   expect(
     (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
       .disabled,
@@ -247,8 +243,6 @@ it("defaults an upload to background removal and allows an explicit original pho
   fireEvent.change(view.getByLabelText("Upload another image"), {
     target: { files: [new File(["photo"], "own.png", { type: "image/png" })] },
   });
-  await waitFor(() => expect(cutout.checked).toBe(true));
-  fireEvent.click(cutout);
   await waitFor(() =>
     expect(
       (
@@ -259,17 +253,19 @@ it("defaults an upload to background removal and allows an explicit original pho
     ).toBe(false),
   );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
-  expect(save).toHaveBeenCalledWith({
-    image: "data:image/png;base64,own-photo",
-    aiOriginalImage: "",
-    skipAiCutout: true,
-  });
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      image: "data:image/png;base64,own-photo",
+      aiOriginalImage: "",
+      skipAiCutout: true,
+    }),
+  );
   expect(close).toHaveBeenCalledTimes(1);
   expect(requestAi).not.toHaveBeenCalled();
   expect(missing.sale).toBe(399);
 });
 
-it("keeps a fetched exact photo pending preparation while displaying its source and normal controls", () => {
+it("uses a fetched exact photo immediately while displaying its source and normal controls", () => {
   const product: Product = {
     ...missing,
     image: "/api/assets/exact-photo.png",
@@ -295,18 +291,13 @@ it("keeps a fetched exact photo pending preparation while displaying its source 
     view.getByRole("link", { name: "Photo source" }).getAttribute("href"),
   ).toBe(product.imageSearch?.sourceUrl);
   expect(
-    (
-      view.getByRole("checkbox", {
-        name: /Remove background with AI/,
-      }) as HTMLInputElement
-    ).checked,
-  ).toBe(true);
-  fireEvent.click(view.getByRole("button", { name: "Use this image" }));
-  expect(save).not.toHaveBeenCalled();
-  expect(
     (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
       .disabled,
-  ).toBe(true);
+  ).toBe(false);
+  fireEvent.click(view.getByRole("button", { name: "Use this image" }));
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({ image: product.image, skipAiCutout: true }),
+  );
   expect(view.getByLabelText("Upload another image")).toBeDefined();
   expect(requestAi).not.toHaveBeenCalled();
 });
@@ -339,11 +330,16 @@ it("updates an open empty editor when the exact-image result arrives without sta
     ).toBe("/api/assets/found.png"),
   );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
-  expect(save).not.toHaveBeenCalled();
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      image: "/api/assets/found.png",
+      skipAiCutout: true,
+    }),
+  );
   expect(
     (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
       .disabled,
-  ).toBe(true);
+  ).toBe(false);
   expect(requestAi).not.toHaveBeenCalled();
 });
 
@@ -379,9 +375,6 @@ it("does not replace the user's uploaded selection when an older search finishes
   expect(
     view.getByRole("img", { name: missing.name }).getAttribute("src"),
   ).toBe("data:image/png;base64,own-photo");
-  fireEvent.click(
-    view.getByRole("checkbox", { name: /Remove background with AI/ }),
-  );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   expect(save).toHaveBeenCalledWith(
     expect.objectContaining({ image: "data:image/png;base64,own-photo" }),
@@ -404,11 +397,6 @@ it("allows a known catalog image to bypass optional cutout while retaining the u
       onClose={vi.fn()}
     />,
   );
-  const cutout = view.getByRole("checkbox", {
-    name: /Remove background with AI/,
-  }) as HTMLInputElement;
-  expect(cutout.checked).toBe(true);
-  fireEvent.click(cutout);
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   expect(save).toHaveBeenCalledWith(
     expect.objectContaining({ image: "/catalog.png", skipAiCutout: true }),
