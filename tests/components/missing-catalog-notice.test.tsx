@@ -78,15 +78,24 @@ it("settles a stalled source photo without starting AI and restores editor contr
       onClose={vi.fn()}
     />,
   );
-  fireEvent.click(view.getByRole("button", { name: "Prepare image" }));
+  fireEvent.click(view.getByRole("button", { name: "Remove background" }));
   expect(requestAi).not.toHaveBeenCalled();
   await act(async () => {
     await vi.advanceTimersByTimeAsync(15_000);
   });
+  expect(view.getByRole("status").textContent).toContain(
+    "Retrying photo · 1/3",
+  );
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(51_000);
+  });
   expect(requestAi).not.toHaveBeenCalled();
   expect(
-    (view.getByRole("button", { name: "Prepare image" }) as HTMLButtonElement)
-      .disabled,
+    (
+      view.getByRole("button", {
+        name: "Remove background",
+      }) as HTMLButtonElement
+    ).disabled,
   ).toBe(false);
 });
 
@@ -260,7 +269,7 @@ it("defaults an upload to background removal and allows an explicit original pho
   expect(missing.sale).toBe(399);
 });
 
-it("uses the fetched exact photo directly while displaying its source and keeping normal controls available", () => {
+it("keeps a fetched exact photo pending preparation while displaying its source and normal controls", () => {
   const product: Product = {
     ...missing,
     image: "/api/assets/exact-photo.png",
@@ -291,11 +300,13 @@ it("uses the fetched exact photo directly while displaying its source and keepin
         name: /Remove background with AI/,
       }) as HTMLInputElement
     ).checked,
-  ).toBe(false);
+  ).toBe(true);
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
-  expect(save).toHaveBeenCalledWith(
-    expect.objectContaining({ image: product.image, skipAiCutout: true }),
-  );
+  expect(save).not.toHaveBeenCalled();
+  expect(
+    (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
   expect(view.getByLabelText("Upload another image")).toBeDefined();
   expect(requestAi).not.toHaveBeenCalled();
 });
@@ -328,12 +339,11 @@ it("updates an open empty editor when the exact-image result arrives without sta
     ).toBe("/api/assets/found.png"),
   );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
-  expect(save).toHaveBeenCalledWith(
-    expect.objectContaining({
-      image: "/api/assets/found.png",
-      skipAiCutout: true,
-    }),
-  );
+  expect(save).not.toHaveBeenCalled();
+  expect(
+    (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
   expect(requestAi).not.toHaveBeenCalled();
 });
 

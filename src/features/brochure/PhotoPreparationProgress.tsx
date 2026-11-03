@@ -7,7 +7,16 @@ export interface PhotoProgressItem {
   code: string;
   name: string;
   image?: string;
-  state: "queued" | "preparing" | "saving" | "ready" | "original" | "failed";
+  state:
+    | "queued"
+    | "preparing"
+    | "retrying"
+    | "saving"
+    | "ready"
+    | "original"
+    | "failed";
+  retryAttempt?: number;
+  retryLimit?: number;
 }
 export function PhotoPreparationProgress({
   items,
@@ -25,18 +34,23 @@ export function PhotoPreparationProgress({
     originals = items.filter((x) => x.state === "original"),
     failed = items.filter((x) => x.state === "failed"),
     active = items.filter(
-      (x) => x.state === "preparing" || x.state === "saving",
+      (x) =>
+        x.state === "preparing" ||
+        x.state === "retrying" ||
+        x.state === "saving",
     ),
     queued = items.filter((x) => x.state === "queued").length;
   const finished = ready + originals.length + failed.length,
-    percent = Math.round((finished / items.length) * 100),
-    busy = finished < items.length;
+    percent = Math.round((ready / items.length) * 100),
+    busy = finished < items.length,
+    needsAttention = originals.length + failed.length > 0,
+    retrying = active.some((item) => item.state === "retrying");
   useEffect(() => {
     setDismissed(false);
-    if (busy || failed.length || !items.length) return;
+    if (busy || needsAttention || !items.length) return;
     const timer = window.setTimeout(() => setDismissed(true), 4000);
     return () => window.clearTimeout(timer);
-  }, [busy, failed.length, campaign.id, items.length]);
+  }, [busy, needsAttention, campaign.id, items.length]);
   if (!items.length || dismissed) return null;
   const missing = campaign.products
     .flatMap((p) => (p.bundleProducts?.length ? p.bundleProducts : [p]))
@@ -48,14 +62,16 @@ export function PhotoPreparationProgress({
     >
       <div className="cs-photo-progress-heading">
         <span className="cs-photo-progress-icon" aria-hidden="true">
-          {busy ? "◌" : failed.length ? "!" : "✓"}
+          {busy ? "◌" : needsAttention ? "!" : "✓"}
         </span>
         <div>
           <h3>
             {t(
               busy
-                ? "Preparing product photos…"
-                : failed.length
+                ? retrying
+                  ? "Retrying some product photos…"
+                  : "Preparing product photos…"
+                : needsAttention
                   ? "Photo preparation needs attention"
                   : "Product photos are ready",
             )}
@@ -73,7 +89,7 @@ export function PhotoPreparationProgress({
       </div>
       <progress
         aria-label={t("Photo preparation progress")}
-        value={finished}
+        value={ready}
         max={items.length}
       />
       <p className="cs-photo-progress-note">
@@ -88,11 +104,13 @@ export function PhotoPreparationProgress({
               {item.image && <img src={item.image} alt="" />}
               <span>
                 <small>
-                  {t(
-                    item.state === "saving"
-                      ? "Saving photo…"
-                      : "Preparing / waiting for AI",
-                  )}
+                  {item.state === "retrying"
+                    ? `${t("Retrying photo")} · ${item.retryAttempt ?? 1}/${item.retryLimit ?? 3}`
+                    : t(
+                        item.state === "saving"
+                          ? "Saving photo…"
+                          : "Preparing / waiting for AI",
+                      )}
                 </small>
                 <strong>{item.name}</strong>
                 <small>{item.code}</small>
@@ -124,9 +142,6 @@ export function PhotoPreparationProgress({
           {failed.length > 0 && (
             <>
               <span>{t("Some photos need a retry or your own upload.")}</span>
-              <button type="button" disabled={busy} onClick={onRetry}>
-                {t("Retry failed photos")}
-              </button>
               {failed.slice(0, 3).map((item) => (
                 <button
                   key={item.key}
@@ -137,6 +152,11 @@ export function PhotoPreparationProgress({
                 </button>
               ))}
             </>
+          )}
+          {needsAttention && (
+            <button type="button" disabled={busy} onClick={onRetry}>
+              {t("Retry failed photos")}
+            </button>
           )}
           {missing > 0 && (
             <span>

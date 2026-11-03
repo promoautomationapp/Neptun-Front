@@ -226,7 +226,9 @@ export function finishMissingImageSearch(
       result.image,
     );
     product.image = result.image;
-    product.skipAiCutout = true;
+    // Finding the exact model only supplies a source photograph. It still needs
+    // the same background removal as an uploaded or catalog product photo.
+    product.skipAiCutout = false;
     for (const key of [
       "aiOriginalImage",
       "aiInchesEmbedded",
@@ -234,6 +236,10 @@ export function finishMissingImageSearch(
       "aiPreparedScreenInches",
       "aiAnnotationStyle",
       "aiBackgroundSignature",
+      "aiCutoutProvider",
+      "aiAnnotationCleanup",
+      "aiCutoutReviewRevision",
+      "aiCutoutReviewAccepted",
       "aiReviewedImageSource",
       "aiReviewedPreparationRevision",
       "aiReviewedBackgroundSignature",

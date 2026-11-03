@@ -1,14 +1,40 @@
-import type {Product,JsonValue}from '../../domain/models';
-import { screenAnnotationType, otherScreenInches, tvScreenInches } from "./tvSpecs";
-import { IMAGE_PREPARATION_REVISION, normalizeImageBackgroundContext } from "./imagePreparationContext";
+import type { Product, JsonValue } from "../../domain/models";
+import {
+  screenAnnotationType,
+  otherScreenInches,
+  tvScreenInches,
+} from "./tvSpecs";
+import {
+  IMAGE_PREPARATION_REVISION,
+  normalizeImageBackgroundContext,
+} from "./imagePreparationContext";
 
-export { IMAGE_PREPARATION_REVISION, imageBackgroundSignature, normalizeImageBackgroundContext } from "./imagePreparationContext";
+export {
+  IMAGE_PREPARATION_REVISION,
+  imageBackgroundSignature,
+  normalizeImageBackgroundContext,
+} from "./imagePreparationContext";
 
 export function imagePreparationSource(product: Product) {
   return product.aiOriginalImage || product.image || "";
 }
 
-export function buildImagePreparationRequest(product: Product, { backgroundContext, orientation, retry = false, image }: {backgroundContext?:unknown;orientation?:string;retry?:boolean;image?:string} = {}) {
+export function buildImagePreparationRequest(
+  product: Product,
+  {
+    backgroundContext,
+    orientation,
+    retry = false,
+    image,
+    instructions,
+  }: {
+    backgroundContext?: unknown;
+    orientation?: string;
+    retry?: boolean;
+    image?: string;
+    instructions?: string;
+  } = {},
+) {
   const picturedProduct = product.bundleProducts?.[0] || product;
   return {
     provider: "openai" as const,
@@ -18,15 +44,22 @@ export function buildImagePreparationRequest(product: Product, { backgroundConte
     category: picturedProduct.subcategory || picturedProduct.category || "",
     description: picturedProduct.description ?? "",
     screenType: screenAnnotationType(picturedProduct),
-    screenInches: tvScreenInches(picturedProduct) || otherScreenInches(picturedProduct),
+    screenInches:
+      tvScreenInches(picturedProduct) || otherScreenInches(picturedProduct),
     backgroundContext: normalizeImageBackgroundContext(backgroundContext),
     ...(orientation ? { orientation } : {}),
     ...(retry ? { retry: true } : {}),
+    ...(instructions?.trim()
+      ? { instructions: instructions.trim().slice(0, 1000) }
+      : {}),
   };
 }
 
-export function imagePreparationMetadata(result:Record<string,JsonValue>) {
-  const ribbon = result.annotationStyle === "tv-folded-ribbon" && result.screenType === "television" && Number.isFinite(Number(result.screenInches));
+export function imagePreparationMetadata(result: Record<string, JsonValue>) {
+  const ribbon =
+    result.annotationStyle === "tv-folded-ribbon" &&
+    result.screenType === "television" &&
+    Number.isFinite(Number(result.screenInches));
   return {
     aiPreparationRevision: Number(result.preparationRevision) || 0,
     aiAnnotationStyle: String(result.annotationStyle || "none"),
@@ -40,15 +73,23 @@ export function imagePreparationMetadata(result:Record<string,JsonValue>) {
 
 export function tvInchesEmbedded(product: Product) {
   const inches = tvScreenInches(product);
-  return Boolean(inches && product.aiInchesEmbedded &&
+  return Boolean(
+    inches &&
+    product.aiInchesEmbedded &&
     (product.aiPreparationRevision ?? 0) >= IMAGE_PREPARATION_REVISION &&
     product.aiAnnotationStyle === "tv-folded-ribbon" &&
-    Number(product.aiPreparedScreenInches) === inches);
+    Number(product.aiPreparedScreenInches) === inches,
+  );
 }
 
-export function needsImagePreparation(product: Product, _backgroundContext?:unknown, { force = false } = {}) {
-  if (!product.image || product.skipAiCutout) return false;
+export function needsImagePreparation(
+  product: Product,
+  _backgroundContext?: unknown,
+  { force = false } = {},
+) {
+  if (!product.image) return false;
   if (force) return true;
+  if (product.skipAiCutout) return false;
   // A prepared or approved source remains reusable across backgrounds and
   // display revisions. Only a new photo or an explicit re-cut needs AI.
   if (product.aiOriginalImage) return false;

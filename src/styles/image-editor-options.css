@@ -49,6 +49,53 @@
 .cs-image-editor .cs-image-upload[hidden] {
   display: none;
 }
+.cs-image-editor .cs-image-preview {
+  background-color: #f7f9fc;
+  background-image:
+    linear-gradient(45deg, #e2e8ef 25%, transparent 25%),
+    linear-gradient(-45deg, #e2e8ef 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e2e8ef 75%),
+    linear-gradient(-45deg, transparent 75%, #e2e8ef 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+.cs-image-repair-note {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+  color: var(--np-text, #254b67);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cs-image-repair-note textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 104px;
+  resize: vertical;
+  border: 1px solid var(--np-border, #cfdeea);
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: var(--np-surface, #fff);
+  color: inherit;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.cs-image-repair-note textarea:focus-visible {
+  outline: 2px solid var(--np-accent, #4384b7);
+  outline-offset: 2px;
+}
+.cs-image-repair-note small {
+  color: var(--np-muted, #6a8094);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 .cs-editor-saved-images > p,
 .cs-screen-existing-images p {
   color: var(--np-muted, #6a8094);

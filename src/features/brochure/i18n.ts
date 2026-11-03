@@ -1379,6 +1379,9 @@ const translations: Record<string, string> = {
   waiting: "në pritje",
   "Your brochure stays editable. Each finished photo is saved automatically. Prepared images are reused when available.":
     "Broshurën mund ta redaktoni gjatë përgatitjes. Çdo fotografi e përfunduar ruhet automatikisht. Imazhet e përgatitura ripërdoren kur janë të disponueshme.",
+  "Retrying photo": "Po provojmë sërish fotografinë",
+  "Retrying some product photos…":
+    "Po provojmë sërish disa fotografi të produkteve…",
   "Preparing / waiting for AI": "Duke u përgatitur / në pritje të AI",
   "Some photos need a retry or your own upload.":
     "Disa fotografi duhen riprovuar ose ngarkuar nga ju.",
@@ -1685,7 +1688,8 @@ const translations: Record<string, string> = {
   "Cover design": "Dizajni i kopertinës",
   "Page not found": "Faqja nuk u gjet",
   "Brochure unavailable": "Broshura nuk është në dispozicion",
-  "This brochure could not be opened. It may be unavailable or you may not have access.": "Broshura nuk u hap. Mund të mos jetë në dispozicion ose nuk keni qasje në të.",
+  "This brochure could not be opened. It may be unavailable or you may not have access.":
+    "Broshura nuk u hap. Mund të mos jetë në dispozicion ose nuk keni qasje në të.",
   "Cover background": "Sfondi i kopertinës",
   "Message ribbon colors": "Ngjyrat e shiritit të mesazhit",
   "Ribbon start color": "Ngjyra e fillimit të shiritit",
@@ -2809,6 +2813,38 @@ const translations: Record<string, string> = {
   "Download is ready.": "Shkarkimi është gati.",
   "Download again": "Shkarko përsëri",
   "Download options": "Opsionet e shkarkimit",
+  "Fix product photos": "Rregullo fotot e produkteve",
+  "Choose photos and remove their backgrounds":
+    "Zgjidhni fotot dhe hiqni sfondin e tyre",
+  "Choose the photos that need background removal or a better cutout. Each replacement is saved when it is ready.":
+    "Zgjidhni fotot që kanë nevojë për heqjen e sfondit ose një prerje më të mirë. Çdo foto e përfunduar ruhet automatikisht.",
+  "Product name or code": "Emri ose kodi i produktit",
+  "photos selected": "foto të zgjedhura",
+  "Clear selection": "Pastro përzgjedhjen",
+  "Needs attention": "Kërkon vëmendje",
+  "Not prepared": "E papërgatitur",
+  "Current photo": "Fotoja aktuale",
+  "No matching photos.": "Nuk u gjet asnjë foto.",
+  "Upload product photos first to remove their backgrounds.":
+    "Ngarkoni fillimisht fotot e produkteve për të hequr sfondin e tyre.",
+  "What should be fixed? (optional)": "Çfarë duhet rregulluar? (opsionale)",
+  "For example: Remove the white background and keep the whole product, including its stand.":
+    "Për shembull: Hiqni sfondin e bardhë dhe ruani produktin e plotë, duke përfshirë mbajtësen e tij.",
+  "Your instructions apply to the selected photos.":
+    "Udhëzimet tuaja vlejnë për fotot e zgjedhura.",
+  "Remove backgrounds": "Hiq sfondet",
+  "Preparing photo…": "Duke përgatitur foton…",
+  "Remove background": "Hiq sfondin",
+  "Remove background again": "Hiq sfondin sërish",
+  "Describe what needs fixing": "Përshkruani çfarë duhet përmirësuar",
+  "For example: remove the white border and keep the entire product, including its stand.":
+    "Për shembull: hiq kornizën e bardhë dhe ruaj produktin e plotë, përfshirë mbajtësen.",
+  "Product photos are prepared with background removal by default.":
+    "Fotot e produkteve përgatiten pa sfond si parazgjedhje.",
+  "Keep the model, colors, labels and all product parts unchanged.":
+    "Ruaj modelin, ngjyrat, etiketat dhe të gjitha pjesët e produktit pa ndryshime.",
+  "The photo background could not be removed completely. Your original photo is unchanged. Try again or describe what needs fixing.":
+    "Sfondi i fotos nuk u hoq plotësisht. Fotoja juaj origjinale mbetet e pandryshuar. Provoni përsëri ose përshkruani çfarë duhet rregulluar.",
 };
 
 let language =

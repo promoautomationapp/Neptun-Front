@@ -71,19 +71,29 @@ export function inspectImage(source: string) {
   });
 }
 
-export function imageOrientation(source: string) {
+class ImageLoadTimeoutError extends Error {}
+
+function loadImageOrientation(source: string) {
   return new Promise<"landscape" | "portrait" | "square">((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "use-credentials";
-    const finish = (orientation?: "landscape" | "portrait" | "square") => {
+    const finish = (
+      orientation?: "landscape" | "portrait" | "square",
+      timedOut = false,
+    ) => {
       clearTimeout(timer);
       image.onload = null;
       image.onerror = null;
       if (orientation) resolve(orientation);
-      else reject(new Error(t("Could not open the edited image.")));
+      else
+        reject(
+          timedOut
+            ? new ImageLoadTimeoutError(t("Could not open the edited image."))
+            : new Error(t("Could not open the edited image.")),
+        );
     };
     const timer = setTimeout(() => {
-      finish();
+      finish(undefined, true);
       image.src = "";
     }, IMAGE_LOAD_TIMEOUT_MS);
     image.onload = () =>
@@ -97,4 +107,23 @@ export function imageOrientation(source: string) {
     image.onerror = () => finish();
     image.src = source;
   });
+}
+
+/** Source loading is safe to repeat: no provider job has started yet. Only
+ * timeouts retry; a definite invalid/inaccessible image fails immediately. */
+export async function imageOrientation(
+  source: string,
+  onRetry?: (attempt: number, limit: number) => void,
+) {
+  const limit = onRetry ? 3 : 0;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await loadImageOrientation(source);
+    } catch (error) {
+      if (!(error instanceof ImageLoadTimeoutError) || attempt >= limit)
+        throw error;
+      onRetry?.(attempt + 1, limit);
+      await new Promise((resolve) => setTimeout(resolve, (attempt + 1) * 1000));
+    }
+  }
 }

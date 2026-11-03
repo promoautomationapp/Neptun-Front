@@ -12,11 +12,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Modal } from "./Modals";
 import { t } from "./i18n";
 import { readImage } from "./utils";
-import {
-  MissingCatalogNotice,
-  imageSearchState,
-  missingCatalogCodes,
-} from "./MissingCatalogNotice";
+import { MissingCatalogNotice, imageSearchState } from "./MissingCatalogNotice";
 import {
   buildImagePreparationRequest,
   imageBackgroundSignature,
@@ -52,12 +48,9 @@ export function ProductImageEditor({
   const photoProduct = catalogPhotos.product;
   const search = imageSearchState(product);
   const foundSource =
-    search?.status === "found" ? product.image || search.imageUrl || "" : "";
-  const unknownProduct = Boolean(
-    product.catalogMissing ||
-    missingCatalogCodes(product).length ||
-    !catalogProduct,
-  );
+    search?.status === "found"
+      ? product.aiOriginalImage || product.image || search.imageUrl || ""
+      : "";
   const choices = useMemo(
     () => [
       ...new Set(
@@ -100,11 +93,14 @@ export function ProductImageEditor({
     product.aiReviewedPreparationRevision === IMAGE_PREPARATION_REVISION &&
     product.aiReviewedBackgroundSignature === backgroundSignature;
   const [cutout, setCutout] = useState(
-    !product.skipAiCutout &&
+    (!product.skipAiCutout ||
+      Boolean(foundSource && !product.aiOriginalImage)) &&
       !savedDeclined &&
-      (Boolean(product.aiOriginalImage) || (!unknownProduct && !foundSource)),
+      Boolean(choices[0] || product.image),
   );
+  const [instructions, setInstructions] = useState("");
   const savedPrepared =
+    !instructions.trim() &&
     cutout &&
     source === product.aiOriginalImage &&
     !needsImagePreparation(product, backgroundContext || { kind: "none" })
@@ -117,21 +113,30 @@ export function ProductImageEditor({
     {},
   );
   const [busy, setBusy] = useState(false);
+  const [retryProgress, setRetryProgress] = useState<{
+    attempt: number;
+    limit: number;
+  }>();
   const [error, setError] = useState("");
   const [draggingUpload, setDraggingUpload] = useState(false);
   const selection = useRef("");
   const uploadInput = useRef<HTMLInputElement>(null);
   const lastFound = useRef(foundSource);
-  selection.current = JSON.stringify([source, cutout, backgroundSignature]);
+  selection.current = JSON.stringify([
+    source,
+    cutout,
+    backgroundSignature,
+    instructions,
+  ]);
   useEffect(() => {
     if (!source && choices[0]) {
       setSource(choices[0]);
-      setCutout(false);
+      setCutout(true);
     }
     if (foundSource && foundSource !== lastFound.current && kind !== "upload") {
       setSource(foundSource);
       setKind("search");
-      setCutout(false);
+      setCutout(true);
     }
     lastFound.current = foundSource;
   }, [choices, source, foundSource, kind]);
@@ -151,7 +156,8 @@ export function ProductImageEditor({
         : {},
     );
     setError("");
-  }, [source, cutout, savedPrepared, backgroundSignature]);
+    setRetryProgress(undefined);
+  }, [source, cutout, savedPrepared, backgroundSignature, instructions]);
 
   async function selectUpload(file: File | undefined) {
     if (!file) return;
@@ -177,30 +183,43 @@ export function ProductImageEditor({
     if (!source || busy) return;
     setError("");
     setBusy(true);
-    const selected = selection.current;
+    setRetryProgress(undefined);
+    setCutout(true);
+    const selected = JSON.stringify([
+      source,
+      true,
+      backgroundSignature,
+      instructions,
+    ]);
+    selection.current = selected;
     try {
-      if (!cutout) {
-        setPrepared(source);
-        setPreparedMetadata({});
-        return;
-      }
+      const onRetry = (attempt: number, limit: number) => {
+        if (selection.current === selected)
+          setRetryProgress({ attempt, limit });
+      };
       const result = await requestAi(
         "ai-remove-background",
         buildImagePreparationRequest(product, {
           image: source,
           backgroundContext,
-          orientation: await imageOrientation(source),
-          retry: Boolean(prepared),
+          orientation: await imageOrientation(source, onRetry),
+          retry: Boolean(
+            prepared || product.aiOriginalImage || instructions.trim(),
+          ),
+          instructions,
         }),
+        undefined,
+        { onRetry },
       );
       if (selection.current !== selected) return;
       setPrepared(result.image);
       setPreparedMetadata(imagePreparationMetadata(result));
     } catch (cause) {
-      setError(
-        (cause instanceof Error ? cause.message : "") ||
-          t("AI could not prepare this image."),
-      );
+      if (selection.current === selected)
+        setError(
+          (cause instanceof Error ? t(cause.message) : "") ||
+            t("AI could not prepare this image."),
+        );
     } finally {
       setBusy(false);
     }
@@ -375,7 +394,7 @@ export function ProductImageEditor({
                     onClick={() => {
                       setSource(choice);
                       setKind(choice === foundSource ? "search" : "catalog");
-                      setCutout(!unknownProduct && choice !== foundSource);
+                      setCutout(true);
                     }}
                     aria-label={`${t("Product photo")} ${index + 1}`}
                     aria-pressed={source === choice}
@@ -403,7 +422,7 @@ export function ProductImageEditor({
                   onSelect={(asset) => {
                     setSource(asset.url);
                     setKind("library");
-                    setCutout(false);
+                    setCutout(true);
                   }}
                 />
               </section>
@@ -428,11 +447,9 @@ export function ProductImageEditor({
               <span>
                 <strong>{t("Remove background with AI")}</strong>
                 <small>
-                  {kind === "catalog" && !unknownProduct
-                    ? t("On by default for catalog photos.")
-                    : t(
-                        "Optional. Finding or uploading a photo does not prepare it with AI.",
-                      )}
+                  {t(
+                    "Product photos are prepared with background removal by default.",
+                  )}
                 </small>
               </span>
             </label>
@@ -459,6 +476,25 @@ export function ProductImageEditor({
                 )}
               </small>
             )}
+            <label className="cs-image-repair-note">
+              <span>{t("Describe what needs fixing")}</span>
+              <textarea
+                aria-label={t("Describe what needs fixing")}
+                value={instructions}
+                onChange={(event) => setInstructions(event.target.value)}
+                maxLength={1000}
+                rows={3}
+                placeholder={t(
+                  "For example: remove the white border and keep the entire product, including its stand.",
+                )}
+                disabled={busy}
+              />
+              <small>
+                {t(
+                  "Keep the model, colors, labels and all product parts unchanged.",
+                )}
+              </small>
+            </label>
             {error && (
               <p className="cs-image-error" role="alert">
                 {error}
@@ -467,7 +503,9 @@ export function ProductImageEditor({
             {busy && (
               <div className="cs-image-progress" role="status">
                 <i />
-                {t("AI is removing the background…")}
+                {retryProgress
+                  ? `${t("Retrying photo")} · ${retryProgress.attempt}/${retryProgress.limit}`
+                  : t("AI is removing the background…")}
               </div>
             )}
           </div>
@@ -493,11 +531,9 @@ export function ProductImageEditor({
         <Button onClick={prepare} disabled={!source || busy}>
           {busy
             ? t("Preparing image…")
-            : savedPrepared && prepared === savedPrepared && cutout
-              ? t("Re-cut with AI")
-              : prepared
-                ? t("Prepare again")
-                : t("Prepare image")}
+            : prepared || product.aiOriginalImage
+              ? t("Remove background again")
+              : t("Remove background")}
         </Button>
         <Button
           tone="primary"

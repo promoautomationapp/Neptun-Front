@@ -54,9 +54,11 @@ import {
   applyPreparedProductPhoto,
   createProductImagePreparationQueue,
   currentProductPhotoTarget,
+  productPhotoSelectionKey,
   productImagePreparationTargets,
   retainPreparedProductPhoto,
   type ProductPhotoTarget,
+  type ProductPhotoPreparationOptions,
 } from "../brochure/productImagePreparationQueue";
 import {
   CatalogNavigator,
@@ -125,6 +127,7 @@ import {
 import { OfferStyleControls } from "../brochure/OfferStyleControls";
 import { CategorySavingsControls } from "../brochure/CategorySavingsControls";
 import { ProductImageEditor } from "../brochure/ProductImageEditor";
+import { ProductPhotoRepair } from "../brochure/ProductPhotoRepair";
 import { ScreenImageEditor } from "../brochure/ScreenImageEditor";
 import { applyTvWallpaper, campaignTelevisions } from "../brochure/tvWallpaper";
 import { BrochureFormatPicker } from "../brochure/BrochureFormatPicker";
@@ -925,7 +928,7 @@ function ProductEditor({
         </div>
         <div className="cs-actions">
           <Button onClick={onAiReview}>{t("✦ AI review")}</Button>
-          <Button onClick={onReCut}>{t("Re-cut product image")}</Button>
+          <Button onClick={onReCut}>{t("Fix product photos")}</Button>
           {canUseCatalog && (
             <Button onClick={onManual}>{t("＋ Add manually")}</Button>
           )}
@@ -2811,8 +2814,8 @@ export function BrochureEditor({
             >
               <span aria-hidden="true">✂</span>
               <span>
-                <strong>{t("Fix a product cutout")}</strong>
-                <small>{t("Choose one image to prepare again")}</small>
+                <strong>{t("Fix product photos")}</strong>
+                <small>{t("Choose photos and remove their backgrounds")}</small>
               </span>
             </button>
           </ActionMenu>
@@ -4786,13 +4789,22 @@ export default function App({
     campaignId: string,
     key: string,
     state: PhotoProgressItem["state"],
+    retry?: { attempt: number; limit: number },
   ) {
     setPhotoProgress((current) => {
       const item = current[campaignId]?.[key];
       return item
         ? {
             ...current,
-            [campaignId]: { ...current[campaignId], [key]: { ...item, state } },
+            [campaignId]: {
+              ...current[campaignId],
+              [key]: {
+                ...item,
+                state,
+                retryAttempt: retry?.attempt,
+                retryLimit: retry?.limit,
+              },
+            },
           }
         : current;
     });
@@ -4801,10 +4813,27 @@ export default function App({
     snapshot: Campaign,
     products = snapshot.products,
     retryFailed = false,
+    options: ProductPhotoPreparationOptions = {},
   ) {
-    const targets = productImagePreparationTargets(snapshot, products).filter(
+    const pendingTargets = productImagePreparationTargets(
+      snapshot,
+      products,
+      options,
+    );
+    const retriedManualTargets =
+      retryFailed && !options.force
+        ? [...failedPhotoTargets.current.values()].filter(
+            (target) =>
+              target.campaignId === snapshot.id &&
+              target.force &&
+              products.some((product) => product.code === target.offerCode) &&
+              currentProductPhotoTarget(snapshot, target),
+          )
+        : [];
+    const targets = [...pendingTargets, ...retriedManualTargets].filter(
       (target) =>
         !productPhotoQueue.current.has(target.key) &&
+        !productPhotoQueue.current.hasTarget(target) &&
         (retryFailed || !failedPhotoTargets.current.has(target.key)),
     );
     if (!targets.length) return Promise.resolve([]);
@@ -4823,6 +4852,7 @@ export default function App({
           (item) =>
             item.state === "queued" ||
             item.state === "preparing" ||
+            item.state === "retrying" ||
             item.state === "saving",
         )
           ? current[snapshot.id]
@@ -4856,8 +4886,8 @@ export default function App({
           },
           {
             retry: retries.has(target.key),
-            onPhase: (phase) =>
-              trackProductPhotoWork(snapshot.id, target.key, phase),
+            onPhase: (phase, retry) =>
+              trackProductPhotoWork(snapshot.id, target.key, phase, retry),
           },
         )
         .then((outcome) => {
@@ -5894,7 +5924,7 @@ export default function App({
                 onImport={() => setModal("import")}
                 onManual={() => setModal("manual")}
                 onAiReview={() => openAiReview("manual")}
-                onReCut={() => openAiReview("images")}
+                onReCut={() => setModal("repair-photos")}
                 onNext={goToBrochure}
                 onMakeSocial={(products: Product[]) => {
                   setSocialSeed({ campaignId: campaign.id, products });
@@ -5926,7 +5956,7 @@ export default function App({
                 onPreparePhotos={prepareProductPhotos}
                 onToast={setToast}
                 onAiReview={() => openAiReview("manual")}
-                onReCut={() => openAiReview("images")}
+                onReCut={() => setModal("repair-photos")}
                 onAddProducts={() => setModal("manual")}
                 onImportProducts={() => setModal("import")}
                 onEditImage={(product: Product) =>
@@ -6075,6 +6105,28 @@ export default function App({
           catalog={catalog}
           existing={campaign.products}
           onApply={addProducts}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "repair-photos" && campaign && (
+        <ProductPhotoRepair
+          campaign={campaign}
+          failedTargetKeys={[...failedPhotoTargets.current.values()]
+            .filter((target) => target.campaignId === campaign.id)
+            .map(productPhotoSelectionKey)}
+          busyTargetKeys={productImagePreparationTargets(campaign, undefined, {
+            force: true,
+          })
+            .filter((target) => productPhotoQueue.current.hasTarget(target))
+            .map(productPhotoSelectionKey)}
+          onPrepare={({ targetKeys, instructions }) => {
+            void prepareProductPhotos(campaign, campaign.products, true, {
+              force: true,
+              targetKeys,
+              instructions,
+            });
+            setModal(null);
+          }}
           onClose={() => setModal(null)}
         />
       )}

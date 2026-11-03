@@ -15,12 +15,16 @@ export function ActionMenu({
   className = "",
   portal = false,
   portalClassName = "",
+  triggerLabel,
+  hideOnExport = false,
 }: {
   label: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   portal?: boolean;
   portalClassName?: string;
+  triggerLabel?: string;
+  hideOnExport?: boolean;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -117,9 +121,14 @@ export function ActionMenu({
     <details
       ref={ref}
       className={`cs-brochure-actions-menu ${className}`}
+      data-export-hide={hideOnExport ? "true" : undefined}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary aria-expanded={open}>
+      <summary
+        aria-expanded={open}
+        aria-label={triggerLabel}
+        title={triggerLabel}
+      >
         {label}
         <svg
           className="cs-action-menu-chevron"

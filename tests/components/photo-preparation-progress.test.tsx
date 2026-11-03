@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, cleanup } from "@testing-library/react";
+import { render, fireEvent, cleanup, act } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PhotoPreparationProgress } from "../../src/features/brochure/PhotoPreparationProgress";
 import type { Campaign } from "../../src/domain/models";
@@ -7,6 +7,7 @@ import { setLanguage } from "../../src/features/brochure/i18n";
 afterEach(() => {
   cleanup();
   setLanguage("sq");
+  vi.useRealTimers();
 });
 it("shows real completed, waiting and failed work while keeping upload and retry actions meaningful", () => {
   setLanguage("en");
@@ -33,9 +34,9 @@ it("shows real completed, waiting and failed work while keeping upload and retry
     />,
   );
   const progress = view.getByRole("progressbar") as HTMLProgressElement;
-  expect(progress.value).toBe(2);
+  expect(progress.value).toBe(1);
   expect(progress.max).toBe(4);
-  expect(view.getByText("50%")).toBeTruthy();
+  expect(view.getByText("25%")).toBeTruthy();
   expect(view.getByText(/1 \/ 4 ready/)).toBeTruthy();
   expect(
     (
@@ -63,9 +64,11 @@ it("shows real completed, waiting and failed work while keeping upload and retry
   expect(view.getByText("Photo preparation needs attention")).toBeTruthy();
 });
 
-it("finishes with an original photo when preparation is unavailable, without inviting another paid retry", () => {
+it("keeps original fallback photos needing attention instead of claiming they were cut out", () => {
+  vi.useFakeTimers();
   setLanguage("en");
-  const edit = vi.fn();
+  const edit = vi.fn(),
+    retry = vi.fn();
   const view = render(
     <PhotoPreparationProgress
       items={[
@@ -80,16 +83,17 @@ it("finishes with an original photo when preparation is unavailable, without inv
           ],
         } as Campaign
       }
-      onRetry={vi.fn()}
+      onRetry={retry}
       onEdit={edit}
     />,
   );
-  expect(view.getByText("100%")).toBeTruthy();
+  expect(view.getByText("50%")).toBeTruthy();
   expect(view.getByText(/1 \/ 2 ready · 1 Using original photo/)).toBeTruthy();
-  expect(view.getByText("Product photos are ready")).toBeTruthy();
-  expect(
-    view.queryByRole("button", { name: "Retry failed photos" }),
-  ).toBeNull();
+  expect(view.queryByText("Product photos are ready")).toBeNull();
+  expect(view.getByText("Photo preparation needs attention")).toBeTruthy();
+  act(() => vi.advanceTimersByTime(5000));
+  fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
+  expect(retry).toHaveBeenCalledOnce();
   fireEvent.click(
     view.getByRole("button", { name: "Upload / edit photo · Tablet" }),
   );
@@ -108,4 +112,30 @@ it("shows saving separately from AI preparation", () => {
   );
   expect(view.getByText("Saving photo…")).toBeTruthy();
   expect(view.queryByText("Preparing / waiting for AI")).toBeNull();
+});
+
+it("identifies retries and their attempt count while keeping unfinished photos out of ready totals", () => {
+  setLanguage("en");
+  const view = render(
+    <PhotoPreparationProgress
+      items={[
+        {
+          key: "retry",
+          code: "tv",
+          name: "TV",
+          state: "retrying",
+          retryAttempt: 2,
+          retryLimit: 3,
+        },
+        { key: "ready", code: "phone", name: "Phone", state: "ready" },
+      ]}
+      campaign={{ products: [] } as unknown as Campaign}
+      onRetry={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+  expect(view.getByText("Retrying some product photos…")).toBeTruthy();
+  expect(view.getByText("Retrying photo · 2/3")).toBeTruthy();
+  expect(view.getByText("50%")).toBeTruthy();
+  expect(view.queryByText("Product photos are ready")).toBeNull();
 });

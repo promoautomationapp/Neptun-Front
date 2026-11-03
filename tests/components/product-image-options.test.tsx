@@ -65,7 +65,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-it("uses a saved workspace image as the product photo without automatically preparing it with AI", async () => {
+it("requires background removal for a saved product photo unless the user explicitly keeps its background", async () => {
   const save = vi.fn();
   const close = vi.fn();
   const view = render(
@@ -87,7 +87,14 @@ it("uses a saved workspace image as the product photo without automatically prep
         name: /Remove background with AI/,
       }) as HTMLInputElement
     ).checked,
-  ).toBe(false);
+  ).toBe(true);
+  expect(
+    (view.getByRole("button", { name: "Use this image" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+  fireEvent.click(
+    view.getByRole("checkbox", { name: /Remove background with AI/ }),
+  );
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   await waitFor(() =>
     expect(save).toHaveBeenCalledWith(

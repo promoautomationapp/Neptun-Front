@@ -1,10 +1,30 @@
 import type { Campaign, Product, JsonValue } from "../../domain/models";
 import { requestAi } from "../ai/ai.api";
 import { imageOrientation, inspectImage } from "../ai/image-inspection";
-import { buildImagePreparationRequest, imageBackgroundSignature, imagePreparationMetadata, imagePreparationSource, needsImagePreparation } from "./imageReview";
+import {
+  buildImagePreparationRequest,
+  imageBackgroundSignature,
+  imagePreparationMetadata,
+  imagePreparationSource,
+  needsImagePreparation,
+} from "./imageReview";
 import { productImageBackgroundContext } from "./pageBackground";
 
-const metadataFields = ["aiInchesEmbedded", "aiAnnotationStyle", "aiPreparedScreenInches", "aiPreparationRevision", "aiBackgroundSignature", "aiCutoutProvider", "aiAnnotationCleanup", "aiCutoutReviewRevision", "aiCutoutReviewAccepted", "aiReviewedImageSource", "aiReviewedPreparationRevision", "aiReviewedBackgroundSignature", "skipAiCutout"] as const;
+const metadataFields = [
+  "aiInchesEmbedded",
+  "aiAnnotationStyle",
+  "aiPreparedScreenInches",
+  "aiPreparationRevision",
+  "aiBackgroundSignature",
+  "aiCutoutProvider",
+  "aiAnnotationCleanup",
+  "aiCutoutReviewRevision",
+  "aiCutoutReviewAccepted",
+  "aiReviewedImageSource",
+  "aiReviewedPreparationRevision",
+  "aiReviewedBackgroundSignature",
+  "skipAiCutout",
+] as const;
 export interface ProductPhotoTarget {
   campaignId: string;
   offerCode: string;
@@ -13,84 +33,282 @@ export interface ProductPhotoTarget {
   source: string;
   backgroundSignature: string;
   request: ReturnType<typeof buildImagePreparationRequest>;
+  force?: boolean;
+  expectedSkipAiCutout?: boolean;
+  expectedReviewedImageSource?: string;
   key: string;
 }
+export interface ProductPhotoPreparationOptions {
+  force?: boolean;
+  instructions?: string;
+  targetKeys?: string[];
+}
+export function productPhotoSelectionKey(
+  target: Pick<ProductPhotoTarget, "offerCode" | "memberCode">,
+) {
+  return JSON.stringify([target.offerCode, target.memberCode || ""]);
+}
 export type PreparedPhotoResult = Record<string, JsonValue> & { image: string };
-export interface PhotoOutcome { ok: boolean; target: ProductPhotoTarget; error?: unknown; usingOriginal?: boolean; }
-export type PhotoPreparationPhase = "preparing" | "saving";
-interface QueueOptions {retry?: boolean; onStart?: () => void; onPhase?: (phase: PhotoPreparationPhase) => void;}
+export interface PhotoOutcome {
+  ok: boolean;
+  target: ProductPhotoTarget;
+  error?: unknown;
+  usingOriginal?: boolean;
+}
+export type PhotoPreparationPhase = "preparing" | "retrying" | "saving";
+export interface PhotoPreparationRetry {
+  attempt: number;
+  limit: number;
+}
+type PhaseHandler = (
+  phase: PhotoPreparationPhase,
+  retry?: PhotoPreparationRetry,
+) => void;
+interface QueueOptions {
+  retry?: boolean;
+  onStart?: () => void;
+  onPhase?: PhaseHandler;
+}
 
-export function retainPreparedProductPhoto(previous: Product | undefined, incoming: Product): Product {
+export function retainPreparedProductPhoto(
+  previous: Product | undefined,
+  incoming: Product,
+): Product {
   let next = incoming;
   if (previous?.bundleProducts?.length && incoming.bundleProducts?.length) {
-    const members = new Map(previous.bundleProducts.map(member => [member.code, member]));
-    next = {...incoming, bundleProducts: incoming.bundleProducts.map(member => ({...members.get(member.code), ...retainPreparedProductPhoto(members.get(member.code), member)}))};
+    const members = new Map(
+      previous.bundleProducts.map((member) => [member.code, member]),
+    );
+    next = {
+      ...incoming,
+      bundleProducts: incoming.bundleProducts.map((member) => ({
+        ...members.get(member.code),
+        ...retainPreparedProductPhoto(members.get(member.code), member),
+      })),
+    };
   }
   if (!previous?.image || !incoming.image) return next;
   if (![previous.image, previous.aiOriginalImage].includes(incoming.image)) {
-    const replaced = {...next};
-    for (const field of ["aiOriginalImage", ...metadataFields] as const) if (Object.hasOwn(previous, field) && !Object.hasOwn(next, field)) Object.assign(replaced, {[field]: undefined});
+    const replaced = { ...next };
+    for (const field of ["aiOriginalImage", ...metadataFields] as const)
+      if (Object.hasOwn(previous, field) && !Object.hasOwn(next, field))
+        Object.assign(replaced, { [field]: undefined });
     return replaced;
   }
-  if (!previous.aiOriginalImage && !previous.skipAiCutout && previous.aiReviewedImageSource !== previous.image) return next;
-  const retained = {...next, image: previous.image};
-  if (previous.aiOriginalImage) retained.aiOriginalImage = previous.aiOriginalImage;
+  if (
+    !previous.aiOriginalImage &&
+    !previous.skipAiCutout &&
+    previous.aiReviewedImageSource !== previous.image
+  )
+    return next;
+  const retained = { ...next, image: previous.image };
+  if (previous.aiOriginalImage)
+    retained.aiOriginalImage = previous.aiOriginalImage;
   for (const field of metadataFields) {
-    if (Object.hasOwn(previous, field)) Object.assign(retained, {[field]: previous[field]});
+    if (Object.hasOwn(previous, field))
+      Object.assign(retained, { [field]: previous[field] });
     else delete retained[field];
   }
   return retained;
 }
 
-export function productImagePreparationTargets(campaign: Campaign, products = campaign.products): ProductPhotoTarget[] {
-  return products.flatMap(offer => {
+export function productImagePreparationTargets(
+  campaign: Campaign,
+  products = campaign.products,
+  options: ProductPhotoPreparationOptions = {},
+): ProductPhotoTarget[] {
+  return products.flatMap((offer) => {
     const backgroundContext = productImageBackgroundContext(campaign, offer);
-    return (offer.bundleProducts?.length ? offer.bundleProducts : [offer]).flatMap(product => {
-      if (!imagePreparationSource(product) || !needsImagePreparation(product, backgroundContext)) return [];
-      const request = buildImagePreparationRequest(product, {backgroundContext});
-      const target = {campaignId: campaign.id, offerCode: offer.code, ...(product !== offer ? {memberCode: product.code} : {}), expectedImage: product.image, source: imagePreparationSource(product), backgroundSignature: imageBackgroundSignature(backgroundContext), request};
-      return [{...target, key: JSON.stringify([target.campaignId, target.offerCode, target.memberCode || "", target.expectedImage, request])}];
+    return (
+      offer.bundleProducts?.length ? offer.bundleProducts : [offer]
+    ).flatMap((product) => {
+      if (
+        !imagePreparationSource(product) ||
+        !needsImagePreparation(product, backgroundContext, options)
+      )
+        return [];
+      const request = buildImagePreparationRequest(product, {
+        backgroundContext,
+        retry: options.force,
+        instructions: options.instructions,
+      });
+      const target = {
+        campaignId: campaign.id,
+        offerCode: offer.code,
+        ...(product !== offer ? { memberCode: product.code } : {}),
+        expectedImage: product.image,
+        source: imagePreparationSource(product),
+        backgroundSignature: imageBackgroundSignature(backgroundContext),
+        request,
+        ...(options.force
+          ? {
+              force: true,
+              expectedSkipAiCutout: Boolean(product.skipAiCutout),
+              expectedReviewedImageSource: product.aiReviewedImageSource,
+            }
+          : {}),
+      };
+      if (
+        options.targetKeys &&
+        !options.targetKeys.includes(productPhotoSelectionKey(target))
+      )
+        return [];
+      return [
+        {
+          ...target,
+          key: JSON.stringify([
+            target.campaignId,
+            target.offerCode,
+            target.memberCode || "",
+            target.expectedImage,
+            request,
+          ]),
+        },
+      ];
     });
   });
 }
 
-export function currentProductPhotoTarget(campaign: Campaign | undefined, target: ProductPhotoTarget) {
+export function currentProductPhotoTarget(
+  campaign: Campaign | undefined,
+  target: ProductPhotoTarget,
+) {
   if (!campaign || campaign.id !== target.campaignId) return null;
-  const offer = campaign.products.find(item => item.code === target.offerCode);
-  const product = target.memberCode ? offer?.bundleProducts?.find(item => item.code === target.memberCode) : offer;
-  if (!offer || !product || product.image !== target.expectedImage || product.skipAiCutout) return null;
+  const offer = campaign.products.find(
+    (item) => item.code === target.offerCode,
+  );
+  const product = target.memberCode
+    ? offer?.bundleProducts?.find((item) => item.code === target.memberCode)
+    : offer;
+  if (
+    !offer ||
+    !product ||
+    product.image !== target.expectedImage ||
+    (product.skipAiCutout && !target.force)
+  )
+    return null;
+  if (
+    target.force &&
+    (Boolean(product.skipAiCutout) !== target.expectedSkipAiCutout ||
+      product.aiReviewedImageSource !== target.expectedReviewedImageSource)
+  )
+    return null;
   const backgroundContext = productImageBackgroundContext(campaign, offer);
-  if (imageBackgroundSignature(backgroundContext) !== target.backgroundSignature || JSON.stringify(buildImagePreparationRequest(product, {backgroundContext})) !== JSON.stringify(target.request) || !needsImagePreparation(product, backgroundContext)) return null;
-  return {offer, product};
+  if (
+    imageBackgroundSignature(backgroundContext) !==
+      target.backgroundSignature ||
+    JSON.stringify(
+      buildImagePreparationRequest(product, {
+        backgroundContext,
+        retry: target.force,
+        instructions: target.request.instructions,
+      }),
+    ) !== JSON.stringify(target.request) ||
+    !needsImagePreparation(product, backgroundContext, { force: target.force })
+  )
+    return null;
+  return { offer, product };
 }
 
-export function applyPreparedProductPhoto(campaign: Campaign, target: ProductPhotoTarget, result: PreparedPhotoResult) {
+export function applyPreparedProductPhoto(
+  campaign: Campaign,
+  target: ProductPhotoTarget,
+  result: PreparedPhotoResult,
+) {
   const current = currentProductPhotoTarget(campaign, target);
   if (!current || !result.image) return false;
-  const {offer, product} = current;
+  const { offer, product } = current;
   product.aiOriginalImage ||= target.source;
   product.image = result.image;
+  product.skipAiCutout = false;
   Object.assign(product, imagePreparationMetadata(result));
-  for (const field of ["aiReviewedImageSource", "aiReviewedPreparationRevision", "aiReviewedBackgroundSignature"] as const) delete product[field];
+  for (const field of [
+    "aiReviewedImageSource",
+    "aiReviewedPreparationRevision",
+    "aiReviewedBackgroundSignature",
+  ] as const)
+    delete product[field];
   if (product.screenArtwork) delete product.screenArtwork.detectedFor;
   if (target.memberCode) {
-    offer.productArtworks = offer.productArtworks?.map(artwork => artwork.type === "bundle-product" && artwork.memberCode === target.memberCode && !artwork.usesPrimaryImage ? {...artwork, image: result.image} : artwork);
-    if (offer.bundleProducts?.[0] === product && offer.image === target.expectedImage) {
-      offer.image = result.image; offer.aiOriginalImage ||= target.source;
+    offer.productArtworks = offer.productArtworks?.map((artwork) =>
+      artwork.type === "bundle-product" &&
+      artwork.memberCode === target.memberCode &&
+      !artwork.usesPrimaryImage
+        ? { ...artwork, image: result.image }
+        : artwork,
+    );
+    if (
+      offer.bundleProducts?.[0] === product &&
+      offer.image === target.expectedImage
+    ) {
+      offer.image = result.image;
+      offer.aiOriginalImage ||= target.source;
+      offer.skipAiCutout = false;
       Object.assign(offer, imagePreparationMetadata(result));
     }
   }
   return true;
 }
 
-export function createProductImagePreparationQueue({prepare = async body => await requestAi("ai-remove-background", body) as PreparedPhotoResult, orientation = imageOrientation, inspect = inspectImage, concurrency = 2}: {prepare?: (body: ReturnType<typeof buildImagePreparationRequest> & {orientation: string}) => Promise<PreparedPhotoResult>; orientation?: (source: string) => Promise<string>; inspect?: (source: string) => Promise<string>; concurrency?: number} = {}) {
-  const limit = Number.isFinite(concurrency) ? Math.max(1, Math.min(3, Math.floor(concurrency))) : 2;
+export function createProductImagePreparationQueue({
+  prepare = async (body, onRetry) =>
+    (await requestAi("ai-remove-background", body, undefined, {
+      onRetry,
+    })) as PreparedPhotoResult,
+  orientation = imageOrientation,
+  inspect = inspectImage,
+  concurrency = 2,
+}: {
+  prepare?: (
+    body: ReturnType<typeof buildImagePreparationRequest> & {
+      orientation: string;
+    },
+    onRetry?: (attempt: number, limit: number) => void,
+  ) => Promise<PreparedPhotoResult>;
+  orientation?: (
+    source: string,
+    onRetry?: (attempt: number, limit: number) => void,
+  ) => Promise<string>;
+  inspect?: (source: string) => Promise<string>;
+  concurrency?: number;
+} = {}) {
+  const limit = Number.isFinite(concurrency)
+    ? Math.max(1, Math.min(3, Math.floor(concurrency)))
+    : 2;
   const jobs = new Map<string, Promise<PhotoOutcome>>();
-  const waiting: Array<{target: ProductPhotoTarget; apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void; retry: boolean; onStart?: () => void; onPhase?: (phase: PhotoPreparationPhase) => void; resolve: (outcome: PhotoOutcome) => void}> = [];
+  const activeTargets = new Map<string, ProductPhotoTarget>();
+  const waiting: Array<{
+    target: ProductPhotoTarget;
+    apply: (
+      target: ProductPhotoTarget,
+      result: PreparedPhotoResult,
+    ) => Promise<void> | void;
+    retry: boolean;
+    onStart?: () => void;
+    onPhase?: PhaseHandler;
+    resolve: (outcome: PhotoOutcome) => void;
+  }> = [];
   let running = 0;
+  const samePhoto = (first: ProductPhotoTarget, second: ProductPhotoTarget) => {
+    const identity = (target: ProductPhotoTarget) =>
+      JSON.stringify([
+        target.campaignId,
+        productPhotoSelectionKey(target),
+        target.expectedImage,
+        Boolean(target.expectedSkipAiCutout),
+        target.expectedReviewedImageSource,
+        Object.fromEntries(
+          Object.entries(target.request).filter(
+            ([key]) => key !== "retry" && key !== "instructions",
+          ),
+        ),
+      ]);
+    return identity(first) === identity(second);
+  };
   function drain() {
     while (running < limit && waiting.length) {
-      const job = waiting.shift()!; running++;
+      const job = waiting.shift()!;
+      running++;
       void (async () => {
         let outcome: PhotoOutcome;
         let prepared = false;
@@ -99,26 +317,69 @@ export function createProductImagePreparationQueue({prepare = async body => awai
           job.onPhase?.("preparing");
           // Do not guess a different output size when the source is unavailable:
           // that would miss an existing paid result's cache identity.
-          const layout = await orientation(job.target.source);
-          const result = await prepare({...job.target.request, ...(job.retry ? {retry: true} : {}), orientation: layout});
-          if (!result.image) throw new Error("Could not prepare this product photo.");
+          const onRetry = (attempt: number, limit: number) =>
+            job.onPhase?.("retrying", { attempt, limit });
+          const layout = await orientation(job.target.source, onRetry);
+          const result = await prepare(
+            {
+              ...job.target.request,
+              ...(job.retry ? { retry: true } : {}),
+              orientation: layout,
+            },
+            onRetry,
+          );
+          if (!result.image)
+            throw new Error("Could not prepare this product photo.");
           result.image = await inspect(result.image);
           prepared = true;
           job.onPhase?.("saving");
           await job.apply(job.target, result);
-          outcome = {ok: true, target: job.target};
-        } catch (error) { outcome = {ok: false, target: job.target, error, usingOriginal: !prepared && Boolean(job.target.expectedImage || job.target.source)}; }
-        jobs.delete(job.target.key); running--; job.resolve(outcome); drain();
+          outcome = { ok: true, target: job.target };
+        } catch (error) {
+          outcome = {
+            ok: false,
+            target: job.target,
+            error,
+            usingOriginal:
+              !prepared &&
+              Boolean(job.target.expectedImage || job.target.source),
+          };
+        }
+        jobs.delete(job.target.key);
+        activeTargets.delete(job.target.key);
+        running--;
+        job.resolve(outcome);
+        drain();
       })();
     }
   }
   return {
     has: (key: string) => jobs.has(key),
-    enqueue(target: ProductPhotoTarget, apply: (target: ProductPhotoTarget, result: PreparedPhotoResult) => Promise<void> | void, {retry = false, onStart, onPhase}: QueueOptions = {}) {
-      const existing = jobs.get(target.key); if (existing) return existing;
+    hasTarget: (target: ProductPhotoTarget) =>
+      [...activeTargets.values()].some((current) => samePhoto(current, target)),
+    enqueue(
+      target: ProductPhotoTarget,
+      apply: (
+        target: ProductPhotoTarget,
+        result: PreparedPhotoResult,
+      ) => Promise<void> | void,
+      { retry = false, onStart, onPhase }: QueueOptions = {},
+    ) {
+      const existing = jobs.get(target.key);
+      if (existing) return existing;
+      const current = [...activeTargets.entries()].find(([, active]) =>
+        samePhoto(active, target),
+      );
+      if (current) return jobs.get(current[0])!;
       let finish!: (outcome: PhotoOutcome) => void;
-      const promise = new Promise<PhotoOutcome>(resolve => {finish = resolve;});
-      jobs.set(target.key, promise); waiting.push({target, apply, retry, onStart, onPhase, resolve: finish}); drain(); return promise;
+      const promise = new Promise<PhotoOutcome>((resolve) => {
+        finish = resolve;
+      });
+      jobs.set(target.key, promise);
+      activeTargets.set(target.key, target);
+      waiting.push({ target, apply, retry, onStart, onPhase, resolve: finish });
+      drain();
+      return promise;
     },
   };
 }

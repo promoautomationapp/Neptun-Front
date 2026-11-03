@@ -1940,14 +1940,9 @@ function StandardProductCard({
           portal
           portalClassName="cs-product-menu-popover"
           className="cs-product-tools"
-          label={
-            <>
-              <EditorIcon name="edit" />
-              <span className="cs-product-tools-label">
-                {t("Edit product")}
-              </span>
-            </>
-          }
+          triggerLabel={`${t("Edit product")}: ${product.name}`}
+          hideOnExport
+          label={<EditorIcon name="edit" />}
         >
           {onEditImage && (
             <button

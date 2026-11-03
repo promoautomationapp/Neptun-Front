@@ -75,9 +75,7 @@ it.each(["superadmin", "admin", "pm", "staff"])(
     );
     vi.stubGlobal("fetch", api);
     const view = render(<App />);
-    fireEvent.click(
-      await view.findByRole("button", { name: /^Settings$/ }),
-    );
+    fireEvent.click(await view.findByRole("button", { name: /^Settings$/ }));
     await view.findByRole("tab", { name: "Reusable images" });
     expect(
       view.getByRole("combobox", { name: "Default cover style" }),
@@ -102,8 +100,10 @@ it.each(["superadmin", "admin", "pm", "staff"])(
         ),
       ).toBe(false);
     expect(
-      api.mock.calls.filter(([input]) =>
-        String(input).includes("/api/team/settings"),
+      api.mock.calls.filter(
+        ([input, options]) =>
+          String(input).includes("/api/team/settings") &&
+          (!options?.method || options.method === "GET"),
       ),
     ).toHaveLength(1);
   },

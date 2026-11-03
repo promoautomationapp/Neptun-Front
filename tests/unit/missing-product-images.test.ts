@@ -74,7 +74,9 @@ it("includes supplied model, selected color, category and imported identity fact
   expect(params.details).toContain("Ngjyra: Black");
   expect(params.details.join(" ")).not.toMatch(/299|399|Price/);
   const recolored = { ...product, color: "White" };
-  expect(productImageSearchKey(product)).not.toBe(productImageSearchKey(recolored));
+  expect(productImageSearchKey(product)).not.toBe(
+    productImageSearchKey(recolored),
+  );
 });
 it("shares one exact lookup for the same offer in different categories while applying each request separately", async () => {
   const duplicate = {
@@ -125,7 +127,7 @@ it("searches missing photos once after a command, records owned photo and leaves
   expect(draft.products[0]).toMatchObject({
     ...missing,
     image: found.image,
-    skipAiCutout: true,
+    skipAiCutout: false,
     imageSearch: { status: "found", sourceUrl: found.sourceUrl },
   });
   expect(missingImageTargets(draft.products)).toEqual([]);
