@@ -1014,6 +1014,9 @@ function LargeBundleProductCard(props: ProductCardProps) {
   return (
     <article
       {...quickEdit?.events}
+      data-cover-card-default={
+        !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
+      }
       data-custom-product-font={
         productDesignFor(campaign).typography.font !== "automatic"
           ? "true"
@@ -1643,6 +1646,9 @@ function StandardProductCard({
   return (
     <article
       {...quickEdit?.events}
+      data-cover-card-default={
+        !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
+      }
       data-blue-reference-defaults={
         isOctoberBrochure(campaign) ? "true" : undefined
       }

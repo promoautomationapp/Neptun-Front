@@ -5085,6 +5085,17 @@ export default function App({
     const started: MissingImageTarget[] = [];
     const updated = updateCampaign((draft: Campaign) => {
       if (importOptions?.brochureImport) {
+        const previousCover = coverProducts(draft).map((product) =>
+          String(product.code),
+        );
+        const incomingCover = products
+          .filter((product) => product.brochurePage === 1)
+          .map((product) => String(product.code));
+        if (JSON.stringify(previousCover) !== JSON.stringify(incomingCover)) {
+          for (const key of Object.keys(draft.coverElementPlacements || {}))
+            if (key.startsWith("product-"))
+              delete draft.coverElementPlacements![key];
+        }
         draft.products = mergeBrochureImportProducts(
           draft.products,
           products,

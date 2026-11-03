@@ -422,7 +422,7 @@
    prices and badges together with their frame; saved regions keep their size. */
 .brochure-page.cover-editable-elements
   .cover-product-frame
-  > .brochure-product[data-default-layout="true"] {
+  > .brochure-product[data-cover-card-default="true"] {
   width: calc(100% / var(--cover-card-scale, 1));
   height: calc(100% / var(--cover-card-scale, 1));
   transform: scale(var(--cover-card-scale, 1));

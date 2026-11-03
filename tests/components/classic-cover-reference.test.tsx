@@ -219,3 +219,46 @@ it("keeps saved cover frames, region placement, image scale, badge dimensions an
   ]).toEqual(["5%", "94%", "90%", "4%"]);
   expect(campaign).toEqual(original);
 });
+
+it("scales default Classic and Blue cover cards for all assigned offers while retaining custom content geometry", () => {
+  const campaign = brochure();
+  campaign.products.push({ ...product, code: "four" });
+  campaign.products.forEach((item) => {
+    item.brochurePage = 1;
+  });
+  const view = render(<CoverPage campaign={campaign} />);
+  expect(view.container.querySelectorAll(".cover-product-frame")).toHaveLength(
+    4,
+  );
+  const small = view.container.querySelector<HTMLElement>(
+    ".cover-element-product-four",
+  )!;
+  expect(
+    Number(small.style.getPropertyValue("--cover-card-scale")),
+  ).toBeLessThan(1);
+  expect(small.querySelector("[data-cover-card-default=true]")).toBeTruthy();
+  const blue = brochure("neptun-october");
+  blue.products.forEach((item) => {
+    item.brochurePage = 1;
+  });
+  view.rerender(<CoverPage campaign={blue} />);
+  expect(view.container.querySelectorAll(".cover-product-frame")).toHaveLength(
+    3,
+  );
+  const blueCard = view.container.querySelector<HTMLElement>(
+    ".cover-element-product-three",
+  )!;
+  expect(
+    Number(blueCard.style.getPropertyValue("--cover-card-scale")),
+  ).toBeLessThan(1);
+  expect(blueCard.querySelector("[data-cover-card-default=true]")).toBeTruthy();
+  blue.products[2]!.brochureContentPlacement = {
+    price: { x: 2, y: 1, width: 25 },
+  };
+  view.rerender(<CoverPage campaign={blue} />);
+  expect(
+    view.container.querySelector(
+      ".cover-element-product-three [data-cover-card-default=true]",
+    ),
+  ).toBeNull();
+});
