@@ -246,6 +246,10 @@ export function RedReferenceSavings({
   const circle = parts.savingCircle;
   const labelBaseline = savingBaseline(0);
   const amountBaseline = savingBaseline(1);
+  // Four-digit savings need room for both the currency and the curved edge.
+  // Keep the original artwork sizing for the ordinary short reference amounts.
+  const longAmount = savingMode !== "percentage" && /^\d{4,}/.test(saving.text);
+  const amountText = longAmount ? saving.text.replace(/€$/, " €") : saving.text;
   const labelSize = fittedRedText(
     saving.label,
     redReferenceRunSize(parts.saving.runs, 0),
@@ -254,9 +258,9 @@ export function RedReferenceSavings({
     -0.06,
   );
   const amountSize = fittedRedText(
-    saving.text,
+    amountText,
     redReferenceRunSize(parts.saving.runs, 2),
-    circle.width - 7,
+    longAmount ? circle.width * 0.76 : circle.width - 7,
     "bold",
     -0.06,
   );
@@ -308,6 +312,7 @@ export function RedReferenceSavings({
             {saving.label}
           </text>
           <text
+            data-saving-amount="true"
             x={amountBaseline[0]}
             y={amountBaseline[1]}
             fontSize={amountSize}
@@ -315,7 +320,7 @@ export function RedReferenceSavings({
             letterSpacing={amountSize * -0.06}
             transform={`rotate(-1 ${amountBaseline.join(" ")})`}
           >
-            {saving.text}
+            {amountText}
           </text>
         </g>
       </svg>

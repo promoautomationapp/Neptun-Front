@@ -251,7 +251,10 @@ function mockPageMeasurement(previewScale = 0.5) {
           card.x +
           (Number.parseFloat(copy.style.left) * card.width) / 100 +
           Number(movement?.[1] || 0) * 10.8,
-        y: card.y + card.height * 0.74 + Number(movement?.[2] || 0) * 10.8,
+        y:
+          card.y +
+          card.height * (Number.parseFloat(copy.style.top) / 100) +
+          Number(movement?.[2] || 0) * 10.8,
         width: width * (Number.parseFloat(details?.style.width || "100") / 100),
         height: 75,
       });
@@ -264,7 +267,7 @@ function mockPageMeasurement(previewScale = 0.5) {
       const brand = region.classList.contains("large-bundle-brand-artwork");
       const width =
         ((Number.parseFloat(region.style.width) ||
-          (price ? 20.5 : brand ? 11 : 8.7)) *
+          (price ? 20.5 : brand ? 21 : 13)) *
           card.width) /
         100;
       const height = price ? width * 0.51 : brand ? card.height * 0.15 : width;
@@ -372,12 +375,12 @@ it("keeps all member images editable and moves/resizes shared regions and member
   };
   const brand = resize(".large-bundle-brand-artwork", 2);
   expect(brand?.[1]).toBe("brand");
-  expect(brand?.[2].width).toBeGreaterThan(11);
-  expect(brand?.[2].width).toBeLessThan(12);
+  expect(brand?.[2].width).toBeGreaterThan(21);
+  expect(brand?.[2].width).toBeLessThan(22);
   const saving = resize(".brochure-red-reference-saving", -2);
   expect(saving?.[1]).toBe("saving");
-  expect(saving?.[2].width).toBeGreaterThan(8);
-  expect(saving?.[2].width).toBeLessThan(8.7);
+  expect(saving?.[2].width).toBeGreaterThan(12);
+  expect(saving?.[2].width).toBeLessThan(13);
   const copy = resize(
     '[data-bundle-member-code="oven"] .large-bundle-member-details',
     -10,
@@ -407,3 +410,43 @@ it("keeps all member images editable and moves/resizes shared regions and member
   expect(offer.regular).toBe(1008);
   expect(offer.sale).toBe(629);
 });
+
+it.each([
+  ".large-bundle-brand-artwork",
+  ".brochure-red-reference-saving",
+  ".brochure-price",
+])(
+  "keeps the grouped %s inside its card after a large drag or resize",
+  (selector) => {
+    mockPageMeasurement();
+    const onLayoutRegion = vi.fn();
+    const before = structuredClone(offer);
+    const view = render(
+      <ProductPage
+        campaign={campaign(offer)}
+        page={page(offer)}
+        onLayoutRegion={onLayoutRegion}
+      />,
+    );
+    const region = view.container.querySelector<HTMLElement>(selector)!;
+    const card =
+      view.container.querySelector<HTMLElement>(".brochure-product")!;
+    const inside = () => {
+      const rect = region.getBoundingClientRect(),
+        bounds = card.getBoundingClientRect();
+      expect(rect.left).toBeGreaterThanOrEqual(bounds.left - 0.01);
+      expect(rect.right).toBeLessThanOrEqual(bounds.right + 0.01);
+      expect(rect.top).toBeGreaterThanOrEqual(bounds.top - 0.01);
+      expect(rect.bottom).toBeLessThanOrEqual(bounds.bottom + 0.01);
+    };
+    for (const type of ["move", "resize"]) {
+      const handle = region.querySelector(`.cs-region-handle.${type}`)!;
+      fireEvent.pointerDown(handle, { button: 0, clientX: 50, clientY: 50 });
+      fireEvent.pointerMove(handle, { clientX: 2050, clientY: 2050 });
+      inside();
+      fireEvent.pointerUp(handle, { clientX: 2050, clientY: 2050 });
+    }
+    expect(onLayoutRegion).toHaveBeenCalled();
+    expect(offer).toEqual(before);
+  },
+);

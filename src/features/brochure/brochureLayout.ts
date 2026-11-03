@@ -6,6 +6,7 @@ import {
 } from "./productTypes";
 import { isTelevision } from "./tvSpecs";
 import { categorySegments } from "../settings/categoryHierarchy";
+import { largeBundleRows } from "./largeBundleLayout";
 
 export const BROCHURE_LAYOUTS = [
   {
@@ -251,7 +252,12 @@ export function cardSize(
       1,
       Math.min(
         rows,
-        Math.round(Number(product?.brochureCardSize?.height) || 1),
+        Math.round(
+          Number(product?.brochureCardSize?.height) ||
+            ((product.bundleProducts?.length || 0) >= 3
+              ? largeBundleRows(product.bundleProducts!.length)
+              : 1),
+        ),
       ),
     ),
   };

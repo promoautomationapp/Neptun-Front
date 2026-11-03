@@ -1,4 +1,5 @@
 import type { Product, Artwork, Campaign } from "../../domain/models";
+import { reflowDefaultLargeBundleImages } from "./largeBundleLayout";
 const BADGE_ROOT = "/api/assets/legacy/assets/product-badges";
 const FEATURE_WORDS = {
   wifi: /\bwi[\s_-]?fi\b/i,
@@ -208,10 +209,14 @@ export function effectiveProductArtworks(
   // An empty saved list records deletion; never regenerate defaults over that edit.
   if (!Array.isArray(product.productArtworks))
     return defaultProductArtworks(product, campaign);
-  return product.productArtworks.some((item) => item.usesPrimaryImage)
-    ? product.productArtworks.map((item) =>
+  const artworks = reflowDefaultLargeBundleImages(
+    product,
+    product.productArtworks,
+  );
+  return artworks.some((item) => item.usesPrimaryImage)
+    ? artworks.map((item) =>
         item.usesPrimaryImage ? { ...item, image: product.image } : item,
       )
-    : product.productArtworks;
+    : artworks;
 }
 import { defaultBundleImages, isBundleOffer } from "./productBundles";

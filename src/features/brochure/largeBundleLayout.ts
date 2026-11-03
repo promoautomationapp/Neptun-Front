@@ -15,6 +15,8 @@ export interface LargeBundleMemberLayout {
 
 export interface LargeBundleLayout {
   photoArea: BundlePanelRect;
+  columns: number;
+  rows: number;
   members: LargeBundleMemberLayout[];
   separators: Array<{ x: number; y: number }>;
 }
@@ -27,24 +29,54 @@ export function isLargeBundleOffer(
   );
 }
 
-/** Coordinates are percentages of one offer card, with image coordinates relative to its photo area. */
+export function largeBundleRows(count: number): number {
+  return Math.ceil(count / (count === 4 ? 2 : count >= 7 ? 4 : 3));
+}
+
+/** Images and copy use card percentages. The right-hand rail holds the shared offer. */
 export function largeBundleLayout(count: number): LargeBundleLayout | null {
   if (!Number.isInteger(count) || count < 3) return null;
+  // Keep this existing reference area for saved custom photo-area placements.
+  // New generated images use product coordinates so they can occupy every row.
   const photoArea = { x: 0, y: 0, width: 100, height: 68 };
-  const imageWidth = (76 / count) * 0.82;
-  const step = (76 - imageWidth) / (count - 1);
+  const columns = count === 4 ? 2 : count >= 7 ? 4 : 3;
+  const rows = largeBundleRows(count);
+  const gapX = 4;
+  const gapY = 5;
+  const content = { x: 3, y: 4, width: 70, height: 92 };
+  const cellWidth = (content.width - gapX * (columns - 1)) / columns;
+  const cellHeight = (content.height - gapY * (rows - 1)) / rows;
   const members = Array.from({ length: count }, (_, index) => {
-    const x = 2 + index * step;
+    const row = Math.floor(index / columns);
+    const col = index % columns;
+    const rowCount = Math.min(columns, count - row * columns);
+    const offset = ((columns - rowCount) * (cellWidth + gapX)) / 2;
+    const x = content.x + offset + col * (cellWidth + gapX);
+    const y = content.y + row * (cellHeight + gapY);
+    const imageHeight = cellHeight * (columns === 4 ? 0.45 : 0.52);
     return {
-      image: { x, y: 17, width: imageWidth, height: 81 },
-      copy: { x, y: 74, width: imageWidth, height: 22 },
+      image: { x, y, width: cellWidth, height: imageHeight },
+      copy: {
+        x,
+        y: y + imageHeight + 1.5,
+        width: cellWidth,
+        height: cellHeight - imageHeight - 1.5,
+      },
     };
   });
-  const separators = members.slice(0, -1).map((member) => ({
-    x: member.image.x + member.image.width + (step - imageWidth) / 2,
-    y: photoArea.height * 0.56,
-  }));
-  return { photoArea, members, separators };
+  const separators = members.slice(1).map((member, offset) => {
+    const index = offset + 1;
+    return index % columns
+      ? {
+          x: member.image.x - gapX / 2,
+          y: member.image.y + member.image.height / 2,
+        }
+      : {
+          x: content.x + content.width + gapX / 2,
+          y: member.image.y - gapY / 2,
+        };
+  });
+  return { photoArea, columns, rows, members, separators };
 }
 
 /** These defaults are deliberately separate from the two-member oven/hob composite. */
@@ -63,10 +95,53 @@ export function defaultLargeBundleImages(product: Partial<Product>): Artwork[] {
       member.imageUrl ||
       "",
     usesPrimaryImage: index === 0,
-    relativeTo: "photo-area",
+    relativeTo: "product",
     zIndex: 2,
     ...layout.members[index]!.image,
   }));
+}
+
+/** Reflow only untouched legacy defaults. Explicit moves, resizing and deletion stay saved. */
+export function reflowDefaultLargeBundleImages(
+  product: Partial<Product>,
+  artworks: Artwork[],
+): Artwork[] {
+  const count = product.bundleProducts?.length ?? 0;
+  const layout = largeBundleLayout(count);
+  if (!layout) return artworks;
+  const oldWidth = (76 / count) * 0.82;
+  const oldStep = (76 - oldWidth) / (count - 1);
+  return artworks.map((artwork) => {
+    const index = product.bundleProducts!.findIndex(
+      (member) => String(member.code) === String(artwork.memberCode),
+    );
+    if (
+      index < 0 ||
+      artwork.type !== "bundle-product" ||
+      artwork.id !== `bundle-image-${artwork.memberCode}` ||
+      artwork.relativeTo !== "photo-area"
+    )
+      return artwork;
+    const legacy = {
+      x: 2 + index * oldStep,
+      y: 17,
+      width: oldWidth,
+      height: 81,
+    };
+    if (
+      !(Object.keys(legacy) as Array<keyof typeof legacy>).every(
+        (key) =>
+          typeof artwork[key] === "number" &&
+          Math.abs(artwork[key]! - legacy[key]) < 0.000001,
+      )
+    )
+      return artwork;
+    return {
+      ...artwork,
+      ...layout.members[index]!.image,
+      relativeTo: "product",
+    };
+  });
 }
 
 function color(value: unknown): string {

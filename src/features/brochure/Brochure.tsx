@@ -69,7 +69,7 @@ import { offerStyleFor, savingModeFor } from "./offerStyles";
 import { t } from "./i18n";
 import { MissingCatalogNotice } from "./MissingCatalogNotice";
 import { hasExcelOfferPrice, hasRegularPrice } from "./missingCatalog";
-import { brandLogoFor } from "./brandLogos";
+import { BundleBrandArtwork } from "./BundleBrandArtwork";
 import {
   pageBackgroundColor,
   pageBackgroundFill,
@@ -341,6 +341,7 @@ interface LayoutHandlesProps {
   widthScope?: "card" | "parent";
   minimumWidth?: number;
   targetSelector?: string;
+  containWithinCard?: boolean;
   toolbar?: boolean;
 }
 interface LayoutGesture {
@@ -357,6 +358,7 @@ interface LayoutGesture {
   initial: { x: number; y: number; width: number; height: number };
   next?: { x: number; y: number; width: number; height: number };
   limits?: { left: number; right: number; top: number; bottom: number };
+  contained?: boolean;
 }
 function LayoutHandles({
   product,
@@ -367,6 +369,7 @@ function LayoutHandles({
   widthScope = "card",
   minimumWidth = kind === "saving" || kind === "brand" ? 2 : 20,
   targetSelector,
+  containWithinCard = false,
   toolbar = false,
 }: LayoutHandlesProps) {
   const gesture = React.useRef<LayoutGesture | null>(null);
@@ -419,14 +422,16 @@ function LayoutHandles({
       height: (rect.height / page.width) * 100,
       ...placement,
     };
-    const limits = targetSelector
-      ? {
-          left: initial.x + ((card.left - rect.left) / page.width) * 100,
-          right: initial.x + ((card.right - rect.right) / page.width) * 100,
-          top: initial.y + ((card.top - rect.top) / page.width) * 100,
-          bottom: initial.y + ((card.bottom - rect.bottom) / page.width) * 100,
-        }
-      : undefined;
+    const limits =
+      targetSelector || containWithinCard
+        ? {
+            left: initial.x + ((card.left - rect.left) / page.width) * 100,
+            right: initial.x + ((card.right - rect.right) / page.width) * 100,
+            top: initial.y + ((card.top - rect.top) / page.width) * 100,
+            bottom:
+              initial.y + ((card.bottom - rect.bottom) / page.width) * 100,
+          }
+        : undefined;
     if ((kind === "details" || kind === "saving") && !placement)
       Object.assign(element.style, regionStyle(initial));
     gesture.current = {
@@ -442,6 +447,7 @@ function LayoutHandles({
       y: event.clientY,
       initial,
       limits,
+      contained: containWithinCard,
     };
     element.closest(".cs-page-preview")?.classList.add("dragging-guides");
   }
@@ -453,7 +459,7 @@ function LayoutHandles({
     if (action.type === "move" && !action.next && Math.hypot(dx, dy) < 3)
       return;
     suppressClick.current = true;
-    const next =
+    let next =
       action.type === "move"
         ? {
             ...action.initial,
@@ -487,9 +493,24 @@ function LayoutHandles({
               action.corner,
               {
                 minWidth: minimumWidth,
-                maxWidth: 100,
+                maxWidth:
+                  action.contained && (kind === "saving" || kind === "price")
+                    ? Math.min(
+                        100,
+                        (action.initial.width * action.card.height * 100) /
+                          Math.max(
+                            1,
+                            action.initial.height * action.page.width,
+                          ),
+                      )
+                    : 100,
                 minHeight: 2 * ratio,
-                maxHeight: 30 * ratio,
+                maxHeight: action.contained
+                  ? Math.min(
+                      30 * ratio,
+                      (action.card.height / action.widthReference) * 100,
+                    )
+                  : 30 * ratio,
               },
             );
             return {
@@ -499,8 +520,31 @@ function LayoutHandles({
               height: value.height / ratio,
             };
           })();
-    action.next = next;
     Object.assign(action.element.style, regionStyle(next));
+    if (action.contained) {
+      // Resizing a right/bottom-anchored region also moves its leading edge.
+      // Measure the applied result so containment works for every anchor.
+      const rect = action.element.getBoundingClientRect();
+      const dx =
+        rect.left < action.card.left
+          ? action.card.left - rect.left
+          : rect.right > action.card.right
+            ? action.card.right - rect.right
+            : 0;
+      const dy =
+        rect.top < action.card.top
+          ? action.card.top - rect.top
+          : rect.bottom > action.card.bottom
+            ? action.card.bottom - rect.bottom
+            : 0;
+      next = {
+        ...next,
+        x: next.x + (dx / action.page.width) * 100,
+        y: next.y + (dy / action.page.width) * 100,
+      };
+      Object.assign(action.element.style, regionStyle(next));
+    }
+    action.next = next;
     setDimensions(
       `${Math.round(next.width)}% × ${Math.round((next.height * action.page.width) / 100)} px`,
     );
@@ -624,6 +668,7 @@ interface PriceProps {
   onEditPrice?: (product: Product) => void;
   onEditSavings?: (product: Product) => void;
   layoutBaseWidth?: number;
+  containLayout?: boolean;
 }
 
 function Price({
@@ -639,6 +684,7 @@ function Price({
   onEditPrice,
   onEditSavings,
   layoutBaseWidth,
+  containLayout = false,
 }: PriceProps) {
   if (!validOffer(product))
     return (
@@ -773,6 +819,7 @@ function Price({
           placement={placement}
           onChange={onLayoutRegion}
           baseWidth={layoutBaseWidth ?? (redCard ? 50 : blueCard ? 56 : 44)}
+          containWithinCard={containLayout}
         />
       )}
     </div>
@@ -931,7 +978,6 @@ function LargeBundleProductCard(props: ProductCardProps) {
   const photoAreaRef = React.useRef<HTMLDivElement>(null);
   const contentPlacement = product.brochureContentPlacement || {};
   const size = cardSize(product, layout || "classic8", props.gridIndex);
-  const brandLogo = product.brandLogo || brandLogoFor(campaign, product.brand);
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
   const changeProduct = onProductChange
@@ -958,7 +1004,8 @@ function LargeBundleProductCard(props: ProductCardProps) {
             kind="saving"
             placement={contentPlacement.saving}
             onChange={onLayoutRegion}
-            baseWidth={8.7}
+            baseWidth={13}
+            containWithinCard
           />
         )}
       </RedReferenceSavings>
@@ -1007,30 +1054,23 @@ function LargeBundleProductCard(props: ProductCardProps) {
         }
         brand={
           product.hideBrandLogo ? null : (
-            <strong
+            <div
               className="large-bundle-brand-artwork brochure-brand-mark"
               style={regionStyle(contentPlacement.brand)}
             >
-              {brandLogo ? (
-                <img
-                  src={brandLogo}
-                  alt={product.brand || "NEPTUN"}
-                  loading="eager"
-                />
-              ) : (
-                product.brand || "NEPTUN"
-              )}
+              <BundleBrandArtwork campaign={campaign} product={product} />
               {onLayoutRegion && (
                 <LayoutHandles
                   product={product}
                   kind="brand"
                   placement={contentPlacement.brand}
                   onChange={onLayoutRegion}
-                  baseWidth={11}
+                  baseWidth={21}
                   minimumWidth={2}
+                  containWithinCard
                 />
               )}
-            </strong>
+            </div>
           )
         }
         savings={savings}
@@ -1048,6 +1088,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
             onEditPrice={onEditPrice}
             onEditSavings={onEditSavings}
             layoutBaseWidth={20.5}
+            containLayout
           />
         }
         renderMember={(member) => {
@@ -1058,7 +1099,6 @@ function LargeBundleProductCard(props: ProductCardProps) {
               className="large-bundle-member-details"
               style={{
                 ...regionStyle(contentPlacement[key]),
-                fontSize: `calc(1.05cqw * var(--large-bundle-member-font-scale, 1) * ${Math.min(1, 5 / Math.max(1, lines.length))})`,
               }}
             >
               {lines.map((line, index) => (

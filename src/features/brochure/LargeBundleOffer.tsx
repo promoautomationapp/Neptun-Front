@@ -11,6 +11,7 @@ import {
   productPhotoSource,
 } from "./MissingCatalogNotice";
 import "../../styles/large-bundle-offer.css";
+import { effectiveProductArtworks } from "./productArtwork";
 
 export interface LargeBundleOfferProps {
   product: Product;
@@ -62,8 +63,8 @@ export function LargeBundleOffer({
       colors.foreground === "#ffffff"
         ? "brightness(0) invert(1)"
         : "brightness(0)",
-    "--large-bundle-member-font-scale": Math.min(1, 3 / members.length),
   };
+  const artworks = effectiveProductArtworks(product);
   return (
     <div
       className={`large-bundle-offer ${className}`}
@@ -71,6 +72,8 @@ export function LargeBundleOffer({
       role="group"
       aria-label={product.name}
       data-bundle-members={members.length}
+      data-bundle-columns={layout.columns}
+      data-bundle-rows={layout.rows}
     >
       <div className="large-bundle-panel" aria-hidden="true" />
       <div
@@ -86,15 +89,13 @@ export function LargeBundleOffer({
         {editable &&
           members.map((member, index) => {
             const photo = layout.members[index]!.image;
-            const saved = product.productArtworks?.find(
+            const saved = artworks.find(
               (item) =>
                 item.type === "bundle-product" &&
                 String(item.memberCode) === String(member.code),
             );
             const source = saved
-              ? saved.usesPrimaryImage
-                ? product.image
-                : saved.image
+              ? saved.image
               : (index === 0 ? product.image : "") ||
                 productPhotoSource(member);
             const missing =
@@ -112,10 +113,14 @@ export function LargeBundleOffer({
                     : "large-bundle-missing-photo"
                 }
                 style={{
-                  left: `${photo.x}%`,
-                  top: `${photo.y}%`,
-                  width: `${photo.width}%`,
-                  ...(source ? {} : { height: `${photo.height}%` }),
+                  left: `${saved?.x ?? photo.x}%`,
+                  top: `${saved?.relativeTo === "photo-area" ? saved.y : (((saved?.y ?? photo.y) - layout.photoArea.y) * 100) / layout.photoArea.height}%`,
+                  width: `${saved?.width ?? photo.width}%`,
+                  ...(source
+                    ? {}
+                    : {
+                        height: `${saved?.relativeTo === "photo-area" ? (saved.height ?? photo.height) : ((saved?.height ?? photo.height) * 100) / layout.photoArea.height}%`,
+                      }),
                 }}
                 data-export-hide="true"
               >
