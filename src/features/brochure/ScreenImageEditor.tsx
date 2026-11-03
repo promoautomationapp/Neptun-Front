@@ -73,7 +73,7 @@ export function ScreenImageEditor({
     ).values(),
   ];
   const [fit, setFit] = useState<"contain" | "cover">(
-    product.screenArtwork?.fit || "contain",
+    product.screenArtwork?.fit || "cover",
   );
   const [screen, setScreen] = useState(product.screenArtwork?.image || "");
   const [box, setBox] = useState(
@@ -166,6 +166,11 @@ export function ScreenImageEditor({
     }
     gesture.current = null;
   }
+  function applyNewScreen(image: string) {
+    setScreen(image);
+    setFit("cover");
+    setError("");
+  }
   async function choose(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
@@ -173,8 +178,7 @@ export function ScreenImageEditor({
       return;
     }
     try {
-      setScreen(await readImage(file));
-      setError("");
+      applyNewScreen(await readImage(file));
     } catch {
       setError(t("Could not read this image."));
     }
@@ -220,7 +224,7 @@ export function ScreenImageEditor({
             context="tv"
             source={screen}
             products={[product]}
-            onApply={(image) => setScreen(image)}
+            onApply={applyNewScreen}
             onClose={() => setLifestyleOpen(false)}
           />
         )}
@@ -396,7 +400,7 @@ export function ScreenImageEditor({
             </p>
             <p className="cs-screen-fit-help">
               {t(
-                "Portrait images stay centered with black space on either side.",
+                "Fill screen crops the image to cover the whole display. Choose Show whole image to keep every edge visible.",
               )}
             </p>
             <Button onClick={() => fitScreen()}>{t("Fit to screen")}</Button>

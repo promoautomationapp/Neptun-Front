@@ -608,7 +608,9 @@ export function SocialProductVisual({
         left: `${((left + contentWidth) / parent.width) * 100}%`,
         top: `${((top + contentHeight) / parent.height) * 100}%`,
       });
-      const box = product.screenArtwork?.box;
+      const box = product.screenArtwork?.image
+        ? televisionScreenBox(product, img)
+        : null;
       setOverlay(
         box && product.screenArtwork?.image
           ? {
@@ -734,7 +736,11 @@ export function SocialProductVisual({
           src={product.screenArtwork?.image}
           alt=""
           aria-hidden="true"
-          style={overlay}
+          style={{
+            ...overlay,
+            objectFit: product.screenArtwork?.fit || "cover",
+            background: "#000",
+          }}
         />
       )}
       {showImage &&

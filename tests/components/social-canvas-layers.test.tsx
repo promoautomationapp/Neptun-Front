@@ -105,6 +105,49 @@ it("moves a product photo relative to its measured dimensions without a resize o
   expect(change).toHaveBeenLastCalledWith({ x: 50, y: 50, scale: 1 });
 });
 
+it("fits shared TV wallpaper without a saved box and honors an explicit whole-image choice", () => {
+  vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
+  vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(
+    200,
+  );
+  vi.spyOn(HTMLImageElement.prototype, "naturalHeight", "get").mockReturnValue(
+    120,
+  );
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    () => null,
+  );
+  const product = {
+    code: "TV",
+    name: "TV",
+    subcategory: "TV",
+    image: "/tv.png",
+    screenArtwork: { image: "/wallpaper.png" },
+  };
+  const canvas = (fit?: "contain" | "cover") => (
+    <div className="social-canvas">
+      <article className="social-product">
+        <SocialProductVisual
+          product={{
+            ...product,
+            screenArtwork: { ...product.screenArtwork, fit },
+          }}
+          image={product.image}
+        />
+      </article>
+    </div>
+  );
+  const view = render(canvas());
+  fireEvent.load(view.getByAltText("TV"));
+  const overlay = view.container.querySelector<HTMLImageElement>(
+    ".social-product-screen-image",
+  )!;
+  expect(overlay.style.width).toBe("92%");
+  expect(overlay.style.height).toBe("75%");
+  expect(overlay.style.objectFit).toBe("cover");
+  view.rerender(canvas("contain"));
+  expect(overlay.style.objectFit).toBe("contain");
+});
+
 it("saves the measured name alignment into the first manual move without a jump", () => {
   const change = vi.fn();
   function ControlledCopy({ initial }: { initial?: Placement }) {

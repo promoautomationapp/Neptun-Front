@@ -2,6 +2,7 @@ import React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { Product } from "../../src/domain/models";
+import type * as ApiClient from "../../src/api/client";
 import { ProductImageEditor } from "../../src/features/brochure/ProductImageEditor";
 import { ScreenImageEditor } from "../../src/features/brochure/ScreenImageEditor";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
@@ -10,6 +11,11 @@ const api = vi.hoisted(() => ({
   prepare: vi.fn(),
   generate: vi.fn(),
   quota: vi.fn(),
+  upload: vi.fn(),
+}));
+vi.mock("../../src/api/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof ApiClient>()),
+  uploadImage: api.upload,
 }));
 vi.mock("../../src/features/ai/ai.api", () => ({ requestAi: api.prepare }));
 vi.mock("../../src/features/products/useCatalogPhotos", () => ({
@@ -168,6 +174,78 @@ it("opens the AI wallpaper tools directly without starting a generation", async 
   expect(view.getByLabelText("AI image direction")).toBeTruthy();
   await waitFor(() => expect(api.quota).toHaveBeenCalledOnce());
   expect(api.generate).not.toHaveBeenCalled();
+  expect(api.prepare).not.toHaveBeenCalled();
+});
+
+it("fills the display with a newly uploaded wallpaper after an earlier whole-image choice", async () => {
+  const save = vi.fn();
+  api.upload.mockResolvedValue("/uploaded-wallpaper.jpg");
+  const view = render(
+    <ScreenImageEditor product={tv} onSave={save} onClose={vi.fn()} />,
+  );
+  expect(
+    (view.getByAltText("Replacement screen image") as HTMLImageElement).style
+      .objectFit,
+  ).toBe("contain");
+  fireEvent.change(view.getByLabelText("Upload screen picture"), {
+    target: {
+      files: [new File(["image"], "wallpaper.jpg", { type: "image/jpeg" })],
+    },
+  });
+  await waitFor(() =>
+    expect(
+      (view.getByAltText("Replacement screen image") as HTMLImageElement).style
+        .objectFit,
+    ).toBe("cover"),
+  );
+  fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({ image: "/uploaded-wallpaper.jpg", fit: "cover" }),
+    "one",
+  );
+  expect(api.prepare).not.toHaveBeenCalled();
+  expect(api.generate).not.toHaveBeenCalled();
+});
+
+it("fills the display when a generated wallpaper is selected", async () => {
+  const save = vi.fn();
+  api.generate.mockResolvedValue({
+    image: "/generated-wallpaper.png",
+    resultId: "generated",
+  });
+  const view = render(
+    <ScreenImageEditor product={tv} onSave={save} onClose={vi.fn()} />,
+  );
+  fireEvent.click(
+    view.getByRole("button", { name: "Create / refine wallpaper with AI" }),
+  );
+  await waitFor(() => expect(api.quota).toHaveBeenCalledOnce());
+  fireEvent.change(view.getByLabelText("AI image direction"), {
+    target: { value: "A mountain landscape" },
+  });
+  fireEvent.click(view.getByRole("button", { name: "Refine this image" }));
+  await waitFor(() =>
+    expect(view.getByAltText("Full image preview").getAttribute("src")).toBe(
+      "/generated-wallpaper.png",
+    ),
+  );
+  fireEvent.click(view.getByRole("button", { name: "Use this image" }));
+  await waitFor(() =>
+    expect(view.queryByAltText("Full image preview")).toBeNull(),
+  );
+  expect(
+    (view.getByAltText("Replacement screen image") as HTMLImageElement).style
+      .objectFit,
+  ).toBe("cover");
+  fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      image: "/generated-wallpaper.png",
+      fit: "cover",
+    }),
+    "one",
+  );
+  expect(api.generate).toHaveBeenCalledOnce();
   expect(api.prepare).not.toHaveBeenCalled();
 });
 

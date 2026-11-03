@@ -320,7 +320,7 @@ function ArtworkPhoto({
           draggable={false}
           referrerPolicy="no-referrer"
           style={{
-            objectFit: member.screenArtwork.fit || "contain",
+            objectFit: member.screenArtwork.fit || "cover",
             background: "#000",
             left: `${screen.x}%`,
             top: `${screen.y}%`,

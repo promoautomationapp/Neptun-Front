@@ -63,7 +63,7 @@ it("asks whether to use a wallpaper on one TV or all TVs before saving", () => {
   );
   fireEvent.click(view.getByRole("button", { name: "All TVs (3)" }));
   expect(onSave).toHaveBeenCalledWith(
-    expect.objectContaining({ image: "/wallpaper.jpg", fit: "contain" }),
+    expect.objectContaining({ image: "/wallpaper.jpg", fit: "cover" }),
     "all",
   );
   expect(onClose).toHaveBeenCalledTimes(1);

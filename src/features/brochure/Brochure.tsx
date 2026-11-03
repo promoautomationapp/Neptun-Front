@@ -1820,7 +1820,7 @@ function StandardProductCard({
             aria-hidden="true"
             style={{
               ...screenOverlay,
-              objectFit: product.screenArtwork.fit || "contain",
+              objectFit: product.screenArtwork.fit || "cover",
               background: "#000",
             }}
           />
