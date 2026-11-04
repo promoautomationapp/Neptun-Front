@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Campaign, Product } from "../../src/domain/models";
 import {
   layoutGrid,
+  cardSize,
   pageCategoryLabel,
   productPageChunk,
 } from "../../src/features/brochure/brochureLayout";
@@ -115,7 +116,7 @@ describe("October brochure automatic layouts", () => {
       expect(pageCodes(value)).toEqual(["interior"]);
     },
   );
-  it("uses four larger TV offers per page, while the reference preset keeps its eight-TV grid", () => {
+  it("keeps eight consecutive TV offers together in the 3–2–3 grid", () => {
     const offers = Array.from({ length: 9 }, (_, i) => tv(String(i)));
     expect(
       splitPages(brochure(offers)).map((page) => [
@@ -123,8 +124,7 @@ describe("October brochure automatic layouts", () => {
         page.products.length,
       ]),
     ).toEqual([
-      ["duo4", 4],
-      ["duo4", 4],
+      ["tv8", 8],
       ["duo4", 1],
     ]);
     expect(
@@ -134,6 +134,64 @@ describe("October brochure automatic layouts", () => {
         0,
       ),
     ).toMatchObject({ layout: "tv8", products: offers.slice(0, 8) });
+    expect(
+      offers
+        .slice(0, 8)
+        .map((offer, index) => cardSize(offer, "tv8", index).width),
+    ).toEqual([2, 2, 2, 3, 3, 2, 2, 2]);
+  });
+
+  it("retains an imported eight-TV page and every neighboring manual page", () => {
+    const offers = Array.from({ length: 8 }, (_, i) => ({
+      ...tv(String(i)),
+      brochurePage: 3,
+    }));
+    const before = product("before", { brochurePage: 2 });
+    const after = product("after", { brochurePage: 4 });
+    const value = brochure([], {
+      products: [before, ...offers, after],
+      pages: {
+        0: { layout: "grid6", backgroundColor: "#123456" },
+        1: { backgroundColor: "#234567" },
+        2: { layout: "pair2", backgroundColor: "#345678" },
+      },
+    });
+    expect(
+      splitPages(value).map((page) => [
+        page.layout,
+        page.products.map((offer) => offer.code),
+        page.backgroundColor,
+      ]),
+    ).toEqual([
+      ["grid6", ["before"], "#123456"],
+      ["tv8", offers.map((offer) => offer.code), "#234567"],
+      ["pair2", ["after"], "#345678"],
+    ]);
+  });
+
+  it("balances eight ordinary automatic offers while retaining an explicit legacy grid", () => {
+    const offers = Array.from({ length: 8 }, (_, i) => product(String(i)));
+    expect(productPageChunk(brochure(offers), offers, 0)).toMatchObject({
+      layout: "balanced8",
+      products: offers,
+    });
+    expect(
+      productPageChunk(
+        { autoProductLayout: true, layout: "feature3" },
+        offers,
+        0,
+      ),
+    ).toMatchObject({ layout: "balanced8", products: offers });
+    expect(
+      productPageChunk(
+        { autoProductLayout: true, pages: { 0: { layout: "classic8" } } },
+        offers,
+        0,
+      ),
+    ).toMatchObject({ layout: "classic8", products: offers });
+    expect(
+      offers.map((offer, index) => cardSize(offer, "balanced8", index).width),
+    ).toEqual([2, 2, 2, 3, 3, 2, 2, 2]);
   });
 
   it.each([2, 4])("keeps %i MacBooks together on their own page", (count) => {

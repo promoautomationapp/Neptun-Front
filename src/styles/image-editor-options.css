@@ -188,6 +188,10 @@
   height: 24px;
   color: var(--np-accent, #4384b7);
 }
+.cs-image-editor .cs-tv-wallpaper-option {
+  border-color: var(--np-accent, #4384b7);
+  box-shadow: inset 3px 0 0 var(--np-accent, #4384b7);
+}
 .cs-tv-screen-option > span:nth-child(2) {
   display: grid;
   flex: 1;
@@ -214,6 +218,74 @@
   color: var(--np-muted, #6a8094);
   font-size: 12px;
   line-height: 1.5;
+}
+.cs-screen-editor-controls > .cs-screen-ai-fit-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.cs-screen-ai-fit-option input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+}
+.cs-screen-fitting-panel {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--np-accent, #4384b7);
+  border-radius: 12px;
+  background: var(--np-selected, #e9f3fb);
+  color: var(--np-text, #254b67);
+}
+.cs-screen-fitting-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cs-screen-fitting-heading > svg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  color: var(--np-accent, #4384b7);
+}
+.cs-screen-fitting-heading small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cs-screen-fitting-heading h3 {
+  margin: 3px 0 0;
+  font-size: 15px;
+  line-height: 1.3;
+}
+.cs-screen-fitting-panel > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cs-screen-fitting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cs-screen-fitting-actions > .cs-button {
+  flex: 1 1 140px;
+  white-space: normal;
+  line-height: 1.35;
+}
+.cs-screen-fitting-panel .cs-screen-ai-fit-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
 }
 .cs-screen-editor-controls > label,
 .cs-image-editor .cs-image-editor-grid strong {

@@ -7,7 +7,6 @@ import {
 import {
   defaultProductImageScale,
   otherScreenInches,
-  tvScreenInches,
 } from "../brochure/tvSpecs";
 
 const baseline = productDesignSchema.parse({});
@@ -24,22 +23,18 @@ export function defaultPhotoPlacement(
   product: Partial<Product>,
   campaign: Partial<Campaign>,
   detailPlacement: string,
-  hero = false,
+  _hero = false,
 ) {
   const photo = productDesignFor(campaign).photo;
   if (photo.mode === "custom")
     return { x: photo.x, y: photo.y, scale: photo.scale };
-  const television = tvScreenInches(product);
   // Keep the inch curve intact in every design. Enlarging and then capping it
   // made 55/65/75-inch TVs share the same default size in the Classic preset.
   const scale = photo.automaticTvSizing ? defaultProductImageScale(product) : 1;
   return {
     x: detailPlacement === "left" ? 63 : otherScreenInches(product) ? 46 : 50,
     y: otherScreenInches(product) ? 56 : 50,
-    scale:
-      hero && television && photo.automaticTvSizing
-        ? Math.min(1, scale * 1.18)
-        : scale,
+    scale,
   };
 }
 

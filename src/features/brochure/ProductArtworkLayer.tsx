@@ -26,6 +26,7 @@ import {
 import { bundleMemberByCode, updateBundleMember } from "./bundleMemberUpdates";
 import { t } from "./i18n";
 import { isApplePhotoArtwork } from "./productTypes";
+import { useProductImageFit } from "./useProductImageFit";
 import "../../styles/product-artwork-layer.css";
 
 const clamp = (value: number, minimum: number, maximum: number) =>
@@ -225,6 +226,7 @@ interface ArtworkPhotoProps {
   artwork: Artwork;
   member: Product | null;
   label: string;
+  fitPhoto?: boolean;
   onPointerDown?: React.PointerEventHandler<HTMLImageElement>;
   onMemberChange?: (
     field: "screenAnnotationPlacement",
@@ -236,10 +238,22 @@ function ArtworkPhoto({
   artwork,
   member,
   label,
+  fitPhoto = false,
   onPointerDown,
   onMemberChange,
 }: ArtworkPhotoProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [imageReady, setImageReady] = useState(0);
+  const base = { x: 50, y: 50, scale: 1 };
+  const fitted = useProductImageFit({
+    imageRef,
+    wrapRef,
+    source: artwork.image,
+    ready: imageReady,
+    base,
+    placement: fitPhoto ? null : base,
+  });
   const [screen, setScreen] = useState<Box | null>(null);
   const [annotation, setAnnotation] = useState<BundleScreenAnnotation | null>(
     null,
@@ -300,16 +314,27 @@ function ArtworkPhoto({
       image?.removeEventListener("error", update);
       card?.removeEventListener("brochure-photo-clearance", update);
     };
-  }, [member, artwork.image]);
+  }, [member, artwork.image, fitted.x, fitted.y, fitted.scale]);
   return (
     <>
       <img
-        ref={imageRef}
+        ref={(image) => {
+          imageRef.current = image;
+          wrapRef.current = image?.parentElement as HTMLDivElement | null;
+        }}
         src={artwork.image}
         alt={label}
         draggable={false}
         referrerPolicy="no-referrer"
         onPointerDown={onPointerDown}
+        onLoad={() => setImageReady((current) => current + 1)}
+        style={
+          fitPhoto
+            ? {
+                transform: `translate(${(fitted.x ?? 50) - 50}%, ${(fitted.y ?? 50) - 50}%) scale(${fitted.scale})`,
+              }
+            : undefined
+        }
       />
       {screen && member?.screenArtwork?.image && (
         <img
@@ -676,6 +701,9 @@ export function ProductArtworkLayer({
               artwork={artwork}
               member={member}
               label={label}
+              fitPhoto={
+                "fitVisiblePhoto" in artwork && artwork.fitVisiblePhoto === true
+              }
               onMemberChange={
                 canEdit && member
                   ? (field, value) =>

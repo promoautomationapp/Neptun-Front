@@ -105,6 +105,49 @@ it("moves a product photo relative to its measured dimensions without a resize o
   expect(change).toHaveBeenLastCalledWith({ x: 50, y: 50, scale: 1 });
 });
 
+it("uses the same gentle TV inch sizing for social photos and retains saved sizes", () => {
+  const tv = (inches: number) => ({
+    code: String(inches),
+    name: `TV LED ${inches}ABC`,
+    subcategory: "TV",
+    specs: { Përmasat: `${inches} inch` },
+  });
+  const view = render(
+    <>
+      {[55, 65, 66].map((inches) => (
+        <SocialProductVisual
+          key={inches}
+          product={tv(inches)}
+          image={`/tv-${inches}.png`}
+        />
+      ))}
+    </>,
+  );
+  expect(
+    Array.from(
+      view.container.querySelectorAll<HTMLImageElement>(
+        ".social-product-main-image",
+      ),
+      (image) => image.style.transform,
+    ),
+  ).toEqual([
+    "translate(0%, 0%) scale(0.86)",
+    "translate(0%, 0%) scale(0.93)",
+    "translate(0%, 0%) scale(0.9323)",
+  ]);
+  view.rerender(
+    <SocialProductVisual
+      product={{ ...tv(55), postImagePlacement: { x: 4, y: 8, scale: 1.2 } }}
+      image="/tv-55.png"
+    />,
+  );
+  expect(
+    view.container.querySelector<HTMLImageElement>(
+      ".social-product-main-image",
+    )!.style.transform,
+  ).toBe("translate(4%, 8%) scale(1.2)");
+});
+
 it("fits shared TV wallpaper without a saved box and honors an explicit whole-image choice", () => {
   vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
   vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(

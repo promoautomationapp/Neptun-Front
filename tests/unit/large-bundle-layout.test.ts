@@ -153,6 +153,31 @@ it("keeps the primary replacement source, member identity and fallback images wi
   ).toEqual([]);
 });
 
+it("uses inch-based sizing for automatic bundle TVs without altering saved member artwork", () => {
+  const tvs = [55, 65, 66].map((inches) => ({
+    code: String(inches),
+    name: `TV LED ${inches}ABC`,
+    subcategory: "TV",
+    specs: { Përmasat: `${inches} inch` },
+  }));
+  const offer = {
+    code: "TVs",
+    name: "TVs",
+    image: "/tv.png",
+    bundleProducts: tvs,
+  };
+  const defaults = effectiveProductArtworks(offer);
+  const saved = defaultLargeBundleImages(offer);
+  expect(defaults.map((artwork) => Number(artwork.width))).toEqual([
+    Number(saved[0]!.width) * 0.86,
+    Number(saved[1]!.width) * 0.93,
+    Number(saved[2]!.width) * 0.9323,
+  ]);
+  expect(
+    effectiveProductArtworks({ ...offer, productArtworks: saved }),
+  ).toEqual(saved);
+});
+
 it("updates only untouched legacy image placements while preserving custom transforms, replacements and deleted layers", () => {
   const bundleMembers = Array.from({ length: 5 }, (_, index) => ({
     code: `member-${index}`,

@@ -185,6 +185,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             {t("Three offers · one above two (default)")}
           </option>
           <option value="tv8">{t("Eight TVs · 3–2–3")}</option>
+          <option value="balanced8">{t("Eight offers · 3–2–3")}</option>
           <option value="grid6portrait">{t("Six offers · 2 × 3")}</option>
           <option value="grid6">{t("Six offers · 3 × 2")}</option>
           <option value="classic8">

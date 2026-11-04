@@ -1,5 +1,8 @@
 import type { Product, Artwork, Campaign } from "../../domain/models";
 import { reflowDefaultLargeBundleImages } from "./largeBundleLayout";
+import { defaultProductImageScale } from "./tvSpecs";
+import { productDesignFor } from "../settings/product-design-defaults";
+import { bundleMemberByCode } from "./bundleMemberUpdates";
 const BADGE_ROOT = "/api/assets/legacy/assets/product-badges";
 const FEATURE_WORDS = {
   wifi: /\bwi[\s_-]?fi\b/i,
@@ -150,7 +153,27 @@ export function defaultProductArtworks(
   product: Partial<Product> = {},
   campaign: Partial<Campaign> = {},
 ) {
-  if (isBundleOffer(product)) return defaultBundleImages(product);
+  if (isBundleOffer(product)) {
+    const photo = productDesignFor(campaign).photo;
+    return defaultBundleImages(product).map((artwork) => {
+      const member = bundleMemberByCode(product, artwork.memberCode || "");
+      const scale =
+        member && photo.mode === "automatic" && photo.automaticTvSizing
+          ? defaultProductImageScale(member)
+          : 1;
+      if (scale === 1) return artwork;
+      const width = artwork.width || 0;
+      const height = artwork.height || 0;
+      return {
+        ...artwork,
+        fitVisiblePhoto: true,
+        x: (artwork.x || 0) + (width * (1 - scale)) / 2,
+        y: (artwork.y || 0) + (height * (1 - scale)) / 2,
+        width: width * scale,
+        height: height * scale,
+      };
+    });
+  }
   if (!isAirConditioner(product)) return [];
   const source = sourceEntries(product);
   const artworks: Artwork[] = [];

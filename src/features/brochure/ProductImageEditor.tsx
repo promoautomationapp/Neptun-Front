@@ -332,6 +332,25 @@ export function ProductImageEditor({
             "Choose a catalog photo or upload your own. Double-click the image in the brochure anytime to change it again.",
           )}
         </p>
+        {isTelevision(product) && onEditScreen && (
+          <button
+            type="button"
+            className="cs-tv-screen-option cs-tv-wallpaper-option"
+            aria-label={t("Change TV screen image")}
+            onClick={onEditScreen}
+          >
+            <EditorIcon name="screen" />
+            <span>
+              <strong>{t("Change the picture inside this TV")}</strong>
+              <small>
+                {t(
+                  "Upload or choose a wallpaper for this TV or all TVs. The frame and inch label stay visible.",
+                )}
+              </small>
+            </span>
+            <span aria-hidden="true">→</span>
+          </button>
+        )}
         {onEditArtwork && (
           <button
             type="button"
@@ -349,23 +368,6 @@ export function ProductImageEditor({
               </small>
             </span>
             <span aria-hidden="true">+</span>
-          </button>
-        )}
-        {isTelevision(product) && onEditScreen && (
-          <button
-            type="button"
-            className="cs-tv-screen-option"
-            aria-label={t("Change TV screen image")}
-            onClick={onEditScreen}
-          >
-            <EditorIcon name="screen" />
-            <span>
-              <strong>{t("Change the picture inside this TV")}</strong>
-              <small>
-                {t("Keep the TV frame and add a wallpaper inside the screen.")}
-              </small>
-            </span>
-            <span aria-hidden="true">→</span>
           </button>
         )}
         <div className="cs-image-drop-hint">

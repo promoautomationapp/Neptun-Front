@@ -84,7 +84,12 @@ import { hasApplePhotos } from "../brochure/productTypes";
 import { APPLE_PHOTO_CLEARANCE_EVENT } from "../brochure/ApplePhotoClearance";
 import { isBundleOffer } from "../brochure/productBundles";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { otherScreenInches, tvScreenInches } from "../brochure/tvSpecs";
+import {
+  defaultProductImageScale,
+  otherScreenInches,
+  tvScreenInches,
+} from "../brochure/tvSpecs";
+import { productImageFit } from "../brochure/productImageFit";
 import { tvInchesEmbedded } from "../brochure/imageReview";
 import {
   televisionScreenBox,
@@ -515,7 +520,52 @@ export function SocialProductVisual({
   );
   const tvInches = tvScreenInches(product);
   const otherInches = otherScreenInches(product);
-  const placement = product.postImagePlacement || { x: 0, y: 0, scale: 1 };
+  const defaultScale = defaultProductImageScale(product);
+  const [fittedPhoto, setFittedPhoto] = useState<{
+    image?: string;
+    defaultScale: number;
+    placement: Placement;
+  } | null>(null);
+  const placement =
+    product.postImagePlacement ||
+    (fittedPhoto?.image === image && fittedPhoto?.defaultScale === defaultScale
+      ? fittedPhoto.placement
+      : { x: 0, y: 0, scale: defaultScale });
+  useLayoutEffect(() => {
+    const photo = imageRef.current;
+    if (!photo || !tvInches || product.postImagePlacement) return;
+    const update = () => {
+      if (!photo.complete || !photo.naturalWidth || !photo.naturalHeight)
+        return;
+      const style = getComputedStyle(photo);
+      const width = parseFloat(style.width);
+      const height = parseFloat(style.height);
+      const fit = productImageFit({
+        naturalWidth: photo.naturalWidth,
+        naturalHeight: photo.naturalHeight,
+        imageBoxWidth: width,
+        imageBoxHeight: height,
+        wrapWidth: width,
+        wrapHeight: height,
+        bounds: visibleImageBounds(photo),
+        base: { x: 50, y: 50, scale: defaultScale },
+      });
+      const next = { x: fit.x - 50, y: fit.y - 50, scale: fit.scale };
+      setFittedPhoto((current) =>
+        current !== null &&
+        current.image === image &&
+        current.defaultScale === defaultScale &&
+        JSON.stringify(current.placement) === JSON.stringify(next)
+          ? current
+          : { image, defaultScale, placement: next },
+      );
+    };
+    update();
+    const observer =
+      typeof ResizeObserver === "function" ? new ResizeObserver(update) : null;
+    observer?.observe(photo);
+    return () => observer?.disconnect();
+  }, [image, imageReady, tvInches, defaultScale, product.postImagePlacement]);
   function start(
     event: React.PointerEvent<HTMLElement>,
     kind: ProductVisualGesture["kind"],
@@ -662,6 +712,7 @@ export function SocialProductVisual({
     image,
     product.screenArtwork,
     product.postImagePlacement,
+    fittedPhoto,
     product.detailPlacement,
     Boolean(details),
     tvInches,

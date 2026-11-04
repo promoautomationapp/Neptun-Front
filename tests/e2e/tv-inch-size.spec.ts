@@ -88,7 +88,7 @@ test("TVs grow with inches in Classic and Blue, keeping manual sizes and their o
       .toBe(4);
     const photos = await comparison(preset);
     expect(photos.map((photo) => photo.scale)).toEqual([
-      0.755, 0.86, 0.93, 0.943,
+      0.755, 0.86, 0.93, 0.9498,
     ]);
     expect(
       photos.every(

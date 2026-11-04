@@ -1173,6 +1173,8 @@ const translations: Record<string, string> = {
     "Ruaj kornizën e TV-së dhe shto një imazh brenda ekranit.",
   "Change the picture inside this TV":
     "Ndrysho figurën brenda këtij televizori",
+  "Upload or choose a wallpaper for this TV or all TVs. The frame and inch label stay visible.":
+    "Ngarkoni ose zgjidhni një sfond për këtë TV ose të gjithë TV-të. Korniza dhe etiketa e inçëve mbeten të dukshme.",
   "Campaign message": "Mesazhi i fushatës",
   "Product code in brochure": "Kodi në broshurë",
   Discount: "Zbritje",
@@ -1396,12 +1398,28 @@ const translations: Record<string, string> = {
   "Select cover products. The cover layout adapts to your selection.":
     "Zgjidhni produktet e kopertinës. Renditja përshtatet sipas përzgjedhjes suaj.",
   "Fit screen with AI": "Përshtat ekranin me AI",
+  "Brochure zoom": "Zmadhimi i broshurës",
+  "Zoom out": "Zvogëlo",
+  "Zoom in": "Zmadho",
+  "Fit page": "Përshtat faqen",
+  "Fit the wallpaper to this TV":
+    "Përshtat sfondin me ekranin e këtij televizori",
+  "Each TV is fitted separately. The wallpaper stays inside the screen and below the inch label.":
+    "Çdo TV përshtatet veçmas. Sfondi mbetet brenda ekranit dhe poshtë etiketës së inçëve.",
+  "Automatic fit": "Përshtat automatikisht",
   "Finding the screen…": "Duke identifikuar ekranin…",
   "The screen could not be identified. Adjust the fit manually or try another photo.":
     "Ekrani nuk u identifikua. Përshtateni manualisht ose provoni një fotografi tjetër.",
   "Fitting TV screens…": "Duke përshtatur ekranet e televizorëve…",
   "Use AI only when automatic screen fitting needs help":
     "Përdor AI vetëm kur përshtatja automatike e ekranit ka nevojë për ndihmë",
+  "Some TV screens could not be fitted. Their existing wallpaper is unchanged. Adjust these TVs individually:":
+    "Disa ekrane nuk u përshtatën. Sfondi i tyre i mëparshëm mbetet i njëjtë. Përshtatini këta televizorë veçmas:",
+  "The product photo changed while fitting. Open the screen editor again.":
+    "Fotografia e produktit ndryshoi gjatë përshtatjes. Hapni përsëri redaktuesin e ekranit.",
+  "Eight offers · 3–2–3": "Tetë oferta · 3–2–3",
+  "Three offers above, two larger offers in the middle, three below":
+    "Tri oferta sipër, dy më të mëdha në mes, tri poshtë",
   "Retrying photo": "Po provojmë sërish fotografinë",
   "Retrying some product photos…":
     "Po provojmë sërish disa fotografi të produkteve…",

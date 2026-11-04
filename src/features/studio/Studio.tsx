@@ -10,6 +10,7 @@ import { BrochurePreview } from "../brochure/BrochurePreview";
 import { BrochureImportNotices } from "../brochure/BrochureImportNotices";
 import { BrochurePageNavigator } from "../brochure/BrochurePageNavigator";
 import { BrochurePagination } from "../brochure/BrochurePagination";
+import { BrochureZoomControls } from "../brochure/BrochureZoomControls";
 import "../../styles/brochure-editor-chrome.css";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
 import { EditorIcon } from "../brochure/EditorIcon";
@@ -129,7 +130,16 @@ import { CategorySavingsControls } from "../brochure/CategorySavingsControls";
 import { ProductImageEditor } from "../brochure/ProductImageEditor";
 import { ProductPhotoRepair } from "../brochure/ProductPhotoRepair";
 import { ScreenImageEditor } from "../brochure/ScreenImageEditor";
-import { applyTvWallpaper, campaignTelevisions } from "../brochure/tvWallpaper";
+import {
+  applyTvWallpaper,
+  campaignTelevisions,
+  campaignTelevisionPhoto,
+  campaignTelevisionPhotos,
+} from "../brochure/tvWallpaper";
+import {
+  normalizeScreenPhotoSource,
+  screenPhotoSource,
+} from "../brochure/screenGeometry";
 import { BrochureFormatPicker } from "../brochure/BrochureFormatPicker";
 import {
   brochureExportGeometry,
@@ -2116,7 +2126,7 @@ export function BrochureEditor({
   const pages = splitPages(campaign);
   const pageFormat = resolveBrochureFormat(campaign);
   const formatGeometry = brochureExportGeometry(pageFormat);
-  const televisions = campaignTelevisions(campaign);
+  const televisions = campaignTelevisionPhotos(campaign);
   const hasStoresPage = includesStoresPage(campaign);
   const [selected, setSelected] = useState(() =>
     Math.max(
@@ -3077,6 +3087,7 @@ export function BrochureEditor({
               </button>
             )}
             <span className="cs-canvas-dock-divider" aria-hidden="true" />
+            <BrochureZoomControls />
             <button
               type="button"
               className="cs-canvas-preview-button"
@@ -3163,250 +3174,263 @@ export function BrochureEditor({
               )}
             </p>
           )}
-          <div
-            className={`cs-preview-paper ${textMode ? "cs-text-placement-mode" : ""} ${selected === pages.length && !hasStoresPage ? "cs-preview-excluded" : ""}`}
-            onPointerDownCapture={placeText}
-            onDragOver={
-              canEditCanvas
-                ? (event) => {
-                    if (
-                      [...event.dataTransfer.types].some(
-                        (type) =>
-                          type === "Files" || type === REUSABLE_IMAGE_TYPE,
-                      )
-                    ) {
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = "copy";
+          <div className="cs-preview-viewport">
+            <div
+              className={`cs-preview-paper ${textMode ? "cs-text-placement-mode" : ""} ${selected === pages.length && !hasStoresPage ? "cs-preview-excluded" : ""}`}
+              onPointerDownCapture={placeText}
+              onDragOver={
+                canEditCanvas
+                  ? (event) => {
+                      if (
+                        [...event.dataTransfer.types].some(
+                          (type) =>
+                            type === "Files" || type === REUSABLE_IMAGE_TYPE,
+                        )
+                      ) {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "copy";
+                      }
                     }
+                  : undefined
+              }
+              onDrop={canEditCanvas ? dropArtwork : undefined}
+            >
+              {selected === pages.length && !hasStoresPage && (
+                <span className="cs-preview-excluded-label">
+                  {t("Not included in brochure")}
+                </span>
+              )}
+              {selected === -1 ? (
+                <CoverPage
+                  campaign={campaign}
+                  settings={settings}
+                  onChooseCoverLogo={
+                    canEditCanvas ? () => setShowLogoPicker(true) : undefined
                   }
-                : undefined
-            }
-            onDrop={canEditCanvas ? dropArtwork : undefined}
-          >
-            {selected === pages.length && !hasStoresPage && (
-              <span className="cs-preview-excluded-label">
-                {t("Not included in brochure")}
-              </span>
-            )}
-            {selected === -1 ? (
-              <CoverPage
-                campaign={campaign}
-                settings={settings}
-                onChooseCoverLogo={
-                  canEditCanvas ? () => setShowLogoPicker(true) : undefined
-                }
-                onReplaceCoverPhoto={
-                  canEditCanvas
-                    ? (file) => {
-                        void replaceCoverPhoto(file);
-                      }
-                    : undefined
-                }
-                onCoverImageChange={
-                  canEditCanvas
-                    ? (source) =>
-                        onUpdate((draft) => {
-                          draft.coverImage = source;
-                        })
-                    : undefined
-                }
-                onStoresFooterChange={
-                  canEditCanvas
-                    ? (kind: string, value: Placement) =>
-                        changeStoreElement("footer", kind, value)
-                    : undefined
-                }
-                onStoresFooterHide={
-                  canEditCanvas
-                    ? (kind: string) => hideStoreElement("footer", kind)
-                    : undefined
-                }
-                onHideStore={canEditCanvas ? hideStore : undefined}
-                onStoreChange={canEditCanvas ? changeStore : undefined}
-                onContactChange={canEditCanvas ? changeStoreContact : undefined}
-                onReplaceCoverArtwork={
-                  canEditCanvas ? replaceCoverArtwork : undefined
-                }
-                onReplaceCoverLogo={
-                  canEditCanvas
-                    ? (file) => {
-                        void replaceCoverLogo(file);
-                      }
-                    : undefined
-                }
-                onCoverTextChange={
-                  canEditCanvas
-                    ? (field, value) =>
-                        onUpdate((draft) => {
-                          draft[field] = value;
-                        })
-                    : undefined
-                }
-                onFooterTextChange={
-                  canEditCanvas
-                    ? (field, value) =>
-                        onUpdate((draft) => {
-                          if (field === "paymentText")
-                            draft.paymentText = value;
-                          else
-                            draft.brochureFooter = {
-                              ...draft.brochureFooter,
-                              dateText: value,
-                            };
-                        })
-                    : undefined
-                }
-                onCoverElementChange={
-                  canEditCanvas
-                    ? (kind: string, placement: Placement) =>
-                        onUpdate((draft: Campaign) => {
-                          if (
-                            !applyCoverProductPlacement(draft, kind, placement)
-                          ) {
-                            draft.coverElementPlacements ||= {};
-                            draft.coverElementPlacements[kind] = placement;
-                            if (kind === "gradient")
-                              draft.coverGradientRegion = "custom";
-                          }
-                        })
-                    : undefined
-                }
-                onCoverElementHide={
-                  canEditCanvas
-                    ? (kind: string) =>
-                        onUpdate((draft: Campaign) => {
-                          if (kind === "logo") draft.showCoverLogo = false;
-                          else if (kind === "headline")
-                            draft.showCoverHeadline = false;
-                          else if (kind === "band") draft.showCoverBand = false;
-                          else if (kind === "message")
-                            draft.showCoverMessage = false;
-                          else if (kind === "gradient")
-                            draft.showCoverGradient = false;
-                          else {
-                            draft.coverElementPlacements ||= {};
-                            draft.coverElementPlacements[kind] = {
-                              ...draft.coverElementPlacements[kind],
-                              hidden: true,
-                            };
-                          }
-                        })
-                    : undefined
-                }
-                onEditImage={canEditCanvas ? onEditImage : undefined}
-                onEditScreen={canEditCanvas ? onEditScreen : undefined}
-                onEditDetails={canEditCanvas ? onEditDetails : undefined}
-                onEditPrice={canEditCanvas ? onEditPrice : undefined}
-                onEditSavings={canEditCanvas ? onEditSavings : undefined}
-                onDropImage={canEditCanvas ? dropImage : undefined}
-                onMove={canEditCanvas ? openMove : undefined}
-                onPlaceImage={canEditCanvas ? placeImage : undefined}
-                onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
-                onReorderDetails={canEditCanvas ? reorderDetails : undefined}
-                onProductChange={
-                  canEditCanvas
-                    ? (
-                        product: Product,
-                        field: keyof Product | Partial<Product>,
-                        value?: Product[keyof Product],
-                      ) => updateProduct(product.code, field, value)
-                    : undefined
-                }
-                onCampaignAssetChange={
-                  canEditCanvas ? changeCampaignAsset : undefined
-                }
-                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
-                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
-                {...(canEditCanvas ? dragProps : {})}
-              />
-            ) : page ? (
-              <ProductPage
-                campaign={campaign}
-                settings={settings}
-                page={page}
-                onPageDecorationChange={
-                  canEditCanvas ? changePageDecoration : undefined
-                }
-                onStoresFooterChange={
-                  canEditCanvas
-                    ? (kind: string, value: Placement) =>
-                        changeStoreElement("footer", kind, value)
-                    : undefined
-                }
-                onStoresFooterHide={
-                  canEditCanvas
-                    ? (kind: string) => hideStoreElement("footer", kind)
-                    : undefined
-                }
-                onHideStore={canEditCanvas ? hideStore : undefined}
-                onStoreChange={canEditCanvas ? changeStore : undefined}
-                onContactChange={canEditCanvas ? changeStoreContact : undefined}
-                onEditImage={canEditCanvas ? onEditImage : undefined}
-                onEditScreen={canEditCanvas ? onEditScreen : undefined}
-                onEditDetails={canEditCanvas ? onEditDetails : undefined}
-                onEditPrice={canEditCanvas ? onEditPrice : undefined}
-                onEditSavings={canEditCanvas ? onEditSavings : undefined}
-                onDropImage={canEditCanvas ? dropImage : undefined}
-                onMove={canEditCanvas ? openMove : undefined}
-                onPlaceImage={canEditCanvas ? placeImage : undefined}
-                onResizeCard={canEditCanvas ? resizeCard : undefined}
-                onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
-                onReorderDetails={canEditCanvas ? reorderDetails : undefined}
-                onProductChange={
-                  canEditCanvas
-                    ? (
-                        product: Product,
-                        field: keyof Product | Partial<Product>,
-                        value?: Product[keyof Product],
-                      ) => updateProduct(product.code, field, value)
-                    : undefined
-                }
-                onCampaignAssetChange={
-                  canEditCanvas ? changeCampaignAsset : undefined
-                }
-                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
-                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
-                {...(canEditCanvas ? dragProps : {})}
-              />
-            ) : (
-              <StoresPage
-                campaign={campaign}
-                settings={settings}
-                onElementChange={
-                  canEditCanvas
-                    ? (kind: string, value: Placement) =>
-                        changeStoreElement("page", kind, value)
-                    : undefined
-                }
-                onElementHide={
-                  canEditCanvas
-                    ? (kind: string) => hideStoreElement("page", kind)
-                    : undefined
-                }
-                onHideStore={canEditCanvas ? hideStore : undefined}
-                onStoreChange={canEditCanvas ? changeStore : undefined}
-                onContactChange={canEditCanvas ? changeStoreContact : undefined}
-                onPlaceStore={canEditCanvas ? placeStore : undefined}
-                onReorderStore={canEditCanvas ? reorderStore : undefined}
-                onCampaignAssetChange={
-                  canEditCanvas ? changeCampaignAsset : undefined
-                }
-                onArtworkChange={canEditCanvas ? changeArtwork : undefined}
-                onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
-              />
-            )}
-            {commentMode && (
-              <BrochureComments
-                key={`${campaign.id}-${selected}-${notificationTarget?.id || "manual"}`}
-                campaign={campaign}
-                pageIndex={selected + 1}
-                pageLabel={title}
-                user={user}
-                members={members}
-                onAction={onReviewAction}
-                focusedCommentId={notificationTarget?.commentId}
-              />
-            )}
+                  onReplaceCoverPhoto={
+                    canEditCanvas
+                      ? (file) => {
+                          void replaceCoverPhoto(file);
+                        }
+                      : undefined
+                  }
+                  onCoverImageChange={
+                    canEditCanvas
+                      ? (source) =>
+                          onUpdate((draft) => {
+                            draft.coverImage = source;
+                          })
+                      : undefined
+                  }
+                  onStoresFooterChange={
+                    canEditCanvas
+                      ? (kind: string, value: Placement) =>
+                          changeStoreElement("footer", kind, value)
+                      : undefined
+                  }
+                  onStoresFooterHide={
+                    canEditCanvas
+                      ? (kind: string) => hideStoreElement("footer", kind)
+                      : undefined
+                  }
+                  onHideStore={canEditCanvas ? hideStore : undefined}
+                  onStoreChange={canEditCanvas ? changeStore : undefined}
+                  onContactChange={
+                    canEditCanvas ? changeStoreContact : undefined
+                  }
+                  onReplaceCoverArtwork={
+                    canEditCanvas ? replaceCoverArtwork : undefined
+                  }
+                  onReplaceCoverLogo={
+                    canEditCanvas
+                      ? (file) => {
+                          void replaceCoverLogo(file);
+                        }
+                      : undefined
+                  }
+                  onCoverTextChange={
+                    canEditCanvas
+                      ? (field, value) =>
+                          onUpdate((draft) => {
+                            draft[field] = value;
+                          })
+                      : undefined
+                  }
+                  onFooterTextChange={
+                    canEditCanvas
+                      ? (field, value) =>
+                          onUpdate((draft) => {
+                            if (field === "paymentText")
+                              draft.paymentText = value;
+                            else
+                              draft.brochureFooter = {
+                                ...draft.brochureFooter,
+                                dateText: value,
+                              };
+                          })
+                      : undefined
+                  }
+                  onCoverElementChange={
+                    canEditCanvas
+                      ? (kind: string, placement: Placement) =>
+                          onUpdate((draft: Campaign) => {
+                            if (
+                              !applyCoverProductPlacement(
+                                draft,
+                                kind,
+                                placement,
+                              )
+                            ) {
+                              draft.coverElementPlacements ||= {};
+                              draft.coverElementPlacements[kind] = placement;
+                              if (kind === "gradient")
+                                draft.coverGradientRegion = "custom";
+                            }
+                          })
+                      : undefined
+                  }
+                  onCoverElementHide={
+                    canEditCanvas
+                      ? (kind: string) =>
+                          onUpdate((draft: Campaign) => {
+                            if (kind === "logo") draft.showCoverLogo = false;
+                            else if (kind === "headline")
+                              draft.showCoverHeadline = false;
+                            else if (kind === "band")
+                              draft.showCoverBand = false;
+                            else if (kind === "message")
+                              draft.showCoverMessage = false;
+                            else if (kind === "gradient")
+                              draft.showCoverGradient = false;
+                            else {
+                              draft.coverElementPlacements ||= {};
+                              draft.coverElementPlacements[kind] = {
+                                ...draft.coverElementPlacements[kind],
+                                hidden: true,
+                              };
+                            }
+                          })
+                      : undefined
+                  }
+                  onEditImage={canEditCanvas ? onEditImage : undefined}
+                  onEditScreen={canEditCanvas ? onEditScreen : undefined}
+                  onEditDetails={canEditCanvas ? onEditDetails : undefined}
+                  onEditPrice={canEditCanvas ? onEditPrice : undefined}
+                  onEditSavings={canEditCanvas ? onEditSavings : undefined}
+                  onDropImage={canEditCanvas ? dropImage : undefined}
+                  onMove={canEditCanvas ? openMove : undefined}
+                  onPlaceImage={canEditCanvas ? placeImage : undefined}
+                  onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
+                  onReorderDetails={canEditCanvas ? reorderDetails : undefined}
+                  onProductChange={
+                    canEditCanvas
+                      ? (
+                          product: Product,
+                          field: keyof Product | Partial<Product>,
+                          value?: Product[keyof Product],
+                        ) => updateProduct(product.code, field, value)
+                      : undefined
+                  }
+                  onCampaignAssetChange={
+                    canEditCanvas ? changeCampaignAsset : undefined
+                  }
+                  onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                  onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+                  {...(canEditCanvas ? dragProps : {})}
+                />
+              ) : page ? (
+                <ProductPage
+                  campaign={campaign}
+                  settings={settings}
+                  page={page}
+                  onPageDecorationChange={
+                    canEditCanvas ? changePageDecoration : undefined
+                  }
+                  onStoresFooterChange={
+                    canEditCanvas
+                      ? (kind: string, value: Placement) =>
+                          changeStoreElement("footer", kind, value)
+                      : undefined
+                  }
+                  onStoresFooterHide={
+                    canEditCanvas
+                      ? (kind: string) => hideStoreElement("footer", kind)
+                      : undefined
+                  }
+                  onHideStore={canEditCanvas ? hideStore : undefined}
+                  onStoreChange={canEditCanvas ? changeStore : undefined}
+                  onContactChange={
+                    canEditCanvas ? changeStoreContact : undefined
+                  }
+                  onEditImage={canEditCanvas ? onEditImage : undefined}
+                  onEditScreen={canEditCanvas ? onEditScreen : undefined}
+                  onEditDetails={canEditCanvas ? onEditDetails : undefined}
+                  onEditPrice={canEditCanvas ? onEditPrice : undefined}
+                  onEditSavings={canEditCanvas ? onEditSavings : undefined}
+                  onDropImage={canEditCanvas ? dropImage : undefined}
+                  onMove={canEditCanvas ? openMove : undefined}
+                  onPlaceImage={canEditCanvas ? placeImage : undefined}
+                  onResizeCard={canEditCanvas ? resizeCard : undefined}
+                  onLayoutRegion={canEditCanvas ? layoutRegion : undefined}
+                  onReorderDetails={canEditCanvas ? reorderDetails : undefined}
+                  onProductChange={
+                    canEditCanvas
+                      ? (
+                          product: Product,
+                          field: keyof Product | Partial<Product>,
+                          value?: Product[keyof Product],
+                        ) => updateProduct(product.code, field, value)
+                      : undefined
+                  }
+                  onCampaignAssetChange={
+                    canEditCanvas ? changeCampaignAsset : undefined
+                  }
+                  onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                  onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+                  {...(canEditCanvas ? dragProps : {})}
+                />
+              ) : (
+                <StoresPage
+                  campaign={campaign}
+                  settings={settings}
+                  onElementChange={
+                    canEditCanvas
+                      ? (kind: string, value: Placement) =>
+                          changeStoreElement("page", kind, value)
+                      : undefined
+                  }
+                  onElementHide={
+                    canEditCanvas
+                      ? (kind: string) => hideStoreElement("page", kind)
+                      : undefined
+                  }
+                  onHideStore={canEditCanvas ? hideStore : undefined}
+                  onStoreChange={canEditCanvas ? changeStore : undefined}
+                  onContactChange={
+                    canEditCanvas ? changeStoreContact : undefined
+                  }
+                  onPlaceStore={canEditCanvas ? placeStore : undefined}
+                  onReorderStore={canEditCanvas ? reorderStore : undefined}
+                  onCampaignAssetChange={
+                    canEditCanvas ? changeCampaignAsset : undefined
+                  }
+                  onArtworkChange={canEditCanvas ? changeArtwork : undefined}
+                  onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
+                />
+              )}
+              {commentMode && (
+                <BrochureComments
+                  key={`${campaign.id}-${selected}-${notificationTarget?.id || "manual"}`}
+                  campaign={campaign}
+                  pageIndex={selected + 1}
+                  pageLabel={title}
+                  user={user}
+                  members={members}
+                  onAction={onReviewAction}
+                  focusedCommentId={notificationTarget?.commentId}
+                />
+              )}
+            </div>
           </div>
           {!previewMode && (
             <div className="cs-brochure-pagination-dock">
@@ -6311,14 +6335,43 @@ export default function App({
       {screenEditCode && screenEditProduct && (
         <ScreenImageEditor
           settings={settings}
-          product={screenEditProduct}
+          product={campaignTelevisionPhoto(campaign, screenEditProduct)}
           tvCount={campaignTelevisions(campaign).length}
-          televisions={campaignTelevisions(campaign)}
-          onSave={(screenArtwork, scope) =>
-            updateCampaign((draft: Campaign) => {
-              applyTvWallpaper(draft, screenEditCode, screenArtwork, scope);
-            })
-          }
+          televisions={campaignTelevisionPhotos(campaign)}
+          onSave={async (screenArtwork, scope, fitPlan) => {
+            const changed = updateCampaign(
+              (draft: Campaign) => {
+                if (fitPlan) {
+                  const televisions = campaignTelevisionPhotos(draft);
+                  if (
+                    fitPlan.fits.some((fitted) => {
+                      return !televisions.some(
+                        (item) =>
+                          String(item.code) === fitted.code &&
+                          normalizeScreenPhotoSource(
+                            screenPhotoSource(item),
+                          ) === normalizeScreenPhotoSource(fitted.detectedFor),
+                      );
+                    })
+                  )
+                    throw new Error(
+                      t(
+                        "The product photo changed while fitting. Open the screen editor again.",
+                      ),
+                    );
+                }
+                applyTvWallpaper(
+                  draft,
+                  screenEditCode,
+                  screenArtwork,
+                  scope,
+                  fitPlan,
+                );
+              },
+              { id: campaign.id },
+            );
+            if (changed) await changed.saved;
+          }}
           onClose={() => setScreenEditCode(null)}
         />
       )}

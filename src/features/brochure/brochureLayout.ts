@@ -26,6 +26,14 @@ export const BROCHURE_LAYOUTS = [
     rows: 3,
   },
   {
+    id: "balanced8",
+    name: "Eight offers · 3–2–3",
+    detail: "Three offers above, two larger offers in the middle, three below",
+    capacity: 8,
+    columns: 6,
+    rows: 3,
+  },
+  {
     id: "grid6portrait",
     name: "Six offers · 2 × 3 grid",
     detail: "Two columns and three rows",
@@ -120,7 +128,10 @@ export function productPageLayout(
     automaticProductLayout(campaign, pageIndex)
   ) {
     const run = consecutiveOctoberProducts(products);
+    if (run.length >= 8 && run.slice(0, 8).every(isTelevision)) return "tv8";
     const family = run[0] ? appleProductFamily(run[0]) : null;
+    if (!family && !isBrochureAccessory(run[0] || {}) && balancedEight(run))
+      return "balanced8";
     if ((family === "macbook" || family === "ipad") && run.length <= 2)
       return "pair2";
     return run[0] && isBrochureAccessory(run[0]) ? "grid6portrait" : "duo4";
@@ -138,7 +149,28 @@ export function productPageLayout(
     isMacBook(products[0])
   )
     return "duo4";
+  if (
+    automaticProductLayout(campaign, pageIndex) &&
+    balancedEight(products) &&
+    products
+      .slice(0, 8)
+      .every((product) => !isTelevision(product) && !isMacBook(product))
+  )
+    return "balanced8";
   return campaign.layout || "feature3";
+}
+
+function balancedEight(products: Product[]) {
+  return (
+    products.length >= 8 &&
+    products
+      .slice(0, 8)
+      .every(
+        (product) =>
+          !product.brochureCardSize &&
+          (product.bundleProducts?.length || 0) < 3,
+      )
+  );
 }
 
 export function productPageChunk(
@@ -238,7 +270,7 @@ export function cardSize(
           Number(product?.brochureCardSize?.width) ||
             ((product.bundleProducts?.length || 0) >= 3
               ? columns
-              : layout === "tv8"
+              : layout === "tv8" || layout === "balanced8"
                 ? index === 3 || index === 4
                   ? 3
                   : 2
@@ -271,7 +303,7 @@ function placeProductGrid(
   limit = products.length,
 ) {
   if (
-    (layout === "feature3" || layout === "tv8") &&
+    (layout === "feature3" || layout === "tv8" || layout === "balanced8") &&
     !products.some(
       (product) =>
         product.brochureCardSize || (product.bundleProducts?.length || 0) >= 3,

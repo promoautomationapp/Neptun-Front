@@ -133,15 +133,17 @@ export function tvScreenInches(product: Partial<Product>) {
 }
 
 // Keep a visible size difference between common 55/65-inch offers without
-// letting larger TVs escape the photo slot. Saved manual scales take precedence.
+// letting larger TVs escape the photo slot. Above 65 inches, taper gradually
+// while retaining a size difference for every neighboring inch.
+// Saved manual scales take precedence.
 export function defaultProductImageScale(product: Partial<Product>) {
   const inches = tvScreenInches(product);
   if (!inches) return 1;
   const scale =
     inches <= 65
       ? 0.615 + (inches - 20) * 0.007
-      : 0.93 + (inches - 65) * (0.07 / 55);
-  return Number(Math.min(1, scale).toFixed(3));
+      : 0.93 + 0.07 * (1 - Math.exp(-(inches - 65) / 30));
+  return Number(Math.min(1, scale).toFixed(4));
 }
 
 export function otherScreenInches(product: Partial<Product>) {

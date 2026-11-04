@@ -105,15 +105,11 @@ it("makes a found photo usable immediately and previews background removal only 
     ).toBe(false),
   );
   expect(save).not.toHaveBeenCalled();
-  fireEvent.click(
-    view.getByRole("button", { name: "Original photo", exact: true }),
-  );
+  fireEvent.click(view.getByRole("button", { name: /^Original photo$/ }));
   expect(view.getByRole("img", { name: found.name }).getAttribute("src")).toBe(
     "/found.png",
   );
-  fireEvent.click(
-    view.getByRole("button", { name: "Background removed", exact: true }),
-  );
+  fireEvent.click(view.getByRole("button", { name: /^Background removed$/ }));
   expect(view.getByRole("img", { name: found.name }).getAttribute("src")).toBe(
     "/cutout.png",
   );

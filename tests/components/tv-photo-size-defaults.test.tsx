@@ -79,6 +79,14 @@ it("renders gently increasing TV sizes within photo slots, including export mark
   expect(
     defaultProductImageScale({ name: "PHONE", subcategory: "SMARTPHONE" }),
   ).toBe(1);
+  const everyInch = Array.from({ length: 101 }, (_, index) =>
+    defaultProductImageScale(tv(index + 20)),
+  );
+  expect(
+    everyInch.every(
+      (scale, index) => scale <= 1 && (!index || scale > everyInch[index - 1]!),
+    ),
+  ).toBe(true);
 });
 
 it("keeps saved manual photo sizes and resets back to the inch-based default", () => {
@@ -133,7 +141,7 @@ it("keeps saved manual photo sizes and resets back to the inch-based default", (
 it.each(["neptun-current", "neptun-october"])(
   "retains increasing 40/55/65/75-inch defaults in the actual %s preset",
   (id) => {
-    const products = [40, 55, 65, 75].map(tv);
+    const products = [40, 55, 65, 66, 75].map(tv);
     const campaign: Campaign = {
       id: "preset-tv-sizes",
       name: "TV sizes",
@@ -148,7 +156,13 @@ it.each(["neptun-current", "neptun-october"])(
     const scales = products.map(
       (product) => defaultPhotoPlacement(product, campaign, "bottom").scale,
     );
-    expect(scales).toEqual([0.755, 0.86, 0.93, 0.943]);
+    expect(scales).toEqual([0.755, 0.86, 0.93, 0.9323, 0.9498]);
+    expect(
+      products.map(
+        (product) =>
+          defaultPhotoPlacement(product, campaign, "bottom", true).scale,
+      ),
+    ).toEqual(scales);
     expect(
       scales.every((scale, index) => index === 0 || scale > scales[index - 1]!),
     ).toBe(true);
@@ -172,7 +186,7 @@ it.each([
   const product = { ...tv(75), ...category };
   expect(isTelevision(product)).toBe(true);
   expect(tvScreenInches(product)).toBe(75);
-  expect(defaultProductImageScale(product)).toBe(0.943);
+  expect(defaultProductImageScale(product)).toBe(0.9498);
 });
 
 it("does not give TV accessories or a neighboring soundbar an inch-based television layout", () => {

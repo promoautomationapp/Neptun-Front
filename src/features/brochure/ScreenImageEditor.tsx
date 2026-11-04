@@ -25,9 +25,17 @@ import { isTelevision } from "./tvSpecs";
 import {
   savedScreenBoxForPhoto,
   detectedTelevisionScreenBox,
+  normalizeScreenPhotoSource,
   screenPhotoSource,
   televisionScreenBox,
 } from "./screenGeometry";
+import {
+  fitTvWallpaperTargets,
+  isDefaultScreenFallback,
+  screenGeometryImageUrl,
+  validScreenBox,
+  type TvWallpaperFitPlan,
+} from "./tvWallpaperFit";
 
 function defaultBox(product: Product) {
   return isTelevision(product)
@@ -42,7 +50,11 @@ interface ScreenImageEditorProps {
   settings?: Settings;
   tvCount?: number;
   televisions?: Product[];
-  onSave: (artwork: ScreenArtwork | null, scope: "one" | "all") => void | Promise<void>;
+  onSave: (
+    artwork: ScreenArtwork | null,
+    scope: "one" | "all",
+    fitPlan?: TvWallpaperFitPlan,
+  ) => void | Promise<void>;
   onClose: () => void;
 }
 interface ScreenGesture {
@@ -62,6 +74,14 @@ export function ScreenImageEditor({
   onSave,
   onClose,
 }: ScreenImageEditorProps) {
+  const photoIdentity = JSON.stringify([
+    String(product.code),
+    normalizeScreenPhotoSource(screenPhotoSource(product)),
+  ]);
+  const latestPhoto = useRef(photoIdentity);
+  latestPhoto.current = photoIdentity;
+  const previousPhoto = useRef(photoIdentity);
+  const wallpaperSelection = useRef(0);
   const [lifestyleOpen, setLifestyleOpen] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const wallpapers = [
@@ -82,7 +102,10 @@ export function ScreenImageEditor({
     savedScreenBoxForPhoto(product) || defaultBox(product),
   );
   const [detectedFor, setDetectedFor] = useState(
-    product.screenArtwork?.detectedFor || "",
+    savedScreenBoxForPhoto(product) &&
+      !isDefaultScreenFallback(savedScreenBoxForPhoto(product))
+      ? screenPhotoSource(product)
+      : "",
   );
   const [scopePrompt, setScopePrompt] = useState<"apply" | "restore" | null>(
     null,
@@ -90,16 +113,43 @@ export function ScreenImageEditor({
   const [adjusting, setAdjusting] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [allowAiFit, setAllowAiFit] = useState(true);
   const detection = useRef<AbortController | null>(null);
+  const fitting = useRef<AbortController | null>(null);
   const scopeRef = useRef<HTMLElement>(null);
   const [error, setError] = useState("");
   const gesture = useRef<ScreenGesture | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const television = isTelevision(product);
-  useEffect(() => () => {
+  useEffect(
+    () => () => {
+      detection.current?.abort();
+      detection.current = null;
+      fitting.current?.abort();
+      fitting.current = null;
+      wallpaperSelection.current++;
+    },
+    [],
+  );
+  useEffect(() => {
+    if (previousPhoto.current === photoIdentity) return;
+    previousPhoto.current = photoIdentity;
     detection.current?.abort();
     detection.current = null;
-  }, []);
+    fitting.current?.abort();
+    fitting.current = null;
+    gesture.current = null;
+    setDetecting(false);
+    setSaving(false);
+    const saved = savedScreenBoxForPhoto(product);
+    setBox(saved || defaultBox(product));
+    setDetectedFor(
+      saved && !isDefaultScreenFallback(saved)
+        ? screenPhotoSource(product)
+        : "",
+    );
+    setError("");
+  }, [photoIdentity]);
   function cancelDetection() {
     detection.current?.abort();
     detection.current = null;
@@ -107,19 +157,59 @@ export function ScreenImageEditor({
   }
   function close() {
     cancelDetection();
+    fitting.current?.abort();
+    fitting.current = null;
+    wallpaperSelection.current++;
     onClose();
   }
-  async function save(scope: "one" | "all", restoring = scopePrompt === "restore") {
-    if (saving || detecting) return;
+  async function save(
+    scope: "one" | "all",
+    restoring = scopePrompt === "restore",
+  ) {
+    if (fitting.current || detecting) return;
+    const controller = new AbortController();
+    const selectedPhoto = photoIdentity;
+    fitting.current = controller;
     setSaving(true);
     setError("");
     try {
-      await onSave(restoring ? null : { image: screen, box, detectedFor, fit }, scope);
+      const artwork = { image: screen, box, detectedFor, fit };
+      let plan: TvWallpaperFitPlan | undefined;
+      if (television && !restoring) {
+        const targets =
+          scope === "all" && televisions.length ? televisions : [product];
+        plan = await fitTvWallpaperTargets(targets, {
+          signal: controller.signal,
+          allowAi: allowAiFit,
+          ...(detectedFor && validScreenBox(box)
+            ? { selectedFit: { code: String(product.code), box, detectedFor } }
+            : {}),
+        });
+        if (
+          controller.signal.aborted ||
+          fitting.current !== controller ||
+          latestPhoto.current !== selectedPhoto
+        )
+          return;
+      }
+      if (plan?.fits.length) await onSave(artwork, scope, plan);
+      else if (!plan) await onSave(restoring ? null : artwork, scope);
+      if (controller.signal.aborted || fitting.current !== controller) return;
+      if (plan?.unfittedCodes.length) {
+        setError(
+          `${plan.unfittedCodes.length} · ${t("Some TV screens could not be fitted. Their existing wallpaper is unchanged. Adjust these TVs individually:")} ${plan.unfittedCodes.join(", ")}`,
+        );
+        return;
+      }
       close();
     } catch (cause) {
-      setError(cause instanceof Error ? t(cause.message) : String(cause));
+      if (!controller.signal.aborted && fitting.current === controller)
+        setError(cause instanceof Error ? t(cause.message) : String(cause));
     } finally {
-      setSaving(false);
+      if (fitting.current === controller) {
+        fitting.current = null;
+        setSaving(false);
+      }
     }
   }
   function requestSave(restoring = false) {
@@ -195,18 +285,22 @@ export function ScreenImageEditor({
     gesture.current = null;
   }
   function applyNewScreen(image: string) {
+    if (fitting.current) return;
+    wallpaperSelection.current++;
     setScreen(image);
     setFit("cover");
     setError("");
   }
   async function choose(file: File | undefined) {
-    if (!file) return;
+    if (!file || fitting.current) return;
     if (!file.type.startsWith("image/") || file.size > 12 * 1024 * 1024) {
       setError(t("Choose an image under 12 MB."));
       return;
     }
+    const selected = ++wallpaperSelection.current;
     try {
-      applyNewScreen(await readImage(file));
+      const image = await readImage(file);
+      if (selected === wallpaperSelection.current) applyNewScreen(image);
     } catch {
       setError(t("Could not read this image."));
     }
@@ -219,24 +313,52 @@ export function ScreenImageEditor({
         ? televisionScreenBox({ ...product, screenArtwork: undefined }, image)
         : defaultBox(product),
     );
-    const detected = television ? detectedTelevisionScreenBox({ ...product, screenArtwork: undefined }, image) : defaultBox(product);
+    const detected = television
+      ? detectedTelevisionScreenBox(
+          { ...product, screenArtwork: undefined },
+          image,
+        )
+      : defaultBox(product);
     setDetectedFor(detected ? screenPhotoSource(product, image) : "");
-    setError(detected ? "" : t("The screen could not be identified. Adjust the fit manually or try another photo."));
+    setError(
+      detected
+        ? ""
+        : t(
+            "The screen could not be identified. Adjust the fit manually or try another photo.",
+          ),
+    );
   }
   async function fitWithAi() {
     if (detection.current || saving) return;
-    const source = screenPhotoSource(product, imageRef.current);
+    const source = screenPhotoSource(product);
+    const selectedPhoto = photoIdentity;
     if (!source) return;
     const controller = new AbortController();
     detection.current = controller;
     setDetecting(true);
     setError("");
     try {
-      const result = await requestAi("ai-detect-screen", { image: source }, controller.signal);
-      if (controller.signal.aborted || detection.current !== controller || source !== screenPhotoSource(product, imageRef.current)) return;
-      if (!result.found || ![result.x, result.y, result.width, result.height].every(Number.isFinite) || result.x < 0 || result.y < 0 || result.width < 0.03 || result.height < 0.03 || result.x + result.width > 1 || result.y + result.height > 1)
-        throw new Error("The screen could not be identified. Adjust the fit manually or try another photo.");
-      setBox({ x: result.x, y: result.y, width: result.width, height: result.height });
+      const result = await requestAi(
+        "ai-detect-screen",
+        { image: source },
+        controller.signal,
+      );
+      if (
+        controller.signal.aborted ||
+        detection.current !== controller ||
+        latestPhoto.current !== selectedPhoto
+      )
+        return;
+      if (!result.found || !validScreenBox(result))
+        throw new Error(
+          "The screen could not be identified. Adjust the fit manually or try another photo.",
+        );
+      setBox({
+        x: result.x,
+        y: result.y,
+        width: result.width,
+        height: result.height,
+      });
       setDetectedFor(source);
     } catch (cause) {
       if (!controller.signal.aborted && detection.current === controller)
@@ -270,7 +392,7 @@ export function ScreenImageEditor({
   return (
     <Modal
       title={t(television ? "TV wallpaper" : "Image inside the screen")}
-      kicker={`${product.brand || "PRODUCT"} · ${product.code}`}
+      kicker={`${product.brand || t("PRODUCT")} · ${product.code}`}
       onClose={close}
       wide
     >
@@ -299,6 +421,7 @@ export function ScreenImageEditor({
         >
           <button
             type="button"
+            disabled={saving}
             aria-expanded={browsing}
             onClick={() => setBrowsing((current) => !current)}
           >
@@ -306,6 +429,7 @@ export function ScreenImageEditor({
             {t("Existing images")}
           </button>
           <FileUpload
+            disabled={saving}
             accept="image/*"
             aria-label={t("Upload screen picture")}
             onChange={(event) => {
@@ -317,7 +441,11 @@ export function ScreenImageEditor({
             {t("Upload screen picture")}
           </FileUpload>
           {television && (
-            <button type="button" onClick={() => setLifestyleOpen(true)}>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => setLifestyleOpen(true)}
+            >
               <svg
                 width="18"
                 height="18"
@@ -342,12 +470,10 @@ export function ScreenImageEditor({
                   <button
                     type="button"
                     key={image}
+                    disabled={saving}
                     aria-label={`${t("Use wallpaper")}: ${tv.brand || "TV"} ${tv.code}`}
                     aria-pressed={screen === image}
-                    onClick={() => {
-                      setScreen(image);
-                      setError("");
-                    }}
+                    onClick={() => applyNewScreen(image)}
                   >
                     <img src={resolveAsset(image)} alt="" draggable={false} />
                     <span>
@@ -373,10 +499,7 @@ export function ScreenImageEditor({
               <SavedImageChoices
                 settings={settings}
                 selected={screen}
-                onSelect={(asset) => {
-                  setScreen(asset.url);
-                  setError("");
-                }}
+                onSelect={(asset) => applyNewScreen(asset.url)}
               />
             </details>
           </section>
@@ -401,10 +524,25 @@ export function ScreenImageEditor({
           >
             <img
               ref={imageRef}
-              src={product.image}
+              src={screenGeometryImageUrl(screenPhotoSource(product))}
+              crossOrigin="use-credentials"
               alt={product.name}
               onLoad={(event) => {
-                if (!savedScreenBoxForPhoto(product, event.currentTarget))
+                if (detection.current || fitting.current) return;
+                if (
+                  detectedFor &&
+                  normalizeScreenPhotoSource(detectedFor) ===
+                    normalizeScreenPhotoSource(
+                      screenPhotoSource(product, event.currentTarget),
+                    )
+                )
+                  return;
+                if (
+                  !savedScreenBoxForPhoto(product, event.currentTarget) ||
+                  isDefaultScreenFallback(
+                    savedScreenBoxForPhoto(product, event.currentTarget),
+                  )
+                )
                   fitScreen(event.currentTarget);
               }}
             />
@@ -442,6 +580,7 @@ export function ScreenImageEditor({
             <label>
               {t("Image fit")}
               <SearchableSelect
+                disabled={saving}
                 aria-label={t("Screen image fit")}
                 value={fit}
                 onChange={(event) =>
@@ -460,13 +599,72 @@ export function ScreenImageEditor({
                 "Fill screen crops the image to cover the whole display. Choose Show whole image to keep every edge visible.",
               )}
             </p>
-            <Button onClick={() => fitScreen()}>{t("Fit to screen")}</Button>
-            {television && (
-              <Button disabled={detecting || saving || !screenPhotoSource(product, imageRef.current)} onClick={fitWithAi}>
-                {t(detecting ? "Finding the screen…" : "Fit screen with AI")}
-              </Button>
-            )}
-            {(detecting || saving) && <p role="status">{t(detecting ? "Finding the screen…" : "Fitting TV screens…")}</p>}
+            <section
+              className="cs-screen-fitting-panel"
+              aria-label={t(
+                television ? "Fit the wallpaper to this TV" : "Fit to screen",
+              )}
+            >
+              <div className="cs-screen-fitting-heading">
+                <EditorIcon name="screen" />
+                <div>
+                  <small>{t("Automatic fit")}</small>
+                  <h3>
+                    {t(
+                      television
+                        ? "Fit the wallpaper to this TV"
+                        : "Fit to screen",
+                    )}
+                  </h3>
+                </div>
+              </div>
+              <p>
+                {t(
+                  television
+                    ? "Each TV is fitted separately. The wallpaper stays inside the screen and below the inch label."
+                    : "Drop a picture onto the TV preview to change its wallpaper.",
+                )}
+              </p>
+              <div className="cs-screen-fitting-actions">
+                <Button
+                  tone="primary"
+                  disabled={saving}
+                  onClick={() => fitScreen()}
+                >
+                  {t("Fit to screen")}
+                </Button>
+                {television && (
+                  <Button
+                    disabled={
+                      detecting ||
+                      saving ||
+                      !screenPhotoSource(product, imageRef.current)
+                    }
+                    onClick={fitWithAi}
+                  >
+                    {t(
+                      detecting ? "Finding the screen…" : "Fit screen with AI",
+                    )}
+                  </Button>
+                )}
+              </div>
+              {(detecting || saving) && (
+                <p role="status">
+                  {t(detecting ? "Finding the screen…" : "Fitting TV screens…")}
+                </p>
+              )}
+              {television && (
+                <label className="cs-screen-ai-fit-option">
+                  <input
+                    type="checkbox"
+                    checked={allowAiFit}
+                    disabled={saving}
+                    onChange={(event) => setAllowAiFit(event.target.checked)}
+                  />
+                  {t("Use AI only when automatic screen fitting needs help")}
+                </label>
+              )}
+            </section>
             <label className="cs-screen-size-control">
               <span>
                 {t("Screen size")}{" "}
@@ -474,6 +672,7 @@ export function ScreenImageEditor({
               </span>
               <input
                 type="range"
+                disabled={saving}
                 aria-label={t("Screen size")}
                 min="20"
                 max="100"
@@ -520,6 +719,7 @@ export function ScreenImageEditor({
                     </span>
                     <input
                       type="range"
+                      disabled={saving}
                       aria-label={label}
                       min={field === "width" || field === "height" ? "3" : "0"}
                       max={field === "x" || field === "y" ? "95" : "100"}
@@ -555,14 +755,18 @@ export function ScreenImageEditor({
             <div className="cs-tv-scope-previews">
               {(televisions.length ? televisions : [product])
                 .slice(0, 4)
-                .map((tv) => (
+                .map((tv, index) => (
                   <TVWallpaperPreview
-                    key={tv.code}
+                    key={`${tv.code}-${normalizeScreenPhotoSource(screenPhotoSource(tv))}-${index}`}
                     product={tv}
                     image={scopePrompt === "restore" ? "" : screen}
                     fit={fit}
                     box={
-                      String(tv.code) === String(product.code) ? box : undefined
+                      String(tv.code) === String(product.code) &&
+                      normalizeScreenPhotoSource(screenPhotoSource(tv)) ===
+                        normalizeScreenPhotoSource(screenPhotoSource(product))
+                        ? box
+                        : undefined
                     }
                   />
                 ))}
@@ -573,9 +777,23 @@ export function ScreenImageEditor({
               )}
             </div>
             <div className="cs-tv-scope-actions">
-              <Button disabled={saving || detecting} onClick={() => setScopePrompt(null)}>{t("Back")}</Button>
-              <Button disabled={saving || detecting} onClick={() => save("one")}>{t("Only this TV")}</Button>
-              <Button disabled={saving || detecting} tone="primary" onClick={() => save("all")}>
+              <Button
+                disabled={saving || detecting}
+                onClick={() => setScopePrompt(null)}
+              >
+                {t("Back")}
+              </Button>
+              <Button
+                disabled={saving || detecting}
+                onClick={() => save("one")}
+              >
+                {t("Only this TV")}
+              </Button>
+              <Button
+                disabled={saving || detecting}
+                tone="primary"
+                onClick={() => save("all")}
+              >
                 {t("All TVs")} ({tvCount})
               </Button>
             </div>
@@ -617,12 +835,13 @@ function TVWallpaperPreview({
   const [box, setBox] = useState(
     savedScreenBoxForPhoto(product) || defaultBox(product),
   );
-  const frame = chosenBox || box;
+  const frame = chosenBox || savedScreenBoxForPhoto(product) || box;
   return (
     <figure className="cs-tv-scope-preview">
       <div>
         <img
-          src={product.image}
+          src={screenGeometryImageUrl(screenPhotoSource(product))}
+          crossOrigin="use-credentials"
           alt={product.name}
           onLoad={(event) =>
             setBox(televisionScreenBox(product, event.currentTarget))

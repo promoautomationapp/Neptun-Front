@@ -1,7 +1,14 @@
 import React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { Product } from "../../src/domain/models";
+import type * as TvWallpaperFitApi from "../../src/features/brochure/tvWallpaperFit";
 import type * as ApiClient from "../../src/api/client";
 import { ProductImageEditor } from "../../src/features/brochure/ProductImageEditor";
 import { ScreenImageEditor } from "../../src/features/brochure/ScreenImageEditor";
@@ -30,6 +37,34 @@ vi.mock("../../src/features/brochure/lifestyleImageApi", () => ({
   lifestyleQuota: api.quota,
   generateLifestyle: api.generate,
   acceptLifestyle: vi.fn(),
+}));
+vi.mock("../../src/features/brochure/tvWallpaperFit", async () => ({
+  ...(await vi.importActual<typeof TvWallpaperFitApi>(
+    "../../src/features/brochure/tvWallpaperFit",
+  )),
+  fitTvWallpaperTargets: vi.fn(
+    async (
+      products: Product[],
+      options?: {
+        selectedFit?: {
+          code: string;
+          box: { x: number; y: number; width: number; height: number };
+          detectedFor: string;
+        };
+      },
+    ) => ({
+      fits: products.map((tv) =>
+        options?.selectedFit?.code === String(tv.code)
+          ? options.selectedFit
+          : {
+              code: String(tv.code),
+              box: { x: 0.04, y: 0.08, width: 0.92, height: 0.75 },
+              detectedFor: tv.image || "",
+            },
+      ),
+      unfittedCodes: [],
+    }),
+  ),
 }));
 vi.mock("../../src/features/brochure/i18n", () => ({
   t: (text: string) => text,
@@ -102,7 +137,7 @@ it("uses a selected saved product photo immediately without starting background 
   expect(api.generate).not.toHaveBeenCalled();
 });
 
-it("reuses another TV's wallpaper with black letterboxing and keeps the explicit scope choice", () => {
+it("fills the display with a selected portrait wallpaper and keeps the explicit scope choice", async () => {
   const save = vi.fn();
   const view = render(
     <ScreenImageEditor
@@ -129,17 +164,20 @@ it("reuses another TV's wallpaper with black letterboxing and keeps the explicit
     "Replacement screen image",
   ) as HTMLImageElement;
   expect(preview.getAttribute("src")).toBe("/portrait-wallpaper.jpg");
-  expect(preview.style.objectFit).toBe("contain");
+  expect(preview.style.objectFit).toBe("cover");
   expect(preview.style.background).toBe("rgb(0, 0, 0)");
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
   expect(save).not.toHaveBeenCalled();
   fireEvent.click(view.getByRole("button", { name: "All TVs (2)" }));
-  expect(save).toHaveBeenCalledWith(
-    expect.objectContaining({
-      image: "/portrait-wallpaper.jpg",
-      fit: "contain",
-    }),
-    "all",
+  await waitFor(() =>
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: "/portrait-wallpaper.jpg",
+        fit: "cover",
+      }),
+      "all",
+      expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
+    ),
   );
   expect(api.generate).not.toHaveBeenCalled();
 });
@@ -189,12 +227,61 @@ it("fills the display with a newly uploaded wallpaper after an earlier whole-ima
     ).toBe("cover"),
   );
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
-  expect(save).toHaveBeenCalledWith(
-    expect.objectContaining({ image: "/uploaded-wallpaper.jpg", fit: "cover" }),
-    "one",
+  await waitFor(() =>
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: "/uploaded-wallpaper.jpg",
+        fit: "cover",
+      }),
+      "one",
+      expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
+    ),
   );
   expect(api.prepare).not.toHaveBeenCalled();
   expect(api.generate).not.toHaveBeenCalled();
+});
+
+it("keeps the newer wallpaper choice when an earlier upload finishes later", async () => {
+  let uploaded!: (image: string) => void;
+  api.upload.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        uploaded = resolve;
+      }),
+  );
+  const other = {
+    ...tv,
+    code: "TV-2",
+    screenArtwork: { image: "/newer-wallpaper.jpg" },
+  };
+  const view = render(
+    <ScreenImageEditor
+      product={tv}
+      televisions={[tv, other]}
+      onSave={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  );
+  fireEvent.change(view.getByLabelText("Upload screen picture"), {
+    target: {
+      files: [new File(["image"], "older.jpg", { type: "image/jpeg" })],
+    },
+  });
+  await waitFor(() => expect(api.upload).toHaveBeenCalledOnce());
+  fireEvent.click(view.getByRole("button", { name: "Existing images" }));
+  fireEvent.click(
+    view.getByRole("button", { name: "Use wallpaper: Samsung TV-2" }),
+  );
+  await act(async () => {
+    uploaded("/older-upload.jpg");
+  });
+  expect(
+    view.getByAltText("Replacement screen image").getAttribute("src"),
+  ).toBe("/newer-wallpaper.jpg");
+  expect(
+    (view.getByAltText("Replacement screen image") as HTMLImageElement).style
+      .objectFit,
+  ).toBe("cover");
 });
 
 it("fills the display when a generated wallpaper is selected", async () => {
@@ -228,12 +315,15 @@ it("fills the display when a generated wallpaper is selected", async () => {
       .objectFit,
   ).toBe("cover");
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
-  expect(save).toHaveBeenCalledWith(
-    expect.objectContaining({
-      image: "/generated-wallpaper.png",
-      fit: "cover",
-    }),
-    "one",
+  await waitFor(() =>
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image: "/generated-wallpaper.png",
+        fit: "cover",
+      }),
+      "one",
+      expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
+    ),
   );
   expect(api.generate).toHaveBeenCalledOnce();
   expect(api.prepare).not.toHaveBeenCalled();

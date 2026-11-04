@@ -1692,6 +1692,7 @@ function StandardProductCard({
         ...(onResizeCard ||
         product.brochureCardSize ||
         layout === "tv8" ||
+        layout === "balanced8" ||
         layout === "feature3"
           ? { gridColumn: `span ${size.width}`, gridRow: `span ${size.height}` }
           : {}),
@@ -3176,7 +3177,7 @@ function ProductPageContent({
         style={{
           gridTemplateRows:
             !page.products.some((item) => item.brochureCardSize) &&
-            page.layout === "tv8"
+            (page.layout === "tv8" || page.layout === "balanced8")
               ? "1fr 1.18fr 1.03fr"
               : `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`,
           ...productGridStyle(campaign, page.spacing),

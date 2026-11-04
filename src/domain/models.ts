@@ -491,6 +491,7 @@ export interface Bounds {
   bottom: number;
 }
 export interface Artwork {
+  fitVisiblePhoto?: boolean;
   imageFit?: "cover" | "contain";
   id: string;
   name?: string;

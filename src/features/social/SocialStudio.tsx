@@ -31,7 +31,10 @@ import { captureSocialPost } from "./socialExport";
 import { ProductBrandArtwork } from "../brochure/ProductBrandArtwork";
 import { getPosts, savePost, removePost, restorePost } from "./socialStorage";
 import { SocialPostCard } from "./SocialPostCard";
-import { duplicateSocialPost, socialPostDisplayName } from "./socialPostLibrary";
+import {
+  duplicateSocialPost,
+  socialPostDisplayName,
+} from "./socialPostLibrary";
 import {
   createPost,
   clearPostImagePreparation,
@@ -48,6 +51,15 @@ import {
 } from "./postModel";
 import { ProductImageEditor } from "../brochure/ProductImageEditor";
 import { ScreenImageEditor } from "../brochure/ScreenImageEditor";
+import {
+  applyTvWallpaper,
+  campaignTelevisionPhoto,
+  campaignTelevisionPhotos,
+} from "../brochure/tvWallpaper";
+import {
+  normalizeScreenPhotoSource,
+  screenPhotoSource,
+} from "../brochure/screenGeometry";
 import {
   hasEditableScreen,
   otherScreenInches,
@@ -96,7 +108,13 @@ import { NeptunWordmark } from "../brochure/NeptunWordmark";
 import { BrandLogoManager } from "../brochure/BrandLogoManager";
 import { CoverLogoPicker } from "../brochure/CoverLogoPicker";
 import { SocialBrandingPanel } from "./SocialBrandingPanel";
-import { brandingVisibility, chooseSocialBranding, socialBrandingSource, socialBrandingText as brandingText, type SocialBrandingKind } from "./socialBranding";
+import {
+  brandingVisibility,
+  chooseSocialBranding,
+  socialBrandingSource,
+  socialBrandingText as brandingText,
+  type SocialBrandingKind,
+} from "./socialBranding";
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
 import { ActionMenu } from "../brochure/ActionMenu";
 import { EditorIcon } from "../brochure/EditorIcon";
@@ -685,7 +703,9 @@ export function PostCanvas({
           maxWidth={24}
           onChange={(value) => onUpdateAsset?.("neptun", value)}
           onEdit={onEditBranding ? () => onEditBranding("neptun") : undefined}
-          onRemove={onRemoveBranding ? () => onRemoveBranding("neptun") : undefined}
+          onRemove={
+            onRemoveBranding ? () => onRemoveBranding("neptun") : undefined
+          }
           source={
             post.neptunLogoUpload ||
             (post.logoVariant === "blue"
@@ -707,7 +727,9 @@ export function PostCanvas({
           maxWidth={38}
           onChange={(value) => onUpdateAsset?.("event", value)}
           onEdit={onEditBranding ? () => onEditBranding("event") : undefined}
-          onRemove={onRemoveBranding ? () => onRemoveBranding("event") : undefined}
+          onRemove={
+            onRemoveBranding ? () => onRemoveBranding("event") : undefined
+          }
           source={
             post.eventLogoUpload ||
             (post.eventLogo === "happy-day"
@@ -733,7 +755,9 @@ export function PostCanvas({
           maxWidth={30}
           onChange={(value) => onUpdateAsset?.("custom", value)}
           onEdit={onEditBranding ? () => onEditBranding("custom") : undefined}
-          onRemove={onRemoveBranding ? () => onRemoveBranding("custom") : undefined}
+          onRemove={
+            onRemoveBranding ? () => onRemoveBranding("custom") : undefined
+          }
           source={post.customLogo}
         />
       )}
@@ -760,8 +784,14 @@ export function PostCanvas({
               source={artwork.image}
               position={artwork}
               width={artwork.width}
-              height={artwork.type === "overlay" ? artwork.height ?? 35 : undefined}
-              color={artwork.type === "overlay" ? validBackgroundColor(artwork.color) || "#1b4075" : undefined}
+              height={
+                artwork.type === "overlay" ? (artwork.height ?? 35) : undefined
+              }
+              color={
+                artwork.type === "overlay"
+                  ? validBackgroundColor(artwork.color) || "#1b4075"
+                  : undefined
+              }
               opacity={artwork.opacity}
               maxWidth={artwork.type === "overlay" ? 100 : 70}
               zIndex={30 + index}
@@ -769,7 +799,9 @@ export function PostCanvas({
               onGestureStart={() => setDraggingCanvas(true)}
               onGestureEnd={() => setDraggingCanvas(false)}
               onChange={(value) => onUpdateAsset?.(artwork.id, value)}
-              onEdit={onEditArtwork ? () => onEditArtwork(artwork.id) : undefined}
+              onEdit={
+                onEditArtwork ? () => onEditArtwork(artwork.id) : undefined
+              }
               onRemove={
                 onRemoveArtwork ? () => onRemoveArtwork(artwork.id) : undefined
               }
@@ -808,7 +840,9 @@ export function PostCanvas({
           placement={post.logoCoords?.footer}
           onChange={onPlaceBrandFooter}
           onEdit={onEditBranding ? () => onEditBranding("neptun") : undefined}
-          onRemove={onRemoveBranding ? () => onRemoveBranding("neptun") : undefined}
+          onRemove={
+            onRemoveBranding ? () => onRemoveBranding("neptun") : undefined
+          }
           style={{
             "--social-footer-logo-width": `${(19 * (post.logoScale || 100)) / 100}%`,
             height: `${(3.5 * (post.logoScale || 100)) / 100}%`,
@@ -819,7 +853,9 @@ export function PostCanvas({
           ) : (
             <NeptunWordmark dark={!isLight} />
           )}
-          {post.showLogoFooterLine !== false && <span className="social-brand-footer-line" />}
+          {post.showLogoFooterLine !== false && (
+            <span className="social-brand-footer-line" />
+          )}
         </EditableOfferBlock>
       )}
       {post.textHtml && (
@@ -1560,7 +1596,9 @@ export function SocialStudio({
   }, []);
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [postVisibility, setPostVisibility] = useState("active");
-  const [activeId, setActiveId] = useState<string | null>(initialPostId || null);
+  const [activeId, setActiveId] = useState<string | null>(
+    initialPostId || null,
+  );
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [loadRevision, setLoadRevision] = useState(0);
@@ -1577,7 +1615,9 @@ export function SocialStudio({
   const [imageLayerPicker, setImageLayerPicker] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [brandingPanel, setBrandingPanel] = useState(false);
-  const [brandingPicker, setBrandingPicker] = useState<SocialBrandingKind | {artworkId:string} | null>(null);
+  const [brandingPicker, setBrandingPicker] = useState<
+    SocialBrandingKind | { artworkId: string } | null
+  >(null);
   const [confirmDelete, setConfirmDelete] = useState<SocialPost | null>(null);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -2305,7 +2345,10 @@ export function SocialStudio({
     }
   }
   const imageProduct = post?.products.find((item) => item.code === imageCode);
-  const screenProduct = post?.products.find((item) => item.code === screenCode);
+  const screenTelevisions = post ? campaignTelevisionPhotos(post) : [];
+  const screenProduct =
+    post?.products.find((item) => item.code === screenCode) ||
+    screenTelevisions.find((item) => item.code === screenCode);
   const dims = post ? outputDimensions(post) : { width: 1080, height: 1350 };
   return (
     <div className="social-studio">
@@ -2376,9 +2419,22 @@ export function SocialStudio({
             </div>
           )}
           {exportNotice && (
-            <div className={`social-export-notice social-export-notice-${exportNotice.kind}`} role={exportNotice.kind === "error" ? "alert" : "status"}>{t(exportNotice.text)}</div>
+            <div
+              className={`social-export-notice social-export-notice-${exportNotice.kind}`}
+              role={exportNotice.kind === "error" ? "alert" : "status"}
+            >
+              {t(exportNotice.text)}
+            </div>
           )}
-          {exportReady && <a className="social-export-direct" href={exportReady.url} download={exportReady.filename}>{t("Download again")}: {exportReady.filename}</a>}
+          {exportReady && (
+            <a
+              className="social-export-direct"
+              href={exportReady.url}
+              download={exportReady.filename}
+            >
+              {t("Download again")}: {exportReady.filename}
+            </a>
+          )}
           <div className="social-post-cards">
             {visiblePosts.map((item) => (
               <SocialPostCard
@@ -2396,7 +2452,17 @@ export function SocialStudio({
           </div>
         </div>
       )}
-      {post && brandingPanel && <SocialBrandingPanel post={post} onUpdate={update} onChoose={(kind) => {setBrandingPanel(false);setBrandingPicker(kind);}} onClose={() => setBrandingPanel(false)} />}
+      {post && brandingPanel && (
+        <SocialBrandingPanel
+          post={post}
+          onUpdate={update}
+          onChoose={(kind) => {
+            setBrandingPanel(false);
+            setBrandingPicker(kind);
+          }}
+          onClose={() => setBrandingPanel(false)}
+        />
+      )}
       {post && productImagePicker && (
         <Modal
           title={t("Product images")}
@@ -2513,10 +2579,7 @@ export function SocialStudio({
                             }}
                           />
                         ) : (
-                          <img
-                            src={resolveAsset(artwork.image || "")}
-                            alt=""
-                          />
+                          <img src={resolveAsset(artwork.image || "")} alt="" />
                         )}
                         <strong>{name}</strong>
                         <div className="social-layer-settings">
@@ -2602,8 +2665,7 @@ export function SocialStudio({
                                   onChange={(event) =>
                                     changeLayer(artwork.id, {
                                       [field]: Math.max(
-                                        field === "width" ||
-                                          field === "height"
+                                        field === "width" || field === "height"
                                           ? 1
                                           : 0,
                                         Math.min(
@@ -2693,9 +2755,9 @@ export function SocialStudio({
                             aria-label={`${t("Delete")}: ${name}`}
                             onClick={() =>
                               update((draft) => {
-                                draft.artworks = (
-                                  draft.artworks || []
-                                ).filter((item) => item.id !== artwork.id);
+                                draft.artworks = (draft.artworks || []).filter(
+                                  (item) => item.id !== artwork.id,
+                                );
                               })
                             }
                           >
@@ -3603,7 +3665,14 @@ export function SocialStudio({
                       {artwork.type === "text" ? (
                         <b aria-hidden="true">T</b>
                       ) : artwork.type === "overlay" ? (
-                        <i className="social-layer-color-swatch" aria-hidden="true" style={{ backgroundColor: validBackgroundColor(artwork.color) || "#1b4075" }} />
+                        <i
+                          className="social-layer-color-swatch"
+                          aria-hidden="true"
+                          style={{
+                            backgroundColor:
+                              validBackgroundColor(artwork.color) || "#1b4075",
+                          }}
+                        />
                       ) : (
                         <img src={artwork.image} alt="" />
                       )}
@@ -3698,13 +3767,21 @@ export function SocialStudio({
                       </>
                     }
                   >
-                    <button type="button" disabled={!post.products.length} onClick={() => {
-                      if (post.products.length === 1) setImageCode(post.products[0]!.code);
-                      else setProductImagePicker(true);
-                    }}>
+                    <button
+                      type="button"
+                      disabled={!post.products.length}
+                      onClick={() => {
+                        if (post.products.length === 1)
+                          setImageCode(post.products[0]!.code);
+                        else setProductImagePicker(true);
+                      }}
+                    >
                       <EditorIcon name="image" /> {t("Change product image")}
                     </button>
-                    <button type="button" onClick={() => setImageLayerPicker(true)}>
+                    <button
+                      type="button"
+                      onClick={() => setImageLayerPicker(true)}
+                    >
                       <EditorIcon name="layers" /> {t("Add image layer")}
                     </button>
                     <button type="button" onClick={addColorLayer}>
@@ -3726,12 +3803,26 @@ export function SocialStudio({
                     <button type="button" onClick={() => setSavedImages(true)}>
                       {t("Saved logos and images")}
                     </button>
-                    <button type="button" onClick={() => setBrandingPicker("custom")}>{brandingText("Add logo or badge")}</button>
-                    <button type="button" onClick={() => setBrandingPanel(true)}>{brandingText("Manage logos and layout")}</button>
+                    <button
+                      type="button"
+                      onClick={() => setBrandingPicker("custom")}
+                    >
+                      {brandingText("Add logo or badge")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBrandingPanel(true)}
+                    >
+                      {brandingText("Manage logos and layout")}
+                    </button>
                   </ActionMenu>
                 )}
                 {!previewMode && (
-                  <button type="button" className="social-dock-action" onClick={() => setShowLayers(true)}>
+                  <button
+                    type="button"
+                    className="social-dock-action"
+                    onClick={() => setShowLayers(true)}
+                  >
                     <EditorIcon name="layers" /> {t("Layers")}
                   </button>
                 )}
@@ -3942,13 +4033,33 @@ export function SocialStudio({
               <PostCanvas
                 post={post}
                 onEditBranding={editingCanvas ? setBrandingPicker : undefined}
-                onRemoveBranding={editingCanvas ? (kind) => update((draft) => {draft[brandingVisibility[kind]]=false;}) : undefined}
-                onPlaceBrandFooter={editingCanvas ? (value) => update((draft) => {(draft.logoCoords ||= {}).footer=value;}) : undefined}
-                onEditArtwork={editingCanvas ? (artworkId) => {
-                  const artwork = post.artworks?.find((item) => item.id === artworkId);
-                  if (artwork?.type === "overlay") setShowLayers(true);
-                  else setBrandingPicker({artworkId});
-                } : undefined}
+                onRemoveBranding={
+                  editingCanvas
+                    ? (kind) =>
+                        update((draft) => {
+                          draft[brandingVisibility[kind]] = false;
+                        })
+                    : undefined
+                }
+                onPlaceBrandFooter={
+                  editingCanvas
+                    ? (value) =>
+                        update((draft) => {
+                          (draft.logoCoords ||= {}).footer = value;
+                        })
+                    : undefined
+                }
+                onEditArtwork={
+                  editingCanvas
+                    ? (artworkId) => {
+                        const artwork = post.artworks?.find(
+                          (item) => item.id === artworkId,
+                        );
+                        if (artwork?.type === "overlay") setShowLayers(true);
+                        else setBrandingPicker({ artworkId });
+                      }
+                    : undefined
+                }
                 onPlaceText={
                   !previewMode && canvasTool === "text" ? addText : undefined
                 }
@@ -4664,18 +4775,41 @@ export function SocialStudio({
           onClose={() => setImageCode(null)}
         />
       )}
-      {screenProduct && (
+      {screenProduct && post && (
         <ScreenImageEditor
-          product={screenProduct}
-          onSave={(screenArtwork) =>
+          product={campaignTelevisionPhoto(post, screenProduct)}
+          settings={settings}
+          tvCount={screenTelevisions.length}
+          televisions={screenTelevisions}
+          onSave={(screenArtwork, scope, fitPlan) =>
             update((draft: SocialPost) => {
-              const item = draft.products.find(
-                (product: Product) => product.code === screenCode,
+              if (fitPlan) {
+                const televisions = campaignTelevisionPhotos(draft);
+                if (
+                  fitPlan.fits.some(
+                    (fit) =>
+                      !televisions.some(
+                        (tv) =>
+                          String(tv.code) === fit.code &&
+                          normalizeScreenPhotoSource(screenPhotoSource(tv)) ===
+                            normalizeScreenPhotoSource(fit.detectedFor),
+                      ),
+                  )
+                )
+                  throw new Error(
+                    t(
+                      "The product photo changed while fitting. Open the screen editor again.",
+                    ),
+                  );
+              }
+              applyTvWallpaper(
+                draft,
+                screenCode || screenProduct.code,
+                screenArtwork,
+                scope,
+                fitPlan,
               );
-              if (!item) return;
-              if (screenArtwork) item.screenArtwork = screenArtwork;
-              else delete item.screenArtwork;
-            })
+            }, post.id)
           }
           onClose={() => setScreenCode(null)}
         />

@@ -1,0 +1,117 @@
+.cs-preview-viewport {
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+  max-height: max(320px, calc(100dvh - 220px));
+  overflow: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+  padding: 12px 0 20px;
+}
+.cs-page-preview .cs-preview-viewport > .cs-preview-paper {
+  width: calc(min(100cqw, 760px) * var(--brochure-preview-zoom, 1));
+  max-width: none;
+  margin-inline: auto;
+}
+/* The full-page view allocates its remaining height to the scroll viewport.
+   Keep size containment here so the paper can retain its natural page ratio. */
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)
+  > .cs-preview-viewport {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  padding: 8px;
+}
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)
+  > .cs-preview-viewport
+  > .cs-preview-paper {
+  container-type: normal;
+  display: block;
+  flex: none;
+  width: calc(
+    min(100cqw, 100cqh * var(--brochure-page-aspect, 1080 / 1350)) *
+      var(--brochure-preview-zoom, 1)
+  );
+  margin: auto;
+  padding: 0;
+}
+.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)
+  > .cs-preview-viewport
+  > .cs-preview-paper
+  > .brochure-output-page {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+}
+.cs-brochure-zoom {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: 2px;
+  padding-inline: 3px;
+  border-left: 1px solid var(--chrome-border, #dce5ed);
+  color: var(--chrome-text, #203c55);
+  font:
+    600 11px/1.2 "DM Sans",
+    Arial,
+    sans-serif;
+}
+.cs-brochure-zoom button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 30px;
+  min-height: 34px;
+  padding: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.cs-brochure-zoom button:hover {
+  background: var(--chrome-raised, #f2f6fa);
+}
+.cs-brochure-zoom button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.cs-brochure-zoom button:focus-visible {
+  outline: 2px solid var(--chrome-accent, #176fa9);
+  outline-offset: 1px;
+}
+.cs-brochure-zoom button > span {
+  font-size: 20px;
+  line-height: 1;
+}
+.cs-brochure-zoom output {
+  min-width: 37px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cs-brochure-zoom .cs-brochure-fit-page {
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .cs-brochure-zoom {
+    border-left: 0;
+    gap: 0;
+  }
+  .cs-brochure-zoom button {
+    min-width: 28px;
+    min-height: 32px;
+    padding: 5px;
+  }
+}
+@media (max-width: 620px) {
+  .cs-page-preview.view-only:not(.comment-view):not(.inline-preview)
+    > .cs-preview-viewport {
+    padding: 4px;
+  }
+}

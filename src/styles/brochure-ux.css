@@ -939,24 +939,25 @@ html[data-theme="dark"] body .cs-inline-price-editor input[type="number"] {
 }
 
 /* The reference preset preserves the printed page's generous top margin. */
-.brochure-interior.layout-tv8 .brochure-products {
+.brochure-interior:is(.layout-tv8, .layout-balanced8) .brochure-products {
   inset: 7.3% 2.25% 1.8%;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   row-gap: 5cqw;
   column-gap: 2.4cqw;
 }
-.brochure-interior.layout-tv8.with-footer .brochure-products {
+.brochure-interior:is(.layout-tv8, .layout-balanced8).with-footer
+  .brochure-products {
   bottom: 6.5%;
 }
-.brochure-interior.layout-tv8:not(.custom-card-layout)
+.brochure-interior:is(.layout-tv8, .layout-balanced8):not(.custom-card-layout)
   .brochure-products
   > article {
   grid-column: span 2;
 }
-.brochure-interior.layout-tv8:not(.custom-card-layout)
+.brochure-interior:is(.layout-tv8, .layout-balanced8):not(.custom-card-layout)
   .brochure-products
   > article:nth-child(4),
-.brochure-interior.layout-tv8:not(.custom-card-layout)
+.brochure-interior:is(.layout-tv8, .layout-balanced8):not(.custom-card-layout)
   .brochure-products
   > article:nth-child(5) {
   grid-column: span 3;
@@ -1145,7 +1146,8 @@ html[data-theme="dark"] body .cs-inline-price-editor input[type="number"] {
   background: url("/cover-backgrounds/neptun-reference-pattern.svg") center /
     100% 100%;
 }
-.brochure-interior.custom-card-layout.layout-tv8 .brochure-products {
+.brochure-interior.custom-card-layout:is(.layout-tv8, .layout-balanced8)
+  .brochure-products {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 .brochure-interior.custom-card-layout.layout-feature3 .brochure-products {

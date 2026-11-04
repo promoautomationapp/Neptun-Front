@@ -140,3 +140,69 @@ it("previews in place without opening a dialog or editing the document and retur
   ).toBe("false");
   expect(props.onUpdate).not.toHaveBeenCalled();
 });
+
+it("zooms and fits the selected page without editing the campaign or resetting canvas scroll", () => {
+  const view = render(
+    <BrochureEditor
+      {...props}
+      campaign={{
+        ...campaign,
+        products: [
+          { code: "cover", name: "Cover offer", brochurePage: 1 },
+          { code: "inside", name: "Interior offer", brochurePage: 2 },
+        ],
+      }}
+    />,
+  );
+  const picker = view.getByRole("combobox", { name: "Go to page" });
+  fireEvent.change(picker, { target: { value: "0" } });
+  const zoom = within(view.getByRole("group", { name: "Brochure zoom" }));
+  const viewport = view.container.querySelector<HTMLElement>(
+    ".cs-preview-viewport",
+  )!;
+  const paper = view.container.querySelector<HTMLElement>(".cs-preview-paper")!;
+  const pagePreview =
+    view.container.querySelector<HTMLElement>(".cs-page-preview")!;
+  viewport.scrollLeft = 19;
+  viewport.scrollTop = 37;
+  fireEvent.click(zoom.getByRole("button", { name: "Zoom in" }));
+  expect(zoom.getByRole("status").textContent).toBe("125%");
+  expect(pagePreview.style.getPropertyValue("--brochure-preview-zoom")).toBe(
+    "1.25",
+  );
+  expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([19, 37]);
+  expect((picker as HTMLSelectElement).value).toBe("0");
+  fireEvent.click(zoom.getByRole("button", { name: "Zoom out" }));
+  expect(zoom.getByRole("status").textContent).toBe("100%");
+  for (let index = 0; index < 3; index++)
+    fireEvent.click(zoom.getByRole("button", { name: "Zoom out" }));
+  expect(zoom.getByRole("button", { name: "Zoom out" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  Object.defineProperty(viewport, "clientWidth", {
+    configurable: true,
+    value: 800,
+  });
+  vi.spyOn(viewport, "getBoundingClientRect").mockReturnValue(
+    new DOMRect(0, 80, 800, 600),
+  );
+  vi.spyOn(paper, "getBoundingClientRect").mockReturnValue(
+    new DOMRect(0, 80, 200, 250),
+  );
+  fireEvent.click(zoom.getByRole("button", { name: "Fit page" }));
+  const expected = Math.round(
+    Math.min(
+      4,
+      (Math.min(
+        Math.max(320, window.innerHeight - 220),
+        window.innerHeight - 104,
+      ) -
+        32) /
+        250,
+    ) * 25,
+  );
+  expect(zoom.getByRole("status").textContent).toBe(`${expected}%`);
+  expect((picker as HTMLSelectElement).value).toBe("0");
+  expect(props.onUpdate).not.toHaveBeenCalled();
+});
