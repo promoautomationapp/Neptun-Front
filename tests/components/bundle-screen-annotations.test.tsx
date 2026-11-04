@@ -176,7 +176,7 @@ it("uses the existing phone corner and other screen artwork for non-Apple member
   const label = bundleScreenAnnotationPlacement(phone, image, container)!;
   expect(label.type).toBe("phone");
   expect(label.inches).toBe(6.3);
-  expect(label.style.width).toBe(75);
+  expect(label.style.width).toBe(22.5);
   const laptop: Product = {
     code: "laptop",
     name: "LAPTOP LENOVO",

@@ -18,6 +18,8 @@ const IMAGE_PREPARATION_FIELDS = [
   "aiAnnotationStyle",
   "aiPreparedScreenInches",
   "aiBackgroundSignature",
+  "aiCutoutValidated",
+  "aiCutoutValidationVersion",
   "aiReviewedImageSource",
   "aiReviewedPreparationRevision",
   "aiReviewedBackgroundSignature",
@@ -293,11 +295,15 @@ export function productForPost(product: Product): Product {
         ].filter((item) => typeof item === "string"),
       ),
     ],
-    cutoutStatus: product.aiOriginalImage
-      ? "done"
-      : product.skipAiCutout || product.aiReviewedImageSource === product.image
-        ? "skipped"
-        : "new",
+    cutoutStatus:
+      product.aiOriginalImage &&
+      product.aiCutoutValidated === true &&
+      (product.aiCutoutValidationVersion ?? 0) >= 1
+        ? "done"
+        : product.skipAiCutout ||
+            product.aiReviewedImageSource === product.image
+          ? "skipped"
+          : "new",
     skipAiCutout: Boolean(
       product.skipAiCutout || product.aiReviewedImageSource === product.image,
     ),

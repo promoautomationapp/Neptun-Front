@@ -21,6 +21,8 @@ function campaign(): Campaign {
         name: "Prepared fridge",
         image: "/fridge.png",
         aiOriginalImage: "/fridge.jpg",
+        aiCutoutValidated: true,
+        aiCutoutValidationVersion: 1,
       },
       {
         code: "skipped",
@@ -39,6 +41,8 @@ function campaign(): Campaign {
             name: "Set phone",
             image: "/phone.png",
             aiOriginalImage: "/phone.jpg",
+            aiCutoutValidated: true,
+            aiCutoutValidationVersion: 1,
           },
         ],
       },

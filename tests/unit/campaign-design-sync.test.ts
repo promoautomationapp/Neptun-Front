@@ -33,7 +33,7 @@ it("preserves source choice and all placement data when a cutout returns or is r
   const draft = structuredClone(campaign);
   const target = productImagePreparationTargets(draft)[0]!;
   expect(target.request.provider).toBe("openai");
-  expect(applyPreparedProductPhoto(draft, target, {image: "/prepared.png", provider: "openai", preparationRevision: 3, backgroundSignature: target.backgroundSignature})).toBe(true);
+  expect(applyPreparedProductPhoto(draft, target, {cutoutValidated: true, cutoutValidationVersion: 1, image: "/prepared.png", provider: "openai", preparationRevision: 3, backgroundSignature: target.backgroundSignature})).toBe(true);
   expect(draft.products[0]?.brochureImagePlacement).toEqual(product.brochureImagePlacement);
   expect(retainPreparedProductPhoto(draft.products[0], product).image).toBe("/prepared.png");
   expect(applyPreparedProductPhoto(draft, target, {image: "/late.png"})).toBe(false);
@@ -45,7 +45,7 @@ it("deduplicates background work and limits simultaneous preparation across impo
   const releases: Array<() => void> = [];
   const queue = createProductImagePreparationQueue({orientation: async () => "square", inspect: async source => source, prepare: async () => {
     calls++; maximum = Math.max(maximum, ++running);
-    await new Promise<void>(resolve => releases.push(resolve)); running--; return {image: "/prepared.png"};
+    await new Promise<void>(resolve => releases.push(resolve)); running--; return {cutoutValidated: true, cutoutValidationVersion: 1, image: "/prepared.png"};
   }});
   const targets = productImagePreparationTargets({...campaign, products: [product, {...product, code: "two"}, {...product, code: "three"}]});
   const jobs = targets.map(target => queue.enqueue(target, () => {}));
@@ -65,7 +65,7 @@ it("keeps original photos available after uncertain work and continues with the 
   const queue = createProductImagePreparationQueue({concurrency: 1, orientation: async () => "square", inspect: async source => source, prepare: async body => {
     expect(body.orientation).toBe("square");
     if (++calls === 1) throw new Error("Provider response uncertain");
-    return {image: "/prepared.png"};
+    return {cutoutValidated: true, cutoutValidationVersion: 1, image: "/prepared.png"};
   }});
   const targets = productImagePreparationTargets({...campaign, products: [product, {...product, code: "next"}]});
   const outcomes = await Promise.all(targets.map(target => queue.enqueue(target, apply, {onPhase: phase => phases.push(phase)})));
@@ -77,7 +77,7 @@ it("keeps original photos available after uncertain work and continues with the 
 });
 
 it("distinguishes a save error from failure to prepare an image", async () => {
-  const queue = createProductImagePreparationQueue({orientation: async () => "square", inspect: async source => source, prepare: async () => ({image: "/prepared.png"})});
+  const queue = createProductImagePreparationQueue({orientation: async () => "square", inspect: async source => source, prepare: async () => ({cutoutValidated: true, cutoutValidationVersion: 1, image: "/prepared.png"})});
   const target = productImagePreparationTargets(campaign)[0]!;
   const outcome = await queue.enqueue(target, () => {throw new Error("Could not save");});
   expect(outcome).toMatchObject({ok: false, usingOriginal: false});

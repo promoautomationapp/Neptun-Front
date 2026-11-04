@@ -32,6 +32,8 @@ it("applying an already available replacement keeps wallpaper but removes geomet
         label: "TV",
         original: "/original.png",
         suggested: "/prepared.png",
+        aiCutoutValidated: true,
+        aiCutoutValidationVersion: 1,
         approved: true,
       },
     ]),
@@ -77,6 +79,8 @@ it("unchanged available photos preserve manual fitting and declining a replaceme
       original: "/original.png",
       expectedImage: "/prepared.png",
       suggested: "/prepared.png",
+      aiCutoutValidated: true,
+      aiCutoutValidationVersion: 1,
       approved: false,
     },
   ]);

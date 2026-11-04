@@ -15,6 +15,8 @@ const product: Product = {
   name: "Televizor Samsung",
   image: "/api/assets/prepared",
   aiOriginalImage: "/api/assets/original",
+  aiCutoutValidated: true,
+  aiCutoutValidationVersion: 1,
 };
 const campaign = (): Campaign => ({
   id: "review",
@@ -32,7 +34,7 @@ const items = (draft: Campaign) =>
     specs: true,
   }).items;
 describe("invisible persisted AI reuse", () => {
-  it("keeps approved legacy cutouts, including after serialization and a background change", () => {
+  it("keeps validated cutouts, including after serialization and a background change", () => {
     const restored = JSON.parse(JSON.stringify(product)) as Product;
     expect(
       needsImagePreparation(restored, { kind: "solid", color: "#112233" }),
@@ -53,10 +55,32 @@ describe("invisible persisted AI reuse", () => {
       false,
     );
   });
+  it("does not treat an old generated file or a reviewed filename as verified background removal", () => {
+    const unverified = {
+      ...product,
+      aiCutoutValidated: undefined,
+      aiCutoutValidationVersion: undefined,
+      aiReviewedImageSource: product.image,
+    };
+    expect(needsImagePreparation(unverified)).toBe(true);
+    expect(
+      needsImagePreparation({ ...unverified, aiCutoutValidated: true }),
+    ).toBe(true);
+  });
   it("reuses checked modern images after background, provider and display revision changes", () => {
-    const checked = {...product, aiPreparationRevision: 2, aiBackgroundSignature: "previous-background", aiCutoutProvider: "openai", aiAnnotationStyle: "external-tv-corner"};
-    expect(needsImagePreparation(checked, {kind: "solid", color: "#ffffff"})).toBe(false);
-    expect(needsImagePreparation(checked, undefined, {force:true})).toBe(true);
+    const checked = {
+      ...product,
+      aiPreparationRevision: 2,
+      aiBackgroundSignature: "previous-background",
+      aiCutoutProvider: "openai",
+      aiAnnotationStyle: "external-tv-corner",
+    };
+    expect(
+      needsImagePreparation(checked, { kind: "solid", color: "#ffffff" }),
+    ).toBe(false);
+    expect(needsImagePreparation(checked, undefined, { force: true })).toBe(
+      true,
+    );
   });
   it("persists checked text with no corrections and only rechecks changed fields", () => {
     const draft = campaign();

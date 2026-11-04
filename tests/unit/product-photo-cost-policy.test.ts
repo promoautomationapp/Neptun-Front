@@ -19,6 +19,40 @@ const campaign = (...codes: string[]): Campaign => ({
   })),
 });
 
+it("refuses an unverified output before changing the document and continues with the next photo", async () => {
+  const draft = campaign("bad", "good");
+  const targets = productImagePreparationTargets(draft);
+  const original = structuredClone(draft);
+  expect(() =>
+    applyPreparedProductPhoto(draft, targets[0]!, { image: "/unverified.png" }),
+  ).toThrow("could not be verified");
+  expect(draft).toEqual(original);
+  const save = vi.fn();
+  const queue = createProductImagePreparationQueue({
+    concurrency: 1,
+    orientation: async () => "square",
+    inspect: async (image) => image,
+    prepare: async (body) =>
+      body.image === "/bad.png"
+        ? {
+            image: "/opaque.png",
+            cutoutValidated: false,
+            cutoutValidationVersion: 0,
+          }
+        : {
+            image: "/verified.png",
+            cutoutValidated: true,
+            cutoutValidationVersion: 1,
+          },
+  });
+  const outcomes = await Promise.all(
+    targets.map((target) => queue.enqueue(target, save)),
+  );
+  expect(outcomes.map(({ ok }) => ok)).toEqual([false, true]);
+  expect(save).toHaveBeenCalledOnce();
+  expect(targets.every((target) => !queue.hasTarget(target))).toBe(true);
+});
+
 it("does not inspect or purchase an obsolete waiting photo and continues with the next job", async () => {
   const draft = campaign("first", "accepted", "last");
   const targets = productImagePreparationTargets(draft);
@@ -29,7 +63,11 @@ it("does not inspect or purchase an obsolete waiting photo and continues with th
   const orientation = vi.fn(async () => "square");
   const prepare = vi.fn(async (body: { image: string }) => {
     if (body.image === "/first.png") await first;
-    return { image: "/cutout.png" };
+    return {
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      image: "/cutout.png",
+    };
   });
   const queue = createProductImagePreparationQueue({
     concurrency: 1,
@@ -64,7 +102,11 @@ it("rechecks a photo after source inspection before purchasing its cutout", asyn
   const draft = campaign("changed");
   const target = productImagePreparationTargets(draft)[0]!;
   let inspected!: (orientation: string) => void;
-  const prepare = vi.fn(async () => ({ image: "/cutout.png" }));
+  const prepare = vi.fn(async () => ({
+    cutoutValidated: true,
+    cutoutValidationVersion: 1,
+    image: "/cutout.png",
+  }));
   const apply = vi.fn();
   const queue = createProductImagePreparationQueue({
     orientation: () =>
@@ -106,7 +148,11 @@ it("keeps a paid cutout after a background change but rejects a changed source o
   changedSource.products[0]!.aiOriginalImage = "/different-original.png";
   expect(currentProductPhotoTarget(changedSource, target)).toBeNull();
   expect(
-    applyPreparedProductPhoto(draft, target, { image: "/paid-cutout.png" }),
+    applyPreparedProductPhoto(draft, target, {
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      image: "/paid-cutout.png",
+    }),
   ).toBe(true);
   expect(draft.products[0]?.image).toBe("/paid-cutout.png");
   expect(productImagePreparationTargets(draft)).toEqual([]);
@@ -119,7 +165,11 @@ it("does not announce a ready photo when the apply callback rejects the result",
   const queue = createProductImagePreparationQueue({
     concurrency: 1,
     orientation: async () => "square",
-    prepare: async () => ({ image: "/cutout.png" }),
+    prepare: async () => ({
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      image: "/cutout.png",
+    }),
     inspect: async (source) => source,
   });
   const rejected = queue.enqueue(targets[0]!, async () => false);
@@ -144,7 +194,11 @@ it("prioritizes explicit waiting selections in order and cancels only unstarted 
     prepare: async (body) => {
       order.push(body.image);
       if (body.image === "/running.png") await running;
-      return { image: "/cutout.png" };
+      return {
+        cutoutValidated: true,
+        cutoutValidationVersion: 1,
+        image: "/cutout.png",
+      };
     },
   });
   const jobs = targets.map((target, index) =>

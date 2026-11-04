@@ -121,7 +121,7 @@ export function ProductPhotoRepair({
             "Choose the photos that need background removal or a better cutout. Each replacement is saved when it is ready.",
           )}{" "}
           {t(
-            "AI starts only for selected photos. Saved results are reused when available.",
+            "Only selected photos are sent to AI. Repeating background removal replaces the previous result and may use credits.",
           )}
         </p>
         {queuedCount > 0 && (

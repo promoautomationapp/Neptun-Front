@@ -50,14 +50,14 @@ export function BrochureZoomControls() {
     const bounds = paper.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
     const availableHeight = Math.min(
-      Math.max(320, window.innerHeight - 220),
+      Math.max(320, window.innerHeight - 150),
       window.innerHeight -
         Math.max(0, canvasViewport.getBoundingClientRect().top) -
         24,
     );
     const factor = Math.min(
       canvasViewport.clientWidth / bounds.width,
-      Math.max(1, availableHeight - 32) / bounds.height,
+      Math.max(1, availableHeight - 4) / bounds.height,
     );
     changeZoom(zoom * factor);
   }

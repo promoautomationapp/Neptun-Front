@@ -255,6 +255,8 @@ it("reuses an unconfirmed regeneration command ID and original output size on ma
     image: "/unconfirmed-regeneration",
     orientation: "portrait",
     retry: true,
+    regenerate: true,
+    rejectedImage: "/bad-previous-result",
   });
   const rejected = expect(first).rejects.toMatchObject({
     code: "AI_REQUEST_UNCONFIRMED",
@@ -275,6 +277,8 @@ it("reuses an unconfirmed regeneration command ID and original output size on ma
     image: "/unconfirmed-regeneration",
     orientation: "square",
     retry: true,
+    regenerate: true,
+    rejectedImage: "/bad-previous-result",
   });
   await vi.advanceTimersByTimeAsync(1200);
   expect(await retry).toEqual({ image: "/api/assets/safe-retry" });
@@ -284,6 +288,10 @@ it("reuses an unconfirmed regeneration command ID and original output size on ma
   expect(posts).toHaveLength(5);
   for (const post of posts) expect(post[2]?.body).toEqual(originalBody);
   expect(originalBody.orientation).toBe("portrait");
+  expect(originalBody).toMatchObject({
+    regenerate: true,
+    rejectedImage: "/bad-previous-result",
+  });
   api.mockResolvedValueOnce({
     status: "succeeded",
     result: { image: "/api/assets/new-version" },
@@ -292,6 +300,8 @@ it("reuses an unconfirmed regeneration command ID and original output size on ma
     image: "/unconfirmed-regeneration",
     orientation: "portrait",
     retry: true,
+    regenerate: true,
+    rejectedImage: "/bad-previous-result",
   });
   expect(
     (api.mock.calls.at(-1)?.[2]?.body as Record<string, unknown>).commandId,

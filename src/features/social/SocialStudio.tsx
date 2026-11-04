@@ -4756,7 +4756,11 @@ export function SocialStudio({
               item.aiOriginalImage = aiOriginalImage;
               Object.assign(item, preparationMetadata);
               item.skipAiCutout = skipAiCutout;
-              item.cutoutStatus = skipAiCutout ? "skipped" : "done";
+              item.cutoutStatus = skipAiCutout
+                ? "skipped"
+                : preparationMetadata.aiCutoutValidated
+                  ? "done"
+                  : "pending";
               item.imageChoices = [
                 ...new Set(
                   [image, ...(item.imageChoices || [])].filter(

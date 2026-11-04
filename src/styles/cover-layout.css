@@ -1,4 +1,3 @@
-/* Cover offers use one fixed row for copy and price, like the printed flyer. */
 .brochure-page.brochure-cover {
   color: #fff;
 }
@@ -7,12 +6,18 @@
   overflow: hidden;
 }
 .brochure-cover .cover-feature-products .brochure-product-image-wrap,
-.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-image-wrap {
+.brochure-cover
+  .cover-feature-products
+  .brochure-product.style-compact
+  .brochure-product-image-wrap {
   height: calc(100% - 18.5cqw);
   overflow: hidden;
 }
 .brochure-cover .cover-feature-products.triple .brochure-product-image-wrap,
-.brochure-cover .cover-feature-products.triple .brochure-product.style-compact .brochure-product-image-wrap {
+.brochure-cover
+  .cover-feature-products.triple
+  .brochure-product.style-compact
+  .brochure-product-image-wrap {
   height: calc(100% - 20.5cqw);
 }
 .brochure-cover .cover-feature-products .brochure-product-image {
@@ -21,7 +26,10 @@
   max-width: 88%;
   max-height: 88%;
 }
-.brochure-cover .cover-feature-products .brochure-product.has-screen-annotation .brochure-product-image {
+.brochure-cover
+  .cover-feature-products
+  .brochure-product.has-screen-annotation
+  .brochure-product-image {
   width: 80%;
   height: 80%;
   max-width: 80%;
@@ -29,7 +37,10 @@
 }
 .brochure-cover .cover-feature-products .brochure-product-bottom,
 .brochure-cover .cover-feature-products.triple .brochure-product-bottom,
-.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-bottom {
+.brochure-cover
+  .cover-feature-products
+  .brochure-product.style-compact
+  .brochure-product-bottom {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
@@ -66,7 +77,10 @@
   margin-left: auto;
 }
 .brochure-cover .cover-feature-products .brochure-price-sale,
-.brochure-cover .cover-feature-products .brochure-price.light .brochure-price-sale {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.light
+  .brochure-price-sale {
   padding-inline: 0.5cqw;
   gap: 0.25cqw;
 }
@@ -79,30 +93,74 @@
   font-size: 3cqw;
   letter-spacing: -0.03em;
 }
-.brochure-cover .cover-feature-products .brochure-price.compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.compact
+  .brochure-price-sale
+  strong {
   font-size: 2.6cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.extra-compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.extra-compact
+  .brochure-price-sale
+  strong {
   font-size: 2.25cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-price-sale strong,
-.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-card
+  .brochure-price-sale
+  strong,
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-compact
+  .brochure-price-sale
+  strong {
   font-size: 2.35cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.style-card.compact .brochure-price-sale strong,
-.brochure-cover .cover-feature-products .brochure-price.style-compact.compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-card.compact
+  .brochure-price-sale
+  strong,
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-compact.compact
+  .brochure-price-sale
+  strong {
   font-size: 2.1cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.style-card.extra-compact .brochure-price-sale strong,
-.brochure-cover .cover-feature-products .brochure-price.style-compact.extra-compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-card.extra-compact
+  .brochure-price-sale
+  strong,
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-compact.extra-compact
+  .brochure-price-sale
+  strong {
   font-size: 1.8cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-happy-mark,
-.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-happy-mark {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-card
+  .brochure-happy-mark,
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-compact
+  .brochure-happy-mark {
   width: 3.25cqw;
 }
-.brochure-cover .cover-feature-products .brochure-price.style-card .brochure-happy-label,
-.brochure-cover .cover-feature-products .brochure-price.style-compact .brochure-happy-label {
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-card
+  .brochure-happy-label,
+.brochure-cover
+  .cover-feature-products
+  .brochure-price.style-compact
+  .brochure-happy-label {
   font-size: 0.9cqw;
 }
 .brochure-cover .cover-feature-products .brochure-specs,
@@ -112,10 +170,16 @@
   height: 6cqw;
   min-height: 6cqw;
 }
-.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-product-bottom {
+.brochure-cover
+  .cover-feature-products
+  .brochure-product.style-compact
+  .brochure-product-bottom {
   order: 1;
 }
-.brochure-cover .cover-feature-products .brochure-product.style-compact .brochure-specs {
+.brochure-cover
+  .cover-feature-products
+  .brochure-product.style-compact
+  .brochure-specs {
   order: 2;
 }
 .brochure-cover .cover-feature-products:not(.triple) .brochure-price {
@@ -123,11 +187,22 @@
   width: 22cqw;
   max-width: 48%;
 }
-.brochure-cover .cover-feature-products:not(.triple) .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products:not(.triple)
+  .brochure-price-sale
+  strong {
   font-size: 3.65cqw;
 }
-.brochure-cover .cover-feature-products:not(.triple) .brochure-price.style-card .brochure-price-sale strong,
-.brochure-cover .cover-feature-products:not(.triple) .brochure-price.style-compact .brochure-price-sale strong {
+.brochure-cover
+  .cover-feature-products:not(.triple)
+  .brochure-price.style-card
+  .brochure-price-sale
+  strong,
+.brochure-cover
+  .cover-feature-products:not(.triple)
+  .brochure-price.style-compact
+  .brochure-price-sale
+  strong {
   font-size: 2.8cqw;
 }
 
@@ -136,16 +211,26 @@
    complete product a larger slot without enlarging or cropping its pixels.
    Blue and Apple prices keep their original flow and artwork geometry;
    saved content positions continue to use their separate layout. */
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-image-wrap,
-.brochure-page.cover-editable-elements .cover-product-frame > .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-image-wrap {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-image-wrap,
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-image-wrap {
   flex: 1 1 auto;
   height: auto;
   min-height: 0;
   order: 0;
   z-index: 1;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-bottom,
-.brochure-page.cover-editable-elements .cover-product-frame > .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-bottom {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom,
+.brochure-page.cover-editable-elements
+  .cover-product-frame
+  > .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom {
   position: relative;
   z-index: 2;
   flex: none;
@@ -154,30 +239,76 @@
   min-height: 0;
   margin-top: 0;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-bottom > .brochure-product-copy {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom
+  > .brochure-product-copy {
   flex: 0 0 57%;
   width: 57%;
   max-width: 57%;
-  padding-bottom: .8cqw;
+  padding-bottom: 0.8cqw;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-product-bottom > .brochure-price {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-product-bottom
+  > .brochure-price {
   position: absolute;
   bottom: 0;
   right: 0;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] > .brochure-specs {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  > .brochure-specs {
   order: 3;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"] .brochure-product-image {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"]
+  .brochure-product-image {
   width: 96%;
   max-width: 96%;
   height: 100%;
   max-height: 100%;
   object-fit: contain;
 }
-.brochure-page .brochure-product.red-reference-offer[data-default-layout="true"].has-screen-annotation .brochure-product-image {
+.brochure-page
+  .brochure-product.red-reference-offer[data-default-layout="true"].has-screen-annotation
+  .brochure-product-image {
   width: 86%;
   max-width: 86%;
   height: 86%;
   max-height: 86%;
+}
+
+/* Give the automatic wide cover offer the available photo height and center
+   its feature row. Saved content placements keep their original geometry. */
+.brochure-page.brochure-cover.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product[data-cover-card-default="true"]
+  > .brochure-specs[data-detail-layout="strip"] {
+  justify-content: center;
+}
+.brochure-page.brochure-cover.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product[data-cover-card-default="true"]
+  > .brochure-product-image-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+.brochure-page.brochure-cover.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product[data-cover-card-default="true"]
+  > .brochure-product-bottom {
+  height: 6.5cqw;
+  min-height: 6.5cqw;
+}
+.brochure-page.brochure-cover.cover-editable-elements
+  .cover-featured-product
+  > .brochure-product[data-cover-card-default="true"]
+  .brochure-product-image {
+  height: 112%;
+  max-height: 112%;
+  width: 100%;
+  max-width: 100%;
 }

@@ -27,6 +27,12 @@ export const TV_ANNOTATION_DEFAULT_SCALE = 0.9;
 export const TV_ANNOTATION_INSET_PX = 2;
 export const SCREEN_ANNOTATION_CANONICAL_WIDTH = 1080;
 export const PHONE_ANNOTATION_IMAGE_WIDTH = 0.25;
+// Compound front/back photos can be much wider than one handset. Limit the
+// corner by the visible height so adding a rear view does not enlarge it.
+export const PHONE_ANNOTATION_IMAGE_HEIGHT = 0.15;
+const otherAnnotationWidthRatio = 0.2147013;
+const otherAnnotationHeightRatio = 0.3067161428571429;
+const otherAnnotationGapRatio = 2 / 85.88052;
 const canonicalInset =
   (TV_ANNOTATION_INSET_PX / SCREEN_ANNOTATION_CANONICAL_WIDTH) * 100;
 
@@ -97,7 +103,7 @@ export function usesPhoneCornerAnnotation(product: Partial<Product>): boolean {
 export function phoneAnnotationBaseBox(photo: AnnotationBox): AnnotationBox {
   const side = Math.min(
     photo.width * PHONE_ANNOTATION_IMAGE_WIDTH,
-    photo.height,
+    photo.height * PHONE_ANNOTATION_IMAGE_HEIGHT,
   );
   return {
     left: photo.left + photo.width - side,
@@ -107,14 +113,20 @@ export function phoneAnnotationBaseBox(photo: AnnotationBox): AnnotationBox {
   };
 }
 
-/** Keep the tablet/laptop guide beside the visible photo, including cutout margins.
- * The vertical arrow is at x=33.3869 in the native 67.1693-wide artwork. */
+/** Keep the tablet/laptop guide beside and proportional to the visible photo.
+ * Ratios retain the reference guide beside a 400 × 280 photo and shrink it
+ * with small inset photos. The arrow is at x=33.3869 in the native artwork.
+ * The optional page width remains accepted for existing callers; it no longer
+ * determines the photo's annotation size. Manual placement stays in page cqw. */
 export function otherScreenAnnotationBaseBox(
   photo: AnnotationBox,
-  pageWidth: number,
+  _pageWidth?: number,
 ): AnnotationBox {
-  const width = pageWidth * 0.079519;
-  const gap = (pageWidth * 2) / SCREEN_ANNOTATION_CANONICAL_WIDTH;
+  const width = Math.min(
+    photo.width * otherAnnotationWidthRatio,
+    photo.height * otherAnnotationHeightRatio,
+  );
+  const gap = width * otherAnnotationGapRatio;
   return {
     left:
       photo.left + photo.width + gap - width * (33.3868950515 / 67.1693479534),

@@ -17,6 +17,8 @@ const metadataFields = [
   "aiPreparationRevision",
   "aiBackgroundSignature",
   "aiCutoutProvider",
+  "aiCutoutValidated",
+  "aiCutoutValidationVersion",
   "aiAnnotationCleanup",
   "aiCutoutReviewRevision",
   "aiCutoutReviewAccepted",
@@ -100,7 +102,11 @@ export function retainPreparedProductPhoto(
     return replaced;
   }
   if (
-    !previous.aiOriginalImage &&
+    !(
+      previous.aiOriginalImage &&
+      previous.aiCutoutValidated === true &&
+      (previous.aiCutoutValidationVersion ?? 0) >= 1
+    ) &&
     !previous.skipAiCutout &&
     previous.aiReviewedImageSource !== previous.image
   )
@@ -134,6 +140,8 @@ export function productImagePreparationTargets(
       const request = buildImagePreparationRequest(product, {
         backgroundContext,
         retry: options.force,
+        regenerate: options.force,
+        rejectedImage: options.force ? product.image : undefined,
         instructions: options.instructions,
       });
       const target = {
@@ -209,6 +217,8 @@ export function currentProductPhotoTarget(
       buildImagePreparationRequest(product, {
         backgroundContext,
         retry: target.force,
+        regenerate: target.force,
+        rejectedImage: target.request.rejectedImage,
         instructions: target.request.instructions,
       }),
     ) !== requestIdentity(target.request) ||
@@ -225,11 +235,12 @@ export function applyPreparedProductPhoto(
 ) {
   const current = currentProductPhotoTarget(campaign, target);
   if (!current || !result.image) return false;
+  const metadata = imagePreparationMetadata(result);
   const { offer, product } = current;
   product.aiOriginalImage ||= target.source;
   product.image = result.image;
   product.skipAiCutout = false;
-  Object.assign(product, imagePreparationMetadata(result));
+  Object.assign(product, metadata);
   for (const field of [
     "aiReviewedImageSource",
     "aiReviewedPreparationRevision",
@@ -252,7 +263,7 @@ export function applyPreparedProductPhoto(
       offer.image = result.image;
       offer.aiOriginalImage ||= target.source;
       offer.skipAiCutout = false;
-      Object.assign(offer, imagePreparationMetadata(result));
+      Object.assign(offer, metadata);
     }
   }
   return true;
@@ -312,6 +323,8 @@ export function createProductImagePreparationQueue({
           Object.entries(target.request).filter(
             ([key]) =>
               key !== "retry" &&
+              key !== "regenerate" &&
+              key !== "rejectedImage" &&
               key !== "instructions" &&
               key !== "backgroundContext",
           ),
@@ -348,6 +361,7 @@ export function createProductImagePreparationQueue({
           );
           if (!result.image)
             throw new Error("Could not prepare this product photo.");
+          imagePreparationMetadata(result);
           result.image = await inspect(result.image);
           prepared = true;
           job.onPhase?.("saving");

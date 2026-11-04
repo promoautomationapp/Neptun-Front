@@ -17,6 +17,8 @@ const campaign: Campaign = {
       name: "Prepared TV",
       image: "/prepared.png",
       aiOriginalImage: "/source.png",
+      aiCutoutValidated: true,
+      aiCutoutValidationVersion: 1,
     },
     {
       code: "skipped",
@@ -43,9 +45,15 @@ it("only forces selected photos, retains their original sources, and rejects a l
   });
   expect(currentProductPhotoTarget(draft, target)).toBeTruthy();
   expect(
-    applyPreparedProductPhoto(draft, target, { image: "/phone-cutout.png" }),
+    applyPreparedProductPhoto(draft, target, {
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      image: "/phone-cutout.png",
+    }),
   ).toBe(true);
   expect(draft.products[1]).toMatchObject({
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
     image: "/phone-cutout.png",
     aiOriginalImage: "/phone.jpg",
     skipAiCutout: false,
@@ -66,7 +74,11 @@ it("recognizes another queued request for the same photo even when repair instru
     name: "Campaign",
     products: [{ code: "tv", name: "TV", image: "/source.png" }],
   };
-  let resolve!: (value: { image: string }) => void;
+  let resolve!: (value: {
+    image: string;
+    cutoutValidated?: boolean;
+    cutoutValidationVersion?: number;
+  }) => void;
   const prepare = vi.fn(
     () =>
       new Promise<{ image: string }>((done) => {
@@ -88,7 +100,11 @@ it("recognizes another queued request for the same photo even when repair instru
   expect(queue.hasTarget(manual)).toBe(true);
   expect(queue.enqueue(manual, () => {})).toBe(job);
   await Promise.resolve();
-  resolve({ image: "/cutout.png" });
+  resolve({
+    cutoutValidated: true,
+    cutoutValidationVersion: 1,
+    image: "/cutout.png",
+  });
   await job;
   expect(queue.hasTarget(manual)).toBe(false);
   expect(prepare).toHaveBeenCalledOnce();

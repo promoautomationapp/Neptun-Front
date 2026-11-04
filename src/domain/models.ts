@@ -409,6 +409,8 @@ export interface Product {
   aiAnnotationStyle?: string;
   aiBackgroundSignature?: string;
   aiCutoutProvider?: string;
+  aiCutoutValidated?: boolean;
+  aiCutoutValidationVersion?: number;
   aiAnnotationCleanup?: boolean;
   aiCutoutReviewRevision?: number;
   aiCutoutReviewAccepted?: boolean;

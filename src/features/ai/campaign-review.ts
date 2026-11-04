@@ -150,6 +150,11 @@ export function startCampaignAiReview(
             backgroundContext: productImageBackgroundContext(campaign, product),
             orientation: await imageOrientation(source),
             retry: retryFailed,
+            regenerate: retryFailed,
+            rejectedImage:
+              retryFailed && product.aiOriginalImage
+                ? product.image
+                : undefined,
           });
           const response = await postJson("ai-remove-background", request);
           const optimized = await inspectImage(response.image);
@@ -210,6 +215,8 @@ export function startCampaignAiReview(
             aiInchesEmbedded: product.aiInchesEmbedded,
             aiPreparedScreenInches: product.aiPreparedScreenInches,
             aiBackgroundSignature: product.aiBackgroundSignature,
+            aiCutoutValidated: product.aiCutoutValidated,
+            aiCutoutValidationVersion: product.aiCutoutValidationVersion,
             approved: true,
           }))
       : [];

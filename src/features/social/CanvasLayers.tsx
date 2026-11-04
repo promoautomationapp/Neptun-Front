@@ -96,6 +96,7 @@ import {
   visibleImageBounds,
 } from "../brochure/screenGeometry";
 import { EditableScreenAnnotation } from "../brochure/EditableScreenAnnotation";
+import { otherScreenAnnotationBaseBox } from "../brochure/screenAnnotationGeometry";
 import { ProductArtworkLayer } from "../brochure/ProductArtworkLayer";
 import { materializeProductNameAlignment } from "../brochure/ProductNameDivider";
 import { t } from "../brochure/i18n";
@@ -681,18 +682,17 @@ export function SocialProductVisual({
         });
       } else if (otherInches) {
         const visible = visibleImageBounds(img);
-        const visibleTop = top + (visible?.top || 0) * contentHeight;
-        const visibleRight = left + (visible?.right || 1) * contentWidth;
-        const labelHeight = canvas.width * 0.044;
-        const labelTop = Math.max(
-          canvas.top - parent.top + canvas.width * 0.01,
-          visibleTop -
-            labelHeight -
-            (hasApplePhotos(product) ? (canvas.width * 6) / 1080 : 0),
-        );
+        const guide = otherScreenAnnotationBaseBox({
+          left: left + (visible?.left || 0) * contentWidth,
+          top: top + (visible?.top || 0) * contentHeight,
+          width: contentWidth * (visible ? visible.right - visible.left : 1),
+          height: contentHeight * (visible ? visible.bottom - visible.top : 1),
+        });
         setMarker({
-          right: `${((parent.width - visibleRight) / parent.width) * 100}%`,
-          top: `${(labelTop / parent.height) * 100}%`,
+          left: `${(guide.left / parent.width) * 100}%`,
+          top: `${(guide.top / parent.height) * 100}%`,
+          width: `${(guide.width / parent.width) * 100}%`,
+          height: `${(guide.height / parent.height) * 100}%`,
         });
       } else setMarker(null);
     };

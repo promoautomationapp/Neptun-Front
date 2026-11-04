@@ -55,6 +55,8 @@ it("opening an already prepared product image editor uses the saved cutout witho
     name: "Prepared product",
     image: "/api/assets/saved-cutout",
     aiOriginalImage: "/api/assets/source",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
   };
   const view = render(
     <StrictMode>
@@ -68,5 +70,26 @@ it("opening an already prepared product image editor uses the saved cutout witho
   expect(
     view.getByRole("img", { name: "Prepared product" }).getAttribute("src"),
   ).toBe(product.image);
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("opening an unverified generated photo shows its original and never purchases a replacement automatically", () => {
+  const view = render(
+    <ProductImageEditor
+      product={{
+        code: "legacy",
+        name: "Legacy generated photo",
+        image: "/unverified-generated.png",
+        aiOriginalImage: "/original-source.png",
+      }}
+      onSave={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(
+    view
+      .getByRole("img", { name: "Legacy generated photo" })
+      .getAttribute("src"),
+  ).toBe("/original-source.png");
   expect(requestAi).not.toHaveBeenCalled();
 });

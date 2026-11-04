@@ -24,6 +24,8 @@ it("replaces an old five-product set with three offers from the selected sheet a
   const first = product("A", {
     image: "/A-prepared.png",
     aiOriginalImage: "/A.png",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
     skipAiCutout: true,
   });
   const oldSet = bundle(
@@ -44,6 +46,8 @@ it("replaces an old five-product set with three offers from the selected sheet a
   expect(result[0]).toMatchObject({
     image: "/A-prepared.png",
     aiOriginalImage: "/A.png",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
     skipAiCutout: true,
   });
   expect(result[1]?.image).toBe("/B.png");
@@ -58,6 +62,8 @@ it("adds a set while superseding its imported individuals and keeping unrelated 
   const first = product("A", {
     image: "/A-prepared.png",
     aiOriginalImage: "/A.png",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
   });
   const manual = bundle("Manual A + B", [product("A"), product("B")], {
     source: "manual",
@@ -102,6 +108,8 @@ it("refreshes same-code import structure without inheriting a synthetic set phot
     offerStyle: "happy",
     image: "/C-prepared.png",
     aiOriginalImage: "/C.png",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
   });
   const result = mergeBrochureImportProducts(
     [oldSet, oldSingle],

@@ -1366,6 +1366,11 @@ export function ImportSales({
         </>
       )}
       {error && <p className="cs-error">{error}</p>}
+      <p className="cs-control-help">
+        {t(
+          "Newly imported product photos are prepared with AI. Existing prepared images are reused; new processing may use credits.",
+        )}
+      </p>
       <div className="cs-modal-actions">
         <Button onClick={onClose}>{t("Cancel")}</Button>
         <Button

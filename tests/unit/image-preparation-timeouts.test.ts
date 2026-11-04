@@ -175,7 +175,11 @@ it("forwards source and durable-job retries as progress without duplicate prepar
     apply = vi.fn();
   const prepare = vi.fn(async (_body, onRetry) => {
     onRetry?.(2, 3);
-    return { image: "/cutout.png" };
+    return {
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      image: "/cutout.png",
+    };
   });
   const queue = createProductImagePreparationQueue({
     orientation: async (_source, onRetry) => {

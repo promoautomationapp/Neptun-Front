@@ -33,6 +33,8 @@ const preparationFields = [
   "aiPreparedScreenInches",
   "aiPreparationRevision",
   "aiBackgroundSignature",
+  "aiCutoutValidated",
+  "aiCutoutValidationVersion",
 ] as const;
 type ImageMetadata = Pick<Product, (typeof preparationFields)[number]>;
 export interface ImageProposal extends ImageMetadata {
@@ -133,6 +135,11 @@ export function applyAiProposals(draft: Campaign, proposals: AiProposal[]) {
         product.aiReviewedBackgroundSignature = signature;
         continue;
       }
+      if (
+        proposal.aiCutoutValidated !== true ||
+        (proposal.aiCutoutValidationVersion ?? 0) < 1
+      )
+        continue;
       product.aiOriginalImage ||= proposal.original;
       if (product.image !== proposal.suggested) {
         product.screenArtwork = screenArtworkForPhotoChange(
@@ -261,6 +268,7 @@ export function AiReview({
   const [imageProgress, setImageProgress] = useState(0);
   const [retryingCode, setRetryingCode] = useState("");
   const [retryError, setRetryError] = useState("");
+  const [retryProgress, setRetryProgress] = useState("");
   const [invalidCodes, setInvalidCodes] = useState(() => new Set<string>());
   const [selectedImageCode, setSelectedImageCode] = useState(() =>
     String((campaign.products || []).find((item) => item.image)?.code || ""),
@@ -328,6 +336,8 @@ export function AiReview({
                   "aiPreparedScreenInches",
                   "aiPreparationRevision",
                   "aiBackgroundSignature",
+                  "aiCutoutValidated",
+                  "aiCutoutValidationVersion",
                 ].map((key) => [key, product[key as keyof Product]]),
               ),
               approved: true,
@@ -372,14 +382,25 @@ export function AiReview({
     setInvalidCodes((current) => new Set(current).add(code));
     setRetryingCode(code);
     setRetryError("");
+    setRetryProgress(t("AI is removing the background…"));
     try {
+      const onRetry = (attempt: number, limit: number) =>
+        setRetryProgress(`${t("Retrying photo")} · ${attempt}/${limit}`);
       const request = buildImagePreparationRequest(product, {
         image: proposal.original,
         backgroundContext: productImageBackgroundContext(campaign, product),
-        orientation: await imageOrientation(proposal.original),
+        orientation: await imageOrientation(proposal.original, onRetry),
         retry: true,
+        regenerate: true,
+        rejectedImage: proposal.suggested,
       });
-      const response = await postJson("ai-remove-background", request);
+      const response = await postJson(
+        "ai-remove-background",
+        request,
+        undefined,
+        { onRetry },
+      );
+      const metadata = imagePreparationMetadata(response);
       const suggested = await inspectImage(response.image);
       setProposals((current) =>
         current.map((item) =>
@@ -388,7 +409,7 @@ export function AiReview({
                 ...item,
                 suggested,
                 screenInches: request.screenInches,
-                ...imagePreparationMetadata(response),
+                ...metadata,
               }
             : item,
         ),
@@ -402,6 +423,7 @@ export function AiReview({
       setRetryError(t("Could not prepare this image. Try again shortly."));
     } finally {
       setRetryingCode("");
+      setRetryProgress("");
     }
   }
   const ready =
@@ -605,7 +627,13 @@ export function AiReview({
                   <article key={proposal.code} className="cs-ai-proposal">
                     <header>
                       <strong>{proposal.label}</strong>
-                      <span>{t("Background removed")}</span>
+                      <span>
+                        {t(
+                          invalidCodes.has(proposal.code)
+                            ? "Needs attention"
+                            : "Background removed",
+                        )}
+                      </span>
                     </header>
                     <div className="cs-ai-compare">
                       <div>
@@ -613,8 +641,21 @@ export function AiReview({
                         <img src={proposal.original} alt="" />
                       </div>
                       <div className="cs-ai-checker">
-                        <small>{t("Prepared image")}</small>
-                        <img src={proposal.suggested} alt="" />
+                        <small>
+                          {t(
+                            invalidCodes.has(proposal.code)
+                              ? "Original photo"
+                              : "Prepared image",
+                          )}
+                        </small>
+                        <img
+                          src={
+                            invalidCodes.has(proposal.code)
+                              ? proposal.original
+                              : proposal.suggested
+                          }
+                          alt=""
+                        />
                       </div>
                     </div>
                     <div
@@ -652,6 +693,9 @@ export function AiReview({
                           ? t("Checking this image again…")
                           : t("This cutout is wrong · Try again with AI")}
                       </Button>
+                      {retryingCode === proposal.code && retryProgress && (
+                        <p role="status">{retryProgress}</p>
+                      )}
                       {invalidCodes.has(proposal.code) &&
                         retryingCode !== proposal.code &&
                         proposal.approved && (

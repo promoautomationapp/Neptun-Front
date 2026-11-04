@@ -70,6 +70,8 @@ it("makes a found photo usable immediately and previews background removal only 
     image: "/cutout.png",
     provider: "openai",
     preparationRevision: 3,
+    cutoutValidated: true,
+    cutoutValidationVersion: 1,
   });
   const save = vi.fn();
   const view = render(
@@ -124,7 +126,7 @@ it("makes a found photo usable immediately and previews background removal only 
   expect(found.image).toBe("/found.png");
 });
 
-it("re-cuts an existing prepared photo from its original and keeps it unchanged if preparation fails", async () => {
+it("discards a rejected saved cutout and requests a fresh one from its original even when preparation fails", async () => {
   prepare.mockRejectedValue(
     new Error("Could not remove background completely."),
   );
@@ -159,16 +161,33 @@ it("re-cuts an existing prepared photo from its original and keeps it unchanged 
       image: "/original.png",
       instructions: "Keep both feet of the television.",
       retry: true,
+      regenerate: true,
+      rejectedImage: "/old-cutout.png",
     }),
     expect.any(AbortSignal),
     { onRetry: expect.any(Function) },
   );
-  expect(save).not.toHaveBeenCalled();
+  expect(save).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({
+      image: "/original.png",
+      aiOriginalImage: "",
+      skipAiCutout: false,
+    }),
+  );
+  expect(save.mock.calls[0]![0].aiCutoutValidated).toBeUndefined();
+  expect(
+    view.getByRole("img", { name: product.name }).getAttribute("src"),
+  ).toBe("/original.png");
+  expect(view.queryByRole("button", { name: "Background removed" })).toBeNull();
   expect(product.image).toBe("/old-cutout.png");
 });
 
 it("announces automatic recovery attempts in the image editor without saving a pending result", async () => {
-  let finish!: (value: { image: string }) => void;
+  let finish!: (value: {
+    image: string;
+    cutoutValidated: boolean;
+    cutoutValidationVersion: number;
+  }) => void;
   prepare.mockImplementation((_path, _body, _signal, options) => {
     options.onRetry(2, 3);
     return new Promise((resolve) => {
@@ -188,7 +207,11 @@ it("announces automatic recovery attempts in the image editor without saving a p
       .disabled,
   ).toBe(true);
   expect(save).not.toHaveBeenCalled();
-  finish({ image: "/cutout.png" });
+  finish({
+    image: "/cutout.png",
+    cutoutValidated: true,
+    cutoutValidationVersion: 1,
+  });
   await waitFor(() =>
     expect(view.queryByText("Retrying photo · 2/3")).toBeNull(),
   );
@@ -279,7 +302,11 @@ it("closes during source inspection without starting a later AI request", async 
 
 it("ignores an earlier preparation finishing while a new photo is being prepared", async () => {
   let first!: (value: { image: string }) => void;
-  let second!: (value: { image: string }) => void;
+  let second!: (value: {
+    image: string;
+    cutoutValidated: boolean;
+    cutoutValidationVersion: number;
+  }) => void;
   prepare
     .mockImplementationOnce(
       () =>
@@ -327,7 +354,11 @@ it("ignores an earlier preparation finishing while a new photo is being prepared
     "/other.png",
   );
   await act(async () => {
-    second({ image: "/new-result.png" });
+    second({
+      image: "/new-result.png",
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+    });
   });
   fireEvent.click(view.getByRole("button", { name: "Use this image" }));
   expect(save).toHaveBeenCalledExactlyOnceWith(
@@ -335,5 +366,45 @@ it("ignores an earlier preparation finishing while a new photo is being prepared
       image: "/new-result.png",
       aiOriginalImage: "/other.png",
     }),
+  );
+});
+
+it("never offers or saves an unvalidated generated photo and makes its retry a fresh AI request", async () => {
+  prepare
+    .mockResolvedValueOnce({ image: "/opaque-output.png" })
+    .mockResolvedValueOnce({
+      image: "/verified.png",
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+    });
+  const save = vi.fn();
+  const view = render(
+    <ProductImageEditor product={found} onSave={save} onClose={vi.fn()} />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Remove background" }));
+  await waitFor(() =>
+    expect(view.getByRole("alert").textContent).toContain(
+      "could not be verified",
+    ),
+  );
+  expect(view.getByRole("img", { name: found.name }).getAttribute("src")).toBe(
+    "/found.png",
+  );
+  expect(view.queryByRole("button", { name: "Background removed" })).toBeNull();
+  expect(save).not.toHaveBeenCalled();
+  fireEvent.click(
+    view.getByRole("button", { name: "Retry background removal" }),
+  );
+  await waitFor(() => expect(prepare).toHaveBeenCalledTimes(2));
+  expect(prepare.mock.calls[1]![1]).toMatchObject({
+    image: "/found.png",
+    retry: true,
+    regenerate: true,
+    rejectedImage: "/opaque-output.png",
+  });
+  await waitFor(() =>
+    expect(
+      view.getByRole("img", { name: found.name }).getAttribute("src"),
+    ).toBe("/verified.png"),
   );
 });

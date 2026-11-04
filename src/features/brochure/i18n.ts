@@ -1402,6 +1402,10 @@ const translations: Record<string, string> = {
   "Zoom out": "Zvogëlo",
   "Zoom in": "Zmadho",
   "Fit page": "Përshtat faqen",
+  "Show toolbar": "Shfaq mjetet",
+  "Hide toolbar": "Fshih mjetet",
+  "Newly imported product photos are prepared with AI. Existing prepared images are reused; new processing may use credits.":
+    "Fotot e produkteve të sapoimportuara përgatiten me AI. Imazhet e përgatitura ripërdoren; përpunimi i ri mund të përdorë kredite.",
   "Fit the wallpaper to this TV":
     "Përshtat sfondin me ekranin e këtij televizori",
   "Each TV is fitted separately. The wallpaper stays inside the screen and below the inch label.":
@@ -2885,6 +2889,11 @@ const translations: Record<string, string> = {
   "Preparing photo…": "Duke përgatitur foton…",
   "Remove background": "Hiq sfondin",
   "Remove background again": "Hiq sfondin sërish",
+  "Retry background removal": "Riprovo heqjen e sfondit",
+  "Only selected photos are sent to AI. Repeating background removal replaces the previous result and may use credits.":
+    "Vetëm fotot e zgjedhura dërgohen te AI. Riprovimi i heqjes së sfondit zëvendëson rezultatin e mëparshëm dhe mund të përdorë kredite.",
+  "The background removal could not be verified. The original photo has been kept. Try again or choose another photo.":
+    "Heqja e sfondit nuk u verifikua. Fotoja origjinale u ruajt. Provoni sërish ose zgjidhni një foto tjetër.",
   "Describe what needs fixing": "Përshkruani çfarë duhet përmirësuar",
   "For example: remove the white border and keep the entire product, including its stand.":
     "Për shembull: hiq kornizën e bardhë dhe ruaj produktin e plotë, përfshirë mbajtësen.",
@@ -2894,6 +2903,10 @@ const translations: Record<string, string> = {
     "Ruaj modelin, ngjyrat, etiketat dhe të gjitha pjesët e produktit pa ndryshime.",
   "The photo background could not be removed completely. Your original photo is unchanged. Try again or describe what needs fixing.":
     "Sfondi i fotos nuk u hoq plotësisht. Fotoja juaj origjinale mbetet e pandryshuar. Provoni përsëri ose përshkruani çfarë duhet rregulluar.",
+  "This saved photo is not a validated cutout. Use Remove background again to prepare a new version.":
+    "Heqja e sfondit nuk është verifikuar për këtë foto. Zgjidhni Hiq sfondin sërish për të përgatitur një version të ri.",
+  "This photo preparation failed. Use Remove background again to request a new version.":
+    "Përgatitja e fotos dështoi. Zgjidhni Hiq sfondin sërish për të kërkuar një version të ri.",
 };
 
 let language =

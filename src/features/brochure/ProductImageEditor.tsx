@@ -15,6 +15,7 @@ import { readImage } from "./utils";
 import { MissingCatalogNotice, imageSearchState } from "./MissingCatalogNotice";
 import {
   buildImagePreparationRequest,
+  discardPreparedProductPhoto,
   imageBackgroundSignature,
   imagePreparationMetadata,
 } from "./imageReview";
@@ -86,11 +87,19 @@ export function ProductImageEditor({
   );
   const backgroundSignature = imageBackgroundSignature(backgroundContext);
   const [cutout, setCutout] = useState(
-    Boolean(product.aiOriginalImage && source === product.aiOriginalImage),
+    Boolean(
+      product.aiOriginalImage &&
+      product.aiCutoutValidated === true &&
+      (product.aiCutoutValidationVersion ?? 0) >= 1 &&
+      source === product.aiOriginalImage,
+    ),
   );
   const [instructions, setInstructions] = useState("");
   const savedPrepared =
-    product.aiOriginalImage && source === product.aiOriginalImage
+    product.aiOriginalImage &&
+    product.aiCutoutValidated === true &&
+    (product.aiCutoutValidationVersion ?? 0) >= 1 &&
+    source === product.aiOriginalImage
       ? product.image
       : "";
   const [prepared, setPrepared] = useState(savedPrepared ?? "");
@@ -106,6 +115,7 @@ export function ProductImageEditor({
   const [draggingUpload, setDraggingUpload] = useState(false);
   const selection = useRef("");
   const activePreparation = useRef<AbortController | null>(null);
+  const rejectedPreparedImage = useRef("");
   const uploadInput = useRef<HTMLInputElement>(null);
   const lastFound = useRef(foundSource);
   selection.current = JSON.stringify([
@@ -123,6 +133,7 @@ export function ProductImageEditor({
   }
   function chooseSource(image: string, nextKind: string) {
     cancelPreparation();
+    rejectedPreparedImage.current = "";
     setSource(image);
     setKind(nextKind);
     setCutout(false);
@@ -166,6 +177,8 @@ export function ProductImageEditor({
               "aiPreparedScreenInches",
               "aiPreparationRevision",
               "aiBackgroundSignature",
+              "aiCutoutValidated",
+              "aiCutoutValidationVersion",
             ].map((key) => [key, product[key as keyof Product]]),
           )
         : {},
@@ -194,6 +207,18 @@ export function ProductImageEditor({
 
   async function prepare() {
     if (!source || activePreparation.current) return;
+    const regenerate = Boolean(prepared || product.aiOriginalImage || error);
+    const rejectedImage =
+      prepared ||
+      rejectedPreparedImage.current ||
+      (product.aiOriginalImage ? product.image : "");
+    if (regenerate) {
+      setPrepared("");
+      setPreparedMetadata({});
+      setCutout(false);
+      if (product.aiOriginalImage && product.image !== source)
+        onSave({ ...discardPreparedProductPhoto(product), image: source });
+    }
     const controller = new AbortController();
     activePreparation.current = controller;
     setError("");
@@ -227,9 +252,9 @@ export function ProductImageEditor({
           image: source,
           backgroundContext,
           orientation,
-          retry: Boolean(
-            prepared || product.aiOriginalImage || instructions.trim(),
-          ),
+          retry: regenerate,
+          regenerate,
+          rejectedImage,
           instructions,
         }),
         controller.signal,
@@ -241,8 +266,16 @@ export function ProductImageEditor({
         selection.current !== selected
       )
         return;
+      let metadata: Partial<Product>;
+      try {
+        metadata = imagePreparationMetadata(result);
+      } catch (cause) {
+        rejectedPreparedImage.current = result.image;
+        throw cause;
+      }
+      rejectedPreparedImage.current = "";
       setPrepared(result.image);
-      setPreparedMetadata(imagePreparationMetadata(result));
+      setPreparedMetadata(metadata);
       setCutout(true);
     } catch (cause) {
       if (
@@ -268,21 +301,17 @@ export function ProductImageEditor({
     if (!applicable) return;
     cancelPreparation();
     onSave({
+      ...(usePrepared
+        ? preparedMetadata
+        : discardPreparedProductPhoto({
+            ...product,
+            image: source,
+            aiOriginalImage: "",
+          })),
       image: applicable,
       ...(product.showImage === false ? { showImage: true } : {}),
       aiOriginalImage: usePrepared ? source : "",
       skipAiCutout: !usePrepared,
-      ...(usePrepared
-        ? preparedMetadata
-        : {
-            aiInchesEmbedded: false,
-            aiAnnotationStyle: "none",
-            aiPreparedScreenInches: null,
-            aiPreparationRevision: 0,
-            aiBackgroundSignature: "",
-            aiCutoutProvider: "",
-            aiAnnotationCleanup: false,
-          }),
     });
     onClose();
   }
@@ -594,9 +623,11 @@ export function ProductImageEditor({
         <Button onClick={prepare} disabled={!source || busy}>
           {busy
             ? t("Preparing image…")
-            : prepared || product.aiOriginalImage
-              ? t("Remove background again")
-              : t("Remove background")}
+            : error
+              ? t("Retry background removal")
+              : prepared || product.aiOriginalImage
+                ? t("Remove background again")
+                : t("Remove background")}
         </Button>
         {(busy || (prepared && cutout)) && (
           <Button onClick={() => apply(true)} disabled={!source}>

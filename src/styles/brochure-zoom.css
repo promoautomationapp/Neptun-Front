@@ -2,11 +2,11 @@
   container-type: inline-size;
   width: 100%;
   min-width: 0;
-  max-height: max(320px, calc(100dvh - 220px));
+  max-height: max(320px, calc(100dvh - 150px));
   overflow: auto;
   overflow-anchor: none;
   overscroll-behavior: contain;
-  padding: 12px 0 20px;
+  padding: 0 0 4px;
 }
 .cs-page-preview .cs-preview-viewport > .cs-preview-paper {
   width: calc(min(100cqw, 760px) * var(--brochure-preview-zoom, 1));

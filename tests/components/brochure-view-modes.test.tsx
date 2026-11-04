@@ -195,14 +195,36 @@ it("zooms and fits the selected page without editing the campaign or resetting c
     Math.min(
       4,
       (Math.min(
-        Math.max(320, window.innerHeight - 220),
+        Math.max(320, window.innerHeight - 150),
         window.innerHeight - 104,
       ) -
-        32) /
+        4) /
         250,
     ) * 25,
   );
   expect(zoom.getByRole("status").textContent).toBe(`${expected}%`);
   expect((picker as HTMLSelectElement).value).toBe("0");
+  expect(props.onUpdate).not.toHaveBeenCalled();
+});
+
+it("shows the toolbar by default and lets its last control hide and restore it without editing", () => {
+  const view = render(<BrochureEditor {...props} />);
+  const dock = view.container.querySelector<HTMLElement>(".cs-canvas-dock")!;
+  const hide = within(dock).getByRole("button", { name: "Hide toolbar" });
+  expect(dock.classList.contains("is-collapsed")).toBe(false);
+  expect(hide.getAttribute("aria-expanded")).toBe("true");
+  expect(dock.lastElementChild).toBe(hide);
+  fireEvent.click(hide);
+  const show = within(dock).getByRole("button", { name: "Show toolbar" });
+  expect(dock.classList.contains("is-collapsed")).toBe(true);
+  expect(show.getAttribute("aria-expanded")).toBe("false");
+  expect(dock.lastElementChild).toBe(show);
+  fireEvent.click(show);
+  expect(dock.classList.contains("is-collapsed")).toBe(false);
+  expect(
+    within(dock)
+      .getByRole("button", { name: "Pointer" })
+      .getAttribute("aria-pressed"),
+  ).toBe("true");
   expect(props.onUpdate).not.toHaveBeenCalled();
 });
