@@ -1423,6 +1423,14 @@ const translations: Record<string, string> = {
   "Retrying photo": "Po provojmë sërish fotografinë",
   "Retrying some product photos…":
     "Po provojmë sërish disa fotografi të produkteve…",
+  "Waiting to prepare": "Në pritje për përgatitje",
+  "Stop waiting photos": "Ndalo fotot në pritje",
+  "Only photos already running will finish. Waiting photos have not been sent to AI.":
+    "Do të përfundojnë vetëm fotot që po përpunohen. Fotot në pritje nuk janë dërguar ende te AI.",
+  "AI starts only for selected photos. Saved results are reused when available.":
+    "AI nis vetëm për fotot që zgjidhni. Rezultatet e ruajtura ripërdoren kur janë të disponueshme.",
+  "This photo preparation failed. Change the cleanup instructions to request a new version.":
+    "Përgatitja e kësaj fotoje dështoi. Ndryshoni udhëzimet për pastrim për të kërkuar një version të ri.",
   "Preparing / waiting for AI": "Duke u përgatitur / në pritje të AI",
   "Some photos need a retry or your own upload.":
     "Disa fotografi duhen riprovuar ose ngarkuar nga ju.",

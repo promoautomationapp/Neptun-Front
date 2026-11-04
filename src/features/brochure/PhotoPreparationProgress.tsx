@@ -23,11 +23,13 @@ export function PhotoPreparationProgress({
   campaign,
   onRetry,
   onEdit,
+  onCancelWaiting,
 }: {
   items: PhotoProgressItem[];
   campaign: Campaign;
   onRetry: () => void;
   onEdit: (code: string) => void;
+  onCancelWaiting?: () => void;
 }) {
   const [dismissed, setDismissed] = useState(false);
   const ready = items.filter((x) => x.state === "ready").length,
@@ -97,6 +99,18 @@ export function PhotoPreparationProgress({
           "Your brochure stays editable. Each finished photo is saved automatically. Prepared images are reused when available.",
         )}
       </p>
+      {queued > 0 && onCancelWaiting && (
+        <div className="cs-photo-progress-actions">
+          <button type="button" onClick={onCancelWaiting}>
+            {t("Stop waiting photos")} · {queued}
+          </button>
+          <span>
+            {t(
+              "Only photos already running will finish. Waiting photos have not been sent to AI.",
+            )}
+          </span>
+        </div>
+      )}
       {active.length > 0 && (
         <div className="cs-photo-progress-current">
           {active.map((item) => (

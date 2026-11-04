@@ -76,7 +76,8 @@ class ImageLoadTimeoutError extends Error {}
 function loadImageOrientation(source: string) {
   return new Promise<"landscape" | "portrait" | "square">((resolve, reject) => {
     const image = new Image();
-    image.crossOrigin = "use-credentials";
+    // Dimensions do not require pixel access. Asking external catalog hosts
+    // for credentialed CORS can reject photos that already display normally.
     const finish = (
       orientation?: "landscape" | "portrait" | "square",
       timedOut = false,

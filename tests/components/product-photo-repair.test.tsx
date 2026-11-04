@@ -206,3 +206,179 @@ it("excludes in-progress photos from both suggested and select-all work", () => 
     JSON.stringify(["new", ""]),
   );
 });
+
+it("allows waiting photos in a large queue to be selected while disabling only actual active jobs", () => {
+  setLanguage("en");
+  const queuedCampaign = {
+    ...campaign(),
+    products: Array.from({ length: 98 }, (_, index) => ({
+      code: String(index),
+      name: `Product ${index}`,
+      image: `/photo-${index}.jpg`,
+    })),
+  };
+  const keys = queuedCampaign.products.map((product) =>
+    JSON.stringify([product.code, ""]),
+  );
+  const prepare = vi.fn();
+  const view = render(
+    <ProductPhotoRepair
+      campaign={queuedCampaign}
+      busyTargetKeys={keys.slice(0, 2)}
+      queuedTargetKeys={keys.slice(2)}
+      onPrepare={prepare}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(view.getByText("96 / 98 photos selected")).toBeTruthy();
+  expect(view.getAllByText("Preparing photo…")).toHaveLength(2);
+  expect(view.getAllByText("Waiting to prepare")).toHaveLength(96);
+  expect(
+    (view.getAllByRole("checkbox") as HTMLInputElement[]).filter(
+      (input) => input.disabled,
+    ),
+  ).toHaveLength(2);
+  fireEvent.change(
+    view.getByRole("textbox", { name: /What should be fixed/ }),
+    { target: { value: " Keep every product edge. " } },
+  );
+  fireEvent.click(
+    view.getByRole("button", { name: "Remove backgrounds · 96" }),
+  );
+  expect(prepare).toHaveBeenCalledExactlyOnceWith({
+    targetKeys: keys.slice(2),
+    instructions: "Keep every product edge.",
+  });
+});
+
+it("restores suggested selection when old queue locks clear while preserving an explicit deselection", () => {
+  setLanguage("en");
+  const keys = [
+    JSON.stringify(["new", ""]),
+    JSON.stringify(["skipped", ""]),
+    JSON.stringify(["set", "new"]),
+  ];
+  const prepare = vi.fn();
+  const props = { campaign: campaign(), onPrepare: prepare, onClose: vi.fn() };
+  const view = render(<ProductPhotoRepair {...props} busyTargetKeys={keys} />);
+  expect(view.getByText("0 / 5 photos selected")).toBeTruthy();
+  view.rerender(
+    <ProductPhotoRepair
+      {...props}
+      busyTargetKeys={keys.slice(0, 1)}
+      queuedTargetKeys={keys.slice(1)}
+    />,
+  );
+  expect(view.getByText("2 / 5 photos selected")).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("checkbox", { name: "Unprepared mixer · skipped" }),
+  );
+  view.rerender(
+    <ProductPhotoRepair
+      {...props}
+      busyTargetKeys={[]}
+      queuedTargetKeys={keys}
+    />,
+  );
+  expect(view.getByText("2 / 5 photos selected")).toBeTruthy();
+  expect(
+    (
+      view.getByRole("checkbox", {
+        name: "Unprepared mixer · skipped",
+      }) as HTMLInputElement
+    ).checked,
+  ).toBe(false);
+  expect(
+    (view.getByRole("checkbox", { name: "New TV · new" }) as HTMLInputElement)
+      .checked,
+  ).toBe(true);
+  expect(prepare).not.toHaveBeenCalled();
+});
+
+it("does not disable photos from persisted preparation flags and respects Clear selection after queue updates", () => {
+  setLanguage("en");
+  const snapshot = {
+    ...campaign(),
+    products: [
+      {
+        code: "pending",
+        name: "Old preparing flag",
+        image: "/pending.jpg",
+        cutoutStatus: "preparing",
+      },
+    ],
+  };
+  const key = JSON.stringify(["pending", ""]);
+  const prepare = vi.fn();
+  const props = { campaign: snapshot, onPrepare: prepare, onClose: vi.fn() };
+  const view = render(<ProductPhotoRepair {...props} />);
+  expect(
+    (
+      view.getByRole("checkbox", {
+        name: "Old preparing flag · pending",
+      }) as HTMLInputElement
+    ).disabled,
+  ).toBe(false);
+  fireEvent.click(view.getByRole("button", { name: "Clear selection" }));
+  view.rerender(<ProductPhotoRepair {...props} busyTargetKeys={[key]} />);
+  view.rerender(
+    <ProductPhotoRepair
+      {...props}
+      busyTargetKeys={[]}
+      queuedTargetKeys={[key]}
+    />,
+  );
+  expect(view.getByText("0 / 1 photos selected")).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "Select all" }));
+  fireEvent.click(view.getByRole("button", { name: "Remove backgrounds · 1" }));
+  expect(prepare).toHaveBeenCalledExactlyOnceWith({
+    targetKeys: [key],
+    instructions: "",
+  });
+});
+
+it("offers to stop only waiting photos without submitting another preparation request", () => {
+  setLanguage("en");
+  const prepare = vi.fn(),
+    cancel = vi.fn();
+  const props = {
+    campaign: campaign(),
+    onPrepare: prepare,
+    onClose: vi.fn(),
+    onCancelQueued: cancel,
+    busyTargetKeys: [JSON.stringify(["new", ""])],
+  };
+  const view = render(
+    <ProductPhotoRepair
+      {...props}
+      queuedTargetKeys={[
+        JSON.stringify(["skipped", ""]),
+        JSON.stringify(["set", "new"]),
+      ]}
+    />,
+  );
+  expect(view.getByText("2 waiting")).toBeTruthy();
+  expect(
+    view.getByText(
+      "Only photos already running will finish. Waiting photos have not been sent to AI.",
+    ),
+  ).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "Stop waiting photos" }));
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(prepare).not.toHaveBeenCalled();
+  expect(
+    (view.getByRole("checkbox", { name: "New TV · new" }) as HTMLInputElement)
+      .disabled,
+  ).toBe(true);
+  expect(
+    (
+      view.getByRole("checkbox", {
+        name: "Unprepared mixer · skipped",
+      }) as HTMLInputElement
+    ).disabled,
+  ).toBe(false);
+  view.rerender(<ProductPhotoRepair {...props} queuedTargetKeys={[]} />);
+  expect(
+    view.queryByRole("button", { name: "Stop waiting photos" }),
+  ).toBeNull();
+});

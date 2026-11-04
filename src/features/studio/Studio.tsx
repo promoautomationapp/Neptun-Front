@@ -4821,8 +4821,32 @@ export default function App({
     setModal("ai");
   }
   function goToBrochure() {
-    if (campaign) void prepareProductPhotos(campaign);
     setEditorTab("brochure");
+  }
+  function forgetProductPhotoWork(campaignId: string, keys: string[]) {
+    const removed = new Set(keys);
+    setPhotoProgress((current) => ({
+      ...current,
+      [campaignId]: Object.fromEntries(
+        Object.entries(current[campaignId] || {}).filter(
+          ([key]) => !removed.has(key),
+        ),
+      ),
+    }));
+  }
+  function cancelQueuedProductPhotos(
+    campaignId: string,
+    targets?: ProductPhotoTarget[],
+  ) {
+    const cancelled = productPhotoQueue.current.cancelQueued(
+      campaignId,
+      targets,
+    );
+    if (cancelled.length)
+      forgetProductPhotoWork(
+        campaignId,
+        cancelled.map((target) => target.key),
+      );
   }
   function trackProductPhotoWork(
     campaignId: string,
@@ -4854,11 +4878,20 @@ export default function App({
     retryFailed = false,
     options: ProductPhotoPreparationOptions = {},
   ) {
+    // Browsing, imports, layout changes and page refreshes must never purchase
+    // image work. Only a deliberate preparation/retry action may enqueue it.
+    if (!options.userRequested) return Promise.resolve([]);
     const pendingTargets = productImagePreparationTargets(
       snapshot,
       products,
       options,
+    ).filter(
+      (target) =>
+        !retryFailed ||
+        options.force ||
+        failedPhotoTargets.current.has(target.key),
     );
+    if (options.force) cancelQueuedProductPhotos(snapshot.id, pendingTargets);
     const retriedManualTargets =
       retryFailed && !options.force
         ? [...failedPhotoTargets.current.values()].filter(
@@ -4915,21 +4948,44 @@ export default function App({
         .enqueue(
           target,
           async (preparedTarget, result) => {
+            let applied = false;
             const changed = updateCampaign(
               (draft) => {
-                applyPreparedProductPhoto(draft, preparedTarget, result);
+                applied = applyPreparedProductPhoto(
+                  draft,
+                  preparedTarget,
+                  result,
+                );
               },
               { id: snapshot.id, group: `product-photos:${snapshot.id}` },
             );
+            if (!applied) return false;
             if (changed?.changed) await changed.saved;
+            return true;
           },
           {
             retry: retries.has(target.key),
+            priority: Boolean(options.force),
+            shouldRun: (queuedTarget) =>
+              Boolean(
+                currentProductPhotoTarget(
+                  latestCampaigns.current.find(
+                    (item) => item.id === snapshot.id,
+                  ),
+                  queuedTarget,
+                ),
+              ),
             onPhase: (phase, retry) =>
               trackProductPhotoWork(snapshot.id, target.key, phase, retry),
           },
         )
         .then((outcome) => {
+          if (outcome.cancelled) {
+            failedPhotoTargets.current.delete(target.key);
+            if (!productPhotoQueue.current.has(target.key))
+              forgetProductPhotoWork(snapshot.id, [target.key]);
+            return outcome;
+          }
           const currentCampaign = latestCampaigns.current.find(
             (item) => item.id === snapshot.id,
           );
@@ -4955,6 +5011,7 @@ export default function App({
       for (const outcome of outcomes)
         if (
           !outcome.ok &&
+          !outcome.cancelled &&
           currentProductPhotoTarget(currentCampaign, outcome.target)
         )
           failedPhotoTargets.current.set(outcome.target.key, outcome.target);
@@ -4969,7 +5026,10 @@ export default function App({
       );
       if (
         failed &&
-        outcomes.some((outcome) => !outcome.ok && !outcome.usingOriginal)
+        outcomes.some(
+          (outcome) =>
+            !outcome.ok && !outcome.cancelled && !outcome.usingOriginal,
+        )
       )
         setToast(t("Some product photos could not be prepared. Try again."));
       return outcomes;
@@ -5045,7 +5105,6 @@ export default function App({
           : "Campaign created. Add products when you are ready.",
       ),
     );
-    void prepareProductPhotos(item);
     if (searches.length) searchImportedImages(searches, item.id);
   }
   function searchImportedImages(
@@ -5058,7 +5117,7 @@ export default function App({
     void findMissingProductImages(
       targets,
       (target, result) => {
-        const changed = updateCampaign(
+        updateCampaign(
           (draft: Campaign) => {
             finishMissingImageSearch(draft, target, result);
           },
@@ -5067,8 +5126,6 @@ export default function App({
             group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
           },
         );
-        if (changed && !(result instanceof Error) && result.found)
-          void prepareProductPhotos(changed.campaign);
       },
       retry,
     ).finally(() => {
@@ -5170,7 +5227,6 @@ export default function App({
       }
     });
     if (updated) {
-      void prepareProductPhotos(updated.campaign);
       searchImportedImages(started, updated.campaign.id);
     }
     setModal(null);
@@ -5515,8 +5571,6 @@ export default function App({
             settings={settings}
             onCreate={() => setModal("create")}
             onOpen={(id: string) => {
-              const selectedCampaign = campaigns.find((item) => item.id === id);
-              if (selectedCampaign) void prepareProductPhotos(selectedCampaign);
               setActiveId(id);
               setEditorTab("brochure");
               setSection("editor");
@@ -5947,8 +6001,11 @@ export default function App({
               items={Object.values(photoProgress[campaign.id] || {})}
               campaign={campaign}
               onRetry={() =>
-                void prepareProductPhotos(campaign, campaign.products, true)
+                void prepareProductPhotos(campaign, campaign.products, true, {
+                  userRequested: true,
+                })
               }
+              onCancelWaiting={() => cancelQueuedProductPhotos(campaign.id)}
               onEdit={setImageEditCode}
             />
             {editorTab === "products" ? (
@@ -6153,13 +6210,28 @@ export default function App({
           busyTargetKeys={productImagePreparationTargets(campaign, undefined, {
             force: true,
           })
-            .filter((target) => productPhotoQueue.current.hasTarget(target))
+            .filter((target) =>
+              productPhotoQueue.current.isRunningTarget(target),
+            )
             .map(productPhotoSelectionKey)}
+          queuedTargetKeys={productImagePreparationTargets(
+            campaign,
+            undefined,
+            {
+              force: true,
+            },
+          )
+            .filter((target) =>
+              productPhotoQueue.current.isQueuedTarget(target),
+            )
+            .map(productPhotoSelectionKey)}
+          onCancelQueued={() => cancelQueuedProductPhotos(campaign.id)}
           onPrepare={({ targetKeys, instructions }) => {
             void prepareProductPhotos(campaign, campaign.products, true, {
               force: true,
               targetKeys,
               instructions,
+              userRequested: true,
             });
             setModal(null);
           }}

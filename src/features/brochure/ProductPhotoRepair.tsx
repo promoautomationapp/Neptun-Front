@@ -12,17 +12,25 @@ export interface ProductPhotoRepairSelection {
   targetKeys: string[];
   instructions: string;
 }
+interface PhotoSelection {
+  mode: "suggested" | "all" | "none";
+  overrides: Map<string, boolean>;
+}
 
 export function ProductPhotoRepair({
   campaign,
   failedTargetKeys = [],
   busyTargetKeys = [],
+  queuedTargetKeys = [],
+  onCancelQueued,
   onPrepare,
   onClose,
 }: {
   campaign: Campaign;
   failedTargetKeys?: string[];
   busyTargetKeys?: string[];
+  queuedTargetKeys?: string[];
+  onCancelQueued?: () => void;
   onPrepare: (selection: ProductPhotoRepairSelection) => void;
   onClose: () => void;
 }) {
@@ -32,6 +40,7 @@ export function ProductPhotoRepair({
     );
     const failed = new Set(failedTargetKeys);
     const busy = new Set(busyTargetKeys);
+    const queued = new Set(queuedTargetKeys);
     return productImagePreparationTargets(campaign, undefined, {
       force: true,
     }).map((target) => {
@@ -45,7 +54,10 @@ export function ProductPhotoRepair({
           )!
         : offer;
       const suggested =
-        failed.has(key) || pending.has(key) || Boolean(product.skipAiCutout);
+        failed.has(key) ||
+        pending.has(key) ||
+        queued.has(key) ||
+        Boolean(product.skipAiCutout);
       return {
         key,
         name: product.name,
@@ -53,29 +65,38 @@ export function ProductPhotoRepair({
         image: product.image || target.source,
         suggested,
         busy: busy.has(key),
+        queued: queued.has(key),
         status: busy.has(key)
           ? "Preparing photo…"
-          : failed.has(key)
-            ? "Needs attention"
-            : suggested
-              ? "Not prepared"
-              : "Current photo",
+          : queued.has(key)
+            ? "Waiting to prepare"
+            : failed.has(key)
+              ? "Needs attention"
+              : suggested
+                ? "Not prepared"
+                : "Current photo",
       };
     });
-  }, [campaign, failedTargetKeys, busyTargetKeys]);
-  const [selected, setSelected] = useState(
-    () =>
-      new Set(
-        photos
-          .filter((photo) => photo.suggested && !photo.busy)
-          .map((photo) => photo.key),
-      ),
-  );
+  }, [campaign, failedTargetKeys, busyTargetKeys, queuedTargetKeys]);
+  const [selection, setSelection] = useState<PhotoSelection>(() => ({
+    mode: "suggested",
+    overrides: new Map(),
+  }));
+  function isSelected(photo: (typeof photos)[number], current = selection) {
+    return (
+      current.overrides.get(photo.key) ??
+      (current.mode === "all" ||
+        (current.mode === "suggested" && photo.suggested))
+    );
+  }
   const [search, setSearch] = useState("");
   const [instructions, setInstructions] = useState("");
   const selectedPhotos = photos.filter(
-    (photo) => !photo.busy && selected.has(photo.key),
+    (photo) => !photo.busy && isSelected(photo),
   );
+  const queuedCount = photos.filter(
+    (photo) => photo.queued && !photo.busy,
+  ).length;
   const visiblePhotos = photos.filter((photo) =>
     `${photo.name} ${photo.code}`
       .toLocaleLowerCase()
@@ -83,11 +104,12 @@ export function ProductPhotoRepair({
   );
 
   function toggle(key: string) {
-    setSelected((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
+    const photo = photos.find((item) => item.key === key);
+    if (!photo || photo.busy) return;
+    setSelection((current) => {
+      const overrides = new Map(current.overrides);
+      overrides.set(key, !isSelected(photo, current));
+      return { ...current, overrides };
     });
   }
 
@@ -97,8 +119,33 @@ export function ProductPhotoRepair({
         <p className="cs-photo-repair-intro">
           {t(
             "Choose the photos that need background removal or a better cutout. Each replacement is saved when it is ready.",
+          )}{" "}
+          {t(
+            "AI starts only for selected photos. Saved results are reused when available.",
           )}
         </p>
+        {queuedCount > 0 && (
+          <section
+            className="cs-photo-repair-tools"
+            aria-label={t("Product photo preparation")}
+          >
+            <div>
+              <strong>
+                {queuedCount} {t("waiting")}
+              </strong>
+              <p className="cs-photo-repair-intro">
+                {t(
+                  "Only photos already running will finish. Waiting photos have not been sent to AI.",
+                )}
+              </p>
+            </div>
+            {onCancelQueued && (
+              <Button onClick={onCancelQueued}>
+                {t("Stop waiting photos")}
+              </Button>
+            )}
+          </section>
+        )}
         <div className="cs-photo-repair-tools">
           <label className="cs-field">
             <span>{t("Search products")}</span>
@@ -117,20 +164,16 @@ export function ProductPhotoRepair({
               <Button
                 disabled={!photos.some((photo) => !photo.busy)}
                 onClick={() =>
-                  setSelected(
-                    new Set(
-                      photos
-                        .filter((photo) => !photo.busy)
-                        .map((photo) => photo.key),
-                    ),
-                  )
+                  setSelection({ mode: "all", overrides: new Map() })
                 }
               >
                 {t("Select all")}
               </Button>
               <Button
-                disabled={!selected.size}
-                onClick={() => setSelected(new Set())}
+                disabled={!photos.some((photo) => isSelected(photo))}
+                onClick={() =>
+                  setSelection({ mode: "none", overrides: new Map() })
+                }
               >
                 {t("Clear selection")}
               </Button>
@@ -141,11 +184,11 @@ export function ProductPhotoRepair({
           {visiblePhotos.map((photo) => (
             <label
               key={photo.key}
-              className={`cs-photo-repair-card ${selected.has(photo.key) && !photo.busy ? "is-selected" : ""} ${photo.busy ? "is-busy" : ""}`}
+              className={`cs-photo-repair-card ${isSelected(photo) && !photo.busy ? "is-selected" : ""} ${photo.busy ? "is-busy" : ""}`}
             >
               <input
                 type="checkbox"
-                checked={!photo.busy && selected.has(photo.key)}
+                checked={!photo.busy && isSelected(photo)}
                 disabled={photo.busy}
                 onChange={() => toggle(photo.key)}
                 aria-label={`${photo.name} · ${photo.code}`}

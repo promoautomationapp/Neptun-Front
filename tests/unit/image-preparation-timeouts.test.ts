@@ -153,6 +153,19 @@ it("does not retry a source that definitively fails to load", async () => {
   await rejected;
   expect(retry).not.toHaveBeenCalled();
 });
+it("measures public catalog photos without requiring credentialed CORS", async () => {
+  const image = new PendingImage();
+  vi.stubGlobal(
+    "Image",
+    vi.fn(function () {
+      return image;
+    }),
+  );
+  const result = imageOrientation("https://www.neptun-ks.com/photo.jpg");
+  expect(image.crossOrigin).toBe("");
+  image.onload!();
+  expect(await result).toBe("portrait");
+});
 it("forwards source and durable-job retries as progress without duplicate preparations", async () => {
   const target = productImagePreparationTargets({
     id: "retry",
