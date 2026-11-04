@@ -108,6 +108,7 @@ describe("Cloudflare frontend API forwarding", () => {
     expect(response.headers.get("Set-Cookie")).toContain(
       "HttpOnly; Secure; SameSite=Lax",
     );
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(fetch.mock.calls[0]?.[1]).toMatchObject({
       redirect: "manual",
       cache: "no-store",
@@ -159,6 +160,53 @@ describe("Cloudflare frontend API forwarding", () => {
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(pixels);
     expect(response.headers.get("Cache-Control")).toContain("private");
     expect(response.headers.get("Vary")).toBe("Cookie");
+    expect(response.headers.get("CDN-Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Cloudflare-CDN-Cache-Control")).toBe(
+      "no-store",
+    );
+  });
+
+  test.each([
+    ["/api/team/session", "GET", 200],
+    ["/api/documents", "GET", 200],
+    ["/api/assets/uploads", "POST", 201],
+    ["/api/assets/photo", "GET", 403],
+    ["/api/assets/photo", "GET", 404],
+    ["/api/assets/photo", "GET", 429],
+  ])("never browser-caches %s %s status %s", async (path, method, status) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response("private data", {
+          status,
+          headers: {
+            "Cache-Control": "public, max-age=31536000, immutable",
+            Expires: "Thu, 01 Jan 2099 00:00:00 GMT",
+            Vary: "Origin",
+          },
+        }),
+      ),
+    );
+    const reply = await worker.fetch(
+      new Request(`https://studio.example.com${path}`, { method }),
+      env(),
+    );
+    expect(reply.status).toBe(status);
+    expect(await reply.text()).toBe("private data");
+    expect(reply.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(reply.headers.has("Expires")).toBe(false);
+    expect(reply.headers.get("Vary")).toBe("origin, cookie, authorization");
+    expect(reply.headers.get("Cloudflare-CDN-Cache-Control")).toBe("no-store");
+  });
+
+  test("does not cache an upstream connection failure", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const reply = await worker.fetch(
+      new Request("https://studio.example.com/api/team/session"),
+      env(),
+    );
+    expect(reply.status).toBe(502);
+    expect(reply.headers.get("Cache-Control")).toBe("private, no-store");
   });
 
   test("returns a controlled error for a missing, insecure or looping upstream", async () => {

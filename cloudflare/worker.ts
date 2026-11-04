@@ -5,6 +5,43 @@ export interface FrontendWorkerEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
 }
 
+function privateApiResponse(
+  response: Response,
+  request: Request,
+  path: string,
+): Response {
+  const reply = new Response(response.body, response);
+  const policy = response.headers.get("Cache-Control") || "";
+  const browserCacheableAsset =
+    ["GET", "HEAD"].includes(request.method) &&
+    path.startsWith("/api/assets/") &&
+    (response.ok || response.status === 304) &&
+    /(?:^|,)\s*private\s*(?:,|$)/i.test(policy) &&
+    /(?:^|,)\s*immutable\s*(?:,|$)/i.test(policy) &&
+    !/(?:^|,)\s*no-store\s*(?:,|$)/i.test(policy);
+
+  // Owned media can reuse its existing private browser cache. Sessions,
+  // documents, mutations and errors must never be stored by the browser.
+  if (!browserCacheableAsset) {
+    reply.headers.set("Cache-Control", "private, no-store");
+    reply.headers.delete("Expires");
+    const vary = new Set(
+      (reply.headers.get("Vary") || "")
+        .split(",")
+        .map((name) => name.trim().toLowerCase())
+        .filter(Boolean),
+    );
+    if (!vary.has("*")) {
+      vary.add("cookie");
+      vary.add("authorization");
+      reply.headers.set("Vary", [...vary].join(", "));
+    }
+  }
+  reply.headers.set("CDN-Cache-Control", "no-store");
+  reply.headers.set("Cloudflare-CDN-Cache-Control", "no-store");
+  return reply;
+}
+
 /** Static frontend plus a fixed upstream API; no database or media credentials. */
 export default {
   async fetch(request: Request, env: FrontendWorkerEnv): Promise<Response> {
@@ -20,9 +57,13 @@ export default {
       (!request.headers.has("Origin") &&
         request.headers.get("Sec-Fetch-Site") === "cross-site")
     )
-      return Response.json(
-        { error: "Request origin is not allowed." },
-        { status: 403 },
+      return privateApiResponse(
+        Response.json(
+          { error: "Request origin is not allowed." },
+          { status: 403 },
+        ),
+        request,
+        incoming.pathname,
       );
 
     let origin: URL;
@@ -39,9 +80,13 @@ export default {
       )
         throw new Error("Invalid upstream origin.");
     } catch {
-      return Response.json(
-        { error: "The backend address is not configured." },
-        { status: 503, headers: { "Cache-Control": "no-store" } },
+      return privateApiResponse(
+        Response.json(
+          { error: "The backend address is not configured." },
+          { status: 503 },
+        ),
+        request,
+        incoming.pathname,
       );
     }
 
@@ -93,11 +138,19 @@ export default {
       );
     }
     try {
-      return await fetch(upstream, { redirect: "manual", cache: "no-store" });
+      return privateApiResponse(
+        await fetch(upstream, { redirect: "manual", cache: "no-store" }),
+        request,
+        incoming.pathname,
+      );
     } catch {
-      return Response.json(
-        { error: "Could not reach the backend. Please try again." },
-        { status: 502, headers: { "Cache-Control": "no-store" } },
+      return privateApiResponse(
+        Response.json(
+          { error: "Could not reach the backend. Please try again." },
+          { status: 502 },
+        ),
+        request,
+        incoming.pathname,
       );
     }
   },
