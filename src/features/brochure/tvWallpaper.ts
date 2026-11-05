@@ -138,7 +138,7 @@ export function applyTvWallpaper(
       if (!fitted) continue;
       product.screenArtwork = {
         image: screenArtwork.image,
-        fit: screenArtwork.fit || "cover",
+        fit: screenArtwork.fit || "contain",
         box: { ...fitted.box },
         detectedFor: fitted.detectedFor,
       };

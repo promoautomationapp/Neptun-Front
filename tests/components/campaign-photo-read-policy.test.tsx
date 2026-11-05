@@ -291,6 +291,7 @@ async function photoImportWorkspace(
   onSave?: (campaign: Campaign) => Promise<void>,
   options: {
     campaignId?: string;
+    initialProducts?: Campaign["products"];
     catalogProducts?: Campaign["products"];
     reuse?: (
       items: Array<{ key: string; image: string } & Record<string, unknown>>,
@@ -301,7 +302,7 @@ async function photoImportWorkspace(
   const campaign: Campaign = {
     id: options.campaignId || "blocking-photo-import",
     name: "Photo import",
-    products: [],
+    products: options.initialProducts || [],
   };
   const user = {
     id: "photo-import-staff",
@@ -866,3 +867,126 @@ it.each([false, true])(
     expect(imageOrientation).not.toHaveBeenCalled();
   },
 );
+
+it("prepares and saves an explicitly searched replacement before reopening the brochure, without preparing the old source", async () => {
+  const found = deferred<{
+    found: true;
+    image: string;
+    sourceUrl: string;
+    imageUrl: string;
+    matchedName: string;
+  }>();
+  const cutout = deferred<{
+    image: string;
+    cutoutValidated: boolean;
+    cutoutValidationVersion: number;
+    annotationCleanup: boolean;
+    annotationHandling: string;
+  }>();
+  const persisted = deferred<void>();
+  let savingCutout = false;
+  vi.mocked(requestAi).mockImplementation((action) => {
+    if (action === "ai-find-product-image") return found.promise;
+    return cutout.promise;
+  });
+  const { view, fetchMock } = await photoImportWorkspace(
+    async (snapshot) => {
+      if (snapshot.products[0]?.image === "/finished-search-cutout.png") {
+        savingCutout = true;
+        await persisted.promise;
+      }
+    },
+    {
+      campaignId: "explicit-searched-replacement",
+      initialProducts: [
+        {
+          code: "88888",
+          name: "Exact model ZX2",
+          brand: "Example",
+          image: "/previous-original.png",
+          catalogMissing: true,
+          imageSearch: {
+            status: "found",
+            matchedName: "Exact model ZX2",
+            requestId: "previous-search",
+            requestKey: "previous-model",
+          },
+          aiReviewedImageSource: "/previous-original.png",
+          regular: 69,
+          sale: 49,
+        },
+      ],
+    },
+  );
+  fireEvent.click(view.getByRole("button", { name: /Products & prices/ }));
+  fireEvent.click(
+    view.getByRole("button", { name: "Change image: Exact model ZX2" }),
+  );
+  await view.findByRole("dialog", { name: "Change product image" });
+  fireEvent.click(view.getByRole("button", { name: "Search again" }));
+  await waitFor(() => expect(requestAi).toHaveBeenCalledOnce());
+  expect(vi.mocked(requestAi).mock.calls[0]?.[0]).toBe("ai-find-product-image");
+  expect(
+    view.queryByRole("dialog", { name: "Change product image" }),
+  ).toBeNull();
+  expect(view.container.querySelector(".brochure-page")).toBeNull();
+  await act(async () =>
+    found.resolve({
+      found: true,
+      image: "/new-search-source.png",
+      sourceUrl: "https://example.test/ZX2",
+      imageUrl: "https://example.test/ZX2.png",
+      matchedName: "Exact model ZX2",
+    }),
+  );
+  await waitFor(() => expect(requestAi).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(requestAi).mock.calls[1]?.[1]).toMatchObject({
+    image: "/new-search-source.png",
+    name: "Exact model ZX2",
+  });
+  expect(
+    vi
+      .mocked(requestAi)
+      .mock.calls.some(
+        ([, params]) =>
+          typeof params === "object" &&
+          params !== null &&
+          "image" in params &&
+          params.image === "/previous-original.png",
+      ),
+  ).toBe(false);
+  expect(view.container.querySelector(".brochure-page")).toBeNull();
+  await act(async () =>
+    cutout.resolve({
+      image: "/finished-search-cutout.png",
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      annotationCleanup: true,
+      annotationHandling: "editable-overlays",
+    }),
+  );
+  await waitFor(() => expect(savingCutout).toBe(true));
+  expect(view.container.querySelector(".brochure-page")).toBeNull();
+  await act(async () => persisted.resolve());
+  await waitFor(() =>
+    expect(
+      view.container.querySelector('img[src="/finished-search-cutout.png"]'),
+    ).toBeTruthy(),
+  );
+  expect(
+    view.getByRole("button", { name: /Brochure design/ }).className,
+  ).toContain("active");
+  const snapshots = fetchMock.mock.calls
+    .filter(([, init]) => init?.method === "POST")
+    .map(([, init]) => JSON.parse(String(init?.body)).campaign as Campaign)
+    .filter(Boolean);
+  expect(snapshots.at(-1)?.products[0]).toMatchObject({
+    code: "88888",
+    catalogMissing: true,
+    image: "/finished-search-cutout.png",
+    aiOriginalImage: "/new-search-source.png",
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
+  });
+  expect(requestAi).toHaveBeenCalledTimes(2);
+});

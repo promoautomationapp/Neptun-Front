@@ -12,6 +12,21 @@ interface SampledGeometry {
 }
 const imageGeometryCache = new WeakMap<HTMLImageElement, SampledGeometry>();
 
+export function validScreenGeometryBox(
+  box: Box | null | undefined,
+): box is Box {
+  return Boolean(
+    box &&
+    [box.x, box.y, box.width, box.height].every(Number.isFinite) &&
+    box.x >= 0 &&
+    box.y >= 0 &&
+    box.width >= 0.03 &&
+    box.height >= 0.03 &&
+    box.x + box.width <= 1 &&
+    box.y + box.height <= 1,
+  );
+}
+
 function validPixels(pixels: Pixels, width: number, height: number) {
   return (
     Number.isInteger(width) &&
@@ -79,7 +94,7 @@ export function savedScreenBoxForPhoto(
   image?: HTMLImageElement | null,
 ): Box | null {
   const artwork = product.screenArtwork;
-  if (!artwork?.box) return null;
+  if (!validScreenGeometryBox(artwork?.box)) return null;
   const source = screenPhotoSource(product, image);
   if (
     artwork.detectedFor &&
@@ -145,14 +160,30 @@ export function televisionScreenBoxFromPixels(
     [0, height - 1],
     [width - 1, height - 1],
   ];
-  const whiteCorners = corners.filter(([x, y]) => {
+  const cornerColors = corners.map(([x, y]) => {
     const offset = (y * width + x) * 4;
-    return (
-      pixels[offset + 3]! > 200 &&
-      Math.min(pixels[offset]!, pixels[offset + 1]!, pixels[offset + 2]!) > 232
-    );
-  }).length;
-  if (!transparent && whiteCorners < 3) return null;
+    return [pixels[offset]!, pixels[offset + 1]!, pixels[offset + 2]!];
+  });
+  const background = [0, 1, 2].map(
+    (channel) =>
+      [...cornerColors]
+        .map((color) => color[channel]!)
+        .sort((a, b) => a - b)[2]!,
+  );
+  const plainCorners = cornerColors.filter(
+    (color) =>
+      Math.min(...color) >= 170 &&
+      color.every(
+        (value, channel) => Math.abs(value - background[channel]!) <= 18,
+      ),
+  ).length;
+  if (!transparent && plainCorners < 3) return null;
+  const backgroundPixel = (offset: number) =>
+    pixels[offset + 3]! < 80 ||
+    (!transparent &&
+      background.every(
+        (value, channel) => Math.abs(pixels[offset + channel]! - value) <= 24,
+      ));
   const rows: Array<{ left: number; right: number; span: number }> = [];
   let largestSpan = 0;
   for (let y = 0; y < height; y++) {
@@ -161,18 +192,13 @@ export function televisionScreenBoxFromPixels(
       count = 0;
     for (let x = 0; x < width; x++) {
       const offset = (y * width + x) * 4;
-      if (
-        pixels[offset + 3]! < 80 ||
-        (!transparent &&
-          Math.min(pixels[offset]!, pixels[offset + 1]!, pixels[offset + 2]!) >=
-            228)
-      )
-        continue;
+      if (backgroundPixel(offset)) continue;
       left = Math.min(left, x);
       right = x;
       count++;
     }
-    const span = count >= 2 ? right - left + 1 : 0;
+    const outerSpan = count >= 2 ? right - left + 1 : 0;
+    const span = outerSpan && count / outerSpan >= 0.3 ? outerSpan : 0;
     largestSpan = Math.max(largestSpan, span);
     rows.push({ left, right, span });
   }
@@ -216,13 +242,98 @@ export function televisionScreenBoxFromPixels(
     panelHeight = best.end - best.start;
   const ratio = panelWidth / panelHeight;
   if (ratio < 1.15 || ratio > 3.4) return null;
-  const insetX = Math.max(1, panelWidth * 0.0125),
-    insetY = Math.max(1, panelHeight * 0.018);
+  // The silhouette includes the bezel. Find the first transition from its
+  // dark, even frame into the display, independently along all four edges.
+  // This preserves thick lower bezels and excludes the stand/feet below.
+  const line = (vertical: boolean, coordinate: number) => {
+    const start = vertical ? best.start : left;
+    const length = vertical ? panelHeight : panelWidth;
+    const values: number[][] = [];
+    for (let n = Math.ceil(length * 0.16); n < length * 0.84; n++) {
+      const x = vertical ? coordinate : start + n;
+      const y = vertical ? start + n : coordinate;
+      const offset = (y * width + x) * 4;
+      values.push([pixels[offset]!, pixels[offset + 1]!, pixels[offset + 2]!]);
+    }
+    const means = [0, 1, 2].map(
+      (channel) =>
+        values.reduce((sum, value) => sum + value[channel]!, 0) /
+        Math.max(1, values.length),
+    );
+    return {
+      means,
+      light: means.reduce((sum, value) => sum + value, 0) / 3,
+      chroma:
+        values.reduce(
+          (sum, value) => sum + Math.max(...value) - Math.min(...value),
+          0,
+        ) / Math.max(1, values.length),
+      spread:
+        values.reduce(
+          (sum, value) =>
+            sum +
+            value.reduce(
+              (total, item, channel) =>
+                total + Math.abs(item - means[channel]!),
+              0,
+            ) /
+              3,
+          0,
+        ) / Math.max(1, values.length),
+    };
+  };
+  const edge = (
+    vertical: boolean,
+    origin: number,
+    direction: number,
+    length: number,
+  ) => {
+    let previous = line(vertical, origin);
+    for (
+      let depth = 1;
+      depth <= Math.max(2, Math.ceil(length * 0.16));
+      depth++
+    ) {
+      const current = line(vertical, origin + direction * depth);
+      const difference =
+        current.means.reduce(
+          (sum, value, channel) =>
+            sum + Math.abs(value - previous.means[channel]!),
+          0,
+        ) / 3;
+      if (
+        previous.light < 120 &&
+        previous.spread < 36 &&
+        ((difference >= 4 &&
+          current.chroma >= 5 &&
+          current.chroma > previous.chroma + 3) ||
+          (difference >= 50 && current.light > 150 && previous.light < 80) ||
+          (difference >= 7 &&
+            current.spread > 18 &&
+            current.spread > previous.spread + 10))
+      )
+        return depth;
+      previous = current;
+    }
+    return 0;
+  };
+  const edges = [
+    edge(true, left, 1, panelWidth),
+    edge(true, right - 1, -1, panelWidth),
+    edge(false, best.start, 1, panelHeight),
+    edge(false, best.end - 1, -1, panelHeight),
+  ];
+  const insetLeft = edges[0] || Math.max(1, Math.round(panelWidth * 0.003));
+  const insetRight = edges[1] || Math.max(1, Math.round(panelWidth * 0.003));
+  const insetTop = edges[2] || Math.max(1, Math.round(panelHeight * 0.003));
+  const insetBottom = edges[3] || Math.max(1, Math.round(panelHeight * 0.003));
+  const innerWidth = panelWidth - insetLeft - insetRight;
+  const innerHeight = panelHeight - insetTop - insetBottom;
   return {
-    x: (left + insetX) / width,
-    y: (best.start + insetY) / height,
-    width: (panelWidth - insetX * 2) / width,
-    height: (panelHeight - insetY * 2) / height,
+    x: (left + insetLeft) / width,
+    y: (best.start + insetTop) / height,
+    width: innerWidth / width,
+    height: innerHeight / height,
   };
 }
 
@@ -242,7 +353,7 @@ function sampledGeometry(
   try {
     const scale = Math.min(
       1,
-      160 / Math.max(image.naturalWidth, image.naturalHeight),
+      640 / Math.max(image.naturalWidth, image.naturalHeight),
     );
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -270,7 +381,9 @@ function sampledGeometry(
   } catch {
     /* Cross-origin and unrecognized photographs keep contained-image bounds. */
   }
-  imageGeometryCache.set(image, result);
+  // Header dimensions may be available before the picture has decoded. A
+  // partial/failed sample must not survive the later load event for that URL.
+  if (image.complete) imageGeometryCache.set(image, result);
   return result;
 }
 
@@ -283,20 +396,28 @@ export function detectedTelevisionScreenBox(
   product: ProductPhoto = {},
   image?: HTMLImageElement | null,
 ): Box | null {
-  const saved = savedScreenBoxForPhoto(product, image);
-  if (saved) return saved;
   const screen = sampledGeometry(image)?.screen;
-  return screen ? { ...screen } : null;
+  if (screen) return { ...screen };
+  const saved = savedScreenBoxForPhoto(product, image);
+  return saved &&
+    !(
+      Math.abs(saved.x - 0.04) < 0.000001 &&
+      Math.abs(saved.y - 0.08) < 0.000001 &&
+      Math.abs(saved.width - 0.92) < 0.000001 &&
+      Math.abs(saved.height - 0.75) < 0.000001
+    )
+    ? saved
+    : null;
 }
 
 export function televisionScreenBox(
   product: ProductPhoto = {},
   image?: HTMLImageElement | null,
 ): Box {
-  const saved = savedScreenBoxForPhoto(product, image);
-  if (saved) return saved;
   const geometry = sampledGeometry(image);
   if (geometry?.screen) return { ...geometry.screen };
+  const saved = savedScreenBoxForPhoto(product, image);
+  if (saved) return saved;
   const bounds = geometry?.bounds || { left: 0, top: 0, right: 1, bottom: 1 };
   const width = bounds.right - bounds.left,
     height = bounds.bottom - bounds.top;

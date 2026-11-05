@@ -6,6 +6,7 @@ import {
   normalizeScreenPhotoSource,
   savedScreenBoxForPhoto,
   screenPhotoSource,
+  validScreenGeometryBox,
 } from "./screenGeometry";
 
 export interface TvWallpaperFit {
@@ -29,16 +30,7 @@ interface FitOptions {
 const fitCache = new Map<string, Box>();
 
 export function validScreenBox(box: Box | null | undefined): box is Box {
-  return Boolean(
-    box &&
-    [box.x, box.y, box.width, box.height].every(Number.isFinite) &&
-    box.x >= 0 &&
-    box.y >= 0 &&
-    box.width >= 0.03 &&
-    box.height >= 0.03 &&
-    box.x + box.width <= 1 &&
-    box.y + box.height <= 1,
-  );
+  return validScreenGeometryBox(box);
 }
 
 export function isDefaultScreenFallback(box: Box | null | undefined) {
@@ -118,7 +110,7 @@ export async function fitTvWallpaperTargets(
 ): Promise<TvWallpaperFitPlan> {
   const plan: TvWallpaperFitPlan = { fits: [], unfittedCodes: [] };
   const pending = new Map<string, Promise<Box | null>>();
-  async function measure(source: string) {
+  async function measure(source: string, useAi: boolean) {
     const key = normalizeScreenPhotoSource(source);
     const cached = fitCache.get(key);
     if (cached) return { ...cached };
@@ -134,7 +126,7 @@ export async function fitTvWallpaperTargets(
           } catch (error) {
             if (signal?.aborted) throw error;
           }
-          if (!validScreenBox(measured) && allowAi) {
+          if (!validScreenBox(measured) && useAi) {
             signal?.throwIfAborted();
             const result = await requestAi(
               "ai-detect-screen",
@@ -166,20 +158,23 @@ export async function fitTvWallpaperTargets(
       const source = screenPhotoSource(product);
       let box: Box | null = savedScreenBoxForPhoto(product);
       if (isDefaultScreenFallback(box)) box = null;
-      if (
+      const selectedForPhoto = Boolean(
         selectedFit?.code === String(product.code) &&
         normalizeScreenPhotoSource(selectedFit.detectedFor) ===
           normalizeScreenPhotoSource(source) &&
-        validScreenBox(selectedFit.box)
-      )
-        box = selectedFit.box;
-      if (!validScreenBox(box)) {
-        try {
-          box = source ? await measure(source) : null;
-        } catch (error) {
-          if (signal?.aborted) throw error;
-          box = null;
-        }
+        validScreenBox(selectedFit.box),
+      );
+      if (selectedForPhoto) box = selectedFit!.box;
+      // An old saved rectangle can include the bezel or feet. Re-read each
+      // actual photo first; saved/manual coordinates only help when its pixels
+      // cannot establish a display boundary. Never copy another TV's box.
+      try {
+        const measured = source
+          ? await measure(source, allowAi && !selectedForPhoto)
+          : null;
+        if (validScreenBox(measured)) box = measured;
+      } catch (error) {
+        if (signal?.aborted) throw error;
       }
       if (!source || !validScreenBox(box))
         plan.unfittedCodes.push(String(product.code));

@@ -104,7 +104,7 @@ it("asks whether to use a wallpaper on one TV or all TVs before saving", async (
   fireEvent.click(view.getByRole("button", { name: "All TVs (3)" }));
   await waitFor(() =>
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ image: "/wallpaper.jpg", fit: "cover" }),
+      expect.objectContaining({ image: "/wallpaper.jpg", fit: "contain" }),
       "all",
       expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
     ),
@@ -146,11 +146,7 @@ it("refits a stale saved box when the replacement photo loads, then stamps manua
     () => null,
   );
   fireEvent.load(image);
-  const overlay = view.container.querySelector<HTMLElement>(
-    ".cs-screen-editor-overlay",
-  )!;
-  expect(overlay.style.left).toBe("4%");
-  expect(overlay.style.width).toBe("92%");
+  expect(view.container.querySelector(".cs-screen-editor-overlay")).toBeNull();
   fireEvent.change(view.getByRole("slider", { name: "Left" }), {
     target: { value: "10" },
   });
@@ -189,7 +185,7 @@ it("keeps an unchanged legacy box on photo load", () => {
     view.container.querySelector<HTMLElement>(".cs-screen-editor-overlay")!
       .style.left,
   ).toBe("20%");
-  expect(sample).not.toHaveBeenCalled();
+  expect(sample).toHaveBeenCalled();
 });
 
 for (const type of ["television", "phone"] as const) {
@@ -304,10 +300,7 @@ it("leaves invalid AI screen detection unapplied", async () => {
     ),
   );
   expect(save).not.toHaveBeenCalled();
-  expect(
-    view.container.querySelector<HTMLElement>(".cs-screen-editor-overlay")!
-      .style.left,
-  ).toBe("4%");
+  expect(view.container.querySelector(".cs-screen-editor-overlay")).toBeNull();
 });
 
 it("keeps the editor open and reports TVs that could not be fitted after applying successful fits", async () => {
@@ -370,10 +363,7 @@ it("cancels stale AI detection when the product photo changes without applying t
   await act(async () => {
     finish({ found: true, x: 0.25, y: 0.2, width: 0.5, height: 0.4 } as never);
   });
-  expect(
-    view.container.querySelector<HTMLElement>(".cs-screen-editor-overlay")!
-      .style.left,
-  ).toBe("4%");
+  expect(view.container.querySelector(".cs-screen-editor-overlay")).toBeNull();
   expect(view.queryByText("Finding the screen…")).toBeNull();
   expect(save).not.toHaveBeenCalled();
 });
@@ -472,4 +462,105 @@ it("previews duplicate TV codes with the fit belonging to each photo", () => {
   );
   expect(previews[0]?.style.width).toBe("80%");
   expect(previews[1]?.style.width).toBe("50%");
+});
+
+it("switches the selected TV's photo, wallpaper, fit and scope together", () => {
+  const first = {
+    ...product,
+    image: "/first-tv.png",
+    screenArtwork: {
+      image: "/first-wallpaper.jpg",
+      fit: "cover" as const,
+      box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 },
+    },
+  };
+  const second = {
+    ...product,
+    code: "TV-75",
+    name: "Beko TV 75 inch",
+    image: "/second-tv.png",
+    screenArtwork: {
+      image: "/second-wallpaper.jpg",
+      fit: "contain" as const,
+      box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 },
+    },
+  };
+  const select = vi.fn();
+  const props = {
+    televisions: [first, second],
+    tvCount: 2,
+    onSelectTelevision: select,
+    onSave: vi.fn(),
+    onClose: vi.fn(),
+  };
+  const view = render(<ScreenImageEditor {...props} product={first} />);
+  fireEvent.click(view.getByRole("combobox", { name: "Selected TV" }));
+  fireEvent.click(
+    view.getByRole("option", { name: "Beko TV 75 inch · TV-75" }),
+  );
+  expect(select).toHaveBeenCalledExactlyOnceWith(second);
+  fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
+  expect(
+    view.getByRole("heading", {
+      name: "Add this image to all TVs in the brochure?",
+    }),
+  ).toBeTruthy();
+  view.rerender(<ScreenImageEditor {...props} product={second} />);
+  expect(
+    view.container
+      .querySelector<HTMLImageElement>(".cs-screen-editor-preview > img")!
+      .getAttribute("src"),
+  ).toBe(second.image);
+  expect(
+    view.getByAltText("Replacement screen image").getAttribute("src"),
+  ).toBe(second.screenArtwork.image);
+  expect(
+    (view.getByAltText("Replacement screen image") as HTMLImageElement).style
+      .objectFit,
+  ).toBe("contain");
+  expect(
+    view.queryByRole("heading", {
+      name: "Add this image to all TVs in the brochure?",
+    }),
+  ).toBeNull();
+  expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("corrects an oversized legacy screen rectangle when the actual TV image loads", () => {
+  const pixels = new Uint8ClampedArray(100 * 80 * 4).fill(255);
+  for (let y = 15; y < 50; y++)
+    for (let x = 20; x < 80; x++) {
+      const offset = (y * 100 + x) * 4;
+      pixels[offset] = pixels[offset + 1] = pixels[offset + 2] = 30;
+    }
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+    drawImage() {},
+    getImageData: () => ({ data: pixels }),
+  } as unknown as CanvasRenderingContext2D);
+  const legacy = {
+    ...product,
+    screenArtwork: {
+      image: "/wallpaper.jpg",
+      box: { x: 0.01, y: 0.01, width: 0.98, height: 0.98 },
+    },
+  };
+  const view = render(
+    <ScreenImageEditor product={legacy} onSave={vi.fn()} onClose={vi.fn()} />,
+  );
+  const image = view.container.querySelector<HTMLImageElement>(
+    ".cs-screen-editor-preview > img",
+  )!;
+  Object.defineProperties(image, {
+    naturalWidth: { value: 100 },
+    naturalHeight: { value: 80 },
+  });
+  fireEvent.load(image);
+  const overlay = view.container.querySelector<HTMLElement>(
+    ".cs-screen-editor-overlay",
+  )!;
+  expect(overlay.style.left).toBe("21%");
+  expect(overlay.style.top).toBe("20%");
+  expect(overlay.style.width).toBe("57.99999999999999%");
+  expect(overlay.style.height).toBe("41.25%");
+  expect(requestAi).not.toHaveBeenCalled();
 });

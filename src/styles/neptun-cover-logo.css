@@ -1,0 +1,29 @@
+/* Only built-in source framing is cropped; uploaded logos keep their artwork. */
+.brochure-page .neptun-cover-logo-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1862 / 478;
+  overflow: hidden;
+}
+.brochure-page .neptun-cover-logo-frame > img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  width: 116.648765%;
+  height: auto;
+  left: -8.324382%;
+  top: -20.502092%;
+}
+.brochure-page .neptun-cover-logo-frame.framed {
+  aspect-ratio: 1358 / 350;
+}
+.brochure-page .neptun-cover-logo-frame.framed > img {
+  width: 106.627393%;
+  left: -3.313697%;
+  top: -103.142857%;
+}
+/* Brochure fonts ship upright faces; allow the separate slogan's italic style
+   even when the surrounding application disables synthesized font styles. */
+.brochure-page .cover-element-brand-tagline {
+  font-synthesis: style;
+}

@@ -158,4 +158,53 @@ describe("localized screen device categories", () => {
       }),
     ).toBeNull();
   });
+
+  it.each(['11.5"', "11,5”"])(
+    "keeps the exact Huawei %s model size when the supplied leaflet rounds it to 11 inches",
+    (size) => {
+      const product: Partial<Product> = {
+        name: `TABLET HUAWEI MATE PAD SE ${size} 8/256GB SPACE GREY (DEMO)`,
+        brochureDetails: ["HarmonyOS 2.0", 'Ekran: 11 "', "256 GB, 8 GB RAM"],
+      };
+      expect(otherScreenInches(product)).toBe(11.5);
+      expect(otherScreenInches({ ...product, specs: { Ekrani: '11 "' } })).toBe(
+        11.5,
+      );
+      expect(
+        otherScreenInches({
+          ...product,
+          image: "/verified-cutout.png",
+          aiOriginalImage: "/original-photo.jpg",
+          aiCutoutValidated: true,
+          aiCutoutValidationVersion: 1,
+        }),
+      ).toBe(11.5);
+    },
+  );
+
+  it.each([
+    ['11.6"', 11.6],
+    ["11,6”", 11.6],
+    ['11.0"', 11],
+    ['12"', 12],
+  ] as const)(
+    "preserves a precise or different authoritative %s fact despite an 11.5-inch product name",
+    (fact, expected) => {
+      expect(
+        otherScreenInches({
+          name: 'TABLET HUAWEI MATE PAD SE 11.5" 8/256GB SPACE GREY',
+          specs: { Ekrani: fact },
+        }),
+      ).toBe(expected);
+    },
+  );
+
+  it("does not infer a fractional diagonal from model digits without an inch unit", () => {
+    expect(
+      otherScreenInches({
+        name: "TABLET HUAWEI MATE PAD SE 11.5 8/256GB SPACE GREY",
+        specs: { Ekrani: '11"' },
+      }),
+    ).toBe(11);
+  });
 });

@@ -29,17 +29,40 @@ function imageSource(product: Product): string {
   return product.image || product.localImage || product.imageUrl || "";
 }
 
+function identityHeading(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_-]+/g, " ")
+    .trim();
+}
+
+function modelHeading(value: string) {
+  return /^(?:(?:product|item) )?(?:model(?: (?:number|no\.?|code|name))?|modeli(?: i produktit)?|mpn|manufacturer part number)$|^(?:kodi|emri|emertimi) i modelit$/i.test(
+    identityHeading(value),
+  );
+}
+
+function operationalHeading(value: string) {
+  return /price|cmim|qmim|discount|kursen|zbritje|stock|inventory|quantity|\bqty\b|availability|available|turnover|purchased|supplier|warranty|garanci|\bcost\b|\bcogs\b/i.test(
+    identityHeading(value),
+  );
+}
+
 export function productImageSearchParams(product: Product) {
   const identity = product as Product & {
     model?: string;
     ean?: string;
     color?: string;
   };
+  const identitySpecs = Object.entries(product.specs || {}).filter(
+    ([key]) => !operationalHeading(key),
+  );
   const identityCells = Object.entries(product.excelSource?.cells || {}).filter(
     ([key]) => {
-      const normalized = key.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+      const normalized = identityHeading(key);
       return (
-        !/price|cmim|discount|kursen|zbritje/i.test(normalized) &&
+        !operationalHeading(normalized) &&
         /model|mpn|emertim|name|brand|marka|ngjyr|colou?r|memori|storage|capacity|pershkrim|description|spec|ean|barcode/i.test(
           normalized,
         )
@@ -48,17 +71,15 @@ export function productImageSearchParams(product: Product) {
   );
   const model = detailPlainText(
     identity.model ||
-      Object.entries(product.specs || {}).find(([key]) =>
-        /^(?:model|modeli|mpn)$/i.test(key.trim()),
-      )?.[1] ||
-      identityCells.find(([key]) => /model|mpn/i.test(key))?.[1] ||
+      identitySpecs.find(([key]) => modelHeading(key))?.[1] ||
+      identityCells.find(([key]) => modelHeading(key))?.[1] ||
       "",
   ).slice(0, 160);
   const variants = [
     ...new Set(
       [
         identity.color || "",
-        ...Object.entries(product.specs || {})
+        ...identitySpecs
           .filter(([key]) =>
             /^(?:colou?r|ngjyra|selected variant)$/i.test(key.trim()),
           )
@@ -69,7 +90,7 @@ export function productImageSearchParams(product: Product) {
     ),
   ].slice(0, 12);
   const details = [
-    ...Object.entries(product.specs || {})
+    ...identitySpecs
       .filter(([key]) =>
         /model|mpn|colou?r|ngjyr|memori|storage|capacity/i.test(key),
       )
@@ -78,9 +99,7 @@ export function productImageSearchParams(product: Product) {
     ...(product.brochureDetails || []).map((row) =>
       typeof row === "string" ? row : row.text,
     ),
-    ...Object.entries(product.specs || {}).map(
-      ([key, value]) => `${key}: ${value}`,
-    ),
+    ...identitySpecs.map(([key, value]) => `${key}: ${value}`),
     product.description || "",
   ]
     .map(detailPlainText)
@@ -239,6 +258,8 @@ export function finishMissingImageSearch(
       "aiAnnotationStyle",
       "aiBackgroundSignature",
       "aiCutoutProvider",
+      "aiCutoutValidated",
+      "aiCutoutValidationVersion",
       "aiAnnotationCleanup",
       "aiCutoutReviewRevision",
       "aiCutoutReviewAccepted",

@@ -366,6 +366,8 @@ it("remeasures the member corner after a live photo resize and a clearance event
   const label = await view.findByLabelText("55 inch screen");
   const firstWidth = parseFloat(label.style.width);
   const item = label.closest<HTMLElement>(".product-artwork-item")!;
+  const wallpaper = item.querySelector<HTMLElement>(".bundle-screen-artwork")!;
+  const firstWallpaperHeight = parseFloat(wallpaper.style.height);
   await act(async () => {
     item.style.width = "35%";
     item
@@ -374,6 +376,9 @@ it("remeasures the member corner after a live photo resize and a clearance event
   });
   await waitFor(() =>
     expect(parseFloat(label.style.width)).toBeGreaterThan(firstWidth),
+  );
+  expect(parseFloat(wallpaper.style.height)).toBeGreaterThan(
+    firstWallpaperHeight,
   );
   expect(label.style.transform).toBe("translate(-1cqw,2cqw) scale(0.8)");
   const currentStyle = label.getAttribute("style");

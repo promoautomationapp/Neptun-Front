@@ -87,18 +87,22 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   defaultProductImageScale,
   hasEditableScreen,
+  isTelevision,
   otherScreenInches,
   tvScreenInches,
 } from "../brochure/tvSpecs";
 import { productImageFit } from "../brochure/productImageFit";
 import { tvInchesEmbedded } from "../brochure/imageReview";
 import {
+  detectedTelevisionScreenBox,
   televisionScreenBox,
   visibleImageBounds,
 } from "../brochure/screenGeometry";
 import { EditableScreenAnnotation } from "../brochure/EditableScreenAnnotation";
 import { otherScreenAnnotationBaseBox } from "../brochure/screenAnnotationGeometry";
 import { ProductArtworkLayer } from "../brochure/ProductArtworkLayer";
+import { screenGeometryImageUrl } from "../brochure/tvWallpaperFit";
+import "../../styles/tv-wallpaper-fit.css";
 import { materializeProductNameAlignment } from "../brochure/ProductNameDivider";
 import { t } from "../brochure/i18n";
 
@@ -664,7 +668,9 @@ export function SocialProductVisual({
       });
       const box =
         allowScreenArtwork && product.screenArtwork?.image
-          ? televisionScreenBox(product, img)
+          ? isTelevision(product)
+            ? detectedTelevisionScreenBox(product, img)
+            : televisionScreenBox(product, img)
           : null;
       setOverlay(
         box && product.screenArtwork?.image
@@ -731,7 +737,8 @@ export function SocialProductVisual({
           className={`social-product-main-image ${adjustImage ? "social-adjusting-image" : ""}`}
           ref={imageRef}
           data-social-apple-photo={hasApplePhotos(product) ? "true" : undefined}
-          src={image}
+          src={isTelevision(product) ? screenGeometryImageUrl(image) : image}
+          crossOrigin={isTelevision(product) ? "use-credentials" : undefined}
           alt={product.name}
           draggable={false}
           referrerPolicy="no-referrer"
@@ -794,7 +801,7 @@ export function SocialProductVisual({
           aria-hidden="true"
           style={{
             ...overlay,
-            objectFit: product.screenArtwork?.fit || "cover",
+            objectFit: product.screenArtwork?.fit || "contain",
             background: "#000",
           }}
         />

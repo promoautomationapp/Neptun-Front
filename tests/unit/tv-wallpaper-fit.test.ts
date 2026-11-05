@@ -117,10 +117,8 @@ it("preserves deliberate own-photo fits but replaces an old stamped generic fall
   samplePhotos(new Map([[products[1]!.image!, panel(25, 20, 50, 28)]]));
   const loadImage = vi.fn(async (source) => image(source));
   const result = await fitTvWallpaperTargets(products, { loadImage });
-  expect(loadImage).toHaveBeenCalledExactlyOnceWith(
-    products[1]!.image,
-    undefined,
-  );
+  expect(loadImage).toHaveBeenCalledTimes(2);
+  expect(loadImage).toHaveBeenCalledWith(products[1]!.image, undefined);
   expect(result.fits.find((fit) => fit.code === "manual-fit")?.box).toEqual(
     manual,
   );
@@ -350,7 +348,10 @@ it("uses a saved member artwork replacement and retains its manual screen fit an
   const plan = await fitTvWallpaperTargets(campaignTelevisionPhotos(campaign), {
     loadImage,
   });
-  expect(loadImage).not.toHaveBeenCalled();
+  expect(loadImage).toHaveBeenCalledExactlyOnceWith(
+    "/manual-member-photo.png",
+    undefined,
+  );
   expect(plan.fits[0]?.box).toEqual(box);
   expect(
     applyTvWallpaper(
@@ -432,7 +433,7 @@ it("selects the fitted duplicate SKU by its effective photo for a single-TV edit
   expect(first.screenArtwork).toBeUndefined();
   expect(member.screenArtwork).toEqual({
     image: "/member-wallpaper.jpg",
-    fit: "cover",
+    fit: "contain",
     detectedFor: bundle.image,
     box,
   });

@@ -8,6 +8,7 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { effectiveProductArtworks } from "./productArtwork";
 import {
   normalizeScreenPhotoSource,
+  detectedTelevisionScreenBox,
   screenPhotoSource,
   televisionScreenBox,
   visibleImageBounds,
@@ -27,7 +28,9 @@ import { bundleMemberByCode, updateBundleMember } from "./bundleMemberUpdates";
 import { t } from "./i18n";
 import { isApplePhotoArtwork, isAppleProduct } from "./productTypes";
 import { useProductImageFit } from "./useProductImageFit";
+import { screenGeometryImageUrl } from "./tvWallpaperFit";
 import "../../styles/product-artwork-layer.css";
+import "../../styles/tv-wallpaper-fit.css";
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.max(minimum, Math.min(maximum, value));
@@ -135,8 +138,9 @@ export function bundleScreenArtworkPlacement(
     return null;
   const photo = productArtworkImageBox(image, container);
   if (!photo) return null;
-  const screen = televisionScreenBox(member, image);
+  const screen = detectedTelevisionScreenBox(member, image);
   if (
+    !screen ||
     ![screen.x, screen.y, screen.width, screen.height].every(Number.isFinite) ||
     screen.width <= 0 ||
     screen.height <= 0
@@ -327,7 +331,14 @@ function ArtworkPhoto({
           imageRef.current = image;
           wrapRef.current = image?.parentElement as HTMLDivElement | null;
         }}
-        src={artwork.image}
+        src={
+          member && isTelevision(member) && artwork.image
+            ? screenGeometryImageUrl(artwork.image)
+            : artwork.image
+        }
+        crossOrigin={
+          member && isTelevision(member) ? "use-credentials" : undefined
+        }
         alt={label}
         draggable={false}
         referrerPolicy="no-referrer"
@@ -350,7 +361,7 @@ function ArtworkPhoto({
           draggable={false}
           referrerPolicy="no-referrer"
           style={{
-            objectFit: member.screenArtwork.fit || "cover",
+            objectFit: member.screenArtwork.fit || "contain",
             background: "#000",
             left: `${screen.x}%`,
             top: `${screen.y}%`,

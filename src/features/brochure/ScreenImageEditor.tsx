@@ -17,7 +17,8 @@ import { requestAi } from "../ai/ai.api";
 import { SavedImageChoices } from "./SavedImageChoices";
 import { EditorIcon } from "./EditorIcon";
 import "../../styles/image-editor-options.css";
-import React, { useEffect, useRef, useState } from "react";
+import "../../styles/tv-wallpaper-fit.css";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Modal } from "./Modals";
 import { readImage } from "./utils";
 import { t } from "./i18n";
@@ -50,6 +51,7 @@ interface ScreenImageEditorProps {
   settings?: Settings;
   tvCount?: number;
   televisions?: Product[];
+  onSelectTelevision?: (product: Product) => void;
   onSave: (
     artwork: ScreenArtwork | null,
     scope: "one" | "all",
@@ -71,6 +73,7 @@ export function ScreenImageEditor({
   settings,
   tvCount = 1,
   televisions = [],
+  onSelectTelevision,
   onSave,
   onClose,
 }: ScreenImageEditorProps) {
@@ -95,7 +98,7 @@ export function ScreenImageEditor({
     ).values(),
   ];
   const [fit, setFit] = useState<"contain" | "cover">(
-    product.screenArtwork?.fit || "cover",
+    product.screenArtwork?.fit || "contain",
   );
   const [screen, setScreen] = useState(product.screenArtwork?.image || "");
   const [box, setBox] = useState(
@@ -119,6 +122,7 @@ export function ScreenImageEditor({
   const scopeRef = useRef<HTMLElement>(null);
   const [error, setError] = useState("");
   const gesture = useRef<ScreenGesture | null>(null);
+  const manuallyAdjusted = useRef(false);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const television = isTelevision(product);
   useEffect(
@@ -131,7 +135,7 @@ export function ScreenImageEditor({
     },
     [],
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (previousPhoto.current === photoIdentity) return;
     previousPhoto.current = photoIdentity;
     detection.current?.abort();
@@ -139,9 +143,15 @@ export function ScreenImageEditor({
     fitting.current?.abort();
     fitting.current = null;
     gesture.current = null;
+    manuallyAdjusted.current = false;
     setDetecting(false);
     setSaving(false);
     const saved = savedScreenBoxForPhoto(product);
+    wallpaperSelection.current++;
+    setScreen(product.screenArtwork?.image || "");
+    setFit(product.screenArtwork?.fit || "contain");
+    setScopePrompt(null);
+    setAdjusting(false);
     setBox(saved || defaultBox(product));
     setDetectedFor(
       saved && !isDefaultScreenFallback(saved)
@@ -232,6 +242,7 @@ export function ScreenImageEditor({
     event.preventDefault();
     event.stopPropagation();
     cancelDetection();
+    manuallyAdjusted.current = true;
     const preview = event.currentTarget.closest(".cs-screen-editor-preview");
     if (!preview) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -288,7 +299,7 @@ export function ScreenImageEditor({
     if (fitting.current) return;
     wallpaperSelection.current++;
     setScreen(image);
-    setFit("cover");
+    setFit("contain");
     setError("");
   }
   async function choose(file: File | undefined) {
@@ -308,20 +319,25 @@ export function ScreenImageEditor({
   function fitScreen(image = imageRef.current) {
     if (!image?.naturalWidth) return;
     cancelDetection();
-    setBox(
-      television
-        ? televisionScreenBox({ ...product, screenArtwork: undefined }, image)
-        : defaultBox(product),
-    );
+    manuallyAdjusted.current = false;
     const detected = television
       ? detectedTelevisionScreenBox(
           { ...product, screenArtwork: undefined },
           image,
         )
       : defaultBox(product);
-    setDetectedFor(detected ? screenPhotoSource(product, image) : "");
+    const saved = savedScreenBoxForPhoto(product, image);
+    const frame =
+      detected || (saved && !isDefaultScreenFallback(saved) ? saved : null);
+    setBox(
+      frame ||
+        (television
+          ? televisionScreenBox({ ...product, screenArtwork: undefined }, image)
+          : defaultBox(product)),
+    );
+    setDetectedFor(frame ? screenPhotoSource(product, image) : "");
     setError(
-      detected
+      frame
         ? ""
         : t(
             "The screen could not be identified. Adjust the fit manually or try another photo.",
@@ -331,6 +347,7 @@ export function ScreenImageEditor({
   async function fitWithAi() {
     if (detection.current || saving) return;
     const source = screenPhotoSource(product);
+    manuallyAdjusted.current = true;
     const selectedPhoto = photoIdentity;
     if (!source) return;
     const controller = new AbortController();
@@ -372,6 +389,7 @@ export function ScreenImageEditor({
   }
   function change(field: keyof Box, value: string) {
     cancelDetection();
+    manuallyAdjusted.current = true;
     setBox((current) => {
       const amount = Number(value) / 100;
       if (field === "x")
@@ -414,6 +432,38 @@ export function ScreenImageEditor({
               : "Upload a picture for the display. The product photograph and frame stay in place. You can keep the original screen by removing this picture.",
           )}
         </p>
+        {television && televisions.length > 1 && onSelectTelevision && (
+          <label className="cs-screen-selected-tv">
+            <span>{t("Selected TV")}</span>
+            <SearchableSelect
+              aria-label={t("Selected TV")}
+              disabled={saving || detecting}
+              value={photoIdentity}
+              onChange={(event) => {
+                const selected = televisions.find(
+                  (tv) =>
+                    JSON.stringify([
+                      String(tv.code),
+                      normalizeScreenPhotoSource(screenPhotoSource(tv)),
+                    ]) === event.target.value,
+                );
+                if (selected) onSelectTelevision(selected);
+              }}
+            >
+              {televisions.map((tv, index) => (
+                <option
+                  key={`${tv.code}-${index}`}
+                  value={JSON.stringify([
+                    String(tv.code),
+                    normalizeScreenPhotoSource(screenPhotoSource(tv)),
+                  ])}
+                >
+                  {tv.name} · {tv.code}
+                </option>
+              ))}
+            </SearchableSelect>
+          </label>
+        )}
         <div
           className="cs-screen-source-options"
           role="group"
@@ -523,30 +573,18 @@ export function ScreenImageEditor({
             }}
           >
             <img
+              key={photoIdentity}
               ref={imageRef}
               src={screenGeometryImageUrl(screenPhotoSource(product))}
               crossOrigin="use-credentials"
               alt={product.name}
               onLoad={(event) => {
                 if (detection.current || fitting.current) return;
-                if (
-                  detectedFor &&
-                  normalizeScreenPhotoSource(detectedFor) ===
-                    normalizeScreenPhotoSource(
-                      screenPhotoSource(product, event.currentTarget),
-                    )
-                )
-                  return;
-                if (
-                  !savedScreenBoxForPhoto(product, event.currentTarget) ||
-                  isDefaultScreenFallback(
-                    savedScreenBoxForPhoto(product, event.currentTarget),
-                  )
-                )
-                  fitScreen(event.currentTarget);
+                if (manuallyAdjusted.current) return;
+                fitScreen(event.currentTarget);
               }}
             />
-            {screen && (
+            {screen && (!television || detectedFor) && (
               <div
                 className="cs-screen-editor-overlay"
                 style={{
@@ -679,6 +717,7 @@ export function ScreenImageEditor({
                 value={box.width * 100}
                 onChange={(event) => {
                   cancelDetection();
+                  manuallyAdjusted.current = true;
                   const scale = Number(event.target.value) / 100 / box.width;
                   const safe = Math.min(scale, 1 / box.width, 1 / box.height);
                   const width = box.width * safe,
@@ -832,10 +871,11 @@ function TVWallpaperPreview({
   fit: "contain" | "cover";
   box?: Box;
 }) {
-  const [box, setBox] = useState(
-    savedScreenBoxForPhoto(product) || defaultBox(product),
-  );
-  const frame = chosenBox || savedScreenBoxForPhoto(product) || box;
+  const [box, setBox] = useState<Box | null>(() => {
+    const saved = savedScreenBoxForPhoto(product);
+    return saved && !isDefaultScreenFallback(saved) ? saved : null;
+  });
+  const frame = chosenBox || box;
   return (
     <figure className="cs-tv-scope-preview">
       <div>
@@ -844,10 +884,10 @@ function TVWallpaperPreview({
           crossOrigin="use-credentials"
           alt={product.name}
           onLoad={(event) =>
-            setBox(televisionScreenBox(product, event.currentTarget))
+            setBox(detectedTelevisionScreenBox(product, event.currentTarget))
           }
         />
-        {image && (
+        {image && frame && (
           <span
             style={{
               left: `${frame.x * 100}%`,

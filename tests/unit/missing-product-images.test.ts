@@ -78,6 +78,47 @@ it("includes supplied model, selected color, category and imported identity fact
     productImageSearchKey(recolored),
   );
 });
+it("does not interpret stock columns mentioning models as the product model", () => {
+  const product = {
+    ...missing,
+    code: "84066872",
+    name: 'TABLET HUAWEI MATE PAD SE 11.5" 8/256GB SPACE GREY (DEMO)',
+    specs: {
+      Power: "20 W",
+      "Supplier name": "Internal supplier",
+      "Model availability": "9",
+      Warranty: "2 years",
+      "Model price": "299",
+      Quantity: "10",
+    },
+    excelSource: {
+      row: 1,
+      cells: {
+        "Stock In the moment that models are proposed": "9",
+        "Stock In The System 1 Day Before Leaflet Starts": "10",
+        "Model availability": "9",
+        "Model warranty": "2 years",
+        Description:
+          'TABLET HUAWEI MATE PAD SE 11.5" 8/256GB SPACE GREY (DEMO)',
+      },
+    },
+  };
+  const params = productImageSearchParams(product);
+  expect(params).not.toHaveProperty("model");
+  expect(params.details.join(" ")).not.toMatch(
+    /stock|models are proposed|supplier|availability|warranty|price|quantity/i,
+  );
+  expect(params.details).toContain("Power: 20 W");
+  expect(
+    productImageSearchParams({
+      ...product,
+      excelSource: {
+        ...product.excelSource,
+        cells: { ...product.excelSource.cells, "Product model": "AGS6-W09" },
+      },
+    }),
+  ).toMatchObject({ model: "AGS6-W09" });
+});
 it("shares one exact lookup for the same offer in different categories while applying each request separately", async () => {
   const duplicate = {
     ...missing,
@@ -220,6 +261,8 @@ it("replaces a found member photo atomically with its saved artwork and refreshe
     image: "/api/assets/previous",
     aiOriginalImage: "/api/assets/pre-cutout",
     aiInchesEmbedded: true,
+    aiCutoutValidated: true,
+    aiCutoutValidationVersion: 1,
     screenArtwork: {
       image: "/api/assets/wallpaper",
       box: { x: 0.1, y: 0.1, width: 0.8, height: 0.7 },
@@ -260,6 +303,12 @@ it("replaces a found member photo atomically with its saved artwork and refreshe
   ).toBeUndefined();
   expect(
     draft.products[0]!.bundleProducts![1]!.aiInchesEmbedded,
+  ).toBeUndefined();
+  expect(
+    draft.products[0]!.bundleProducts![1]!.aiCutoutValidated,
+  ).toBeUndefined();
+  expect(
+    draft.products[0]!.bundleProducts![1]!.aiCutoutValidationVersion,
   ).toBeUndefined();
   expect(draft.products[0]!.sale).toBe(499);
 });

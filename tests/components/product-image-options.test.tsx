@@ -90,7 +90,12 @@ const tv: Product = {
   category: "TV",
   subcategory: "TV",
   image: "/tv.png",
-  screenArtwork: { image: "/first-wallpaper.jpg", fit: "contain" },
+  screenArtwork: {
+    image: "/first-wallpaper.jpg",
+    fit: "contain",
+    box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 },
+    detectedFor: "/tv.png",
+  },
 };
 beforeEach(() => {
   api.quota.mockResolvedValue({
@@ -137,7 +142,7 @@ it("uses a selected saved product photo immediately without starting background 
   expect(api.generate).not.toHaveBeenCalled();
 });
 
-it("fills the display with a selected portrait wallpaper and keeps the explicit scope choice", async () => {
+it("keeps the whole selected portrait wallpaper inside the display and keeps the explicit scope choice", async () => {
   const save = vi.fn();
   const view = render(
     <ScreenImageEditor
@@ -164,7 +169,7 @@ it("fills the display with a selected portrait wallpaper and keeps the explicit 
     "Replacement screen image",
   ) as HTMLImageElement;
   expect(preview.getAttribute("src")).toBe("/portrait-wallpaper.jpg");
-  expect(preview.style.objectFit).toBe("cover");
+  expect(preview.style.objectFit).toBe("contain");
   expect(preview.style.background).toBe("rgb(0, 0, 0)");
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
   expect(save).not.toHaveBeenCalled();
@@ -173,7 +178,7 @@ it("fills the display with a selected portrait wallpaper and keeps the explicit 
     expect(save).toHaveBeenCalledWith(
       expect.objectContaining({
         image: "/portrait-wallpaper.jpg",
-        fit: "cover",
+        fit: "contain",
       }),
       "all",
       expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
@@ -205,7 +210,7 @@ it("opens the AI wallpaper tools directly without starting a generation", async 
   expect(api.prepare).not.toHaveBeenCalled();
 });
 
-it("fills the display with a newly uploaded wallpaper after an earlier whole-image choice", async () => {
+it("keeps the whole newly uploaded wallpaper after an earlier whole-image choice", async () => {
   const save = vi.fn();
   api.upload.mockResolvedValue("/uploaded-wallpaper.jpg");
   const view = render(
@@ -224,14 +229,14 @@ it("fills the display with a newly uploaded wallpaper after an earlier whole-ima
     expect(
       (view.getByAltText("Replacement screen image") as HTMLImageElement).style
         .objectFit,
-    ).toBe("cover"),
+    ).toBe("contain"),
   );
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
   await waitFor(() =>
     expect(save).toHaveBeenCalledWith(
       expect.objectContaining({
         image: "/uploaded-wallpaper.jpg",
-        fit: "cover",
+        fit: "contain",
       }),
       "one",
       expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
@@ -281,10 +286,10 @@ it("keeps the newer wallpaper choice when an earlier upload finishes later", asy
   expect(
     (view.getByAltText("Replacement screen image") as HTMLImageElement).style
       .objectFit,
-  ).toBe("cover");
+  ).toBe("contain");
 });
 
-it("fills the display when a generated wallpaper is selected", async () => {
+it("keeps the whole generated wallpaper inside the display", async () => {
   const save = vi.fn();
   api.generate.mockResolvedValue({
     image: "/generated-wallpaper.png",
@@ -313,13 +318,13 @@ it("fills the display when a generated wallpaper is selected", async () => {
   expect(
     (view.getByAltText("Replacement screen image") as HTMLImageElement).style
       .objectFit,
-  ).toBe("cover");
+  ).toBe("contain");
   fireEvent.click(view.getByRole("button", { name: "Apply wallpaper" }));
   await waitFor(() =>
     expect(save).toHaveBeenCalledWith(
       expect.objectContaining({
         image: "/generated-wallpaper.png",
-        fit: "cover",
+        fit: "contain",
       }),
       "one",
       expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),

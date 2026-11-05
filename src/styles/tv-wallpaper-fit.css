@@ -1,0 +1,40 @@
+.cs-screen-editor-preview > img:first-child,
+.cs-tv-scope-preview > div > img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  transform: none;
+  object-fit: contain;
+}
+.cs-tv-scope-preview span,
+.brochure-screen-image,
+.bundle-screen-artwork,
+.social-product .social-product-screen-image {
+  background: #000;
+  overflow: hidden;
+  clip-path: inset(0);
+  border-radius: 0;
+}
+.cs-screen-editor-overlay > img,
+.cs-tv-scope-preview span > img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  transform: none;
+  object-position: center;
+  clip-path: inset(0);
+}
+.cs-screen-selected-tv {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: var(--np-text, #23435e);
+  font-size: 13px;
+  font-weight: 700;
+}

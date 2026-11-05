@@ -160,13 +160,33 @@ export function otherScreenInches(product: Partial<Product>) {
     ),
     product.name,
   ];
+  const sizePattern = /\b(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:["″”]|inch|inç)/i;
+  const namedSize = String(product.name || "").match(sizePattern);
+  const namedInches = Number((namedSize?.[1] || "").replace(",", "."));
+  const preciseNamedSize =
+    namedSize &&
+    /[.,]/.test(namedSize[1]!) &&
+    !Number.isInteger(namedInches) &&
+    namedInches >= (kind === "phone" ? 3 : 7) &&
+    namedInches <= 50
+      ? namedInches
+      : null;
   for (const source of sources) {
-    const match = String(source || "").match(
-      /\b(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:["″”]|inch|inç)/i,
-    );
+    const match = String(source || "").match(sizePattern);
     if (!match) continue;
     const inches = Number((match[1] ?? "").replace(",", "."));
-    if (inches >= (kind === "phone" ? 3 : 7) && inches <= 50) return inches;
+    if (inches >= (kind === "phone" ? 3 : 7) && inches <= 50) {
+      // The supplied Huawei rows name the exact 11.5-inch model but shorten
+      // its leaflet fact to 11 inches. Recover only the matching fractional
+      // model size; explicit decimal facts and different sizes retain priority.
+      if (
+        preciseNamedSize !== null &&
+        !/[.,]/.test(match[1]!) &&
+        Math.floor(preciseNamedSize) === inches
+      )
+        return preciseNamedSize;
+      return inches;
+    }
   }
   return null;
 }

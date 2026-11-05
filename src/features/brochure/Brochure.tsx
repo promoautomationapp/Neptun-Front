@@ -15,6 +15,11 @@ import { COVER_OPTIONS } from "../settings/options";
 import { stableMeasurement } from "./layoutObservation";
 import { logoForBackground } from "../settings/logo-rules";
 import {
+  NeptunCoverLogo,
+  builtinCoverLogo,
+  neptunCoverTaglinePlacement,
+} from "./NeptunCoverLogo";
+import {
   defaultPhotoPlacement,
   defaultDetailFill,
   defaultRegionScale,
@@ -64,6 +69,7 @@ import {
 import {
   displaySpecs,
   hasEditableScreen,
+  isTelevision,
   otherScreenInches,
   tvScreenInches,
 } from "./tvSpecs";
@@ -90,6 +96,7 @@ import { NeptunWordmark } from "./NeptunWordmark";
 import { PageArtwork } from "./PageArtwork";
 import { CoverElement } from "./CoverElement";
 import {
+  coverElementPlacement,
   coverGradientFill,
   coverProductPlacement,
   coverProductDensity,
@@ -112,6 +119,8 @@ import { EditableScreenAnnotation } from "./EditableScreenAnnotation";
 import { ProductArtworkLayer } from "./ProductArtworkLayer";
 import { ApplePhotoClearance } from "./ApplePhotoClearance";
 import { DefaultSavingsClearance } from "./DefaultSavingsClearance";
+import { screenGeometryImageUrl } from "./tvWallpaperFit";
+import "../../styles/tv-wallpaper-fit.css";
 import {
   ProductNameDivider,
   materializeProductNameAlignment,
@@ -162,7 +171,11 @@ import "../../styles/mobile-details.css";
 import "../../styles/brochure-detail-strip.css";
 import "../../styles/background-readability.css";
 import "../../styles/brochure-october.css";
-import { visibleImageBounds, televisionScreenBox } from "./screenGeometry";
+import {
+  visibleImageBounds,
+  televisionScreenBox,
+  detectedTelevisionScreenBox,
+} from "./screenGeometry";
 import {
   televisionAnnotationBaseBox,
   phoneAnnotationBaseBox,
@@ -302,9 +315,11 @@ export { coverProducts, splitPages } from "./campaignPages";
 function Mark({
   campaign,
   dark = false,
+  showTagline = true,
 }: {
   campaign: Campaign;
   dark?: boolean;
+  showTagline?: boolean;
 }) {
   const framed =
     campaign.neptunLogoOption === "framed" && !campaign.brandAssets?.neptun;
@@ -322,7 +337,7 @@ function Mark({
       ) : (
         <>
           <img src={brochureAssetSource(campaign, "neptun")} alt="NEPTUN" />
-          <em>Jeto më mirë, çdo ditë.</em>
+          {showTagline && <em>Jeto më mirë, çdo ditë.</em>}
         </>
       )}
     </div>
@@ -1515,7 +1530,13 @@ function StandardProductCard({
       );
       const left = rect.left - wrap.left + (rect.width - width) / 2;
       const top = rect.top - wrap.top + (rect.height - height) / 2;
-      const b = televisionScreenBox(product, image);
+      const b = isTelevision(product)
+        ? detectedTelevisionScreenBox(product, image)
+        : televisionScreenBox(product, image);
+      if (!b) {
+        setScreenOverlay(null);
+        return;
+      }
       setScreenOverlay({
         left: (left + b.x * width) / visualScale,
         top: (top + b.y * height) / visualScale,
@@ -1793,7 +1814,14 @@ function StandardProductCard({
                 className="brochure-product-image"
                 draggable={false}
                 ref={imageRef}
-                src={product.image}
+                src={
+                  isTelevision(product)
+                    ? screenGeometryImageUrl(product.image)
+                    : product.image
+                }
+                crossOrigin={
+                  isTelevision(product) ? "use-credentials" : undefined
+                }
                 alt={product.name}
                 loading="eager"
                 referrerPolicy="no-referrer"
@@ -1843,7 +1871,7 @@ function StandardProductCard({
               aria-hidden="true"
               style={{
                 ...screenOverlay,
-                objectFit: product.screenArtwork.fit || "cover",
+                objectFit: product.screenArtwork.fit || "contain",
                 background: "#000",
               }}
             />
@@ -2541,8 +2569,29 @@ function CoverPageContent({
     campaign,
     "cover",
     backgroundColor,
-    campaign.coverLogoSource || "",
+    campaign.coverLogoSource ||
+      (campaign.neptunLogoOption === "framed" && !campaign.brandAssets?.neptun
+        ? "/api/assets/legacy/assets/neptun-logo-framed.png"
+        : ""),
   );
+  const builtinLogo = builtinCoverLogo(campaign, coverLogo);
+  const separateBrandTagline =
+    october || campaign.coverBandVariant === "hajde" || Boolean(builtinLogo);
+  const logoDefaultPlacement = october
+    ? { x: 31.85, y: 3.26, width: 35.57, height: 6.085 }
+    : campaign.coverBandVariant === "hajde"
+      ? { x: 30, y: 2, width: 40, height: 8 }
+      : undefined;
+  const builtinTaglinePlacement = builtinLogo
+    ? neptunCoverTaglinePlacement(
+        {
+          ...coverElementPlacement(campaign, "logo"),
+          ...logoDefaultPlacement,
+          ...campaign.coverElementPlacements?.logo,
+        },
+        builtinLogo,
+      )
+    : undefined;
   const priceLogo = priceLogoSource(campaign);
   const template =
     campaign.coverTemplate === "photo"
@@ -2725,19 +2774,15 @@ function CoverPageContent({
         <CoverElement
           campaign={campaign}
           kind="logo"
-          defaultPlacement={
-            october
-              ? { x: 31.85, y: 3.26, width: 35.57, height: 6.085 }
-              : campaign.coverBandVariant === "hajde"
-                ? { x: 30, y: 2, width: 40, height: 8 }
-                : undefined
-          }
+          defaultPlacement={logoDefaultPlacement}
           onReplaceFile={onReplaceCoverLogo}
           onChooseImage={onChooseCoverLogo}
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
-          {coverLogo ? (
+          {builtinLogo ? (
+            <NeptunCoverLogo source={coverLogo} variant={builtinLogo} />
+          ) : coverLogo ? (
             (campaign.coverLogoStyle === "framed" &&
               coverLogo === campaign.coverLogoSource) ||
             coverLogo === "/api/assets/legacy/assets/neptun-logo-framed.png" ? (
@@ -2748,36 +2793,36 @@ function CoverPageContent({
               <img src={coverLogo} alt="NEPTUN" draggable={false} />
             )
           ) : (
-            <Mark campaign={campaign} />
+            <Mark campaign={campaign} showTagline={!separateBrandTagline} />
           )}
         </CoverElement>
       )}
-      {(october || campaign.coverBandVariant === "hajde") &&
-        campaign.showCoverLogo !== false && (
-          <CoverElement
-            campaign={campaign}
-            kind="brand-tagline"
-            defaultPlacement={
-              october
-                ? { x: 46.63, y: 9.95, width: 22.1, height: 1.9 }
-                : { x: 46, y: 9.2, width: 24, height: 1.6 }
-            }
-            onChange={onCoverElementChange}
-            onHide={onCoverElementHide}
+      {separateBrandTagline && campaign.showCoverLogo !== false && (
+        <CoverElement
+          campaign={campaign}
+          kind="brand-tagline"
+          defaultPlacement={
+            builtinTaglinePlacement ||
+            (october
+              ? { x: 46.63, y: 9.95, width: 22.1, height: 1.9 }
+              : { x: 46, y: 9.2, width: 24, height: 1.6 })
+          }
+          onChange={onCoverElementChange}
+          onHide={onCoverElementHide}
+        >
+          <span
+            {...inlineText(
+              campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë.",
+              t("Brand tagline"),
+              onCoverTextChange
+                ? (value) => onCoverTextChange("coverBrandTagline", value)
+                : undefined,
+            )}
           >
-            <span
-              {...inlineText(
-                campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë.",
-                t("Brand tagline"),
-                onCoverTextChange
-                  ? (value) => onCoverTextChange("coverBrandTagline", value)
-                  : undefined,
-              )}
-            >
-              {campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë."}
-            </span>
-          </CoverElement>
-        )}
+            {campaign.coverBrandTagline ?? "Jeto më mirë, çdo ditë."}
+          </span>
+        </CoverElement>
+      )}
       {campaign.showCoverHeadline !== false && headline && (
         <CoverElement
           campaign={campaign}

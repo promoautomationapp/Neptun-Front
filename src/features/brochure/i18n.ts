@@ -1686,6 +1686,7 @@ const translations: Record<string, string> = {
   "Use reference brochure preset": "Përdor modelin referencë të broshurës",
   "One above two · TV pages 3–2–3":
     "Një sipër dhe dy poshtë · faqet me TV 3–2–3",
+  "Selected TV": "Televizori i zgjedhur",
   "TV wallpaper": "Pamja e ekranit të TV-së",
   "Choose a wallpaper for this TV or every TV in the brochure.":
     "Zgjidhni një pamje për këtë TV ose çdo TV në broshurë.",

@@ -148,7 +148,7 @@ it("uses the same gentle TV inch sizing for social photos and retains saved size
   ).toBe("translate(4%, 8%) scale(1.2)");
 });
 
-it("fits shared TV wallpaper without a saved box and honors an explicit whole-image choice", () => {
+it("keeps an unrecognized screen original and honors whole-image or fill choices once a panel is fitted", () => {
   vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
   vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(
     200,
@@ -166,13 +166,19 @@ it("fits shared TV wallpaper without a saved box and honors an explicit whole-im
     image: "/tv.png",
     screenArtwork: { image: "/wallpaper.png" },
   };
-  const canvas = (fit?: "contain" | "cover") => (
+  const canvas = (fit?: "contain" | "cover", fitted = false) => (
     <div className="social-canvas">
       <article className="social-product">
         <SocialProductVisual
           product={{
             ...product,
-            screenArtwork: { ...product.screenArtwork, fit },
+            screenArtwork: {
+              ...product.screenArtwork,
+              fit,
+              ...(fitted
+                ? { box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 } }
+                : {}),
+            },
           }}
           image={product.image}
         />
@@ -181,14 +187,83 @@ it("fits shared TV wallpaper without a saved box and honors an explicit whole-im
   );
   const view = render(canvas());
   fireEvent.load(view.getByAltText("TV"));
+  expect(
+    view.container.querySelector(".social-product-screen-image"),
+  ).toBeNull();
+  view.rerender(canvas(undefined, true));
   const overlay = view.container.querySelector<HTMLImageElement>(
     ".social-product-screen-image",
   )!;
-  expect(overlay.style.width).toBe("92%");
-  expect(overlay.style.height).toBe("75%");
-  expect(overlay.style.objectFit).toBe("cover");
-  view.rerender(canvas("contain"));
+  expect(overlay.style.width).toBe("80%");
+  expect(overlay.style.height).toBe("60%");
   expect(overlay.style.objectFit).toBe("contain");
+  view.rerender(canvas("cover", true));
+  expect(overlay.style.objectFit).toBe("cover");
+});
+
+it("keeps the wallpaper and inch corner attached when the social TV photo is resized", () => {
+  vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
+  vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(
+    400,
+  );
+  vi.spyOn(HTMLImageElement.prototype, "naturalHeight", "get").mockReturnValue(
+    240,
+  );
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+    function (this: Element) {
+      const scale = this.classList.contains("social-product-main-image")
+        ? Number(
+            (this as HTMLElement).style.transform.match(
+              /scale\(([^)]+)/,
+            )?.[1] || 1,
+          )
+        : 1;
+      return DOMRect.fromRect(
+        this.classList.contains("social-canvas")
+          ? { x: 0, y: 0, width: 1000, height: 1000 }
+          : { x: 100, y: 100, width: 200 * scale, height: 120 * scale },
+      );
+    },
+  );
+  const visual = (scale: number) => (
+    <div className="social-canvas">
+      <article className="social-product">
+        <SocialProductVisual
+          product={{
+            code: "resizable-tv",
+            name: "TV LED 55MODEL",
+            subcategory: "TV",
+            image: "/resize-tv.png",
+            specs: { Ekrani: '55"' },
+            postImagePlacement: { x: 0, y: 0, scale },
+            screenArtwork: {
+              image: "/wallpaper.jpg",
+              box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 },
+            },
+          }}
+          image="/resize-tv.png"
+          showInches
+        />
+      </article>
+    </div>
+  );
+  const view = render(visual(1));
+  const wallpaper = view.container.querySelector<HTMLElement>(
+    ".social-product-screen-image",
+  )!;
+  const inches = view.container.querySelector<HTMLElement>(
+    ".social-screen-size-label",
+  )!;
+  const width = parseFloat(wallpaper.style.width),
+    inchWidth = parseFloat(inches.style.width);
+  view.rerender(visual(0.5));
+  expect(parseFloat(wallpaper.style.width)).toBeCloseTo(width / 2);
+  expect(parseFloat(inches.style.width)).toBeCloseTo(inchWidth / 2);
+  expect(wallpaper.style.objectFit).toBe("contain");
+  expect(view.getByAltText("TV LED 55MODEL").getAttribute("src")).toBe(
+    "/resize-tv.png",
+  );
 });
 
 it("saves the measured name alignment into the first manual move without a jump", () => {

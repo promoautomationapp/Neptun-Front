@@ -24,6 +24,7 @@ function photo(src: string, currentSrc = "") {
     currentSrc: { configurable: true, value: currentSrc },
     naturalWidth: { value: 100 },
     naturalHeight: { value: 80 },
+    complete: { value: true },
   });
   return image;
 }
@@ -164,4 +165,35 @@ it("uses the safe contained-photo fallback when the local photo cannot be sample
       photo("/new-photo.png"),
     ),
   ).toEqual({ x: 0.04, y: 0.08, width: 0.92, height: 0.75 });
+});
+
+it("remeasures after a loading photo becomes readable instead of retaining an early failed sample", () => {
+  let loaded = false;
+  const pixels = new Uint8ClampedArray(100 * 80 * 4).fill(255);
+  for (let y = 15; y < 50; y++)
+    for (let x = 20; x < 80; x++) {
+      const offset = (y * 100 + x) * 4;
+      pixels[offset] = pixels[offset + 1] = pixels[offset + 2] = 30;
+    }
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+    drawImage() {
+      if (!loaded) throw new Error("Still decoding");
+    },
+    getImageData: () => ({ data: pixels }),
+  } as unknown as CanvasRenderingContext2D);
+  const image = document.createElement("img");
+  image.src = "/late-tv.png";
+  Object.defineProperties(image, {
+    naturalWidth: { value: 100 },
+    naturalHeight: { value: 80 },
+    complete: { get: () => loaded },
+  });
+  visibleImageBounds(image);
+  loaded = true;
+  expect(televisionScreenBox({}, image)).toEqual({
+    x: 0.21,
+    y: 0.2,
+    width: 0.58,
+    height: 0.4125,
+  });
 });

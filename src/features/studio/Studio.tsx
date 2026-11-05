@@ -2446,6 +2446,7 @@ export function BrochureEditor({
       const image = await readImage(file);
       onUpdate((draft: Campaign) => {
         draft.coverLogoSource = image;
+        draft.coverLogoStyle = "custom";
         draft.showCoverLogo = true;
       });
       onToast(t("Cover logo updated. Drag it on the page to move it."));
@@ -2938,6 +2939,11 @@ export function BrochureEditor({
           onSelect={(source) =>
             onUpdate((draft) => {
               draft.coverLogoSource = source;
+              draft.coverLogoStyle = source.endsWith("/neptun-logo-framed.png")
+                ? "framed"
+                : source.endsWith("/neptun-cover-logo.png")
+                  ? "original"
+                  : "custom";
               draft.showCoverLogo = true;
             })
           }
@@ -3546,7 +3552,14 @@ export function BrochureEditor({
                   </p>
                   <Button
                     onClick={() => {
-                      const television = televisions[0];
+                      const currentPageProducts =
+                        selected === -1
+                          ? coverProducts(campaign)
+                          : page?.products || [];
+                      const television =
+                        campaignTelevisionPhotos({
+                          products: currentPageProducts,
+                        })[0] || televisions[0];
                       if (television) onEditScreen(television);
                     }}
                   >
@@ -4426,6 +4439,7 @@ export default function App({
   const [detail, setDetail] = useState<DetailSelection | null>(null);
   const [imageEditCode, setImageEditCode] = useState<string | null>(null);
   const [screenEditCode, setScreenEditCode] = useState<string | null>(null);
+  const [screenEditSource, setScreenEditSource] = useState<string>("");
   const [priceEdit, setPriceEdit] = useState<{
     code: string;
     focusSavings?: boolean;
@@ -4703,9 +4717,15 @@ export default function App({
   );
   const screenEditProduct =
     campaign &&
-    (campaign.products.find(
-      (product: Product) => String(product.code) === screenEditCode,
+    (campaignTelevisionPhotos(campaign).find(
+      (product) =>
+        String(product.code) === screenEditCode &&
+        normalizeScreenPhotoSource(screenPhotoSource(product)) ===
+          screenEditSource,
     ) ||
+      campaign.products.find(
+        (product: Product) => String(product.code) === screenEditCode,
+      ) ||
       campaignTelevisions(campaign).find(
         (product: Product) => String(product.code) === screenEditCode,
       ));
@@ -4868,6 +4888,14 @@ export default function App({
   }
   function goToBrochure() {
     setEditorTab("brochure");
+  }
+  function openScreenEditor(product: Product) {
+    if (!campaign) return;
+    const television = campaignTelevisionPhoto(campaign, product);
+    setScreenEditCode(String(television.code));
+    setScreenEditSource(
+      normalizeScreenPhotoSource(screenPhotoSource(television)),
+    );
   }
   function forgetProductPhotoWork(campaignId: string, keys: string[]) {
     const removed = new Set(keys);
@@ -5360,6 +5388,7 @@ export default function App({
     searches: MissingImageTarget[],
     saved: Promise<unknown>,
     retry = false,
+    options: { retrySearch?: boolean } = {},
   ) {
     if (!products.length) return;
     const run = ++photoPreparationRun.current;
@@ -5373,11 +5402,25 @@ export default function App({
       try {
         await saved;
         if (run !== photoPreparationRun.current) return;
+        const searchingKeys = new Set(searches.map(productPhotoSelectionKey));
+        const existingPhotoKeys = productImagePreparationTargets(
+          snapshot,
+          products,
+          { force: retry },
+        )
+          .map(productPhotoSelectionKey)
+          .filter((key) => !searchingKeys.has(key));
         const outcomes = await waitForPhotoWork([
           prepareProductPhotos(snapshot, products, retry, {
             userRequested: true,
+            targetKeys: existingPhotoKeys,
           }),
-          searchImportedImages(searches, snapshot.id, retry, true),
+          searchImportedImages(
+            searches,
+            snapshot.id,
+            options.retrySearch ?? retry,
+            true,
+          ),
         ]);
         if (run !== photoPreparationRun.current) return;
         const current =
@@ -5443,7 +5486,7 @@ export default function App({
     targets: MissingImageTarget[],
     campaignId: string,
     retry = false,
-    prepareFound = false,
+    prepareFound = true,
   ) {
     for (const target of targets)
       activeImageSearches.current.add(target.requestId);
@@ -5496,7 +5539,7 @@ export default function App({
     if (!campaign) return;
     const targets = missingImageTargets([offer], true);
     const started: MissingImageTarget[] = [];
-    updateCampaign((draft: Campaign) => {
+    const updated = updateCampaign((draft: Campaign) => {
       for (const target of targets) {
         const liveOffer = draft.products.find(
           (product) => product.code === target.offerCode,
@@ -5514,20 +5557,28 @@ export default function App({
           started.push(target);
       }
     });
-    void searchImportedImages(
+    if (!updated || !started.length) return;
+    const retrySearch = targets.some((target) => {
+      const member = target.memberCode
+        ? offer.bundleProducts?.find(
+            (product) => product.code === target.memberCode,
+          )
+        : offer;
+      return ["not_found", "failed", "found"].includes(
+        member?.imageSearch?.status || "",
+      );
+    });
+    setImageEditCode(null);
+    prepareBeforeOpeningBrochure(
+      updated.campaign,
+      updated.campaign.products.filter(
+        (product) => product.code === offer.code,
+      ),
       started,
-      campaign.id,
-      targets.some((target) => {
-        const member = target.memberCode
-          ? offer.bundleProducts?.find(
-              (product) => product.code === target.memberCode,
-            )
-          : offer;
-        return ["not_found", "failed", "found"].includes(
-          member?.imageSearch?.status || "",
-        );
-      }),
-    ).catch((error: unknown) => setToast(errorMessage(error)));
+      updated.saved,
+      false,
+      { retrySearch },
+    );
   }
   function addProducts(
     products: Product[],
@@ -6431,7 +6482,7 @@ export default function App({
                       setImageEditCode(String(product.code))
                     }
                     onEditScreen={(product: Product) =>
-                      setScreenEditCode(String(product.code))
+                      openScreenEditor(product)
                     }
                     onEditDetails={(
                       product: Product,
@@ -6718,7 +6769,7 @@ export default function App({
           }}
           onEditScreen={() => {
             setImageEditCode(null);
-            setScreenEditCode(String(imageEditProduct.code));
+            openScreenEditor(imageEditProduct);
           }}
           catalogProduct={catalog.find(
             (product: Product) => String(product.code) === imageEditCode,
@@ -6788,6 +6839,7 @@ export default function App({
           product={campaignTelevisionPhoto(campaign, screenEditProduct)}
           tvCount={campaignTelevisions(campaign).length}
           televisions={campaignTelevisionPhotos(campaign)}
+          onSelectTelevision={openScreenEditor}
           onSave={async (screenArtwork, scope, fitPlan) => {
             const changed = updateCampaign(
               (draft: Campaign) => {
