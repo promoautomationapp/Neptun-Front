@@ -1,0 +1,217 @@
+.cs-photo-preparation-dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--np-border, #d6e3ee);
+  border-radius: 18px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #1d405f);
+  box-shadow: 0 24px 90px #0d29454d;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.cs-photo-preparation-dialog::backdrop {
+  background: #0b2442b3;
+  backdrop-filter: blur(3px);
+}
+.cs-photo-preparation-content {
+  padding: 28px;
+}
+.cs-photo-preparation-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cs-photo-preparation-heading > div {
+  min-width: 0;
+}
+.cs-photo-preparation-symbol {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--np-selected, #eaf4fc);
+  color: var(--np-accent, #217cb0);
+  font-size: 24px;
+}
+.cs-photo-preparation-symbol.is-running::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid #a9d0e7;
+  border-top-color: var(--np-accent, #217cb0);
+  border-radius: 50%;
+  animation: cs-photo-preparation-spin 0.9s linear infinite;
+}
+.cs-photo-preparation-kicker {
+  margin: 0 0 5px;
+  color: var(--np-muted, #72869a);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.cs-photo-preparation-heading h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.25;
+}
+.cs-photo-preparation-heading h2:focus {
+  outline: none;
+}
+.cs-photo-preparation-campaign {
+  margin: 5px 0 0;
+  color: var(--np-muted, #6b8398);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.cs-photo-preparation-description {
+  margin: 22px 0 18px;
+  color: var(--np-muted, #627b90);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cs-photo-preparation-progress-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cs-photo-preparation-progress-heading strong {
+  flex: none;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+.cs-photo-preparation-dialog progress {
+  display: block;
+  width: 100%;
+  height: 9px;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  accent-color: var(--np-accent, #258bc0);
+}
+.cs-photo-preparation-dialog progress::-webkit-progress-bar {
+  background: var(--np-raised, #e8eef5);
+}
+.cs-photo-preparation-dialog progress::-webkit-progress-value {
+  background: var(--np-accent, #258bc0);
+}
+.cs-photo-preparation-list {
+  display: grid;
+  gap: 0;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--np-border, #e0e9f0);
+}
+.cs-photo-preparation-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--np-border, #e0e9f0);
+}
+.cs-photo-preparation-list li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.cs-photo-preparation-list strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.cs-photo-preparation-list small {
+  color: var(--np-muted, #70879a);
+  font-size: 10px;
+}
+.cs-photo-preparation-list li > span {
+  max-width: 48%;
+  color: var(--np-muted, #627b90);
+  font-size: 11px;
+  text-align: right;
+}
+.cs-photo-preparation-error {
+  margin: 18px 0 0;
+  border-radius: 9px;
+  background: var(--np-raised, #fff4ed);
+  color: var(--np-text, #8f481d);
+  padding: 11px 13px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.cs-photo-preparation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+.cs-photo-preparation-actions button {
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid var(--np-border, #cadbe8);
+  border-radius: 8px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #234d6e);
+  font:
+    700 12px/1.3 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.cs-photo-preparation-actions button.is-primary {
+  border-color: var(--np-accent, #247aaf);
+  background: var(--np-accent, #247aaf);
+  color: #fff;
+}
+.cs-photo-preparation-actions button:focus-visible {
+  outline: 2px solid var(--np-accent, #247aaf);
+  outline-offset: 3px;
+}
+.cs-photo-preparation-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@keyframes cs-photo-preparation-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 520px) {
+  .cs-photo-preparation-dialog {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 14px;
+  }
+  .cs-photo-preparation-content {
+    padding: 21px 18px;
+  }
+  .cs-photo-preparation-heading {
+    gap: 11px;
+  }
+  .cs-photo-preparation-heading h2 {
+    font-size: 18px;
+  }
+  .cs-photo-preparation-actions button {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-photo-preparation-symbol.is-running::after {
+    animation: none;
+  }
+}
+@media print {
+  .cs-photo-preparation-dialog {
+    display: none !important;
+  }
+}

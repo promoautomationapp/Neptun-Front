@@ -67,7 +67,9 @@ export function buildImagePreparationRequest(
   return {
     provider: "openai" as const,
     image: image || imagePreparationSource(product),
-    name: picturedProduct.name,
+    name: String(
+      picturedProduct.brochureVariants?.[0]?.name || picturedProduct.name,
+    ),
     brand: picturedProduct.brand ?? "",
     category: picturedProduct.subcategory || picturedProduct.category || "",
     description: picturedProduct.description ?? "",

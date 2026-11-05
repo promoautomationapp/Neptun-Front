@@ -101,6 +101,38 @@ export function colorVariantName(value: string) {
     .trim();
 }
 
+/** Keep the original model typography while hiding its selected finish. */
+function displayVariantName(value: string, color: ImportedColor | null) {
+  if (!color) return value;
+  const matches = [...normalize(value).matchAll(colorPattern)].filter(
+    (match) => {
+      const name = match[2]!;
+      return (
+        name === color.name ||
+        COLOR_WORDS.find(([word]) => word === name)?.[1] === color.hex ||
+        name.endsWith(` ${color.name}`) ||
+        color.name.endsWith(` ${name}`)
+      );
+    },
+  );
+  let result = value;
+  // The last matching phrase is the finish. Preserve a color word that is
+  // also part of the brand, for example BLACK+DECKER ... BLACK.
+  for (const match of matches.slice(-1)) {
+    const start = match.index! + match[1]!.length;
+    result = result.slice(0, start) + result.slice(start + match[2]!.length);
+  }
+  return (
+    result
+      .replace(/\(\s*\)|\[\s*\]|\{\s*\}/g, " ")
+      .replace(/([([{])\s*[,;]\s*/g, "$1")
+      .replace(/[,;]\s*([)\]}])/g, "$1")
+      .replace(/\s+/g, " ")
+      .replace(/\s*[-–—|,;/]\s*$/, "")
+      .trim() || value
+  );
+}
+
 export function productImportColor(product: Product, explicit?: unknown) {
   return (
     importedColor(explicit) ||
@@ -170,7 +202,7 @@ export interface ColorVariantCandidate {
   color: ImportedColor | null;
   eligible?: boolean;
   /** Sheet prices can describe the shared offer without changing member facts. */
-  regular?: number | null;
+  regular?: number | string | null;
   sale?: number | null;
 }
 
@@ -210,10 +242,18 @@ export function collapseImportedColorVariants(
     }
     const product = parent.product;
     product.brochureVariants ||= [
-      { code: product.code, color: parent.color || undefined },
+      {
+        code: product.code,
+        name: product.name,
+        color: parent.color || undefined,
+      },
     ];
     const variants = candidate.product.brochureVariants || [
-      { code: candidate.product.code, color: candidate.color || undefined },
+      {
+        code: candidate.product.code,
+        name: candidate.product.name,
+        color: candidate.color || undefined,
+      },
     ];
     for (const variant of variants) {
       if (
@@ -223,6 +263,8 @@ export function collapseImportedColorVariants(
       )
         product.brochureVariants.push(structuredClone(variant));
     }
+    if (product.brochureVariants.length > 1)
+      product.name = displayVariantName(product.name, parent.color);
     if (candidate.product.catalogMissing) {
       product.catalogMissing = true;
       product.missingCatalogCodes = [

@@ -2930,6 +2930,17 @@ const translations: Record<string, string> = {
     "Heqja e sfondit nuk është verifikuar për këtë foto. Zgjidhni Hiq sfondin sërish për të përgatitur një version të ri.",
   "This photo preparation failed. Use Remove background again to request a new version.":
     "Përgatitja e fotos dështoi. Zgjidhni Hiq sfondin sërish për të kërkuar një version të ri.",
+  "Campaign created. Preparing product photos…":
+    "Fushata u krijua. Po përgatiten fotot e produkteve…",
+  "AI photo preparation": "Përgatitja e fotove me AI",
+  "We are removing photo backgrounds and saving the finished images before opening your brochure.":
+    "Po heqim sfondin e fotove dhe po ruajmë imazhet e përfunduara para hapjes së broshurës.",
+  "The brochure stays hidden until its photos are ready. Retry or return to Products & prices to repair the photos.":
+    "Broshura do të hapet pasi fotot të jenë gati. Provoni sërish ose kthehuni te Produktet dhe çmimet për t’i rregulluar fotot.",
+  "Starting photo preparation…": "Po fillon përgatitja e fotove…",
+  "Searching for product photos": "Po kërkohen fotot e produkteve",
+  "Photo needed": "Nevojitet foto",
+  "Return to Products & prices": "Kthehu te Produktet dhe çmimet",
 };
 
 let language =

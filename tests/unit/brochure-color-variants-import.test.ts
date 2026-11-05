@@ -5,6 +5,8 @@ import {
   inferBrochureColumns,
 } from "../../src/features/brochure/brochureImport";
 import { productColors } from "../../src/features/brochure/colors";
+import { buildImagePreparationRequest } from "../../src/features/brochure/imageReview";
+import { productImageSearchParams } from "../../src/features/ai/missing-product-images";
 
 const headers = [
   "Code",
@@ -50,6 +52,7 @@ describe("same-position color choices from Excel", () => {
     const phone = result.products[0]!;
     expect(phone).toMatchObject({
       code: "84066096",
+      name: "A37 5G 6/128",
       brochurePage: 1,
       brochureOrder: 1,
       sale: "299",
@@ -57,6 +60,12 @@ describe("same-position color choices from Excel", () => {
       image: "/84066096.png",
     });
     expect(phone.bundleProducts).toBeUndefined();
+    expect(phone.brochureVariants?.[0]).toMatchObject({
+      code: "84066096",
+      name: "A37 5G 6/128 GREEN",
+    });
+    expect(buildImagePreparationRequest(phone).name).toBe("A37 5G 6/128 GREEN");
+    expect(productImageSearchParams(phone).name).toBe("A37 5G 6/128 GREEN");
     expect(phone.brochureVariants?.map((variant) => variant.code)).toEqual(
       phones.map((product) => product.code),
     );
@@ -150,6 +159,23 @@ describe("same-position color choices from Excel", () => {
     expect(speaker.regular).toBe(59);
     expect(speaker.sale).toBe("39");
     expect(result.matchedRows).toBe(2);
+  });
+
+  it("keeps a brand's color word while removing the model's finish", () => {
+    const products = ["BLACK", "WHITE"].map((finish, index) => ({
+      code: `TOASTER-${index}`,
+      name: `BLACK+DECKER TOASTER BX10 ${finish}`,
+      brand: "BLACK+DECKER",
+      regular: 59,
+    }));
+    const result = analyzeBrochureRows(
+      products.map((product) => row(product, "2.1", 39)),
+      columns,
+      products,
+    );
+    expect(result.products[0]?.name).toBe("BLACK+DECKER TOASTER BX10");
+    expect(result.products[0]?.code).toBe("TOASTER-0");
+    expect(result.products[0]?.brochureVariants).toHaveLength(2);
   });
 
   it.each([

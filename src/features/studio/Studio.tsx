@@ -60,7 +60,9 @@ import {
   retainPreparedProductPhoto,
   type ProductPhotoTarget,
   type ProductPhotoPreparationOptions,
+  type PhotoOutcome,
 } from "../brochure/productImagePreparationQueue";
+import { PhotoPreparationModal } from "../brochure/PhotoPreparationModal";
 import {
   CatalogNavigator,
   defaultCatalogSelection,
@@ -4404,6 +4406,17 @@ export default function App({
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [newBusy, setNewBusy] = useState(false);
+  const [photoPreparationStage, setPhotoPreparationStage] = useState<{
+    campaignId: string;
+    productCodes: string[];
+    busy: boolean;
+    error?: string;
+  } | null>(null);
+  const photoPreparationRun = useRef(0);
+  useEffect(() => {
+    photoPreparationRun.current += 1;
+    setPhotoPreparationStage(null);
+  }, [user?.id]);
   const [aiTask, setAiTask] = useState<CampaignReviewTask | null>(null);
   const [aiDestination, setAiDestination] = useState("manual");
   const activeImageSearches = useRef(new Set<string>());
@@ -4425,7 +4438,7 @@ export default function App({
     interactionHandlers,
   } = useCampaignEditHistory({
     activeId,
-    enabled: section === "editor",
+    enabled: section === "editor" && !photoPreparationStage,
     persist: saveCampaign,
     onError: (error: unknown) => {
       console.error(error);
@@ -5217,6 +5230,77 @@ export default function App({
       ),
     );
   }
+  async function waitForPhotoWork(tasks: Promise<PhotoOutcome[]>[]) {
+    // A failed save must not release the dialog while other paid work is still
+    // running. Every task is bounded by the existing AI request/job timeouts.
+    const settled = await Promise.allSettled(tasks);
+    const rejected = settled.find((result) => result.status === "rejected");
+    if (rejected?.status === "rejected") throw rejected.reason;
+    return settled.flatMap((result) =>
+      result.status === "fulfilled" ? result.value : [],
+    );
+  }
+  function prepareBeforeOpeningBrochure(
+    snapshot: Campaign,
+    products: Product[],
+    searches: MissingImageTarget[],
+    saved: Promise<unknown>,
+    retry = false,
+  ) {
+    if (!products.length) return;
+    const run = ++photoPreparationRun.current;
+    const productCodes = products.map((product) => String(product.code));
+    setPhotoPreparationStage({
+      campaignId: snapshot.id,
+      productCodes,
+      busy: true,
+    });
+    void (async () => {
+      try {
+        await saved;
+        if (run !== photoPreparationRun.current) return;
+        const outcomes = await waitForPhotoWork([
+          prepareProductPhotos(snapshot, products, retry, {
+            userRequested: true,
+          }),
+          searchImportedImages(searches, snapshot.id, retry, true),
+        ]);
+        if (run !== photoPreparationRun.current) return;
+        const current =
+          latestCampaigns.current.find((item) => item.id === snapshot.id) ||
+          snapshot;
+        const selected = current.products.filter((product) =>
+          productCodes.includes(String(product.code)),
+        );
+        const missing = selected
+          .flatMap((product) =>
+            product.bundleProducts?.length ? product.bundleProducts : [product],
+          )
+          .some(
+            (product) =>
+              !product.image && !product.localImage && !product.imageUrl,
+          );
+        if (
+          missing ||
+          productImagePreparationTargets(current, selected).length > 0 ||
+          outcomes.some((outcome) => !outcome.ok && !outcome.cancelled)
+        )
+          throw new Error(
+            t("Some product photos could not be prepared. Try again."),
+          );
+        setPhotoPreparationStage(null);
+        setEditorTab("brochure");
+      } catch (error) {
+        if (run !== photoPreparationRun.current) return;
+        setPhotoPreparationStage({
+          campaignId: snapshot.id,
+          productCodes,
+          busy: false,
+          error: errorMessage(error),
+        });
+      }
+    })();
+  }
   function createCampaign(item: Campaign) {
     if (item.products.some((product) => Number.isInteger(product.brochurePage)))
       materializeProductPages(item);
@@ -5224,13 +5308,10 @@ export default function App({
       startMissingImageSearch(item, target),
     );
     setCampaigns((current) => [item, ...current]);
-    saveCampaign(item)
-      .then(() =>
-        prepareProductPhotos(item, item.products, false, {
-          userRequested: true,
-        }),
-      )
-      .catch((error: unknown) => setToast(errorMessage(error)));
+    const saved = saveCampaign(item);
+    if (item.products.length)
+      prepareBeforeOpeningBrochure(item, item.products, searches, saved);
+    else void saved.catch((error: unknown) => setToast(errorMessage(error)));
     setActiveId(item.id);
     setSection("editor");
     setEditorTab("brochure");
@@ -5238,13 +5319,12 @@ export default function App({
     setToast(
       t(
         item.products.length
-          ? "Campaign created. Your brochure is ready to edit."
+          ? "Campaign created. Preparing product photos…"
           : "Campaign created. Add products when you are ready.",
       ),
     );
-    if (searches.length) searchImportedImages(searches, item.id, false, true);
   }
-  function searchImportedImages(
+  async function searchImportedImages(
     targets: MissingImageTarget[],
     campaignId: string,
     retry = false,
@@ -5252,48 +5332,50 @@ export default function App({
   ) {
     for (const target of targets)
       activeImageSearches.current.add(target.requestId);
-    void findMissingProductImages(
-      targets,
-      (target, result) => {
-        let applied = false;
-        const updated = updateCampaign(
-          (draft: Campaign) => {
-            applied = finishMissingImageSearch(draft, target, result);
-          },
-          {
-            id: campaignId,
-            group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
-          },
-        );
-        if (
-          prepareFound &&
-          applied &&
-          updated &&
-          !(result instanceof Error) &&
-          result.found
-        ) {
-          void updated.saved
-            .then(() =>
-              prepareProductPhotos(
-                updated.campaign,
-                updated.campaign.products.filter(
-                  (product) => product.code === target.offerCode,
-                ),
-                false,
-                {
-                  userRequested: true,
-                  targetKeys: [productPhotoSelectionKey(target)],
-                },
-              ),
-            )
-            .catch((error: unknown) => setToast(errorMessage(error)));
-        }
-      },
-      retry,
-    ).finally(() => {
+    const preparations: Promise<PhotoOutcome[]>[] = [];
+    try {
+      await findMissingProductImages(
+        targets,
+        (target, result) => {
+          let applied = false;
+          const updated = updateCampaign(
+            (draft: Campaign) => {
+              applied = finishMissingImageSearch(draft, target, result);
+            },
+            {
+              id: campaignId,
+              group: `missing-images:${campaignId}:${targets[0]?.requestId || ""}`,
+            },
+          );
+          if (applied && updated) {
+            const preparation = updated.saved.then(() =>
+              prepareFound && !(result instanceof Error) && result.found
+                ? prepareProductPhotos(
+                    updated.campaign,
+                    updated.campaign.products.filter(
+                      (product) => product.code === target.offerCode,
+                    ),
+                    false,
+                    {
+                      userRequested: true,
+                      targetKeys: [productPhotoSelectionKey(target)],
+                    },
+                  )
+                : [],
+            );
+            // Observe rejection immediately while the remaining image searches
+            // finish; waitForPhotoWork still reports it after every task settles.
+            void preparation.catch(() => {});
+            preparations.push(preparation);
+          }
+        },
+        retry,
+      );
+      return await waitForPhotoWork(preparations);
+    } finally {
       for (const target of targets)
         activeImageSearches.current.delete(target.requestId);
-    });
+    }
   }
   function findProductImage(offer: Product) {
     if (!campaign) return;
@@ -5317,7 +5399,7 @@ export default function App({
           started.push(target);
       }
     });
-    searchImportedImages(
+    void searchImportedImages(
       started,
       campaign.id,
       targets.some((target) => {
@@ -5330,7 +5412,7 @@ export default function App({
           member?.imageSearch?.status || "",
         );
       }),
-    );
+    ).catch((error: unknown) => setToast(errorMessage(error)));
   }
   function addProducts(
     products: Product[],
@@ -5392,19 +5474,14 @@ export default function App({
       const importedCodes = new Set(
         products.map((product) => String(product.code)),
       );
-      void updated.saved
-        .then(() =>
-          prepareProductPhotos(
-            updated.campaign,
-            updated.campaign.products.filter((product) =>
-              importedCodes.has(String(product.code)),
-            ),
-            false,
-            { userRequested: true },
-          ),
-        )
-        .catch((error: unknown) => setToast(errorMessage(error)));
-      searchImportedImages(started, updated.campaign.id, false, true);
+      prepareBeforeOpeningBrochure(
+        updated.campaign,
+        updated.campaign.products.filter((product) =>
+          importedCodes.has(String(product.code)),
+        ),
+        started,
+        updated.saved,
+      );
     }
     setModal(null);
     setEditorTab("brochure");
@@ -6174,94 +6251,142 @@ export default function App({
                 language={language}
               />
             </div>
-            <PhotoPreparationProgress
-              items={Object.values(photoProgress[campaign.id] || {})}
-              campaign={campaign}
-              onRetry={() =>
-                void prepareProductPhotos(campaign, campaign.products, true, {
-                  userRequested: true,
-                })
-              }
-              onCancelWaiting={() => cancelQueuedProductPhotos(campaign.id)}
-              onEdit={setImageEditCode}
-            />
-            {editorTab === "products" ? (
-              <ProductEditor
-                canMakeSocial={access.canViewSocialPosts}
-                canUseCatalog={access.canViewCatalog}
+            {photoPreparationStage?.campaignId === campaign.id ? (
+              <PhotoPreparationModal
                 campaign={campaign}
-                onUpdate={updateCampaign}
-                onImport={() => setModal("import")}
-                onManual={() => setModal("manual")}
-                onAiReview={() => openAiReview("manual")}
-                onReCut={() => setModal("repair-photos")}
-                onNext={goToBrochure}
-                onMakeSocial={(products: Product[]) => {
-                  setSocialSeed({ campaignId: campaign.id, products });
-                  setSection("social");
+                items={Object.values(photoProgress[campaign.id] || {})}
+                busy={photoPreparationStage.busy}
+                error={photoPreparationStage.error}
+                onRetry={() => {
+                  const snapshot = structuredClone(campaign);
+                  const products = snapshot.products.filter((product) =>
+                    photoPreparationStage.productCodes.includes(
+                      String(product.code),
+                    ),
+                  );
+                  const searches = missingImageTargets(products).filter(
+                    (target) => startMissingImageSearch(snapshot, target),
+                  );
+                  const changed = updateCampaign((draft) => {
+                    for (const target of searches)
+                      startMissingImageSearch(draft, target);
+                  });
+                  const next = changed?.campaign || snapshot;
+                  prepareBeforeOpeningBrochure(
+                    next,
+                    next.products.filter((product) =>
+                      photoPreparationStage.productCodes.includes(
+                        String(product.code),
+                      ),
+                    ),
+                    searches,
+                    changed?.changed ? changed.saved : saveCampaign(next),
+                    true,
+                  );
                 }}
-                onDetails={(product: Product) =>
-                  setDetail({ product, editable: true })
-                }
-                onImageEdit={(product: Product) =>
-                  setImageEditCode(String(product.code))
-                }
+                onReturnToProducts={() => {
+                  setPhotoPreparationStage(null);
+                  setEditorTab("products");
+                }}
               />
             ) : (
-              <BrochureEditor
-                canMakeSocial={access.canViewSocialPosts}
-                canUseCatalog={access.canViewCatalog}
-                key={`${campaign.id}-${brochurePreviewVersion}`}
-                campaign={campaign}
-                settings={settings}
-                user={user}
-                members={members}
-                onReviewAction={runReviewAction}
-                notificationTarget={notificationTarget}
-                initialPage={
-                  routePage.campaignId === campaign.id ? routePage.index : 0
-                }
-                onPageChange={rememberBrochurePage}
-                onUpdate={updateCampaign}
-                onPreparePhotos={prepareProductPhotos}
-                onToast={setToast}
-                onAiReview={() => openAiReview("manual")}
-                onReCut={() => setModal("repair-photos")}
-                onAddProducts={() => setModal("manual")}
-                onImportProducts={() => setModal("import")}
-                onEditImage={(product: Product) =>
-                  setImageEditCode(String(product.code))
-                }
-                onEditScreen={(product: Product) =>
-                  setScreenEditCode(String(product.code))
-                }
-                onEditDetails={(product: Product, focusDetailKey?: string) =>
-                  setDetail({ product, editable: true, focusDetailKey })
-                }
-                onEditPrice={(product: Product) =>
-                  setPriceEdit({
-                    code: String(product.code),
-                    focusSavings: false,
-                  })
-                }
-                onEditSavings={(product: Product) =>
-                  setPriceEdit({
-                    code: String(product.code),
-                    focusSavings: true,
-                  })
-                }
-                onMakeSocial={(products: Product[]) => {
-                  setSocialSeed({ campaignId: campaign.id, products });
-                  setSection("social");
-                }}
-                onPrint={() => {
-                  window.print();
-                }}
-                onExport={(pageIndex: React.SetStateAction<number>) => {
-                  setExportPage(pageIndex);
-                  setExportId(campaign.id);
-                }}
-              />
+              <>
+                <PhotoPreparationProgress
+                  items={Object.values(photoProgress[campaign.id] || {})}
+                  campaign={campaign}
+                  onRetry={() =>
+                    void prepareProductPhotos(
+                      campaign,
+                      campaign.products,
+                      true,
+                      {
+                        userRequested: true,
+                      },
+                    )
+                  }
+                  onCancelWaiting={() => cancelQueuedProductPhotos(campaign.id)}
+                  onEdit={setImageEditCode}
+                />
+                {editorTab === "products" ? (
+                  <ProductEditor
+                    canMakeSocial={access.canViewSocialPosts}
+                    canUseCatalog={access.canViewCatalog}
+                    campaign={campaign}
+                    onUpdate={updateCampaign}
+                    onImport={() => setModal("import")}
+                    onManual={() => setModal("manual")}
+                    onAiReview={() => openAiReview("manual")}
+                    onReCut={() => setModal("repair-photos")}
+                    onNext={goToBrochure}
+                    onMakeSocial={(products: Product[]) => {
+                      setSocialSeed({ campaignId: campaign.id, products });
+                      setSection("social");
+                    }}
+                    onDetails={(product: Product) =>
+                      setDetail({ product, editable: true })
+                    }
+                    onImageEdit={(product: Product) =>
+                      setImageEditCode(String(product.code))
+                    }
+                  />
+                ) : (
+                  <BrochureEditor
+                    canMakeSocial={access.canViewSocialPosts}
+                    canUseCatalog={access.canViewCatalog}
+                    key={`${campaign.id}-${brochurePreviewVersion}`}
+                    campaign={campaign}
+                    settings={settings}
+                    user={user}
+                    members={members}
+                    onReviewAction={runReviewAction}
+                    notificationTarget={notificationTarget}
+                    initialPage={
+                      routePage.campaignId === campaign.id ? routePage.index : 0
+                    }
+                    onPageChange={rememberBrochurePage}
+                    onUpdate={updateCampaign}
+                    onPreparePhotos={prepareProductPhotos}
+                    onToast={setToast}
+                    onAiReview={() => openAiReview("manual")}
+                    onReCut={() => setModal("repair-photos")}
+                    onAddProducts={() => setModal("manual")}
+                    onImportProducts={() => setModal("import")}
+                    onEditImage={(product: Product) =>
+                      setImageEditCode(String(product.code))
+                    }
+                    onEditScreen={(product: Product) =>
+                      setScreenEditCode(String(product.code))
+                    }
+                    onEditDetails={(
+                      product: Product,
+                      focusDetailKey?: string,
+                    ) => setDetail({ product, editable: true, focusDetailKey })}
+                    onEditPrice={(product: Product) =>
+                      setPriceEdit({
+                        code: String(product.code),
+                        focusSavings: false,
+                      })
+                    }
+                    onEditSavings={(product: Product) =>
+                      setPriceEdit({
+                        code: String(product.code),
+                        focusSavings: true,
+                      })
+                    }
+                    onMakeSocial={(products: Product[]) => {
+                      setSocialSeed({ campaignId: campaign.id, products });
+                      setSection("social");
+                    }}
+                    onPrint={() => {
+                      window.print();
+                    }}
+                    onExport={(pageIndex: React.SetStateAction<number>) => {
+                      setExportPage(pageIndex);
+                      setExportId(campaign.id);
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
         )}

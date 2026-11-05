@@ -92,7 +92,9 @@ export function productImageSearchParams(product: Product) {
     )
       .trim()
       .slice(0, 160),
-    name: detailPlainText(product.name).slice(0, 600),
+    name: detailPlainText(
+      String(product.brochureVariants?.[0]?.name || product.name),
+    ).slice(0, 600),
     brand: detailPlainText(product.brand).slice(0, 100),
     category: detailPlainText(product.category).slice(0, 100),
     ...(model ? { model } : {}),
