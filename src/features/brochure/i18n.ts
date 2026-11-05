@@ -1424,9 +1424,9 @@ const translations: Record<string, string> = {
   "Eight offers · 3–2–3": "Tetë oferta · 3–2–3",
   "Three offers above, two larger offers in the middle, three below":
     "Tri oferta sipër, dy më të mëdha në mes, tri poshtë",
-  "Retrying photo": "Po provojmë sërish fotografinë",
+  "Retrying photo": "Po përpunojmë fotografinë",
   "Retrying some product photos…":
-    "Po provojmë sërish disa fotografi të produkteve…",
+    "Po përpunojmë dhe po përgatisim fotot e produkteve…",
   "Waiting to prepare": "Në pritje për përgatitje",
   "Stop waiting photos": "Ndalo fotot në pritje",
   "Only photos already running will finish. Waiting photos have not been sent to AI.":
@@ -2230,7 +2230,8 @@ const translations: Record<string, string> = {
     "Një redaktor tjetër ruajti ndryshime. Redaktimet tuaja janë në këtë skedë.",
   "Changes could not be saved. Your edits are kept in this tab.":
     "Ndryshimet nuk u ruajtën. Redaktimet tuaja janë në këtë skedë.",
-  "Preparing product photos…": "Po përgatiten fotot e produkteve…",
+  "Preparing product photos…":
+    "Po përpunojmë dhe po përgatisim fotot e produkteve…",
   "Some product photos could not be prepared. Try again.":
     "Disa foto të produkteve nuk u përgatitën. Provoni përsëri.",
   "Try again": "Provoni përsëri",
@@ -2931,7 +2932,7 @@ const translations: Record<string, string> = {
   "This photo preparation failed. Use Remove background again to request a new version.":
     "Përgatitja e fotos dështoi. Zgjidhni Hiq sfondin sërish për të kërkuar një version të ri.",
   "Campaign created. Preparing product photos…":
-    "Fushata u krijua. Po përgatiten fotot e produkteve…",
+    "Fushata u krijua. Po përpunojmë dhe po përgatisim fotot e produkteve…",
   "AI photo preparation": "Përgatitja e fotove me AI",
   "We are removing photo backgrounds and saving the finished images before opening your brochure.":
     "Po heqim sfondin e fotove dhe po ruajmë imazhet e përfunduara para hapjes së broshurës.",
