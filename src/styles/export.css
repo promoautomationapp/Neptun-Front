@@ -14,6 +14,10 @@
 .cs-export-page-select select { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid #d8e2ed; border-radius: 9px; background: #fff; color: #1d405f; }
 .cs-export-note { border-radius: 9px; padding: 11px 13px; background: #eef5fb; color: #365d7e !important; font-size: 12px; }
 .cs-export-error { color: #c33324 !important; font-size: 12px; }
+.cs-export-missing-photos { padding: 12px 14px; border: 1px solid #eed5a5; border-radius: 9px; background: #fff8ec; color: #76521d; font-size: 12px; }
+.cs-export-missing-photos p { margin: 6px 0; color: inherit; }
+.cs-export-missing-photos ul { max-height: 150px; overflow: auto; margin: 8px 0 0; padding-left: 20px; }
+.cs-export-missing-photos li + li { margin-top: 5px; }
 .cs-export-progress { display: flex; align-items: center; gap: 10px; color: #1d507d; font-size: 12px; font-weight: 800; }
 .cs-export-spinner { width: 18px; height: 18px; border: 2px solid #cce0ef; border-top-color: #f44731; border-radius: 50%; animation: cs-export-spin .8s linear infinite; }
 @keyframes cs-export-spin { to { transform: rotate(360deg); } }

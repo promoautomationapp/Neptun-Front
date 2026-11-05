@@ -2,6 +2,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   brochureExportFontCSS,
   captureBrochurePage,
+  readyImages,
+  missingExportPhotos,
 } from "../../src/features/brochure/BrochureExport";
 import { setLanguage } from "../../src/features/brochure/i18n";
 import { brochureExportGeometry } from "../../src/features/brochure/brochureFormat";
@@ -10,6 +12,65 @@ beforeEach(() => setLanguage("en"));
 afterEach(() => {
   document.body.replaceChildren();
   vi.restoreAllMocks();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+it("leaves blank space for failed photos while preserving loaded photos during export", async () => {
+  Object.defineProperty(document, "fonts", {
+    configurable: true,
+    value: { ready: Promise.resolve() },
+  });
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    callback(0);
+    return 1;
+  });
+  const root = document.createElement("section");
+  root.innerHTML =
+    '<img src="/missing.png" alt="Missing product"><img src="/good.png">';
+  const [missing, loaded] = root.querySelectorAll("img");
+  Object.defineProperties(missing!, {
+    complete: { value: true },
+    naturalWidth: { value: 0 },
+  });
+  Object.defineProperties(loaded!, {
+    complete: { value: true },
+    naturalWidth: { value: 300 },
+  });
+  vi.spyOn(missing!, "getBoundingClientRect").mockReturnValue({
+    width: 280,
+    height: 190,
+  } as DOMRect);
+  await readyImages(root);
+  expect(missing!.style.visibility).toBe("hidden");
+  expect(missing!.style.width).toBe("280px");
+  expect(missing!.style.height).toBe("190px");
+  expect(missing!.src).toMatch(/^data:image\/gif;base64,/);
+  expect(loaded!.getAttribute("src")).toBe("/good.png");
+  expect(loaded!.style.visibility).toBe("");
+});
+
+it("continues exporting when a photo never finishes loading", async () => {
+  vi.useFakeTimers();
+  Object.defineProperty(document, "fonts", {
+    configurable: true,
+    value: { ready: Promise.resolve() },
+  });
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    callback(0);
+    return 1;
+  });
+  const root = document.createElement("section");
+  root.innerHTML = '<img src="/stalled.png">';
+  const image = root.querySelector("img")!;
+  Object.defineProperties(image, {
+    complete: { value: false },
+    naturalWidth: { value: 0 },
+  });
+  const preparing = readyImages(root);
+  await vi.advanceTimersByTimeAsync(10_000);
+  await preparing;
+  expect(image.style.visibility).toBe("hidden");
 });
 function page() {
   const root = document.createElement("section");
@@ -20,6 +81,26 @@ function page() {
   document.body.append(root);
   return root;
 }
+it("identifies missing photos by product, code and page, including set members", () => {
+  expect(
+    missingExportPhotos(
+      [
+        { code: "84001", name: "Phone" },
+        { code: "hidden", name: "Intentionally hidden", showImage: false },
+        { code: "found", name: "Ready", image: "/ready.png" },
+        {
+          code: "set",
+          name: "Set",
+          bundleProducts: [
+            { code: "84002", name: "Oven" },
+            { code: "84003", name: "Hob", localImage: "/hob.png" },
+          ],
+        },
+      ],
+      "Page 2",
+    ),
+  ).toEqual(["Page 2 · Phone (84001)", "Page 2 · Oven (84002)"]);
+});
 it("includes SVG-only inch fonts in each page's embedded fonts and removes temporary probes", async () => {
   const root = page();
   const embed = vi.fn(async (node: HTMLElement) => {
@@ -78,14 +159,21 @@ it.each([false, true])(
     const canvas = document.createElement("canvas");
     canvas.width = geometry.width;
     canvas.height = geometry.height;
-    const toCanvas = vi.fn(async () => {
-      const rule = root.querySelector("style")!.textContent;
-      expect(rule).toContain('font-family: "TSTAR Headline" !important');
-      expect(rule).toContain("font-weight: 700 !important");
-      expect(rule).toContain("font-size: 29.44px !important");
-      if (fail) throw new Error("Capture failed");
-      return canvas;
-    });
+    const toCanvas = vi.fn(
+      async (
+        _page: HTMLElement,
+        options?: { imagePlaceholder?: string; includeQueryParams?: boolean },
+      ) => {
+        expect(options?.imagePlaceholder).toMatch(/^data:image\/gif;base64,/);
+        expect(options?.includeQueryParams).toBe(true);
+        const rule = root.querySelector("style")!.textContent;
+        expect(rule).toContain('font-family: "TSTAR Headline" !important');
+        expect(rule).toContain("font-weight: 700 !important");
+        expect(rule).toContain("font-size: 29.44px !important");
+        if (fail) throw new Error("Capture failed");
+        return canvas;
+      },
+    );
     if (fail)
       await expect(
         captureBrochurePage(root, geometry, { toCanvas }),

@@ -14,6 +14,7 @@ import {
   brochureExportGeometry,
   resolveBrochureFormat,
 } from "./brochureFormat";
+import { coverProducts } from "./campaignPages";
 
 function exportImageUrl(value: string): string;
 function exportImageUrl(value: undefined): undefined;
@@ -145,27 +146,71 @@ function canvasBlob(
 const nextFrame = () =>
   new Promise((resolve) => requestAnimationFrame(resolve));
 
-async function readyImages(root: HTMLElement) {
+const blankExportImage =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+/** Only the temporary export stage is changed; keep the missing photo's space. */
+function blankUnavailableImage(image: HTMLImageElement) {
+  const rect = image.getBoundingClientRect();
+  if (rect.width > 0) image.style.width = `${rect.width}px`;
+  if (rect.height > 0) image.style.height = `${rect.height}px`;
+  image.style.boxSizing = "border-box";
+  image.style.visibility = "hidden";
+  image.removeAttribute("srcset");
+  image.src = blankExportImage;
+}
+
+export async function readyImages(root: HTMLElement) {
   await document.fonts.ready;
   const images = [...root.querySelectorAll("img")];
+  const unavailable: HTMLImageElement[] = [];
   await Promise.all(
     images.map(async (image) => {
       if (!image.complete) {
-        await new Promise((resolve) => {
-          image.addEventListener("load", resolve, { once: true });
-          image.addEventListener("error", resolve, { once: true });
+        await new Promise<void>((resolve) => {
+          const finish = () => {
+            clearTimeout(timer);
+            image.removeEventListener("load", finish);
+            image.removeEventListener("error", finish);
+            resolve();
+          };
+          const timer = setTimeout(finish, 10_000);
+          image.addEventListener("load", finish, { once: true });
+          image.addEventListener("error", finish, { once: true });
+          if (image.complete) finish();
         });
       }
-      if (!image.naturalWidth)
-        throw new Error(
-          t(
-            "A brochure image could not be loaded. Check the product photos and retry.",
-          ),
-        );
-      if (image.decode) await image.decode().catch(() => {});
+      if (!image.complete || !image.naturalWidth) {
+        unavailable.push(image);
+        blankUnavailableImage(image);
+        return;
+      }
+      // The load event establishes readiness. A browser decode rejection must
+      // not prevent the other products and prices from being downloaded.
+      if (image.decode)
+        await image.decode().catch(() => {
+          unavailable.push(image);
+          blankUnavailableImage(image);
+        });
     }),
   );
   await nextFrame();
+  return unavailable;
+}
+
+export function missingExportPhotos(
+  products: readonly Product[],
+  page: string,
+): string[] {
+  return products.flatMap((offer) =>
+    (offer.bundleProducts?.length ? offer.bundleProducts : [offer])
+      .filter(
+        (product) =>
+          product.showImage !== false &&
+          !(product.image || product.localImage || product.imageUrl),
+      )
+      .map((product) => `${page} · ${product.name} (${product.code})`),
+  );
 }
 
 /** html-to-image skips SVG descendants when detecting used font families. */
@@ -193,7 +238,10 @@ export async function brochureExportFontCSS(
     const css = await embed(root);
     if (
       /url\(\s*["']?\s*["']?\s*\)/i.test(css) ||
-      (!css && [...families].some((family) => /TSTAR|SkolaSans|Cera Pro/i.test(family)))
+      (!css &&
+        [...families].some((family) =>
+          /TSTAR|SkolaSans|Cera Pro/i.test(family),
+        ))
     )
       throw new Error(
         t("Brochure fonts could not be loaded. Please retry the download."),
@@ -256,7 +304,12 @@ export async function captureBrochurePage(
   {
     toCanvas,
     fontEmbedCSS,
-  }: { toCanvas: typeof HtmlToImageToCanvas; fontEmbedCSS?: string },
+    onUnavailableImage,
+  }: {
+    toCanvas: typeof HtmlToImageToCanvas;
+    fontEmbedCSS?: string;
+    onUnavailableImage?: (image?: Element) => void;
+  },
 ) {
   const rect = page.getBoundingClientRect();
   const expectedRatio = geometry.previewWidth / geometry.previewHeight;
@@ -270,6 +323,11 @@ export async function captureBrochurePage(
       ),
     );
   const restoreTypography = preserveExportTypography(page);
+  const resources = new AbortController();
+  const timeout = setTimeout(() => {
+    resources.abort();
+    onUnavailableImage?.();
+  }, 15_000);
   try {
     const canvas = await toCanvas(page, {
       width: rect.width,
@@ -278,6 +336,23 @@ export async function captureBrochurePage(
       canvasHeight: geometry.canvasHeight,
       pixelRatio: geometry.pixelRatio,
       skipAutoScale: true,
+      includeQueryParams: true,
+      fetchRequestInit: { signal: resources.signal },
+      // Covers CSS/SVG resources and a photo that fails during embedding after
+      // it had loaded in the export stage. The layout stays intact.
+      get imagePlaceholder() {
+        // html-to-image reads this only when fetching a resource fails,
+        // including CSS backgrounds for which there is no image error event.
+        onUnavailableImage?.();
+        return blankExportImage;
+      },
+      onImageErrorHandler: (event) => {
+        if (event instanceof Event && event.target instanceof Element) {
+          (event.target as HTMLElement | SVGElement).style.visibility =
+            "hidden";
+          onUnavailableImage?.(event.target);
+        }
+      },
       filter: (node) =>
         !(node instanceof Element) ||
         node.getAttribute("data-export-hide") !== "true",
@@ -287,6 +362,8 @@ export async function captureBrochurePage(
       throw new Error(t("The exported page size is incorrect. Please retry."));
     return canvas;
   } finally {
+    clearTimeout(timeout);
+    resources.abort();
     restoreTypography();
   }
 }
@@ -335,22 +412,45 @@ export function BrochureExport({
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
+  const [pendingFile, setPendingFile] = useState<{
+    blob: Blob;
+    filename: string;
+  } | null>(null);
+  const [unavailablePhotos, setUnavailablePhotos] = useState<string[]>([]);
   const stageRef = useRef<HTMLDivElement>(null);
   const labels = [
     t("Cover"),
     ...pages.map((_, index) => `${t("Page")} ${index + 2}`),
     ...(hasStoresPage ? [t("Stores & details")] : []),
   ];
+  const selectedIndexes =
+    scope === "all"
+      ? Array.from({ length: pageCount }, (_, index) => index)
+      : [pageIndex];
+  const knownMissing = selectedIndexes.flatMap((index) =>
+    missingExportPhotos(
+      index === 0 ? coverProducts(campaign) : pages[index - 1]?.products || [],
+      labels[index] || `${t("Page")} ${index + 1}`,
+    ),
+  );
+  const warnings = pendingFile ? unavailablePhotos : knownMissing;
+  function resetPreparedDownload() {
+    setPendingFile(null);
+    setUnavailablePhotos([]);
+  }
 
   async function download() {
     if (busy) return;
     setBusy(true);
     setError("");
+    resetPreparedDownload();
     const indexes =
       scope === "all"
         ? Array.from({ length: pageCount }, (_, index) => index)
         : [pageIndex];
     try {
+      const unavailable = new Set(knownMissing);
+      let file: { blob: Blob; filename: string } | undefined;
       const base = fileBase(campaign.name);
       let pdf: jsPDF | undefined;
       let zip: JSZip | undefined;
@@ -378,7 +478,22 @@ export function BrochureExport({
         await nextFrame();
         const stage = stageRef.current;
         if (!stage) throw new Error(t("Could not prepare brochure pages."));
-        await readyImages(stage);
+        const recordUnavailable = (image?: Element) => {
+          const name = image?.getAttribute("alt")?.trim() || t("Page artwork");
+          const products =
+            index === 0
+              ? coverProducts(campaign)
+              : pages[index - 1]?.products || [];
+          const product = products
+            .flatMap((offer) =>
+              offer.bundleProducts?.length ? offer.bundleProducts : [offer],
+            )
+            .find((product) => product.name === name);
+          unavailable.add(
+            `${labels[index]} · ${name}${product ? ` (${product.code})` : ""}`,
+          );
+        };
+        (await readyImages(stage)).forEach(recordUnavailable);
         // A later page may introduce a font used only by SVG inch labels or
         // price artwork. Never reuse an incomplete first-page font subset.
         const fontEmbedCSS = await brochureExportFontCSS(stage);
@@ -391,6 +506,7 @@ export function BrochureExport({
         const canvas = await captureBrochurePage(page, geometry, {
           toCanvas,
           fontEmbedCSS,
+          onUnavailableImage: recordUnavailable,
         });
         if (pdf) {
           if (position)
@@ -417,27 +533,34 @@ export function BrochureExport({
           );
           const filename = `${base}-page-${String(index + 1).padStart(2, "0")}.${extension}`;
           if (zip) zip.file(filename, blob);
-          else saveBlob(blob, filename);
+          else file = { blob, filename };
         }
         canvas.width = 0;
         canvas.height = 0;
       }
       if (pdf)
-        saveBlob(
-          pdf.output("blob"),
-          `${base}${scope === "all" ? "" : `-page-${String(pageIndex + 1).padStart(2, "0")}`}.pdf`,
-        );
+        file = {
+          blob: pdf.output("blob"),
+          filename: `${base}${scope === "all" ? "" : `-page-${String(pageIndex + 1).padStart(2, "0")}`}.pdf`,
+        };
       if (zip) {
         setProgress(t("Packing pages…"));
-        saveBlob(
-          await zip.generateAsync({
+        file = {
+          blob: await zip.generateAsync({
             type: "blob",
             compression: "DEFLATE",
             compressionOptions: { level: 3 },
           }),
-          `${base}-${format}-pages.zip`,
-        );
+          filename: `${base}-${format}-pages.zip`,
+        };
       }
+      if (!file) throw new Error(t("Could not create the image file."));
+      if ([...unavailable].some((item) => !knownMissing.includes(item))) {
+        setUnavailablePhotos([...unavailable]);
+        setPendingFile(file);
+        return;
+      }
+      saveBlob(file.blob, file.filename);
       onClose();
     } catch (cause) {
       setError(
@@ -485,7 +608,10 @@ export function BrochureExport({
                 className={format === value ? "active" : ""}
                 aria-pressed={format === value}
                 disabled={busy}
-                onClick={() => setFormat(value)}
+                onClick={() => {
+                  resetPreparedDownload();
+                  setFormat(value);
+                }}
               >
                 <strong>{label}</strong>
                 <small>{hint}</small>
@@ -502,7 +628,10 @@ export function BrochureExport({
               className={scope === "all" ? "active" : ""}
               aria-pressed={scope === "all"}
               disabled={busy}
-              onClick={() => setScope("all")}
+              onClick={() => {
+                resetPreparedDownload();
+                setScope("all");
+              }}
             >
               {t("All pages")} <small>({pageCount})</small>
             </button>
@@ -511,7 +640,10 @@ export function BrochureExport({
               className={scope === "one" ? "active" : ""}
               aria-pressed={scope === "one"}
               disabled={busy}
-              onClick={() => setScope("one")}
+              onClick={() => {
+                resetPreparedDownload();
+                setScope("one");
+              }}
             >
               {t("One page")}
             </button>
@@ -522,7 +654,10 @@ export function BrochureExport({
               <SearchableSelect
                 value={pageIndex}
                 disabled={busy}
-                onChange={(event) => setPageIndex(Number(event.target.value))}
+                onChange={(event) => {
+                  resetPreparedDownload();
+                  setPageIndex(Number(event.target.value));
+                }}
               >
                 {labels.map((label, index) => (
                   <option key={index} value={index}>
@@ -544,6 +679,21 @@ export function BrochureExport({
               {error}
             </p>
           )}
+          {warnings.length > 0 && (
+            <div className="cs-export-missing-photos" role="alert">
+              <strong>{t("Some photos are missing or unavailable")}</strong>
+              <p>
+                {t(
+                  "The photos listed below are missing or could not be loaded. Their spaces will stay blank; prices and other content will be included. Download anyway or return to the editor to add the photos.",
+                )}
+              </p>
+              <ul>
+                {warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {busy && (
             <div className="cs-export-progress" role="status">
               <span className="cs-export-spinner" />
@@ -555,10 +705,19 @@ export function BrochureExport({
           <Button disabled={busy} onClick={onClose}>
             {t("Cancel")}
           </Button>
-          <Button tone="primary" disabled={busy} onClick={download}>
+          <Button
+            tone="primary"
+            disabled={busy}
+            onClick={() => {
+              if (pendingFile) {
+                saveBlob(pendingFile.blob, pendingFile.filename);
+                onClose();
+              } else void download();
+            }}
+          >
             {busy
               ? t("Preparing export…")
-              : `↓ ${t("Download")} ${format.toUpperCase()}${scope === "all" && format !== "pdf" ? " ZIP" : ""}`}
+              : `↓ ${t(warnings.length ? "Download anyway" : "Download")} ${format.toUpperCase()}${scope === "all" && format !== "pdf" ? " ZIP" : ""}`}
           </Button>
         </div>
       </Modal>

@@ -1,4 +1,9 @@
 const translations: Record<string, string> = {
+  "Some photos are missing or unavailable":
+    "Disa foto mungojnë ose nuk mund të hapen",
+  "The photos listed below are missing or could not be loaded. Their spaces will stay blank; prices and other content will be included. Download anyway or return to the editor to add the photos.":
+    "Më poshtë janë fotot që mungojnë ose nuk mund të hapen dhe faqet ku ndodhen. Hapësirat e tyre do të mbeten bosh; çmimet dhe përmbajtja tjetër do të përfshihen. Zgjidhni ‘Vazhdo me shkarkimin’ ose kthehuni te redaktimi për t’i shtuar fotot.",
+  "Download anyway": "Vazhdo me shkarkimin",
   "This photo preparation already failed. Automatic retries are paused for 14 days. Keep the original, choose another photo, or explicitly retry background removal.":
     "Përgatitja e kësaj fotoje ka dështuar. Riprovimet automatike janë ndalur për 14 ditë. Mbani origjinalin, zgjidhni një foto tjetër ose zgjidhni vetë ta riprovoni heqjen e sfondit.",
   "Photo verification is temporarily unavailable. Your original images are unchanged. Try again shortly.":
