@@ -170,6 +170,9 @@ it("hides successful preparation after four seconds and keeps failures actionabl
     />,
   );
   act(() => vi.advanceTimersByTime(5000));
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
+  );
   expect(
     view.getByRole("button", { name: "Retry failed photos" }),
   ).toBeTruthy();

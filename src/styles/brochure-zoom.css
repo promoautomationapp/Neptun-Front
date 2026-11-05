@@ -2,10 +2,13 @@
   container-type: inline-size;
   width: 100%;
   min-width: 0;
-  max-height: max(320px, calc(100dvh - 150px));
+  /* The toolbar and thumbnails can start the canvas far below the window top.
+     Let the document own vertical scrolling instead of trapping the wheel in
+     a second viewport whose lower edge is itself outside the window. */
+  max-height: none;
   overflow: auto;
   overflow-anchor: none;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   padding: 0 0 4px;
 }
 .cs-page-preview .cs-preview-viewport > .cs-preview-paper {

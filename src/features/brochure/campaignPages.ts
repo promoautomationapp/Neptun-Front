@@ -15,6 +15,14 @@ export interface BrochurePage {
   products: Product[];
 }
 
+export function isFeaturedProductCollection(campaign: Campaign) {
+  return campaign.brochurePresetId
+    ? campaign.brochurePresetId === "neptun-current"
+    : campaign.brochureVisualStyle !== "october" &&
+        campaign.showCoverBand !== true &&
+        campaign.brochureFooter?.style === "reference";
+}
+
 export function coverProducts(campaign: Campaign) {
   const products = campaign?.products || [];
   // Use a small default cover selection, while retaining every product that
@@ -44,6 +52,9 @@ function buildPages(campaign: Campaign) {
   const october =
     campaign.brochureVisualStyle === "october" ||
     campaign.brochurePresetId === "neptun-october";
+  // Older snapshots inherited the former footer default. In the featured
+  // collection, a page-level choice is the explicit opt-in to restore it.
+  const featuredCollection = isFeaturedProductCollection(campaign);
   const appendPage = (
     products: Product[],
     layout: string,
@@ -60,9 +71,12 @@ function buildPages(campaign: Campaign) {
       backgroundColor: config.backgroundColor || "",
       backgroundGradient: config.backgroundGradient || null,
       backgroundImage: config.backgroundImage || "",
-      showFooter: config.showFooter ?? campaign.showInteriorFooter ?? false,
+      showFooter:
+        config.showFooter ??
+        (featuredCollection ? false : (campaign.showInteriorFooter ?? false)),
       showFooterPageNumber:
-        config.showFooterPageNumber ?? campaign.showFooterPageNumber ?? false,
+        config.showFooterPageNumber ??
+        (featuredCollection ? false : (campaign.showFooterPageNumber ?? false)),
       spacing: config.spacing || null,
       title,
       products,

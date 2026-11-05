@@ -16,7 +16,39 @@
   backdrop-filter: blur(3px);
 }
 .cs-photo-preparation-content {
+  position: relative;
   padding: 28px;
+}
+.cs-photo-preparation-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--np-raised, #eef3f8);
+  color: var(--np-text, #234d6e);
+  cursor: pointer;
+}
+.cs-photo-preparation-close svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.cs-photo-preparation-close:focus-visible {
+  outline: 2px solid var(--np-accent, #247aaf);
+  outline-offset: 3px;
+}
+.cs-photo-preparation-dialog[data-preparation-busy="false"]
+  .cs-photo-preparation-heading {
+  padding-right: 32px;
 }
 .cs-photo-preparation-heading {
   display: flex;

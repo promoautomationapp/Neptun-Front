@@ -415,3 +415,59 @@ for (const viewport of [
     expect(aiCalls).toEqual([]);
   });
 }
+
+test("wheel scrolling over a half-size preview reaches the page end and enlarged artwork stays horizontally reachable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 760 });
+  const { failures, aiCalls } = await setup(page);
+  const picker = page
+    .locator(".cs-canvas-dock .cs-brochure-pagination")
+    .getByRole("combobox", { name: "Go to page" });
+  await picker.selectOption("6");
+  const zoom = page.getByRole("group", { name: "Brochure zoom" });
+  await zoom.getByRole("button", { name: "Zoom out", exact: true }).click();
+  await zoom.getByRole("button", { name: "Zoom out", exact: true }).click();
+  await page.getByRole("button", { name: "Preview only", exact: true }).click();
+  const viewport = page.locator(".cs-preview-viewport"),
+    paper = page.locator(".cs-preview-paper");
+  const point = await viewport.boundingBox();
+  await page.mouse.move(
+    point!.x + point!.width / 2,
+    Math.min(730, point!.y + 50),
+  );
+  await page.mouse.wheel(0, 3000);
+  await expect
+    .poll(() => paper.evaluate((node) => node.getBoundingClientRect().bottom))
+    .toBeLessThanOrEqual(760);
+  expect(
+    await viewport.evaluate((node) => node.scrollHeight - node.clientHeight),
+  ).toBeLessThanOrEqual(1);
+  await expect(page.locator(".cs-brochure-pagination-dock")).toHaveCount(0);
+
+  for (let index = 0; index < 6; index++)
+    await zoom.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await page.mouse.wheel(0, 5000);
+  await expect
+    .poll(() => paper.evaluate((node) => node.getBoundingClientRect().bottom))
+    .toBeLessThanOrEqual(760);
+  expect(
+    await paper.evaluate((node) => node.getBoundingClientRect().left),
+  ).toBeGreaterThanOrEqual(0);
+  await page.mouse.move(800, 650);
+  await page.mouse.wheel(3000, 0);
+  await expect
+    .poll(() =>
+      viewport.evaluate(
+        (node) => node.scrollWidth - node.clientWidth - node.scrollLeft,
+      ),
+    )
+    .toBeLessThanOrEqual(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - innerWidth,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(failures).toEqual([]);
+  expect(aiCalls).toEqual([]);
+});

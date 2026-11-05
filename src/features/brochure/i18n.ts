@@ -2939,8 +2939,33 @@ const translations: Record<string, string> = {
   "AI photo preparation": "Përgatitja e fotove me AI",
   "We are removing photo backgrounds and saving the finished images before opening your brochure.":
     "Po heqim sfondin e fotove dhe po ruajmë imazhet e përfunduara para hapjes së broshurës.",
-  "The brochure stays hidden until its photos are ready. Retry or return to Products & prices to repair the photos.":
-    "Broshura do të hapet pasi fotot të jenë gati. Provoni sërish ose kthehuni te Produktet dhe çmimet për t’i rregulluar fotot.",
+  "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.":
+    "Përpunimi përfundoi. Mund të riprovoni fotot e papërfunduara ose ta mbyllni këtë dritare dhe t’i ngarkoni vetë te Produktet dhe çmimet.",
+  "Close and upload photos": "Mbyll dhe ngarko fotot",
+  "View photo preparation details": "Shiko hollësitë e përgatitjes së fotove",
+  "Photo preparation details": "Hollësitë e përgatitjes së fotove",
+  "Photos without an image": "Produkte pa foto",
+  "Exact product photo not found": "Nuk u gjet foto e saktë e produktit",
+  "Photo search could not finish": "Kërkimi i fotos nuk përfundoi",
+  "No photo has been added yet": "Ende nuk është shtuar foto",
+  "Original photo — background removal incomplete":
+    "Foto origjinale — sfondi nuk u hoq plotësisht",
+  "Photo preparation could not finish": "Përgatitja e fotos nuk përfundoi",
+  "Finished photos have been saved. You can upload the missing photos or correct the product name and model in Products & prices.":
+    "Fotot e përfunduara janë ruajtur. Fotot që mungojnë mund t’i ngarkoni vetë ose të plotësoni emrin dhe modelin e saktë te Produktet dhe çmimet.",
+  "One featured product above the rest": "Një produkt i veçuar mbi të tjerët",
+  "Prepared photos": "Foto të përgatitura",
+  "Original photos": "Foto me sfond origjinal",
+  "Missing photos": "Foto që mungojnë",
+  "Photos selected for preparation": "Foto të zgjedhura për përgatitje",
+  "Photos needing preparation": "Foto që duhen përgatitur",
+  "Missing photos are counted separately from background-removal progress.":
+    "Fotot që mungojnë numërohen veçmas nga ecuria e heqjes së sfondit.",
+  "Upload a photo with Upload / edit photo, or complete the exact product name and model in Products & prices.":
+    "Përdorni “Ngarko / redakto fotografinë” për të shtuar foton tuaj, ose plotësoni emrin dhe modelin e saktë te Produktet dhe çmimet.",
+  "Finished photos have been saved.": "Fotot e përfunduara janë ruajtur.",
+  "Original photos are still in use; their backgrounds have not been removed completely.":
+    "Po përdoren ende fotot origjinale; sfondi i tyre nuk është hequr plotësisht.",
   "Starting photo preparation…": "Po fillon përgatitja e fotove…",
   "Searching for product photos": "Po kërkohen fotot e produkteve",
   "Photo needed": "Nevojitet foto",

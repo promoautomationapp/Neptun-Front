@@ -23,15 +23,15 @@ function photoStatus(item: PhotoProgressItem) {
       : item.state === "queued"
         ? "waiting"
         : item.state === "original"
-          ? "Using original photo"
+          ? "Original photo — background removal incomplete"
           : item.state === "failed"
-            ? "need attention"
+            ? "Photo preparation could not finish"
             : "Preparing / waiting for AI",
   );
 }
 
-/** Import/create gate: the parent releases the brochure only after preparation
- * and persistence settle. Neither Escape nor a backdrop click skips this step. */
+/** Import/create gate: dismissal is available after preparation and persistence
+ * settle, so unfinished photos can be uploaded from Products & prices. */
 export function PhotoPreparationModal({
   campaign,
   items,
@@ -62,12 +62,18 @@ export function PhotoPreparationModal({
     product.bundleProducts?.length ? product.bundleProducts : [product],
   );
   const searching = products.filter(
-    (product) => product.imageSearch?.status === "searching",
+    (product) =>
+      !product.image &&
+      !product.localImage &&
+      !product.imageUrl &&
+      product.imageSearch?.status === "searching",
   );
   const searchFailures = products.filter(
     (product) =>
       !product.image &&
-      ["failed", "not_found"].includes(product.imageSearch?.status || ""),
+      !product.localImage &&
+      !product.imageUrl &&
+      product.imageSearch?.status !== "searching",
   );
   const ready = items.filter((item) => item.state === "ready").length;
   const queued = items.filter((item) => item.state === "queued").length;
@@ -104,15 +110,32 @@ export function PhotoPreparationModal({
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-description`}
       data-preparation-busy={busy}
-      onCancel={(event) => event.preventDefault()}
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!busy) onReturnToProducts();
+      }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
           event.stopPropagation();
+          if (!busy) onReturnToProducts();
         }
       }}
     >
       <div className="cs-photo-preparation-content">
+        {!busy && (
+          <button
+            type="button"
+            className="cs-photo-preparation-close"
+            aria-label={t("Close")}
+            title={t("Close")}
+            onClick={onReturnToProducts}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        )}
         <header className="cs-photo-preparation-heading">
           <span
             className={`cs-photo-preparation-symbol ${busy ? "is-running" : ""}`}
@@ -137,7 +160,7 @@ export function PhotoPreparationModal({
           {t(
             busy
               ? "We are removing photo backgrounds and saving the finished images before opening your brochure."
-              : "The brochure stays hidden until its photos are ready. Retry or return to Products & prices to repair the photos.",
+              : "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.",
           )}
         </p>
         <div
@@ -158,8 +181,11 @@ export function PhotoPreparationModal({
             {searching.length > 0
               ? ` · ${searching.length} ${t("Searching for product photos")}`
               : ""}
-            {attention.length + searchFailures.length > 0
-              ? ` · ${attention.length + searchFailures.length} ${t("need attention")}`
+            {attention.length > 0
+              ? ` · ${t("Photos needing preparation")}: ${attention.length}`
+              : ""}
+            {searchFailures.length > 0
+              ? ` · ${t("Missing photos")}: ${searchFailures.length}`
               : ""}
           </span>
           {percent !== null && <strong>{percent}%</strong>}
@@ -169,6 +195,13 @@ export function PhotoPreparationModal({
           value={total ? ready : busy ? undefined : 0}
           max={total || 1}
         />
+        {!busy && needsAttention && ready > 0 && (
+          <p className="cs-photo-preparation-description">
+            {t(
+              "Finished photos have been saved. You can upload the missing photos or correct the product name and model in Products & prices.",
+            )}
+          </p>
+        )}
         {(visibleWork.length > 0 ||
           searching.length > 0 ||
           (!busy && searchFailures.length > 0)) && (
@@ -201,7 +234,15 @@ export function PhotoPreparationModal({
                     <strong>{product.name}</strong>
                     <small>{product.code}</small>
                   </div>
-                  <span>{t("Photo needed")}</span>
+                  <span>
+                    {t(
+                      product.imageSearch?.status === "not_found"
+                        ? "Exact product photo not found"
+                        : product.imageSearch?.status === "failed"
+                          ? "Photo search could not finish"
+                          : "No photo has been added yet",
+                    )}
+                  </span>
                 </li>
               ))}
           </ul>
@@ -223,7 +264,7 @@ export function PhotoPreparationModal({
               className="is-primary"
               onClick={onReturnToProducts}
             >
-              {t("Return to Products & prices")}
+              {t("Close and upload photos")}
             </button>
           </footer>
         )}

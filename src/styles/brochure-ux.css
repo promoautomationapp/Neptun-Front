@@ -1137,15 +1137,6 @@ html[data-theme="dark"] body .cs-inline-price-editor input[type="number"] {
   padding: 0;
   overflow-wrap: normal;
 }
-.brochure-page.reference-ready-preset::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: url("/cover-backgrounds/neptun-reference-pattern.svg") center /
-    100% 100%;
-}
 .brochure-interior.custom-card-layout:is(.layout-tv8, .layout-balanced8)
   .brochure-products {
   grid-template-columns: repeat(6, minmax(0, 1fr));

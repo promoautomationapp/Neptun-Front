@@ -509,7 +509,7 @@ it("keeps failed photo preparation in the blocking stage with retry and a route 
   });
   expect(view.container.querySelector(".cs-canvas-dock")).toBeNull();
   fireEvent.click(
-    view.getByRole("button", { name: "Return to Products & prices" }),
+    view.getByRole("button", { name: "Close and upload photos" }),
   );
   await waitFor(() =>
     expect(
@@ -520,4 +520,59 @@ it("keeps failed photo preparation in the blocking stage with retry and a route 
   expect(
     view.getByRole("button", { name: /Products & prices/ }).className,
   ).toContain("active");
+});
+
+it("lets a completed search with no exact photo close to Products and manually choose an image without restarting AI", async () => {
+  vi.mocked(requestAi).mockResolvedValue({
+    found: false,
+    reason: "No exact product photo",
+  });
+  const { view, fetchMock, importCsv } = await photoImportWorkspace();
+  await importCsv(
+    "Code,Product name,Sale price,Regular price,Brochure position\n88888,Exact model ZX2,49,69,1.1\n",
+    1,
+  );
+  await view.findByRole("dialog", {
+    name: "Photo preparation needs attention",
+  });
+  expect(requestAi).toHaveBeenCalledOnce();
+  expect(vi.mocked(requestAi).mock.calls[0]?.[0]).toBe("ai-find-product-image");
+  expect(view.container.querySelector(".cs-canvas-dock")).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "Close" }));
+  await waitFor(() =>
+    expect(
+      view.queryByRole("dialog", { name: "Photo preparation needs attention" }),
+    ).toBeNull(),
+  );
+  expect(
+    view.getByRole("button", { name: /Products & prices/ }).className,
+  ).toContain("active");
+  expect(view.getByRole("heading", { name: "Exact model ZX2" })).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("button", {
+      name: "Change image: Exact model ZX2",
+    }),
+  );
+  await view.findByRole("dialog", { name: "Change product image" });
+  expect(view.getByRole("button", { name: "Upload own image" })).toBeTruthy();
+  expect(view.getByRole("button", { name: "Upload image" })).toBeTruthy();
+  expect(
+    [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')].some(
+      (input) => input.accept.includes("image/"),
+    ),
+  ).toBe(true);
+  const saved = fetchMock.mock.calls
+    .filter(([, init]) => init?.method === "POST")
+    .map(([, init]) => JSON.parse(String(init?.body)).campaign as Campaign)
+    .filter(Boolean);
+  expect(saved.at(-1)?.products).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        code: "88888",
+        name: "Exact model ZX2",
+        imageSearch: expect.objectContaining({ status: "not_found" }),
+      }),
+    ]),
+  );
+  expect(requestAi).toHaveBeenCalledOnce();
 });

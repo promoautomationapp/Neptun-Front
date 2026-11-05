@@ -56,7 +56,11 @@ import type { PageArtworkProps } from "./PageArtwork";
 import type { CompactStoresFooterProps } from "./CompactStoresFooter";
 import type { StoresElementProps } from "./StoresElement";
 import React from "react";
-import { coverProducts, splitPages } from "./campaignPages";
+import {
+  coverProducts,
+  isFeaturedProductCollection,
+  splitPages,
+} from "./campaignPages";
 import {
   displaySpecs,
   hasEditableScreen,
@@ -3135,6 +3139,14 @@ function ProductPageContent({
   const readability = pageBackgroundReadability(campaign, "product", page);
   const light = readability.light;
   const priceLogo = priceLogoSource(campaign);
+  const pageConfig = campaign.pages?.[page.index];
+  const footerConfig = {
+    ...campaign.pageDecorationDefaults,
+    ...(isFeaturedProductCollection(campaign) && pageConfig?.showFooter === true
+      ? { showFooterLogo: true, showFooterLine: true }
+      : {}),
+    ...pageConfig,
+  };
   return (
     <section
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
@@ -3223,20 +3235,24 @@ function ProductPageContent({
       </div>
       {page.showFooter && !october && (
         <div className="brochure-interior-brand-footer">
-          <CampaignAssetArtwork
-            campaign={campaign}
-            assetKey={`product-${page.index}-neptun`}
-            label="NEPTUN footer logo"
-            onChange={onCampaignAssetChange}
-            defaultWidth="12cqw"
-          >
-            <NeptunWordmark
-              dark={!light}
+          {footerConfig.showFooterLogo !== false && (
+            <CampaignAssetArtwork
               campaign={campaign}
-              backgroundColor={pageBackgroundColor(campaign, "product", page)}
-            />
-          </CampaignAssetArtwork>
-          <span className="brochure-interior-footer-line" />
+              assetKey={`product-${page.index}-neptun`}
+              label="NEPTUN footer logo"
+              onChange={onCampaignAssetChange}
+              defaultWidth="12cqw"
+            >
+              <NeptunWordmark
+                dark={!light}
+                campaign={campaign}
+                backgroundColor={pageBackgroundColor(campaign, "product", page)}
+              />
+            </CampaignAssetArtwork>
+          )}
+          {footerConfig.showFooterLine !== false && (
+            <span className="brochure-interior-footer-line" />
+          )}
           {page.showFooterPageNumber && <b>{page.index + 2}</b>}
         </div>
       )}

@@ -1,5 +1,11 @@
 import React from "react";
-import { render, fireEvent, cleanup, act } from "@testing-library/react";
+import {
+  render,
+  fireEvent,
+  cleanup,
+  act,
+  within,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PhotoPreparationProgress } from "../../src/features/brochure/PhotoPreparationProgress";
 import type { Campaign } from "../../src/domain/models";
@@ -33,11 +39,19 @@ it("shows real completed, waiting and failed work while keeping upload and retry
       onEdit={edit}
     />,
   );
-  const progress = view.getByRole("progressbar") as HTMLProgressElement;
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
+  );
+  let details = within(
+    view.getByRole("dialog", { name: "Photo preparation details" }),
+  );
+  const progress = details.getByRole("progressbar") as HTMLProgressElement;
   expect(progress.value).toBe(1);
   expect(progress.max).toBe(4);
   expect(view.getByText("25%")).toBeTruthy();
-  expect(view.getByText(/1 \/ 4 ready/)).toBeTruthy();
+  expect(
+    details.getByText("Photos selected for preparation: 1 / 4 ready"),
+  ).toBeTruthy();
   expect(
     (
       view.getByRole("button", {
@@ -59,9 +73,15 @@ it("shows real completed, waiting and failed work while keeping upload and retry
       onEdit={edit}
     />,
   );
-  fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
+  );
+  details = within(
+    view.getByRole("dialog", { name: "Photo preparation details" }),
+  );
+  fireEvent.click(details.getByRole("button", { name: "Retry failed photos" }));
   expect(retry).toHaveBeenCalledOnce();
-  expect(view.getByText("Photo preparation needs attention")).toBeTruthy();
+  expect(details.getByText("Photo preparation needs attention")).toBeTruthy();
 });
 
 it("keeps original fallback photos needing attention instead of claiming they were cut out", () => {
@@ -87,10 +107,18 @@ it("keeps original fallback photos needing attention instead of claiming they we
       onEdit={edit}
     />,
   );
-  expect(view.getByText("50%")).toBeTruthy();
-  expect(view.getByText(/1 \/ 2 ready · 1 Using original photo/)).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
+  );
+  const details = within(
+    view.getByRole("dialog", { name: "Photo preparation details" }),
+  );
+  expect(details.getByText("50%")).toBeTruthy();
+  expect(
+    details.getByText("Prepared photos: 1 · Original photos: 1"),
+  ).toBeTruthy();
   expect(view.queryByText("Product photos are ready")).toBeNull();
-  expect(view.getByText("Photo preparation needs attention")).toBeTruthy();
+  expect(details.getByText("Photo preparation needs attention")).toBeTruthy();
   act(() => vi.advanceTimersByTime(5000));
   fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
   expect(retry).toHaveBeenCalledOnce();
@@ -109,6 +137,9 @@ it("shows saving separately from AI preparation", () => {
       onRetry={vi.fn()}
       onEdit={vi.fn()}
     />,
+  );
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
   );
   expect(view.getByText("Saving photo…")).toBeTruthy();
   expect(view.queryByText("Preparing / waiting for AI")).toBeNull();
@@ -135,6 +166,9 @@ it("identifies retries and their attempt count while keeping unfinished photos o
     />,
   );
   expect(view.getByText("Retrying some product photos…")).toBeTruthy();
+  fireEvent.click(
+    view.getByRole("button", { name: "View photo preparation details" }),
+  );
   expect(view.getByText("Retrying photo · 2/3")).toBeTruthy();
   expect(view.getByText("50%")).toBeTruthy();
   expect(view.queryByText("Product photos are ready")).toBeNull();

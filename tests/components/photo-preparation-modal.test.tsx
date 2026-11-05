@@ -116,7 +116,7 @@ it("blocks dismissal while AI work and searches run, with real saving/retry prog
   expect(returnToProducts).not.toHaveBeenCalled();
 });
 
-it("keeps failed/original photos out of ready totals and allows only explicit retry or repair after work settles", () => {
+it("keeps failed/original photos out of ready totals and exposes retry, close and manual repair after work settles", () => {
   const retry = vi.fn(),
     returnToProducts = vi.fn();
   const view = render(
@@ -136,21 +136,82 @@ it("keeps failed/original photos out of ready totals and allows only explicit re
     name: "Photo preparation needs attention",
   });
   expect(view.getByText("50%")).toBeTruthy();
-  expect(view.getByText("Using original photo")).toBeTruthy();
+  expect(
+    view.getByText("Original photo — background removal incomplete"),
+  ).toBeTruthy();
   expect(view.getByRole("alert").textContent).toBe(
     "The photo could not be prepared.",
   );
   expect(view.queryByText("Product photos are ready")).toBeNull();
-  expect(view.queryByRole("button", { name: "Close" })).toBeNull();
+  expect(view.getByRole("button", { name: "Close" })).toBeTruthy();
   const cancel = new Event("cancel", { bubbles: true, cancelable: true });
   fireEvent(dialog, cancel);
   expect(cancel.defaultPrevented).toBe(true);
+  expect(returnToProducts).toHaveBeenCalledOnce();
+  returnToProducts.mockClear();
   fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
   expect(retry).toHaveBeenCalledOnce();
-  fireEvent.click(
-    view.getByRole("button", { name: "Return to Products & prices" }),
-  );
+  fireEvent.click(view.getByRole("button", { name: "Close" }));
   expect(returnToProducts).toHaveBeenCalledOnce();
+  fireEvent.click(
+    view.getByRole("button", { name: "Close and upload photos" }),
+  );
+  expect(returnToProducts).toHaveBeenCalledTimes(2);
+});
+
+it("reveals dismissal after a missing-photo search finishes and lets Escape return to manual upload", () => {
+  const retry = vi.fn(),
+    returnToProducts = vi.fn();
+  const props = {
+    campaign,
+    items: [],
+    onRetry: retry,
+    onReturnToProducts: returnToProducts,
+  };
+  const view = render(<PhotoPreparationModal {...props} busy />);
+  const pending = view.getByRole("dialog", {
+    name: "Preparing product photos…",
+  });
+  expect(view.queryByRole("button", { name: "Close" })).toBeNull();
+  expect(
+    view.queryByRole("button", { name: "Close and upload photos" }),
+  ).toBeNull();
+  fireEvent.keyDown(pending, { key: "Escape" });
+  expect(returnToProducts).not.toHaveBeenCalled();
+
+  const missing: Campaign = {
+    ...campaign,
+    products: [
+      {
+        ...campaign.products[1]!,
+        imageSearch: {
+          status: "not_found",
+          requestKey: "phone",
+          requestId: "search-phone",
+          message: "No exact photo",
+        },
+      },
+    ],
+  };
+  view.rerender(
+    <PhotoPreparationModal {...props} campaign={missing} busy={false} />,
+  );
+  const settled = view.getByRole("dialog", {
+    name: "Photo preparation needs attention",
+  });
+  expect(view.getByText("Exact product photo not found")).toBeTruthy();
+  expect(
+    view.getByText(
+      "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.",
+    ),
+  ).toBeTruthy();
+  expect(view.getByRole("button", { name: "Close" })).toBeTruthy();
+  expect(
+    view.getByRole("button", { name: "Close and upload photos" }),
+  ).toBeTruthy();
+  fireEvent.keyDown(settled, { key: "Escape" });
+  expect(returnToProducts).toHaveBeenCalledOnce();
+  expect(retry).not.toHaveBeenCalled();
 });
 
 it("stays indeterminate before work is known and restores focus and scrolling when the parent releases it", () => {

@@ -16,6 +16,7 @@ import {
   resetCoverProductPositions,
   featureCoverProduct,
   makeCoverImageLayer,
+  resolvedCoverProductLayout,
 } from "./coverPresentation";
 import { readImage } from "./utils";
 import {
@@ -143,14 +144,16 @@ export function CoverDesignControls({
         Product layout
         <SearchableSelect
           aria-label="Cover product layout"
-          value={
-            campaign.coverProductLayout ||
-            (coverProducts(campaign).length >= 3 ? "hero" : "pair")
-          }
+          value={resolvedCoverProductLayout(
+            campaign,
+            coverProducts(campaign).length,
+          )}
           onChange={(event) => update("coverProductLayout", event.target.value)}
         >
           <option value="pair">Two products beside each other</option>
-          <option value="hero">One featured product above two</option>
+          <option value="hero">
+            {t("One featured product above the rest")}
+          </option>
           <option value="row">Products in one row</option>
         </SearchableSelect>
       </label>

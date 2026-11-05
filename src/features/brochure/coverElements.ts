@@ -1,6 +1,9 @@
-import { coverMessageVisible } from "./coverPresentation";
+import {
+  coverMessageVisible,
+  resolvedCoverProductLayout,
+} from "./coverPresentation";
 import type { Campaign, Placement } from "../../domain/models";
-import { coverProducts } from "./campaignPages";
+import { coverProducts, isFeaturedProductCollection } from "./campaignPages";
 import { isOctoberBrochure } from "./octoberDesign";
 type CoverPlacement = Placement & { x: number; y: number; width: number };
 export const COVER_ELEMENT_DEFAULTS: Record<string, CoverPlacement> = {
@@ -135,6 +138,51 @@ export function coverProductPlacement(
   count: number,
 ) {
   const band = isOctoberBrochure(campaign) || campaign.showCoverBand === true;
+  const featuredCollection = !band && isFeaturedProductCollection(campaign);
+  const mode = resolvedCoverProductLayout(campaign, count);
+  const belowBand = campaign.showCoverBand === true;
+  const messageAboveProducts = !belowBand && coverMessageVisible(campaign);
+  const selectedCode = !belowBand && campaign.coverBannerProductCode;
+  const covers = selectedCode ? coverProducts(campaign) : [];
+  const featuredIndex = covers.findIndex(
+    (item) => String(item.code) === String(selectedCode),
+  );
+  const heroY = messageAboveProducts
+    ? campaign.showCoverHeadline === false
+      ? 24
+      : 34
+    : campaign.showCoverHeadline === false
+      ? 18
+      : 26;
+  if (
+    featuredCollection &&
+    (mode === "hero" || featuredIndex >= 0) &&
+    count > 0
+  ) {
+    const hajde = campaign.coverBandVariant === "hajde";
+    const reference = campaign.brochureFooter?.style === "reference";
+    const top = hajde ? 19 : reference ? 12 : heroY;
+    const area = {
+      x: hajde ? 3 : reference ? 2.25 : 4,
+      y: top,
+      width: hajde ? 94 : reference ? 95.5 : 92,
+      height: 92 - top,
+    };
+    // Keep the featured row the same size when the lower row is still empty.
+    return featuredPlacement(
+      area,
+      index,
+      Math.max(2, count),
+      Math.max(0, featuredIndex),
+    );
+  }
+  if (featuredCollection && mode === "row")
+    return gridPlacement(
+      { x: 4, y: 46, width: 92, height: 42 },
+      index,
+      count,
+      count,
+    );
   if (band && count > 2) {
     const area = isOctoberBrochure(campaign)
       ? { x: 3.85, y: 56.8, width: 92.5, height: 35.2 }
@@ -154,8 +202,7 @@ export function coverProductPlacement(
       (product) =>
         String(product.code) === String(campaign.coverBannerProductCode),
     );
-    const featured =
-      chosen >= 0 || (campaign.coverProductLayout || "hero") === "hero";
+    const featured = chosen >= 0 || mode === "hero";
     const reference =
       campaign.coverBandVariant === "hajde" ||
       campaign.brochureFooter?.style === "reference";
@@ -178,28 +225,18 @@ export function coverProductPlacement(
       ? featuredPlacement(area, index, count, Math.max(0, chosen))
       : gridPlacement(area, index, count, balancedColumns(area, count));
   }
-  if (campaign.coverBandVariant === "hajde" && count >= 3) {
+  if (
+    campaign.coverBandVariant === "hajde" &&
+    count >= 3 &&
+    !featuredCollection
+  ) {
     return index === 0
       ? { x: 3, y: 19, width: 94, height: 35 }
       : { x: 3 + (index - 1) * 49, y: 58, width: 45, height: 34 };
   }
   if (isOctoberBrochure(campaign))
     return { x: 3.85 + (index % 2) * 48, y: 56.8, width: 44.5, height: 35.2 };
-  const belowBand = campaign.showCoverBand === true;
-  const messageAboveProducts = !belowBand && coverMessageVisible(campaign);
-  const selectedCode = !belowBand && campaign.coverBannerProductCode;
-  const heroY = messageAboveProducts
-    ? campaign.showCoverHeadline === false
-      ? 24
-      : 34
-    : campaign.showCoverHeadline === false
-      ? 18
-      : 26;
   const heroHeight = 64 - heroY;
-  const covers = selectedCode ? coverProducts(campaign) : [];
-  const featuredIndex = covers.findIndex(
-    (item) => String(item.code) === String(selectedCode),
-  );
   if (
     campaign.brochureFooter?.style === "reference" &&
     !belowBand &&
@@ -229,7 +266,6 @@ export function coverProductPlacement(
           height: messageAboveProducts ? 22 : 23,
         };
   }
-  const mode = campaign.coverProductLayout || (count >= 3 ? "hero" : "pair");
   if (mode === "hero" && count >= 3)
     return index === 0
       ? { x: 4, y: heroY, width: 92, height: heroHeight }
