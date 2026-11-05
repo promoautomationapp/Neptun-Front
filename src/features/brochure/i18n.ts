@@ -1385,6 +1385,9 @@ const translations: Record<string, string> = {
     "Importohet vetëm fleta e zgjedhur. Zgjidhni fletën me produktet dhe pozicionet që dëshironi të përdorni.",
   "1.1, 1.2, 1.3 are separate offers on the cover. Repeated 1.1 positions form one grouped offer.":
     "1.1, 1.2, 1.3 janë oferta të veçanta në kopertinë. Pozicionet e përsëritura 1.1 formojnë një ofertë të grupuar.",
+  "The first number is the page and the second is the order. Page 1 is the cover and order 0 is valid. At the same position, matching models and prices share color choices. Different models form a combined offer.":
+    "Numri para pikës tregon faqen, kurse numri pas saj renditjen. Faqja 1 është kopertina dhe renditja mund të fillojë nga 0. Në të njëjtin pozicion, modeli dhe çmimet e njëjta bashkojnë ngjyrat. Modelet e ndryshme formojnë një ofertë të përbashkët.",
+  "Brochure products": "Produktet e broshurës",
   "Fill screen crops the image to cover the whole display. Choose Show whole image to keep every edge visible.":
     "Mbush ekranin e pret imazhin për të mbuluar gjithë ekranin. Zgjidh Shfaq imazhin e plotë për t’i mbajtur të dukshme të gjitha skajet.",
   "Replace previous spreadsheet products":

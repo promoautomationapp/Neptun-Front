@@ -96,7 +96,14 @@ export function inferBrochureColumns(
           index,
           score: rows.filter((row) => {
             const parsed = parseBrochurePosition(row?.[index]);
-            return parsed && parsed.page <= 80 && parsed.order <= 30;
+            // A plain integer could be stock or another numeric fact. Infer
+            // an unlabeled position column only from dotted page.order values.
+            return (
+              /[.,]/.test(String(row?.[index] ?? "")) &&
+              parsed &&
+              parsed.page <= 80 &&
+              parsed.order <= 30
+            );
           }).length,
         };
       })
@@ -154,11 +161,17 @@ export function parseBrochurePosition(value: unknown): BrochurePosition | null {
   const clean = /^\d+\.\d{8,}$/.test(raw)
     ? String(Number(Number(raw).toFixed(4)))
     : raw;
+  if (/^\d+$/.test(clean)) {
+    const page = Number(clean);
+    return page >= 1 && page <= 999
+      ? { page, order: 0, label: `${page}.0` }
+      : null;
+  }
   const match = clean.match(/^(\d+)\.(\d+)$/);
   if (!match) return null;
   const page = Number(match[1]);
   const order = Number(match[2]);
-  return page >= 1 && page <= 999 && order >= 1 && order <= 999
+  return page >= 1 && page <= 999 && order >= 0 && order <= 999
     ? { page, order, label: `${page}.${order}` }
     : null;
 }
@@ -286,13 +299,19 @@ export function analyzeBrochureRows(
     const { row, index } = first;
     const rowNumber = rowOffset + index;
     if (group.set) {
+      const sourcePositions = group.sources.map(({ row }) =>
+        parseBrochurePosition(row[columns.positionCol]),
+      );
+      const exactPosition = sourcePositions.every(
+        (position) => position && position.label === sourcePositions[0]?.label,
+      );
       const distinctRegular = new Set(
         group.sources
           .map((source) => parsePrice(source.row[columns.regularCol]))
           .filter((value) => value > 0),
       );
       const individualRegular =
-        group.positionGrouped && distinctRegular.size > 1;
+        (group.positionGrouped || exactPosition) && distinctRegular.size > 1;
       const sourceCodes = new Set<string>();
       const memberGroup = group.positionGrouped
         ? {
@@ -393,7 +412,10 @@ export function analyzeBrochureRows(
             (codeLookup.get(importCode(member.code))
               ? productImportColor(codeLookup.get(importCode(member.code))!)
               : null),
-          eligible: group.positionGrouped && !explicitSet && !source?.bundle,
+          // A positioned Set may describe color choices too. The slot plus
+          // model/spec/price agreement is the evidence; the Set label alone
+          // must not force interchangeable finishes into separate products.
+          eligible: exactPosition && !source?.bundle,
           regular:
             parsePrice(imported?.[columns.regularCol]) || product.regular,
           sale: sharedSale.value,
@@ -402,7 +424,9 @@ export function analyzeBrochureRows(
       const collapsed = collapseImportedColorVariants(candidates);
       const members = collapsed.map(({ product }) => product);
       const onlyColorChoices =
-        group.positionGrouped && !explicitSet && members.length === 1;
+        exactPosition &&
+        members.length === 1 &&
+        (members[0]?.brochureVariants?.length || 0) > 1;
       const product = onlyColorChoices
         ? structuredClone(members[0]!)
         : setOfferProduct(

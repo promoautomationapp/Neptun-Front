@@ -399,7 +399,7 @@ describe("Set brochure placement and details", () => {
     expect(phone.brochureDetails).toEqual(saved);
   });
 
-  it("groups matching positions regardless of whether only one row is marked Set", () => {
+  it("recognizes positioned color choices even when one row is marked Set", () => {
     const phones: Product[] = [
       {
         code: "P400",
@@ -423,7 +423,11 @@ describe("Set brochure placement and details", () => {
       phones,
     );
     expect(result.products).toHaveLength(1);
-    expect(result.products[0]?.bundleCodes).toEqual(["P400", "P401"]);
+    expect(result.products[0]?.bundleProducts).toBeUndefined();
+    expect(result.products[0]?.code).toBe("P400");
+    expect(
+      result.products[0]?.brochureVariants?.map((variant) => variant.code),
+    ).toEqual(["P400", "P401"]);
     expect(result.matchedRows).toBe(2);
     expect(result.warnings).toEqual([]);
   });

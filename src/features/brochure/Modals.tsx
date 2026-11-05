@@ -959,7 +959,7 @@ export function ImportSales({
             <div className="cs-import-sheet-rules">
               <p>
                 {t(
-                  "1.1, 1.2, 1.3 are separate offers on the cover. Repeated 1.1 positions form one grouped offer.",
+                  "The first number is the page and the second is the order. Page 1 is the cover and order 0 is valid. At the same position, matching models and prices share color choices. Different models form a combined offer.",
                 )}
               </p>
               <label>

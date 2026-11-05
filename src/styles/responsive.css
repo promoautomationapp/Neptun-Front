@@ -662,12 +662,20 @@
   gap: 8px;
   padding: 2px;
 }
+.cs-import-results .cs-result-list > .cs-import-brochure-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
 .cs-import-price-row {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   min-width: 0;
+  width: 100%;
   padding: 9px 12px;
   border: 1px solid #e0e8ef;
   border-radius: 10px;
