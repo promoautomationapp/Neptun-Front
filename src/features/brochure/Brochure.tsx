@@ -65,6 +65,7 @@ import {
 } from "./tvSpecs";
 import { warrantyDuration } from "./warranty";
 import { productColors } from "./colors";
+import { BundleVariantColors } from "./BundleVariantColors";
 import { offerStyleFor, savingModeFor } from "./offerStyles";
 import { t } from "./i18n";
 import { MissingCatalogNotice } from "./MissingCatalogNotice";
@@ -2061,6 +2062,7 @@ function StandardProductCard({
               ))}
             </ProductDetailBlock>
           )}
+          {isBundleOffer(product) && <BundleVariantColors product={product} />}
           {(!isOctoberBrochure(campaign) ||
             !isAppleProduct(product) ||
             product.hideBrandLogo === false ||

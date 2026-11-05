@@ -88,6 +88,7 @@ import {
 } from "../brochure/mobileDetails";
 import { reorderDisplayedDetails } from "../brochure/detailRows";
 import { productColors } from "../brochure/colors";
+import { BundleVariantColors } from "../brochure/BundleVariantColors";
 import { warrantyDuration } from "../brochure/warranty";
 import { ProductDetailBlock } from "../brochure/ProductDetailBlock";
 import { isAirConditioner } from "../brochure/productArtwork";
@@ -1142,6 +1143,9 @@ export function PostCanvas({
                           ))}
                         </ProductDetailBlock>
                       )}
+                    {product.bundleProducts?.length ? (
+                      <BundleVariantColors product={product} />
+                    ) : null}
                     <div
                       className={`social-product-brand ${brandOnLight ? "on-light" : "on-dark"}`}
                     >

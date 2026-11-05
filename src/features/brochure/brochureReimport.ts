@@ -26,14 +26,29 @@ function leafProducts(product: Product): Product[] {
 function leafCodes(product: Product): string[] {
   return product.bundleProducts?.length
     ? product.bundleProducts.flatMap(leafCodes)
-    : (product.bundleCodes?.length ? product.bundleCodes : [product.code]).map(
-        importCode,
-      );
+    : [
+        ...new Set(
+          [
+            ...(product.bundleCodes?.length
+              ? product.bundleCodes
+              : [product.code]),
+            ...(product.brochureVariants || []).flatMap((variant) =>
+              variant.code ? [variant.code] : [],
+            ),
+          ].map(importCode),
+        ),
+      ];
 }
 
 function sameOfferStructure(previous: Product, incoming: Product) {
-  const previousCodes = leafCodes(previous).sort();
-  const incomingCodes = leafCodes(incoming).sort();
+  // Color choices share the representative photo; adding a choice does not
+  // invalidate that prepared image. Only simultaneous product members matter.
+  const representativeCodes = (product: Product): string[] =>
+    product.bundleProducts?.length
+      ? product.bundleProducts.flatMap(representativeCodes)
+      : [importCode(product.code)];
+  const previousCodes = representativeCodes(previous).sort();
+  const incomingCodes = representativeCodes(incoming).sort();
   return (
     Boolean(previous.bundleProducts?.length) ===
       Boolean(incoming.bundleProducts?.length) &&

@@ -41,7 +41,7 @@ const oldPhoneNotice: BrochureImportWarning = {
 };
 
 describe("shared brochure positions are one collaboration offer", () => {
-  it("requires one unambiguous shared price instead of choosing between conflicting offer prices", () => {
+  it("keeps separately priced position rows instead of choosing a shared price or losing the products", () => {
     const rows = [
       ["TV", "Beko TV 65 inch", "1.1", 399],
       ["84066096", "A37 5G 6/128 GREEN", "1.1", 299],
@@ -49,13 +49,18 @@ describe("shared brochure positions are one collaboration offer", () => {
     ];
     const before = structuredClone({ rows, catalog });
     const result = analyzeBrochureRows(rows, columns, catalog, 12);
-    expect(result.products).toEqual([]);
-    expect(result.skipped).toHaveLength(3);
     expect(
-      result.skipped.every((issue) =>
-        issue.reason.includes("Conflicting shared Set sale prices"),
-      ),
-    ).toBe(true);
+      result.products.map((product) => [product.code, product.sale]),
+    ).toEqual([
+      ["TV", "399"],
+      ["84066096", "299"],
+      ["SPEAKER", "249"],
+    ]);
+    expect(result.products.every((product) => !product.bundleProducts)).toBe(
+      true,
+    );
+    expect(result.matchedRows).toBe(3);
+    expect(result.skipped).toEqual([]);
     expect({ rows, catalog }).toEqual(before);
   });
   it("groups mixed products at one page.order with editable member facts and one populated or repeated shared price", () => {
@@ -146,7 +151,7 @@ describe("shared brochure positions are one collaboration offer", () => {
     expect(result.matchedRows).toBe(4);
   });
 
-  it("groups distinct color SKUs at the same exact position as an editable offer", () => {
+  it("groups distinct color SKUs at the same exact position as one editable product with color choices", () => {
     const result = analyzeBrochureRows(
       [
         ["84066096", "A37 5G 6/128 GREEN", "1.1", 299, "", "GREEN"],
@@ -157,8 +162,9 @@ describe("shared brochure positions are one collaboration offer", () => {
     );
     expect(result.products).toHaveLength(1);
     expect(
-      result.products[0]!.bundleProducts?.map((variant) => variant.code),
+      result.products[0]!.brochureVariants?.map((variant) => variant.code),
     ).toEqual(["84066096", "84066097"]);
+    expect(result.products[0]!.bundleProducts).toBeUndefined();
     expect(result.warnings).toEqual([]);
   });
 

@@ -24,6 +24,7 @@ import {
 import "../../styles/large-bundle-offer.css";
 import { effectiveProductArtworks } from "./productArtwork";
 import { productArtworkPhotoBox } from "./ProductArtworkLayer";
+import { BundleVariantColors } from "./BundleVariantColors";
 
 function BundleSeparators({
   layout,
@@ -264,6 +265,9 @@ export function LargeBundleOffer({
               minHeight: `${copy.height}%`,
             }}
           >
+            {product.hideColors !== true && (
+              <BundleVariantColors product={member} showNames={false} />
+            )}
             {renderMember(member, index)}
           </div>
         );

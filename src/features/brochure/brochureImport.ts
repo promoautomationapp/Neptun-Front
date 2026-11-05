@@ -18,6 +18,13 @@ import {
   splitExcelDetails,
 } from "./excelProducts";
 import type { ExcelProductColumns } from "./excelProducts";
+import {
+  collapseImportedColorVariants,
+  colorVariantName,
+  productImportColor,
+  sameColorVariantModel,
+} from "./importedColorVariants";
+import type { ImportedColor } from "./importedColorVariants";
 
 export interface BrochureImportColumns extends ExcelProductColumns {
   codeCol: number;
@@ -35,10 +42,6 @@ interface BrochurePosition {
   order: number;
   label: string;
 }
-interface ImportedColor {
-  name: string;
-  hex: string;
-}
 interface BrochureEntry {
   row: number;
   position: BrochurePosition | null;
@@ -53,38 +56,6 @@ interface BrochureIssue {
   reason: string;
 }
 type BrochureWarning = BrochureImportWarning;
-
-const COLOR_WORDS: [string, string][] = [
-  ["space black", "#30343a"],
-  ["deep blue", "#1d395b"],
-  ["dark blue", "#243f75"],
-  ["sky blue", "#8bc5e9"],
-  ["light blue", "#9ac9e5"],
-  ["gracier blue", "#9bc8df"],
-  ["cosmic orange", "#dc7b49"],
-  ["light gold", "#d9c7a4"],
-  ["pink gold", "#d9ada4"],
-  ["mocha brown", "#91705d"],
-  ["space grey", "#777c82"],
-  ["gaphite grey", "#575d62"],
-  ["graphite grey", "#575d62"],
-  ["black", "#25292e"],
-  ["white", "#f5f5f1"],
-  ["silver", "#c9ced1"],
-  ["grey", "#8d9398"],
-  ["gray", "#8d9398"],
-  ["graphite", "#575d62"],
-  ["gaphit", "#575d62"],
-  ["green", "#4d9c7d"],
-  ["blue", "#4f8fc7"],
-  ["violet", "#8c77b5"],
-  ["red", "#c95051"],
-  ["pink", "#e7a8bd"],
-  ["beige", "#c9b79d"],
-  ["gold", "#ccae65"],
-  ["brown", "#806751"],
-  ["squad", "#6e7659"],
-];
 
 function header(value: unknown) {
   return normalize(String(value ?? ""))
@@ -216,31 +187,10 @@ export function reorderImportedDetails(
   return next;
 }
 
-function colorFrom(text: unknown) {
-  const source = normalize(String(text ?? ""))
-    .replace(/\(demo\)/g, "")
-    .trim();
-  for (const [name, hex] of COLOR_WORDS) {
-    if (new RegExp(`(?:^|\\s)${name}(?:$|\\s)`).test(source))
-      return { name, hex };
-  }
-  return null;
-}
-
-function familyName(name: string) {
-  let value = normalize(name).replace(/\(demo\)/g, " ");
-  for (const [color] of COLOR_WORDS)
-    value = value.replace(new RegExp(`(?:^|\\s)${color}(?=$|\\s)`, "g"), " ");
-  return value
-    .replace(/\b(?=[a-z0-9]*\d)(?=[a-z0-9]*[a-z])[a-z0-9]{10,}\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function catalogByName(catalog: Product[]) {
   const byName = new Map<string, Product[]>();
   for (const product of catalog) {
-    const key = familyName(product.name);
+    const key = colorVariantName(product.name);
     if (!key) continue;
     const matches = byName.get(key) || [];
     matches.push(product);
@@ -330,7 +280,7 @@ export function analyzeBrochureRows(
   const warnings: BrochureWarning[] = [];
   const incompleteProducts: Product[] = [];
   let ignored = 0;
-  groupPositionOffers(rows, columns).forEach((group) => {
+  const importGroup = (group: ImportRowGroup) => {
     const first = group.sources[0];
     if (!first) return;
     const { row, index } = first;
@@ -382,6 +332,20 @@ export function analyzeBrochureRows(
       const sharedRegular = hasRegular
         ? sharedSetPrice(group, columns.regularCol, rowOffset, "regular")
         : null;
+      // Position inference may be wrong when rows have different or missing
+      // prices. Preserve those rows as individual offers or editable incomplete
+      // products; only an explicitly marked Set requires one shared price.
+      const explicitSet = group.sources.some(
+        ({ row }) =>
+          (columns.setCol ?? -1) >= 0 &&
+          normalize(String(row[columns.setCol!] ?? "")) === "set",
+      );
+      if (group.positionGrouped && !explicitSet && sharedSale.error) {
+        group.sources.forEach((source) =>
+          importGroup({ set: false, sources: [source] }),
+        );
+        return;
+      }
       const reason = resolved.error || sharedSale.error || sharedRegular?.error;
       const skipSet = (message: string) =>
         group.sources.forEach(({ row, index }) =>
@@ -396,7 +360,7 @@ export function analyzeBrochureRows(
         skipSet(reason);
         return;
       }
-      const members = resolved.members.map((member) => {
+      const candidates = resolved.members.map((member) => {
         const source = resolved.resolvedRows.find(
           ({ product, bundle }) =>
             !bundle && importCode(product.code) === importCode(member.code),
@@ -411,7 +375,7 @@ export function analyzeBrochureRows(
           columns.detailsCol >= 0
             ? splitImportedDetails(imported?.[columns.detailsCol])
             : [];
-        return {
+        const product: Product = {
           ...importedProduct,
           ...(details.length
             ? {
@@ -422,12 +386,39 @@ export function analyzeBrochureRows(
               }
             : {}),
         };
+        return {
+          product,
+          color:
+            productImportColor(product, imported?.[columns.colorCol]) ||
+            (codeLookup.get(importCode(member.code))
+              ? productImportColor(codeLookup.get(importCode(member.code))!)
+              : null),
+          eligible: group.positionGrouped && !explicitSet && !source?.bundle,
+          regular:
+            parsePrice(imported?.[columns.regularCol]) || product.regular,
+          sale: sharedSale.value,
+        };
       });
-      const product = setOfferProduct(
-        members,
-        rowNumber,
-        group.sources.map(({ index }) => rowOffset + index),
-      );
+      const collapsed = collapseImportedColorVariants(candidates);
+      const members = collapsed.map(({ product }) => product);
+      const onlyColorChoices =
+        group.positionGrouped && !explicitSet && members.length === 1;
+      const product = onlyColorChoices
+        ? structuredClone(members[0]!)
+        : setOfferProduct(
+            members,
+            rowNumber,
+            group.sources.map(({ index }) => rowOffset + index),
+          );
+      if (product.bundleProducts?.length) {
+        product.bundleCodes = members.flatMap((member) =>
+          member.brochureVariants?.length
+            ? member.brochureVariants.map(
+                (variant) => variant.code || member.code,
+              )
+            : [member.code],
+        );
+      }
       if (sharedRegular?.value) product.regular = sharedRegular.value;
       if (product.catalogMissing && !(Number(product.regular) > 0))
         product.regular = null;
@@ -473,7 +464,7 @@ export function analyzeBrochureRows(
       entries.push({
         row: rowNumber,
         position,
-        color: null,
+        color: onlyColorChoices ? collapsed[0]!.color : null,
         sourceRows: group.sources.length,
         product: {
           ...product,
@@ -552,12 +543,12 @@ export function analyzeBrochureRows(
     }
     const catalogProduct =
       resolved.product ||
-      (nameLookup.get(familyName(sheetName)) || []).find(
+      (nameLookup.get(colorVariantName(sheetName)) || []).find(
         (item: { code: string }) =>
           !code || importCode(item.code) === importCode(code),
       ) ||
-      ((nameLookup.get(familyName(sheetName)) || []).length === 1
-        ? nameLookup.get(familyName(sheetName))?.[0]
+      ((nameLookup.get(colorVariantName(sheetName)) || []).length === 1
+        ? nameLookup.get(colorVariantName(sheetName))?.[0]
         : null);
     const importedProduct = resolved.bundle
       ? catalogProduct
@@ -597,11 +588,8 @@ export function analyzeBrochureRows(
       : [];
     const color = resolved.bundle
       ? null
-      : colorFrom(
-          columns.colorCol >= 0
-            ? row?.[columns.colorCol]
-            : sheetName || catalogProduct?.name,
-        );
+      : productImportColor(importedProduct, row?.[columns.colorCol]) ||
+        (catalogProduct ? productImportColor(catalogProduct) : null);
     entries.push({
       row: rowNumber,
       position,
@@ -619,7 +607,8 @@ export function analyzeBrochureRows(
         ...(details.length ? { brochureDetails: details } : {}),
       },
     });
-  });
+  };
+  groupPositionOffers(rows, columns).forEach(importGroup);
   entries.sort(
     (a, b) =>
       (a.position?.page ?? 999) - (b.position?.page ?? 999) ||
@@ -633,10 +622,11 @@ export function analyzeBrochureRows(
   for (const entry of entries) {
     const key = entry.position?.label || `row-${entry.row}`;
     const atPosition = groups.get(key) || [];
-    const family = familyName(entry.product.name);
+    const family = colorVariantName(entry.product.name);
     const parent = atPosition.find(
       (item) =>
-        familyName(item.name) === family &&
+        colorVariantName(item.name) === family &&
+        sameColorVariantModel(item, entry.product) &&
         Number(item.sale) === Number(entry.product.sale),
     );
     if (parent && isBundleOffer(parent) && parent.code === entry.product.code) {
@@ -650,7 +640,7 @@ export function analyzeBrochureRows(
       (entry.color || parent.code === entry.product.code)
     ) {
       parent.brochureVariants ||= [
-        { code: parent.code, color: colorFrom(parent.name) || undefined },
+        { code: parent.code, color: productImportColor(parent) || undefined },
       ];
       parent.brochureVariants.push({
         code: entry.product.code,

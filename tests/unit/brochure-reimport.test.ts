@@ -138,3 +138,42 @@ it("refreshes same-code import structure without inheriting a synthetic set phot
   ] as const)
     expect(result[1]?.[field]).toBeUndefined();
 });
+
+it.each([true, false])(
+  "reuses the finished primary photo when four individual color SKUs become one offer (replace imported: %s)",
+  (replaceImported) => {
+    const codes = ["GREEN", "GRAY", "PURPLE", "WHITE"];
+    const previous = codes.map((code) => product(code));
+    previous[0] = product("GREEN", {
+      image: "/green-prepared.png",
+      aiOriginalImage: "/GREEN.png",
+      aiCutoutValidated: true,
+      aiCutoutValidationVersion: 1,
+    });
+    const incoming = product("GREEN", {
+      brochurePage: 1,
+      brochureOrder: 1,
+      brochureVariants: codes.map((code) => ({ code })),
+    });
+    const manual = product("unrelated", { source: "manual" });
+    const before = structuredClone({ previous, incoming, manual });
+
+    const result = mergeBrochureImportProducts(
+      [...previous, manual],
+      [incoming],
+      replaceImported,
+    );
+    expect(result.map((offer) => offer.code)).toEqual(["GREEN", "unrelated"]);
+    expect(result[0]).toMatchObject({
+      image: "/green-prepared.png",
+      aiOriginalImage: "/GREEN.png",
+      aiCutoutValidated: true,
+      aiCutoutValidationVersion: 1,
+    });
+    expect(result[0]?.brochureVariants?.map((variant) => variant.code)).toEqual(
+      codes,
+    );
+    expect(result[1]?.source).toBe("manual");
+    expect({ previous, incoming, manual }).toEqual(before);
+  },
+);

@@ -1,0 +1,33 @@
+.bundle-variant-colors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4cqw;
+  max-width: 100%;
+  margin-bottom: 0.5cqw;
+}
+.bundle-variant-color-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5cqw;
+  color: inherit;
+  font-size: 1.05cqw;
+  line-height: 1.2;
+}
+.bundle-variant-color-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.bundle-variant-color-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4cqw;
+}
+.bundle-variant-color-dots > i {
+  display: block;
+  flex: none;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  border: 0.08cqw solid #93a8ba;
+  border-radius: 50%;
+}
