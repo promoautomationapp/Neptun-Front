@@ -27,14 +27,16 @@
 .brochure-page .brochure-saving {
   top: 32%;
   right: 0;
-  width: 6.5cqw;
-  height: 6.5cqw;
+  width: 5.85cqw;
+  height: 5.85cqw;
+  padding: 0.405cqw;
 }
 .brochure-page .brochure-saving i {
-  font-size: 0.95cqw;
+  font-size: 0.855cqw;
 }
 .brochure-page .brochure-saving-amount {
-  font-size: 2cqw;
+  font-size: 1.8cqw;
+  letter-spacing: -0.117cqw;
 }
 .brochure-page
   .brochure-product-bottom

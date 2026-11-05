@@ -128,3 +128,19 @@ it("keeps a conflicted local edit even when another editor has a newer server ti
     mergeCampaignSnapshots([local], [remote], local.id, true)[0]?.name,
   ).toBe(remote.name);
 });
+
+it("retains failed edits when navigating away from the editor and refreshing the brochure list", () => {
+  const local: Campaign = {
+    id: "list-draft-qa",
+    name: "My failed edit",
+    products: [],
+    version: 2,
+  };
+  const remote = { ...local, name: "Old saved version" };
+  setCampaignSaveStatus(local.id, { state: "error" });
+  expect(mergeCampaignSnapshots([local], [remote], null, false)[0]?.name).toBe(
+    local.name,
+  );
+  expect(mergeCampaignSnapshots([local], [], null, false)).toEqual([local]);
+  setCampaignSaveStatus(local.id, { state: "saved" });
+});

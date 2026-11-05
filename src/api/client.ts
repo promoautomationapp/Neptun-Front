@@ -20,9 +20,27 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly code?: string,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
   }
+}
+function retryAfterSeconds(
+  header: string | null,
+  body?: number,
+): number | undefined {
+  const seconds = header === null ? NaN : Number(header);
+  const fromHeader =
+    Number.isFinite(seconds) && seconds >= 0
+      ? seconds
+      : header
+        ? (Date.parse(header) - Date.now()) / 1000
+        : NaN;
+  const value = Math.max(
+    Number.isFinite(fromHeader) ? fromHeader : 0,
+    body ?? 0,
+  );
+  return value > 0 ? Math.ceil(value) : undefined;
 }
 export async function request<T>(
   path: string,
@@ -83,7 +101,11 @@ export async function request<T>(
     const result: unknown = await response.json().catch(() => null);
     if (!response.ok) {
       const error = z
-        .object({ error: z.string().optional(), code: z.string().optional() })
+        .object({
+          error: z.string().optional(),
+          code: z.string().optional(),
+          retryAfterSeconds: z.number().positive().optional(),
+        })
         .safeParse(result);
       sessionExpired(
         path,
@@ -96,6 +118,10 @@ export async function request<T>(
           : `Request failed (${response.status})`,
         response.status,
         error.success ? error.data.code : undefined,
+        retryAfterSeconds(
+          response.headers.get("Retry-After"),
+          error.success ? error.data.retryAfterSeconds : undefined,
+        ),
       );
     }
     return mapAssetUrls(schema.parse(result), true);
@@ -168,6 +194,10 @@ export async function uploadImage(file: File): Promise<string> {
   ).url;
 }
 
+/** The same relative asset URLs used by document writes and reconciliation. */
+export function normalizeApiDocument<T>(value: T): T {
+  return mapAssetUrls(value, false);
+}
 function mapAssetUrls<T>(value: T, absolute: boolean): T {
   const visit = (input: unknown): unknown => {
     if (Array.isArray(input)) return input.map(visit);

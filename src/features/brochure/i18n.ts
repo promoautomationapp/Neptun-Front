@@ -2202,6 +2202,29 @@ const translations: Record<string, string> = {
   "Saving changes…": "Po ruhen ndryshimet…",
   "All changes saved": "Të gjitha ndryshimet u ruajtën",
   "also editing this brochure": "po redakton gjithashtu këtë broshurë",
+  "This brochure was disabled. Your unsaved draft is kept for recovery.":
+    "Kjo broshurë u çaktivizua. Drafti juaj i paruajtur ruhet për rikthim.",
+  "Could not complete the request. Please try again.":
+    "Kërkesa nuk mund të përfundohej. Ju lutemi, provoni sërish.",
+  "Could not reach the backend. Please try again.":
+    "Nuk mund të lidhemi me serverin. Ju lutemi, provoni sërish.",
+  "The connection is taking too long. Your existing work is kept.":
+    "Lidhja po zgjat shumë. Puna juaj është ruajtur në këtë skedë.",
+  "Invalid request.": "Kërkesa nuk është e vlefshme.",
+  "Failed to fetch": "Lidhja me serverin dështoi.",
+  "Request failed (429)":
+    "Kërkesa u kufizua përkohësisht. Prisni pak para se ta riprovoni.",
+  "Retry save": "Riprovo ruajtjen",
+  "Retrying save shortly…": "Ruajtja po provohet sërish pas pak…",
+  "Recovered unsaved changes. Retry saving to sync this brochure.":
+    "U rikthyen ndryshimet e paruajtura. Riprovo ruajtjen për t’i sinkronizuar.",
+  "No unsaved changes to retry.":
+    "Nuk ka ndryshime të paruajtura për t’u riprovuar.",
+  "Could not connect to the team service.":
+    "Nuk mund të lidhemi me shërbimin e ekipit.",
+  "Could not save changes.": "Ndryshimet nuk mund të ruheshin.",
+  "This document was changed by another team member. Reload it before saving.":
+    "Ky dokument u ndryshua nga një anëtar tjetër i ekipit. Ringarkojeni para se ta ruani.",
   "Live team status unavailable": "Statusi i ekipit nuk është i disponueshëm",
   "Another editor saved changes. Your edits are kept in this tab.":
     "Një redaktor tjetër ruajti ndryshime. Redaktimet tuaja janë në këtë skedë.",

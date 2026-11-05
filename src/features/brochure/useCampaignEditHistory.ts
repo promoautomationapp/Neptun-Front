@@ -1,3 +1,4 @@
+import { subscribeCampaignSaveOwner } from "./campaignDraftRecovery";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
@@ -68,6 +69,16 @@ export function useCampaignEditHistory({
       campaignsRef.current = next;
       setCampaignState(next);
     },
+    [],
+  );
+  useEffect(
+    () =>
+      subscribeCampaignSaveOwner(() => {
+        historyRef.current.clear();
+        campaignsRef.current = [];
+        interactionRef.current = null;
+        setCampaignState([]);
+      }),
     [],
   );
   const endInteraction = useCallback(() => {

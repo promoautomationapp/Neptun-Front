@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ApiError, SESSION_EXPIRED_EVENT } from "../../api/client";
+import { setCampaignSaveOwner } from "../brochure/campaignDraftRecovery";
 import { getSession, userSchema, type User } from "./auth.api";
 
 const sessionKey = (user: User | null) =>
@@ -12,6 +13,9 @@ export function useLiveSession(
 ) {
   const current = useRef({ user, onChange });
   current.current = { user, onChange };
+  useEffect(() => {
+    setCampaignSaveOwner(user);
+  }, [user?.id, user?.organizationId]);
   useEffect(() => {
     if (!user?.id) return;
     const controller = new AbortController();

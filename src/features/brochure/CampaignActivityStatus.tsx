@@ -6,6 +6,7 @@ import {
   subscribeCampaignSaveStatus,
 } from "./campaignSaveStatus";
 import { t } from "./i18n";
+import { retryCampaignSave } from "./teamStorage";
 import "../../styles/campaign-activity-status.css";
 
 const presence = z.object({
@@ -35,11 +36,26 @@ export function CampaignActivityStatus({
 }) {
   const sessionId = useRef(crypto.randomUUID());
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [connected, setConnected] = useState(true);
+  const [connectionError, setConnectionError] = useState("");
+  const [now, setNow] = useState(Date.now);
   const save = useSyncExternalStore(
     subscribeCampaignSaveStatus,
     () => campaignSaveStatus(campaignId),
     () => campaignSaveStatus(campaignId),
+  );
+  useEffect(() => {
+    if (!save.retryAt || save.retryAt <= Date.now()) return;
+    setNow(Date.now());
+    const timer = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= save.retryAt!) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [save.retryAt]);
+  const retrySeconds = Math.max(
+    0,
+    Math.ceil(((save.retryAt || 0) - now) / 1000),
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -63,10 +79,15 @@ export function CampaignActivityStatus({
               (person) => person.sessionId !== sessionId.current,
             ),
           );
-          setConnected(true);
+          setConnectionError("");
         }
-      } catch {
-        if (!controller.signal.aborted) setConnected(false);
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setConnectionError(
+            error instanceof Error
+              ? error.message
+              : "Could not connect to the team service.",
+          );
       } finally {
         busy = false;
       }
@@ -131,7 +152,9 @@ export function CampaignActivityStatus({
       <span className={`cs-save-status state-${save.state}`}>
         {t(
           save.state === "saving"
-            ? "Saving changes…"
+            ? retrySeconds > 0
+              ? "Retrying save shortly…"
+              : "Saving changes…"
             : save.state === "conflict"
               ? "Another editor saved changes. Your edits are kept in this tab."
               : save.state === "error"
@@ -139,15 +162,34 @@ export function CampaignActivityStatus({
                 : "All changes saved",
         )}
       </span>
+      {(save.state === "error" ||
+        save.state === "conflict" ||
+        retrySeconds > 0) &&
+        save.message && (
+          <span className="cs-save-error-reason">{t(save.message)}</span>
+        )}
+      {save.state === "error" && (
+        <button
+          className="cs-save-retry"
+          type="button"
+          disabled={retrySeconds > 0}
+          onClick={() => {
+            void retryCampaignSave(campaignId).catch(() => {});
+          }}
+        >
+          {t("Retry save")}
+          {retrySeconds > 0 ? ` · ${retrySeconds}s` : ""}
+        </button>
+      )}
       {others.length > 0 && (
         <span className="cs-collaboration-status">
           {others.map((person) => person.name || person.email).join(", ")} ·{" "}
           {t("also editing this brochure")}
         </span>
       )}
-      {!connected && (
+      {connectionError && (
         <span className="cs-presence-unavailable">
-          {t("Live team status unavailable")}
+          {t("Live team status unavailable")} · {t(connectionError)}
         </span>
       )}
     </div>

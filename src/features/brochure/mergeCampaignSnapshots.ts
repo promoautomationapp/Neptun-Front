@@ -10,6 +10,30 @@ export function mergeCampaignSnapshots(
   isEditing: boolean,
   missingActiveConfirmed = false,
 ) {
+  // Failed drafts belong to the tab even after navigating to another section.
+  // Keep every dirty brochure until its save is acknowledged or its deletion is confirmed.
+  remote = remote.map((saved) => {
+    const local = current.find((item) => item.id === saved.id);
+    return local &&
+      hasUnsavedCampaign(saved.id) &&
+      !saved.disabledAt &&
+      !local.disabledAt
+      ? {
+          ...local,
+          status: saved.status,
+          reviewComments: saved.reviewComments,
+          reviewHistory: saved.reviewHistory,
+        }
+      : saved;
+  });
+  for (const local of current)
+    if (
+      hasUnsavedCampaign(local.id) &&
+      !local.disabledAt &&
+      !remote.some((item) => item.id === local.id) &&
+      !(missingActiveConfirmed && local.id === activeId)
+    )
+      remote.push(local);
   if (!isEditing || !activeId) return remote;
   const active = current.find((item) => item.id === activeId);
   if (!active) return remote;

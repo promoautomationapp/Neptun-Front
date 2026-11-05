@@ -244,6 +244,13 @@ export function RedReferenceSavings({
   const saving = artworkSaving(product.regular, product.sale, savingMode);
   if (!saving) return null;
   const circle = parts.savingCircle;
+  // Scale the circle and its typography together inside the saved outer frame.
+  // This keeps every manual position, resize and grouped-offer anchor intact.
+  const artworkScale = 0.9;
+  const frameWidth = (circle.width + 1.4) / artworkScale;
+  const frameHeight = (circle.height + 1.4) / artworkScale;
+  const frameLeft = circle.x + circle.width / 2 - frameWidth / 2;
+  const frameTop = circle.y + circle.height / 2 - frameHeight / 2;
   const labelBaseline = savingBaseline(0);
   const amountBaseline = savingBaseline(1);
   // Four-digit savings need room for both the currency and the curved edge.
@@ -292,7 +299,7 @@ export function RedReferenceSavings({
       }
     >
       <svg
-        viewBox={`${circle.x - 0.7} ${circle.y - 0.7} ${circle.width + 1.4} ${circle.height + 1.4}`}
+        viewBox={`${frameLeft} ${frameTop} ${frameWidth} ${frameHeight}`}
         aria-hidden="true"
       >
         <path d={circle.path} fill="#fff" />

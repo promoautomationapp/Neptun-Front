@@ -109,3 +109,30 @@ it("keeps the short savings and percentage reference artwork", () => {
     view.container.querySelector("[data-saving-amount]")?.textContent,
   ).toBe("86%");
 });
+
+it("reduces the visible circle and both text lines by ten percent while retaining saved placement", () => {
+  const style = {
+    width: "18cqw",
+    left: "42%",
+    top: "33%",
+    transform: "translate(-2cqw, 3cqw) scale(1.4)",
+  };
+  const view = render(<RedReferenceSavings product={product} style={style} />);
+  const badge = view.getByRole("img");
+  const svg = badge.querySelector("svg")!;
+  const [left, top, width, height] = svg
+    .getAttribute("viewBox")!
+    .split(" ")
+    .map(Number);
+  const circle = geometry.parts.savingCircle;
+  expect((circle.width + 1.4) / width!).toBeCloseTo(0.9);
+  expect((circle.height + 1.4) / height!).toBeCloseTo(0.9);
+  expect(left! + width! / 2).toBeCloseTo(circle.x + circle.width / 2);
+  expect(top! + height! / 2).toBeCloseTo(circle.y + circle.height / 2);
+  expect(badge.style.width).toBe(style.width);
+  expect(badge.style.left).toBe(style.left);
+  expect(badge.style.top).toBe(style.top);
+  expect(badge.style.transform).toBe(style.transform);
+  expect(svg.querySelectorAll("text")).toHaveLength(2);
+  expect(badge.getAttribute("aria-label")).toBe("KURSENI 1896€");
+});

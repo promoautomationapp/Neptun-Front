@@ -1,6 +1,7 @@
 import { workspaceAccessSchema } from "./workspaceAccess";
 import { z } from "zod";
 import { request } from "../../api/client";
+import { setCampaignSaveOwner } from "../brochure/campaignDraftRecovery";
 
 export const userSchema = z.object({
   id: z.string(),
@@ -19,17 +20,32 @@ const sessionSchema = z.object({
   configured: z.boolean(),
   user: userSchema.nullable(),
 });
-export const getSession = (signal?: AbortSignal) =>
-  request("/api/team/session", sessionSchema, { signal });
-export const login = (email: string, password: string) =>
-  request("/api/team/login", z.object({ user: userSchema }), {
-    method: "POST",
-    body: { email, password },
-  });
-export const logout = () =>
-  request("/api/team/logout", z.object({ signedOut: z.boolean() }), {
-    method: "POST",
-  });
+export const getSession = async (signal?: AbortSignal) => {
+  const result = await request("/api/team/session", sessionSchema, { signal });
+  setCampaignSaveOwner(result.user);
+  return result;
+};
+export const login = async (email: string, password: string) => {
+  const result = await request(
+    "/api/team/login",
+    z.object({ user: userSchema }),
+    {
+      method: "POST",
+      body: { email, password },
+    },
+  );
+  setCampaignSaveOwner(result.user);
+  return result;
+};
+export const logout = async () => {
+  const result = await request(
+    "/api/team/logout",
+    z.object({ signedOut: z.boolean() }),
+    { method: "POST" },
+  );
+  setCampaignSaveOwner(null, true);
+  return result;
+};
 export const changePassword = (currentPassword: string, password: string) =>
   request(
     "/api/team/change-password",

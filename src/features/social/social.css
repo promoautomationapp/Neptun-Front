@@ -762,6 +762,13 @@
 .social-saving b {
   font-size: 2.65cqw;
 }
+.social-price-stack:not(.price-card) .social-saving {
+  font-size: 1.215cqw;
+  padding: 1.35cqw 0.585cqw;
+}
+.social-price-stack:not(.price-card) .social-saving b {
+  font-size: 2.385cqw;
+}
 .social-price-stack del {
   background: #fff;
   color: #193f69;
