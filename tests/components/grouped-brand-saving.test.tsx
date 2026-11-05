@@ -7,7 +7,10 @@ import {
   bundleBrandArtworks,
 } from "../../src/features/brochure/BundleBrandArtwork";
 import { BUILTIN_BRAND_LOGOS } from "../../src/features/brochure/brandLogos";
-import { RedReferenceSavings } from "../../src/features/brochure/RedReferencePrice";
+import {
+  RedReferenceSavings,
+  SavingsCircleArtwork,
+} from "../../src/features/brochure/RedReferencePrice";
 import { redTextWidth } from "../../src/features/brochure/redPriceModel";
 import geometry from "../../src/features/brochure/redPriceGeometry.json";
 
@@ -88,7 +91,7 @@ it.each([1896, 1896.99, 12896])(
     expect(text.textContent).toMatch(/ \u20ac$/);
     expect(
       redTextWidth(text.textContent || "", size, "bold", -0.06),
-    ).toBeLessThanOrEqual(geometry.parts.savingCircle.width * 0.76 + 0.01);
+    ).toBeLessThanOrEqual(geometry.parts.savingCircle.width * 0.7 + 0.01);
     expect(view.getByRole("img").getAttribute("aria-label")).toContain(
       String(amount),
     );
@@ -125,8 +128,8 @@ it("reduces the visible circle and both text lines by ten percent while retainin
     .split(" ")
     .map(Number);
   const circle = geometry.parts.savingCircle;
-  expect((circle.width + 1.4) / width!).toBeCloseTo(0.9);
-  expect((circle.height + 1.4) / height!).toBeCloseTo(0.9);
+  expect((circle.width + 1.4) / width! / 0.9).toBeCloseTo(0.9);
+  expect((circle.height + 1.4) / height! / 0.9).toBeCloseTo(0.9);
   expect(left! + width! / 2).toBeCloseTo(circle.x + circle.width / 2);
   expect(top! + height! / 2).toBeCloseTo(circle.y + circle.height / 2);
   expect(badge.style.width).toBe(style.width);
@@ -136,3 +139,30 @@ it("reduces the visible circle and both text lines by ten percent while retainin
   expect(svg.querySelectorAll("text")).toHaveLength(2);
   expect(badge.getAttribute("aria-label")).toBe("KURSENI 1896€");
 });
+
+it.each(["amount", "percentage"])(
+  "uses the same safe circular text inset in legacy %s badges",
+  (savingMode) => {
+    const view = render(
+      <SavingsCircleArtwork
+        product={product}
+        savingMode={savingMode}
+        legacyFrame
+      />,
+    );
+    const svg = view.container.querySelector("svg")!;
+    const [, , width] = svg.getAttribute("viewBox")!.split(" ").map(Number);
+    const circle = geometry.parts.savingCircle;
+    expect(circle.width / width!).toBeCloseTo(0.9);
+    for (const line of svg.querySelectorAll("text")) {
+      expect(
+        redTextWidth(
+          line.textContent || "",
+          Number(line.getAttribute("font-size")),
+          "bold",
+          -0.06,
+        ),
+      ).toBeLessThanOrEqual(circle.width * 0.7 + 0.01);
+    }
+  },
+);

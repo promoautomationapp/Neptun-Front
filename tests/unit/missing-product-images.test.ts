@@ -8,6 +8,7 @@ import {
   findMissingProductImages,
   productImageSearchKey,
   productImageSearchParams,
+  productImageSearchIsCoolingDown,
 } from "../../src/features/ai/missing-product-images";
 import {
   catalogWithExcelProducts,
@@ -42,6 +43,81 @@ function campaign(product = missing): Campaign {
   };
 }
 beforeEach(() => vi.clearAllMocks());
+
+it("keeps a checked missing photo missing and avoids another lookup during its 14-day cooldown", () => {
+  const draft = campaign();
+  const target = missingImageTargets(draft.products)[0]!;
+  startMissingImageSearch(draft, target);
+  const cooldownUntil = new Date(Date.now() + 14 * 86_400_000).toISOString();
+  finishMissingImageSearch(draft, target, {
+    found: false,
+    reason: "No exact photo found.",
+    negativeCached: true,
+    cooldownUntil,
+    searchOutcome: "not_found",
+  });
+  expect(draft.products[0]!.imageSearch).toMatchObject({
+    status: "not_found",
+    negativeCached: true,
+    cooldownUntil,
+  });
+  const next = missingImageTargets(draft.products, true)[0]!;
+  expect(startMissingImageSearch(draft, next)).toBe(false);
+  expect(requestAi).not.toHaveBeenCalled();
+  expect(draft.products[0]!.image).toBeUndefined();
+  expect(draft.products[0]!.imageSearch?.status).toBe("not_found");
+  expect(
+    productImageSearchIsCoolingDown(
+      draft.products[0]!,
+      Date.parse(cooldownUntil),
+    ),
+  ).toBe(false);
+});
+
+it("allows a corrected model or an expired missing-photo result to be searched", () => {
+  for (const change of ["model", "expired"] as const) {
+    const draft = campaign();
+    const target = missingImageTargets(draft.products)[0]!;
+    startMissingImageSearch(draft, target);
+    finishMissingImageSearch(draft, target, {
+      found: false,
+      cooldownUntil: new Date(
+        Date.now() + (change === "expired" ? -1 : 14) * 86_400_000,
+      ).toISOString(),
+    });
+    if (change === "model") draft.products[0]!.name = "Beko oven BBIE456";
+    expect(
+      startMissingImageSearch(
+        draft,
+        missingImageTargets(draft.products, true)[0]!,
+      ),
+    ).toBe(true);
+  }
+});
+
+it("does not treat temporary photo verification trouble as a cached missing model", () => {
+  const draft = campaign();
+  const target = missingImageTargets(draft.products)[0]!;
+  startMissingImageSearch(draft, target);
+  finishMissingImageSearch(draft, target, {
+    found: false,
+    retryable: true,
+    searchOutcome: "verification_unavailable",
+    cooldownUntil: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+  });
+  expect(draft.products[0]!.imageSearch).toMatchObject({
+    status: "failed",
+    retryable: true,
+    searchOutcome: "verification_unavailable",
+  });
+  expect(draft.products[0]!.imageSearch).not.toHaveProperty("cooldownUntil");
+  expect(
+    startMissingImageSearch(
+      draft,
+      missingImageTargets(draft.products, true)[0]!,
+    ),
+  ).toBe(true);
+});
 
 it("includes supplied model, selected color, category and imported identity facts without prices", () => {
   const product = {

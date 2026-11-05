@@ -89,7 +89,7 @@
   outline: 2px solid var(--chrome-accent, #176fa9);
   outline-offset: 1px;
 }
-.cs-brochure-zoom button > span {
+.cs-brochure-zoom button > span:not(.cs-brochure-fit-label) {
   font-size: 20px;
   line-height: 1;
 }
@@ -100,6 +100,20 @@
 }
 .cs-brochure-zoom .cs-brochure-fit-page {
   white-space: nowrap;
+  gap: 5px;
+}
+.cs-brochure-preview-dialog .cs-preview-dialog-stage {
+  justify-content: normal;
+  align-items: normal;
+  overflow-anchor: none;
+}
+.cs-brochure-preview-dialog[open] .cs-preview-dialog-paper {
+  width: calc(
+    min(100cqw, calc(100cqh * var(--brochure-preview-ratio, 0.8))) *
+      var(--brochure-preview-zoom, 1)
+  );
+  max-width: none;
+  margin: auto;
 }
 @media (max-width: 520px) {
   .cs-brochure-zoom {
@@ -110,6 +124,9 @@
     min-width: 28px;
     min-height: 32px;
     padding: 5px;
+  }
+  .cs-brochure-fit-label {
+    display: none;
   }
 }
 @media (max-width: 620px) {

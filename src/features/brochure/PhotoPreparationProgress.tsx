@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Campaign } from "../../domain/models";
+import { productImageSearchIsCoolingDown } from "../ai/missing-product-images";
 import { CloseButton } from "../../components/CloseButton";
 import { t } from "./i18n";
 import "../../styles/photo-preparation-progress.css";
@@ -349,7 +350,11 @@ export function PhotoPreparationProgress({
                       <strong>{product.name}</strong>
                       <small>{product.code}</small>
                       <span>
-                        {missingPhotoReason(product.imageSearch?.status)}
+                        {productImageSearchIsCoolingDown(product)
+                          ? t(
+                              "Photo missing · checked recently; automatic search paused for 14 days",
+                            )
+                          : missingPhotoReason(product.imageSearch?.status)}
                       </span>
                     </div>
                     <button

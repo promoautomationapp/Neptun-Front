@@ -49,9 +49,6 @@ export function coverProducts(campaign: Campaign) {
 function buildPages(campaign: Campaign) {
   const pages: BrochurePage[] = [];
   const sourceIndexes: number[] = [];
-  const october =
-    campaign.brochureVisualStyle === "october" ||
-    campaign.brochurePresetId === "neptun-october";
   // Older snapshots inherited the former footer default. In the featured
   // collection, a page-level choice is the explicit opt-in to restore it.
   const featuredCollection = isFeaturedProductCollection(campaign);
@@ -87,7 +84,7 @@ function buildPages(campaign: Campaign) {
       // A saved page owns its background and explicit layout. When an
       // automatic group overflows, keep those settings with its chunks.
       const pageCampaign =
-        october && sourceIndex !== undefined
+        sourceIndex !== undefined
           ? {
               ...campaign,
               pages: {
@@ -104,7 +101,7 @@ function buildPages(campaign: Campaign) {
         chunk.products,
         chunk.layout,
         `Page ${pages.length + 2}`,
-        october ? sourceIndex : undefined,
+        sourceIndex,
       );
       offset += chunk.products.length;
     }
@@ -141,7 +138,7 @@ function buildPages(campaign: Campaign) {
           campaign.autoProductLayout === true ||
           products.some((product) => product.brochureCardSize))
       )
-        appendChunks(products, october ? number - 2 : undefined);
+        appendChunks(products, number - 2);
       else {
         // Preserve the imported page membership and layout of older designs.
         const fallback =
@@ -154,11 +151,9 @@ function buildPages(campaign: Campaign) {
                 : "grid9";
         appendPage(
           products,
-          campaign.pages?.[october ? number - 2 : pages.length]?.layout ||
-            campaign.layout ||
-            fallback,
+          campaign.pages?.[number - 2]?.layout || campaign.layout || fallback,
           `Page ${number}`,
-          october ? number - 2 : undefined,
+          number - 2,
         );
       }
     }
@@ -188,8 +183,6 @@ export function materializeProductPages(campaign: Campaign) {
   const covers = coverProducts(campaign);
   const { pages, sourceIndexes } = buildPages(campaign);
   if (
-    (campaign.brochureVisualStyle === "october" ||
-      campaign.brochurePresetId === "neptun-october") &&
     campaign.products.some((product) => Number.isInteger(product.brochurePage))
   ) {
     const firstTarget = new Map<number, number>();

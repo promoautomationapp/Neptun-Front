@@ -33,7 +33,8 @@
   font-family: TSTAR, Arial, sans-serif;
   line-height: 1;
 }
-.red-reference-saving > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.red-reference-saving > svg,
+.brochure-saving > .savings-circle-artwork { display: block; width: 100%; height: auto; overflow: visible; flex: none; }
 .brochure-red-reference-saving { top: 40%; right: .5%; width: 24%; }
 .cs-page-preview.edit-view .red-reference-saving[role="button"] { cursor: pointer; }
 .cs-page-preview.edit-view .red-reference-saving[role="button"]:is(:hover, :focus-visible) { outline: 2px solid #31b6fb; outline-offset: 2px; }

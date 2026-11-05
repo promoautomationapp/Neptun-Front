@@ -1,15 +1,14 @@
-import type { Product } from "../../domain/models";
+import type { Product, ProductImageSearch } from "../../domain/models";
+import { productImageSearchIsCoolingDown } from "../ai/missing-product-images";
 import { t } from "./i18n";
 import "../../styles/missing-catalog-notice.css";
 
-export interface ProductImageSearchState {
-  status: "searching" | "found" | "not_found" | "failed";
+export interface ProductImageSearchState extends Omit<
+  ProductImageSearch,
+  "requestKey" | "requestId"
+> {
   requestKey?: string;
   requestId?: string;
-  sourceUrl?: string;
-  imageUrl?: string;
-  matchedName?: string;
-  message?: string;
 }
 export interface MissingCatalogProduct extends Omit<
   Partial<Product>,
@@ -65,6 +64,22 @@ export function MissingCatalogNotice({
     product.bundleProducts?.some((member) => productPhotoSource(member)),
   );
   const search = imageSearchState(product);
+  const coolingDown = Boolean(
+    product.code &&
+    product.name &&
+    search?.requestKey &&
+    search.requestId &&
+    productImageSearchIsCoolingDown({
+      ...product,
+      code: product.code,
+      name: product.name,
+      imageSearch: {
+        ...search,
+        requestKey: search.requestKey,
+        requestId: search.requestId,
+      },
+    }),
+  );
   if (!missing && hasPhoto && !search) return null;
   const searching = search?.status === "searching";
   const incomplete = Boolean(
@@ -150,7 +165,13 @@ export function MissingCatalogNotice({
         )}
         {(search?.status === "not_found" || search?.status === "failed") && (
           <small>
-            {t("Add the full model name and product code, or upload a photo.")}
+            {t(
+              coolingDown
+                ? "This exact product was already checked. Automatic searches are paused for 14 days to avoid repeat AI charges. Upload a photo or correct the model."
+                : search?.retryable
+                  ? "Photo verification is temporarily unavailable. You can upload a photo or try the search later."
+                  : "Add the full model name and product code, or upload a photo.",
+            )}
           </small>
         )}
       </div>
@@ -159,20 +180,22 @@ export function MissingCatalogNotice({
           {onFindImage && !incomplete && (
             <button
               type="button"
-              disabled={searching && !canResumeSearch}
+              disabled={coolingDown || (searching && !canResumeSearch)}
               onClick={(event) => {
                 event.stopPropagation();
                 void onFindImage();
               }}
             >
               {t(
-                searching
-                  ? canResumeSearch
-                    ? "Resume search"
-                    : "Searching…"
-                  : search
-                    ? "Search again"
-                    : "Find exact photo",
+                coolingDown
+                  ? "Search paused"
+                  : searching
+                    ? canResumeSearch
+                      ? "Resume search"
+                      : "Searching…"
+                    : search
+                      ? "Search again"
+                      : "Find exact photo",
               )}
             </button>
           )}

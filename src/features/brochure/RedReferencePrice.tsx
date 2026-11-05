@@ -233,6 +233,85 @@ export function RedReferencePrice({
   );
 }
 
+export function SavingsCircleArtwork({
+  product,
+  savingMode = "amount",
+  legacyFrame = false,
+}: Pick<RedReferenceSavingsProps, "product" | "savingMode"> & {
+  legacyFrame?: boolean;
+}) {
+  const saving = artworkSaving(product.regular, product.sale, savingMode);
+  if (!saving) return null;
+  const circle = parts.savingCircle;
+  // Scale the circle and its typography together inside the saved outer frame.
+  // This keeps every manual position, resize and grouped-offer anchor intact.
+  // Reference circles were already 90% of the source artwork; reduce that
+  // visible circle a further 10%. Legacy HTML circles used the whole frame.
+  const artworkScale = legacyFrame ? 0.9 : 0.81;
+  const outlineMargin = legacyFrame ? 0 : 1.4;
+  const frameWidth = (circle.width + outlineMargin) / artworkScale;
+  const frameHeight = (circle.height + outlineMargin) / artworkScale;
+  const frameLeft = circle.x + circle.width / 2 - frameWidth / 2;
+  const frameTop = circle.y + circle.height / 2 - frameHeight / 2;
+  const labelBaseline = savingBaseline(0);
+  const amountBaseline = savingBaseline(1);
+  // Text lies above/below the center, where the circular edge is narrower.
+  // Reserve a safe chord for both lines, including the rotated euro glyph.
+  const textWidth = circle.width * 0.7;
+  const longAmount = savingMode !== "percentage" && /^\d{4,}/.test(saving.text);
+  const amountText = longAmount ? saving.text.replace(/€$/, " €") : saving.text;
+  const labelSize = fittedRedText(
+    saving.label,
+    redReferenceRunSize(parts.saving.runs, 0),
+    textWidth,
+    "bold",
+    -0.06,
+  );
+  const amountSize = fittedRedText(
+    amountText,
+    redReferenceRunSize(parts.saving.runs, 2),
+    textWidth,
+    "bold",
+    -0.06,
+  );
+  return (
+    <svg
+      className="savings-circle-artwork"
+      viewBox={`${frameLeft} ${frameTop} ${frameWidth} ${frameHeight}`}
+      aria-hidden="true"
+    >
+      <path d={circle.path} fill="#fff" />
+      <g
+        fill="var(--brochure-price-saving, #ef4023)"
+        fontFamily="TSTAR"
+        textAnchor="middle"
+      >
+        <text
+          x={labelBaseline[0]}
+          y={labelBaseline[1]}
+          fontSize={labelSize}
+          fontWeight={700}
+          letterSpacing={labelSize * -0.06}
+          transform={`rotate(-1 ${labelBaseline.join(" ")})`}
+        >
+          {saving.label}
+        </text>
+        <text
+          data-saving-amount="true"
+          x={amountBaseline[0]}
+          y={amountBaseline[1]}
+          fontSize={amountSize}
+          fontWeight={700}
+          letterSpacing={amountSize * -0.06}
+          transform={`rotate(-1 ${amountBaseline.join(" ")})`}
+        >
+          {amountText}
+        </text>
+      </g>
+    </svg>
+  );
+}
+
 export function RedReferenceSavings({
   product,
   savingMode = "amount",
@@ -243,34 +322,6 @@ export function RedReferenceSavings({
 }: RedReferenceSavingsProps) {
   const saving = artworkSaving(product.regular, product.sale, savingMode);
   if (!saving) return null;
-  const circle = parts.savingCircle;
-  // Scale the circle and its typography together inside the saved outer frame.
-  // This keeps every manual position, resize and grouped-offer anchor intact.
-  const artworkScale = 0.9;
-  const frameWidth = (circle.width + 1.4) / artworkScale;
-  const frameHeight = (circle.height + 1.4) / artworkScale;
-  const frameLeft = circle.x + circle.width / 2 - frameWidth / 2;
-  const frameTop = circle.y + circle.height / 2 - frameHeight / 2;
-  const labelBaseline = savingBaseline(0);
-  const amountBaseline = savingBaseline(1);
-  // Four-digit savings need room for both the currency and the curved edge.
-  // Keep the original artwork sizing for the ordinary short reference amounts.
-  const longAmount = savingMode !== "percentage" && /^\d{4,}/.test(saving.text);
-  const amountText = longAmount ? saving.text.replace(/€$/, " €") : saving.text;
-  const labelSize = fittedRedText(
-    saving.label,
-    redReferenceRunSize(parts.saving.runs, 0),
-    circle.width - 8,
-    "bold",
-    -0.06,
-  );
-  const amountSize = fittedRedText(
-    amountText,
-    redReferenceRunSize(parts.saving.runs, 2),
-    longAmount ? circle.width * 0.76 : circle.width - 7,
-    "bold",
-    -0.06,
-  );
   return (
     <span
       className={`red-reference-saving ${className}`}
@@ -298,39 +349,7 @@ export function RedReferenceSavings({
           : undefined
       }
     >
-      <svg
-        viewBox={`${frameLeft} ${frameTop} ${frameWidth} ${frameHeight}`}
-        aria-hidden="true"
-      >
-        <path d={circle.path} fill="#fff" />
-        <g
-          fill="var(--brochure-price-saving, #ef4023)"
-          fontFamily="TSTAR"
-          textAnchor="middle"
-        >
-          <text
-            x={labelBaseline[0]}
-            y={labelBaseline[1]}
-            fontSize={labelSize}
-            fontWeight={700}
-            letterSpacing={labelSize * -0.06}
-            transform={`rotate(-1 ${labelBaseline.join(" ")})`}
-          >
-            {saving.label}
-          </text>
-          <text
-            data-saving-amount="true"
-            x={amountBaseline[0]}
-            y={amountBaseline[1]}
-            fontSize={amountSize}
-            fontWeight={700}
-            letterSpacing={amountSize * -0.06}
-            transform={`rotate(-1 ${amountBaseline.join(" ")})`}
-          >
-            {amountText}
-          </text>
-        </g>
-      </svg>
+      <SavingsCircleArtwork product={product} savingMode={savingMode} />
       {children}
     </span>
   );

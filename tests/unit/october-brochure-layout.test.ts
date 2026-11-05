@@ -333,6 +333,55 @@ describe("October brochure automatic layouts", () => {
       "#aabbcc",
     ]);
   });
+
+  it("keeps featured collection overflow with its source background/footer and moves the neighboring page settings together", () => {
+    const value = brochure([], {
+      brochurePresetId: "neptun-current",
+      brochureVisualStyle: "current",
+      layout: "feature3",
+      products: [
+        product("cover", { brochurePage: 1 }),
+        ...Array.from({ length: 9 }, (_, i) => ({
+          ...tv(`tv${i}`),
+          brochurePage: 2,
+        })),
+        product("washer", { brochurePage: 3 }),
+      ],
+      pages: {
+        0: { backgroundColor: "#112233", showFooter: false },
+        1: {
+          layout: "pair2",
+          backgroundColor: "#aabbcc",
+          showFooter: true,
+          showFooterPageNumber: true,
+        },
+      },
+      pageArtworks: {
+        "product-1": [{ id: "washer-label", x: 10, y: 10, width: 30 }],
+      },
+      reviewComments: [
+        { id: "washer-comment", pageIndex: 2, text: "Washer note" },
+      ],
+    });
+    const expected = [
+      ["tv8", "#112233", false],
+      ["tv8", "#112233", false],
+      ["pair2", "#aabbcc", true],
+    ];
+    const summary = () =>
+      splitPages(value).map((page) => [
+        page.layout,
+        page.backgroundColor,
+        page.showFooter,
+      ]);
+    expect(summary()).toEqual(expected);
+    materializeProductPages(value);
+    expect(summary()).toEqual(expected);
+    expect(value.pages?.[2]?.showFooterPageNumber).toBe(true);
+    expect(value.pageArtworks?.["product-2"]?.[0]?.id).toBe("washer-label");
+    expect(reviewCommentsForLayout(value)[0]?.pageIndex).toBe(3);
+    expect(value.products.at(-1)?.brochurePage).toBe(4);
+  });
 });
 
 describe("October page category ribbons", () => {

@@ -351,6 +351,10 @@ export interface ProductImageSearch {
   imageUrl?: string;
   matchedName?: string;
   message?: string;
+  negativeCached?: boolean;
+  cooldownUntil?: string;
+  searchOutcome?: "not_found" | "verification_unavailable";
+  retryable?: boolean;
 }
 
 export interface BrochureImportWarning {

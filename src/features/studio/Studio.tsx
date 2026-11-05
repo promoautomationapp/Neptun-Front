@@ -12,6 +12,7 @@ import { BrochurePageNavigator } from "../brochure/BrochurePageNavigator";
 import { BrochurePagination } from "../brochure/BrochurePagination";
 import { BrochureZoomControls } from "../brochure/BrochureZoomControls";
 import "../../styles/brochure-editor-chrome.css";
+import "../../styles/brochure-mobile-toolbar.css";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
 import { EditorIcon } from "../brochure/EditorIcon";
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
@@ -3040,70 +3041,158 @@ export function BrochureEditor({
           <div
             className={`cs-canvas-dock ${toolbarCollapsed ? "is-collapsed" : ""}`}
           >
-            <CanvasTools
-              activeTool={
-                commentMode ? "comment" : textMode ? "text" : "pointer"
-              }
-              onSelect={chooseCanvasTool}
-              disabled={previewMode}
-              commentCount={
-                (campaign.reviewComments || []).filter((item) => !item.fixed)
-                  .length
-              }
-            />
-            {canEditCanvas && (
-              <ActionMenu
-                label={
-                  <>
-                    <EditorIcon name="image" />
-                    {t("Images")}
-                  </>
+            <div className="cs-canvas-actions-row">
+              <CanvasTools
+                activeTool={
+                  commentMode ? "comment" : textMode ? "text" : "pointer"
                 }
-                className="cs-canvas-images"
-                triggerLabel={t("Images")}
-              >
-                {selected === -1 && (
-                  <CoverImageControls campaign={campaign} onUpdate={onUpdate} />
-                )}
-                {selected === -1 && (
+                onSelect={chooseCanvasTool}
+                disabled={previewMode}
+                commentCount={
+                  (campaign.reviewComments || []).filter((item) => !item.fixed)
+                    .length
+                }
+              />
+              {canEditCanvas && (
+                <ActionMenu
+                  label={
+                    <>
+                      <EditorIcon name="image" />
+                      {t("Images")}
+                    </>
+                  }
+                  className="cs-canvas-images"
+                  portal
+                  portalClassName="cs-canvas-images-panel"
+                  triggerLabel={t("Images")}
+                >
+                  {selected === -1 && (
+                    <CoverImageControls
+                      campaign={campaign}
+                      onUpdate={onUpdate}
+                    />
+                  )}
+                  {selected === -1 && (
+                    <button
+                      type="button"
+                      className="cs-button secondary"
+                      onClick={() => setShowLogoPicker(true)}
+                    >
+                      <EditorIcon name="image" />
+                      {t("Change cover logo")}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="cs-button secondary"
-                    onClick={() => setShowLogoPicker(true)}
+                    aria-label={t("Add image layer")}
+                    onClick={() => setShowLayerPicker(true)}
                   >
-                    <EditorIcon name="image" />
-                    {t("Change cover logo")}
+                    <EditorIcon name="plus" />
+                    {t("Add image layer")}
                   </button>
-                )}
+                  <button type="button" onClick={() => setShowLayers(true)}>
+                    <EditorIcon name="layers" /> {t("Manage layers")}
+                  </button>
+                  <ReusableImages
+                    settings={settings}
+                    onAdd={addSavedPageArtwork}
+                  />
+                </ActionMenu>
+              )}
+              {canEditCanvas && (
                 <button
                   type="button"
-                  aria-label={t("Add image layer")}
-                  onClick={() => setShowLayerPicker(true)}
+                  className="cs-canvas-layers-button"
+                  aria-label={t("Layers")}
+                  title={t("Layers")}
+                  onClick={() => setShowLayers(true)}
                 >
-                  <EditorIcon name="plus" />
-                  {t("Add image layer")}
+                  <EditorIcon name="layers" /> {t("Layers")}
                 </button>
-                <button type="button" onClick={() => setShowLayers(true)}>
-                  <EditorIcon name="layers" /> {t("Manage layers")}
-                </button>
-                <ReusableImages
-                  settings={settings}
-                  onAdd={addSavedPageArtwork}
-                />
-              </ActionMenu>
-            )}
-            {canEditCanvas && (
+              )}
               <button
                 type="button"
-                className="cs-canvas-layers-button"
-                aria-label={t("Layers")}
-                title={t("Layers")}
-                onClick={() => setShowLayers(true)}
+                className="cs-canvas-preview-button"
+                aria-label={t(
+                  inlinePreview ? "Back to editing" : "Preview only",
+                )}
+                title={t(inlinePreview ? "Back to editing" : "Preview only")}
+                aria-pressed={inlinePreview}
+                ref={editModeButton}
+                onClick={() => {
+                  setInlinePreview(!inlinePreview);
+                  setTextMode(false);
+                  setCommentMode(false);
+                }}
               >
-                <EditorIcon name="layers" /> {t("Layers")}
+                <NavIcon name="eye" size={18} />
+                {t(inlinePreview ? "Back to editing" : "Preview")}
               </button>
-            )}
-            <span className="cs-canvas-dock-divider" aria-hidden="true" />
+              <button
+                type="button"
+                ref={fullPreviewButton}
+                className="cs-canvas-full-preview-button"
+                aria-label={t("Open full preview")}
+                title={t("Open full preview")}
+                onClick={() => {
+                  setSelected((current) => Math.min(current, lastPreviewPage));
+                  setInlinePreview(false);
+                  setPreviewMode(true);
+                  setTextMode(false);
+                  setCommentMode(false);
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  aria-hidden="true"
+                >
+                  <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="cs-canvas-design-button"
+                aria-label={t(
+                  showSettings ? "Close design tools" : "Design tools",
+                )}
+                title={t(showSettings ? "Close design tools" : "Design tools")}
+                aria-expanded={showSettings}
+                aria-controls="brochure-page-settings"
+                onClick={() => {
+                  setShowSettings(!showSettings);
+                  setCommentMode(false);
+                  setTextMode(false);
+                  setPreviewMode(false);
+                  setInlinePreview(false);
+                }}
+              >
+                <NavIcon name="stores" size={18} />
+                {t(showSettings ? "Close design tools" : "Design")}
+              </button>
+              <ActionMenu
+                label={<span aria-label={t("Editing help")}>?</span>}
+                className="cs-canvas-help"
+                portal
+                portalClassName="cs-canvas-help-panel"
+              >
+                <strong>{t("Editing help")}</strong>
+                <p>
+                  {t(
+                    "Click text or prices to edit them here. Double-click an image to replace it, or drop a new image onto it. Double-click savings to switch € and %. Drag handles to move items.",
+                  )}
+                </p>
+                <small>{t(pageFormat.label)}</small>
+                <BrochureImportNotices
+                  warnings={campaign.brochureImportWarnings}
+                  products={campaign.products}
+                />
+              </ActionMenu>
+            </div>
             <BrochureZoomControls />
             <BrochurePagination
               pages={[
@@ -3121,84 +3210,6 @@ export function BrochureEditor({
               selected={selected}
               onSelect={setSelected}
             />
-            <button
-              type="button"
-              className="cs-canvas-preview-button"
-              aria-label={t(inlinePreview ? "Back to editing" : "Preview only")}
-              title={t(inlinePreview ? "Back to editing" : "Preview only")}
-              aria-pressed={inlinePreview}
-              ref={editModeButton}
-              onClick={() => {
-                setInlinePreview(!inlinePreview);
-                setTextMode(false);
-                setCommentMode(false);
-              }}
-            >
-              <NavIcon name="eye" size={18} />
-              {t(inlinePreview ? "Back to editing" : "Preview")}
-            </button>
-            <button
-              type="button"
-              ref={fullPreviewButton}
-              className="cs-canvas-full-preview-button"
-              aria-label={t("Open full preview")}
-              title={t("Open full preview")}
-              onClick={() => {
-                setSelected((current) => Math.min(current, lastPreviewPage));
-                setInlinePreview(false);
-                setPreviewMode(true);
-                setTextMode(false);
-                setCommentMode(false);
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                aria-hidden="true"
-              >
-                <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="cs-canvas-design-button"
-              aria-label={t(
-                showSettings ? "Close design tools" : "Design tools",
-              )}
-              title={t(showSettings ? "Close design tools" : "Design tools")}
-              aria-expanded={showSettings}
-              aria-controls="brochure-page-settings"
-              onClick={() => {
-                setShowSettings(!showSettings);
-                setCommentMode(false);
-                setTextMode(false);
-                setPreviewMode(false);
-                setInlinePreview(false);
-              }}
-            >
-              <NavIcon name="stores" size={18} />
-              {t(showSettings ? "Close design tools" : "Design")}
-            </button>
-            <ActionMenu
-              label={<span aria-label={t("Editing help")}>?</span>}
-              className="cs-canvas-help"
-            >
-              <strong>{t("Editing help")}</strong>
-              <p>
-                {t(
-                  "Click text or prices to edit them here. Double-click an image to replace it, or drop a new image onto it. Double-click savings to switch € and %. Drag handles to move items.",
-                )}
-              </p>
-              <small>{t(pageFormat.label)}</small>
-              <BrochureImportNotices
-                warnings={campaign.brochureImportWarnings}
-                products={campaign.products}
-              />
-            </ActionMenu>
             <button
               type="button"
               className="cs-canvas-collapse-button"

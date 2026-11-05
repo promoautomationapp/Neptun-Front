@@ -1,0 +1,206 @@
+/* The mobile controls operate on the same canvas and document as desktop. */
+.cs-canvas-actions-row {
+  display: contents;
+}
+.campaign-app .cs-canvas-actions-row > button,
+.campaign-app .cs-canvas-actions-row > .cs-brochure-actions-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 35px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--chrome-muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.campaign-app .cs-canvas-actions-row > button:hover,
+.campaign-app
+  .cs-canvas-actions-row
+  > .cs-brochure-actions-menu
+  > summary:hover {
+  background: var(--chrome-raised);
+  color: var(--chrome-text);
+}
+.campaign-app
+  .cs-canvas-actions-row
+  > .cs-canvas-design-button[aria-expanded="true"] {
+  border-color: var(--chrome-accent);
+  background: var(--chrome-selected);
+  color: var(--chrome-accent);
+}
+.cs-canvas-help-panel p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--np-muted, #657b8e);
+}
+.cs-canvas-help-panel small {
+  color: var(--np-muted, #657b8e);
+  font-size: 11px;
+}
+@container brochure-editor (max-width: 1320px) {
+  .campaign-app .cs-canvas-actions-row > button,
+  .campaign-app .cs-canvas-actions-row > .cs-canvas-images > summary {
+    gap: 0;
+    padding-inline: 8px;
+    font-size: 0;
+  }
+}
+@container brochure-editor (max-width: 620px) {
+  .campaign-app .cs-canvas-dock:not(.is-collapsed) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 36px;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    border-radius: 10px;
+  }
+  .cs-canvas-dock:not(.is-collapsed)::after {
+    display: none;
+  }
+  .campaign-app .cs-canvas-dock > .cs-brochure-pagination {
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: 44px minmax(48px, 1fr) 44px;
+    min-width: 136px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .cs-canvas-dock .cs-brochure-pagination-current > span {
+    display: none;
+  }
+  .cs-canvas-dock .cs-brochure-pagination-picker {
+    gap: 2px;
+    padding-inline: 2px;
+  }
+  .cs-canvas-dock .cs-brochure-pagination-current strong {
+    font-size: 11px;
+  }
+  .cs-canvas-dock .cs-brochure-pagination-current i {
+    margin-inline: 2px;
+  }
+  .cs-canvas-dock > .cs-brochure-zoom {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0;
+    gap: 0;
+    border: 0;
+  }
+  .cs-canvas-dock .cs-brochure-zoom button {
+    min-width: 28px;
+    min-height: 36px;
+    padding: 5px;
+  }
+  .cs-canvas-dock .cs-brochure-zoom output {
+    min-width: 34px;
+    font-size: 10px;
+  }
+  .cs-canvas-dock .cs-brochure-fit-label {
+    display: none;
+  }
+  .campaign-app .cs-canvas-dock > .cs-canvas-collapse-button {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 36px;
+    min-height: 36px;
+    margin: 0;
+    padding: 6px;
+  }
+  .cs-canvas-dock .cs-canvas-actions-row {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    border-top: 1px solid var(--chrome-border);
+    padding-top: 3px;
+  }
+  .cs-canvas-actions-row > *,
+  .cs-canvas-actions-row .cs-canvas-tools > button {
+    flex: none;
+  }
+  .campaign-app .cs-canvas-actions-row .cs-canvas-tools {
+    gap: 0;
+  }
+  .campaign-app .cs-canvas-actions-row > button,
+  .campaign-app .cs-canvas-actions-row > .cs-brochure-actions-menu > summary,
+  .campaign-app .cs-canvas-actions-row .cs-canvas-tools > button {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 7px;
+    font-size: 0;
+  }
+  .cs-canvas-actions-row .cs-canvas-help {
+    margin-left: 0;
+  }
+  .campaign-app .cs-canvas-actions-row .cs-canvas-help > summary {
+    font-size: 16px;
+  }
+  .cs-canvas-actions-row .cs-canvas-help > summary > .cs-action-menu-chevron {
+    display: none;
+  }
+}
+@container brochure-editor (max-width: 330px) {
+  .campaign-app .cs-canvas-dock:not(.is-collapsed) {
+    grid-template-columns: minmax(0, 1fr) 36px;
+  }
+  .campaign-app .cs-canvas-dock > .cs-canvas-collapse-button {
+    grid-column: 2;
+  }
+  .cs-canvas-dock > .cs-brochure-zoom {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: end;
+  }
+}
+@media (max-width: 700px) {
+  .cs-brochure-preview-dialog .cs-preview-dialog-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+  .cs-brochure-preview-dialog .cs-preview-header-controls {
+    display: contents;
+  }
+  .cs-preview-header-controls > .cs-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .cs-preview-header-controls > .cs-brochure-pagination {
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: 44px minmax(64px, 1fr) 44px;
+    min-width: 0;
+  }
+  .cs-preview-header-controls .cs-brochure-pagination-current > span {
+    display: none;
+  }
+  .cs-preview-header-controls > .cs-brochure-zoom {
+    grid-column: 2;
+    grid-row: 2;
+    border: 0;
+    padding: 0;
+    gap: 0;
+  }
+  .cs-preview-header-controls .cs-brochure-fit-label {
+    display: none;
+  }
+  .cs-preview-header-controls .cs-brochure-zoom button {
+    min-width: 28px;
+    padding-inline: 5px;
+  }
+  .cs-preview-header-controls .cs-brochure-zoom output {
+    min-width: 34px;
+  }
+}

@@ -6,6 +6,7 @@ import { includesStoresPage } from "./storesSelection";
 import { t } from "./i18n";
 import { resolveBrochureFormat } from "./brochureFormat";
 import { BrochurePagination, revealPageThumbnail } from "./BrochurePagination";
+import { BrochureZoomControls } from "./BrochureZoomControls";
 
 export function BrochurePreview({
   campaign,
@@ -114,6 +115,7 @@ export function BrochurePreview({
           <strong>{campaign.name}</strong>
         </div>
         <div className="cs-preview-header-controls">
+          <BrochureZoomControls targetRef={dialog} />
           <BrochurePagination
             pages={navigationPages}
             selected={current}

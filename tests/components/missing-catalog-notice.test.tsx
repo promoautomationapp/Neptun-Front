@@ -15,6 +15,7 @@ import {
 import { ProductImageEditor } from "../../src/features/brochure/ProductImageEditor";
 import { LargeBundleOffer } from "../../src/features/brochure/LargeBundleOffer";
 import { requestAi } from "../../src/features/ai/ai.api";
+import { productImageSearchKey } from "../../src/features/ai/missing-product-images";
 
 vi.mock("../../src/features/ai/ai.api", () => ({ requestAi: vi.fn() }));
 vi.mock("../../src/features/brochure/i18n", () => ({
@@ -93,7 +94,7 @@ it("settles a stalled source photo without starting AI and restores editor contr
   expect(
     (
       view.getByRole("button", {
-        name: "Remove background",
+        name: "Retry background removal",
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(false);
@@ -152,6 +153,46 @@ it("shows a clear missing-catalog status and lets the user choose image search o
     view.container.firstElementChild?.getAttribute("data-export-hide"),
   ).toBe("true");
   expect(requestAi).not.toHaveBeenCalled();
+});
+
+it("explains the missing-photo cooldown while leaving upload and corrected model search available", () => {
+  const upload = vi.fn();
+  const find = vi.fn();
+  const product = {
+    ...missing,
+    imageSearch: {
+      ...search("not_found"),
+      requestKey: productImageSearchKey(missing),
+      cooldownUntil: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+      negativeCached: true,
+    },
+  };
+  const view = render(
+    <MissingCatalogNotice
+      product={product}
+      onFindImage={find}
+      onUploadImage={upload}
+    />,
+  );
+  expect(
+    view.getByText(/Automatic searches are paused for 14 days/),
+  ).toBeDefined();
+  expect(
+    (view.getByRole("button", { name: "Search paused" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+  fireEvent.click(view.getByRole("button", { name: "Upload own image" }));
+  expect(upload).toHaveBeenCalledOnce();
+  expect(find).not.toHaveBeenCalled();
+  view.rerender(
+    <MissingCatalogNotice
+      product={{ ...product, name: "Corrected exact model" }}
+      onFindImage={find}
+      onUploadImage={upload}
+    />,
+  );
+  fireEvent.click(view.getByRole("button", { name: "Search again" }));
+  expect(find).toHaveBeenCalledOnce();
 });
 
 it("keeps upload available while search is running and presents not-found/failure states without disabling editing", () => {

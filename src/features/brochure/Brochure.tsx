@@ -109,7 +109,11 @@ import {
   BROCHURE_LAYOUTS,
 } from "./brochureLayout";
 import { ReferencePriceCard } from "./ReferencePriceCard";
-import { RedReferencePrice, RedReferenceSavings } from "./RedReferencePrice";
+import {
+  RedReferencePrice,
+  RedReferenceSavings,
+  SavingsCircleArtwork,
+} from "./RedReferencePrice";
 import {
   usesRedReferencePrice,
   usesBlueReferencePrice,
@@ -1957,13 +1961,11 @@ function StandardProductCard({
                   : undefined
               }
             >
-              <i>{savingMode === "percentage" ? "ZBRITJE" : "KURSENI"}</i>
-              <b className="brochure-saving-amount">
-                {savingMode === "percentage"
-                  ? discount(product.regular, product.sale)
-                  : money(Number(product.regular) - Number(product.sale))}
-                <small>{savingMode === "percentage" ? "%" : "€"}</small>
-              </b>
+              <SavingsCircleArtwork
+                product={product}
+                savingMode={savingMode}
+                legacyFrame
+              />
             </span>
           )}
         {onEditImage && (

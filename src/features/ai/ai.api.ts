@@ -29,7 +29,17 @@ const proofreadResult = z
   .catchall(jsonValue);
 const schemas = {
   "ai-find-product-image": z.discriminatedUnion("found", [
-    z.object({ found: z.literal(false), reason: z.string().optional() }),
+    z.object({
+      found: z.literal(false),
+      reason: z.string().optional(),
+      negativeCached: z.boolean().optional(),
+      cooldownUntil: z.string().optional(),
+      retryAfterSeconds: z.number().nonnegative().optional(),
+      searchOutcome: z
+        .enum(["not_found", "verification_unavailable"])
+        .optional(),
+      retryable: z.boolean().optional(),
+    }),
     z.object({
       found: z.literal(true),
       image: z.string().min(1),

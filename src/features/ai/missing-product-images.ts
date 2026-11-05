@@ -1,4 +1,5 @@
 import type { Campaign, Product } from "../../domain/models";
+import { ApiError } from "../../api/client";
 import { detailPlainText } from "../brochure/detailFacts";
 import { screenArtworkForPhotoChange } from "../brochure/screenGeometry";
 import { requestAi } from "./ai.api";
@@ -143,6 +144,19 @@ export function productImageSearchKey(product: Product): string {
   return JSON.stringify(productImageSearchParams(product));
 }
 
+export function productImageSearchIsCoolingDown(
+  product: Product,
+  now = Date.now(),
+): boolean {
+  const search = product.imageSearch;
+  return Boolean(
+    search?.status === "not_found" &&
+    search.requestKey === productImageSearchKey(product) &&
+    search.cooldownUntil &&
+    Date.parse(search.cooldownUntil) > now,
+  );
+}
+
 export function missingImageTargets(
   products: readonly Product[],
   manual = false,
@@ -187,7 +201,8 @@ export function startMissingImageSearch(
   if (
     !product ||
     productImageSearchKey(product) !== target.requestKey ||
-    imageSource(product) !== target.expectedImage
+    imageSource(product) !== target.expectedImage ||
+    productImageSearchIsCoolingDown(product)
   )
     return false;
   product.imageSearch = {
@@ -226,12 +241,24 @@ export function finishMissingImageSearch(
       ...common,
       status: "failed",
       message: result.message.slice(0, 300),
+      ...(result instanceof ApiError && result.code === "AI_SEARCH_UNAVAILABLE"
+        ? {
+            retryable: true,
+            searchOutcome: "verification_unavailable" as const,
+          }
+        : {}),
     };
   } else if (!result.found) {
     product.imageSearch = {
       ...common,
-      status: "not_found",
+      status: result.retryable ? "failed" : "not_found",
       message: result.reason,
+      negativeCached: result.negativeCached,
+      ...(!result.retryable && result.cooldownUntil
+        ? { cooldownUntil: result.cooldownUntil }
+        : {}),
+      searchOutcome: result.searchOutcome,
+      retryable: result.retryable,
     };
   } else {
     product.imageSearch = {

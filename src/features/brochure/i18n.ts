@@ -1,4 +1,15 @@
 const translations: Record<string, string> = {
+  "This photo preparation already failed. Automatic retries are paused for 14 days. Keep the original, choose another photo, or explicitly retry background removal.":
+    "Përgatitja e kësaj fotoje ka dështuar. Riprovimet automatike janë ndalur për 14 ditë. Mbani origjinalin, zgjidhni një foto tjetër ose zgjidhni vetë ta riprovoni heqjen e sfondit.",
+  "Photo verification is temporarily unavailable. Your original images are unchanged. Try again shortly.":
+    "Verifikimi i fotove është përkohësisht i padisponueshëm. Fotot origjinale janë ruajtur. Provoni pak më vonë.",
+  "This exact product was already checked. Automatic searches are paused for 14 days to avoid repeat AI charges. Upload a photo or correct the model.":
+    "Ky produkt është kontrolluar më parë. Kërkimet automatike janë ndalur për 14 ditë për të shmangur shpenzimet e përsëritura të AI. Ngarkoni një foto ose korrigjoni modelin.",
+  "Photo verification is temporarily unavailable. You can upload a photo or try the search later.":
+    "Verifikimi i fotove është përkohësisht i padisponueshëm. Mund të ngarkoni një foto ose ta provoni kërkimin më vonë.",
+  "Photo missing · checked recently; automatic search paused for 14 days":
+    "Fotoja mungon · kontrolluar së fundmi; kërkimi automatik është ndalur për 14 ditë",
+  "Search paused": "Kërkimi është ndalur",
   "Edit formatted post text": "Redakto tekstin e formatuar të postimit",
   "POST TEXT": "TEKSTI I POSTIMIT",
   "Post text": "Teksti i postimit",

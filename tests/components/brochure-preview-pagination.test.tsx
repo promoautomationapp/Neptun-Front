@@ -136,3 +136,40 @@ it("clamps an excluded stores selection to the last actual brochure page", () =>
     within(view.dialog).getByRole("button", { name: "Next page" }),
   ).toHaveProperty("disabled", true);
 });
+
+it("pinches the full preview stage without changing the selected page, its arrow bounds or export target", () => {
+  const view = fixture(false, 1);
+  const preview = within(view.dialog);
+  const stage = view.dialog.querySelector<HTMLElement>(
+    ".cs-preview-dialog-stage",
+  )!;
+  const pinch = new WheelEvent("wheel", {
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: true,
+    deltaY: -20,
+  });
+  fireEvent(stage, pinch);
+  expect(pinch.defaultPrevented).toBe(true);
+  expect(preview.getByRole("status").textContent).toBe("122%");
+  expect(view.dialog.style.getPropertyValue("--brochure-preview-zoom")).toBe(
+    "1.22",
+  );
+  expect(preview.getByRole("combobox", { name: "Go to page" })).toHaveProperty(
+    "value",
+    "1",
+  );
+  expect(preview.getByRole("button", { name: "Next page" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  const scroll = new WheelEvent("wheel", {
+    bubbles: true,
+    cancelable: true,
+    deltaY: 100,
+  });
+  fireEvent(stage, scroll);
+  expect(scroll.defaultPrevented).toBe(false);
+  fireEvent.click(preview.getByRole("button", { name: "Download brochure" }));
+  expect(view.onExport).toHaveBeenCalledWith(2);
+});

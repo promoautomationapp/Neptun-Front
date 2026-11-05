@@ -29,14 +29,9 @@
   right: 0;
   width: 5.85cqw;
   height: 5.85cqw;
-  padding: 0.405cqw;
-}
-.brochure-page .brochure-saving i {
-  font-size: 0.855cqw;
-}
-.brochure-page .brochure-saving-amount {
-  font-size: 1.8cqw;
-  letter-spacing: -0.117cqw;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .brochure-page
   .brochure-product-bottom
