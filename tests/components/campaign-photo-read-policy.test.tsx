@@ -511,7 +511,7 @@ it("keeps the brochure hidden until imported, searched and prepared photos have 
   expect(requestAi).toHaveBeenCalledTimes(3);
 });
 
-it("keeps failed photo preparation in the blocking stage with retry and a route back to products", async () => {
+it("keeps failed photo preparation in the blocking stage and opens the brochure when dismissed", async () => {
   vi.mocked(requestAi).mockRejectedValue(new Error("Photo preparation failed"));
   const { view, fetchMock, importCsv } = await photoImportWorkspace();
   await importCsv("Code,Sale price\n77777,79\n", 1);
@@ -543,13 +543,17 @@ it("keeps failed photo preparation in the blocking stage with retry and a route 
       view.queryByRole("dialog", { name: "Photo preparation needs attention" }),
     ).toBeNull(),
   );
-  expect(view.container.querySelector(".cs-canvas-dock")).toBeNull();
+  expect(view.container.querySelector(".cs-canvas-dock")).toBeTruthy();
+  expect(
+    view.getByRole("button", { name: /Brochure design/ }).className,
+  ).toContain("active");
   expect(
     view.getByRole("button", { name: /Products & prices/ }).className,
-  ).toContain("active");
+  ).not.toContain("active");
+  expect(requestAi).toHaveBeenCalledTimes(2);
 });
 
-it("lets a completed search with no exact photo close to Products and manually choose an image without restarting AI", async () => {
+it("opens the brochure after a missing-photo search and allows manual image upload without restarting AI", async () => {
   vi.mocked(requestAi).mockResolvedValue({
     found: false,
     reason: "No exact product photo",
@@ -572,8 +576,11 @@ it("lets a completed search with no exact photo close to Products and manually c
     ).toBeNull(),
   );
   expect(
-    view.getByRole("button", { name: /Products & prices/ }).className,
+    view.getByRole("button", { name: /Brochure design/ }).className,
   ).toContain("active");
+  expect(view.container.querySelector(".cs-canvas-dock")).toBeTruthy();
+  expect(requestAi).toHaveBeenCalledOnce();
+  fireEvent.click(view.getByRole("button", { name: /Products & prices/ }));
   expect(view.getByRole("heading", { name: "Exact model ZX2" })).toBeTruthy();
   fireEvent.click(
     view.getByRole("button", {

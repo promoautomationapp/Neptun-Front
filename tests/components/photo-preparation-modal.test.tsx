@@ -75,14 +75,14 @@ afterEach(() => {
 
 it("blocks dismissal while AI work and searches run, with real saving/retry progress and no brochure artwork", () => {
   const retry = vi.fn(),
-    returnToProducts = vi.fn();
+    openBrochure = vi.fn();
   const view = render(
     <PhotoPreparationModal
       campaign={campaign}
       items={items}
       busy
       onRetry={retry}
-      onReturnToProducts={returnToProducts}
+      onOpenBrochure={openBrochure}
     />,
   );
   const dialog = view.getByRole("dialog", {
@@ -113,12 +113,12 @@ it("blocks dismissal while AI work and searches run, with real saving/retry prog
   fireEvent.click(dialog);
   expect(dialog.hasAttribute("open")).toBe(true);
   expect(retry).not.toHaveBeenCalled();
-  expect(returnToProducts).not.toHaveBeenCalled();
+  expect(openBrochure).not.toHaveBeenCalled();
 });
 
 it("keeps failed/original photos out of ready totals and exposes retry, close and manual repair after work settles", () => {
   const retry = vi.fn(),
-    returnToProducts = vi.fn();
+    openBrochure = vi.fn();
   const view = render(
     <PhotoPreparationModal
       campaign={{ ...campaign, products: [campaign.products[0]!] }}
@@ -129,7 +129,7 @@ it("keeps failed/original photos out of ready totals and exposes retry, close an
       busy={false}
       error="The photo could not be prepared."
       onRetry={retry}
-      onReturnToProducts={returnToProducts}
+      onOpenBrochure={openBrochure}
     />,
   );
   const dialog = view.getByRole("dialog", {
@@ -147,26 +147,26 @@ it("keeps failed/original photos out of ready totals and exposes retry, close an
   const cancel = new Event("cancel", { bubbles: true, cancelable: true });
   fireEvent(dialog, cancel);
   expect(cancel.defaultPrevented).toBe(true);
-  expect(returnToProducts).toHaveBeenCalledOnce();
-  returnToProducts.mockClear();
+  expect(openBrochure).toHaveBeenCalledOnce();
+  openBrochure.mockClear();
   fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
   expect(retry).toHaveBeenCalledOnce();
   fireEvent.click(view.getByRole("button", { name: "Close" }));
-  expect(returnToProducts).toHaveBeenCalledOnce();
+  expect(openBrochure).toHaveBeenCalledOnce();
   fireEvent.click(
     view.getByRole("button", { name: "Close and upload photos" }),
   );
-  expect(returnToProducts).toHaveBeenCalledTimes(2);
+  expect(openBrochure).toHaveBeenCalledTimes(2);
 });
 
 it("reveals dismissal after a missing-photo search finishes and lets Escape return to manual upload", () => {
   const retry = vi.fn(),
-    returnToProducts = vi.fn();
+    openBrochure = vi.fn();
   const props = {
     campaign,
     items: [],
     onRetry: retry,
-    onReturnToProducts: returnToProducts,
+    onOpenBrochure: openBrochure,
   };
   const view = render(<PhotoPreparationModal {...props} busy />);
   const pending = view.getByRole("dialog", {
@@ -177,7 +177,7 @@ it("reveals dismissal after a missing-photo search finishes and lets Escape retu
     view.queryByRole("button", { name: "Close and upload photos" }),
   ).toBeNull();
   fireEvent.keyDown(pending, { key: "Escape" });
-  expect(returnToProducts).not.toHaveBeenCalled();
+  expect(openBrochure).not.toHaveBeenCalled();
 
   const missing: Campaign = {
     ...campaign,
@@ -202,7 +202,7 @@ it("reveals dismissal after a missing-photo search finishes and lets Escape retu
   expect(view.getByText("Exact product photo not found")).toBeTruthy();
   expect(
     view.getByText(
-      "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.",
+      "Processing has finished. You can retry the unfinished photos or open the brochure and upload them manually.",
     ),
   ).toBeTruthy();
   expect(view.getByRole("button", { name: "Close" })).toBeTruthy();
@@ -210,7 +210,7 @@ it("reveals dismissal after a missing-photo search finishes and lets Escape retu
     view.getByRole("button", { name: "Close and upload photos" }),
   ).toBeTruthy();
   fireEvent.keyDown(settled, { key: "Escape" });
-  expect(returnToProducts).toHaveBeenCalledOnce();
+  expect(openBrochure).toHaveBeenCalledOnce();
   expect(retry).not.toHaveBeenCalled();
 });
 
@@ -226,7 +226,7 @@ it("stays indeterminate before work is known and restores focus and scrolling wh
       items={[]}
       busy
       onRetry={vi.fn()}
-      onReturnToProducts={vi.fn()}
+      onOpenBrochure={vi.fn()}
     />,
   );
   expect(

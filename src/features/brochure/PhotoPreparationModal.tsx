@@ -11,7 +11,7 @@ export interface PhotoPreparationModalProps {
   busy: boolean;
   error?: string;
   onRetry: () => void;
-  onReturnToProducts: () => void;
+  onOpenBrochure: () => void;
 }
 
 function photoStatus(item: PhotoProgressItem) {
@@ -33,14 +33,14 @@ function photoStatus(item: PhotoProgressItem) {
 }
 
 /** Import/create gate: dismissal is available after preparation and persistence
- * settle, so unfinished photos can be uploaded from Products & prices. */
+ * settle, then the brochure opens for editing and manual photo uploads. */
 export function PhotoPreparationModal({
   campaign,
   items,
   busy,
   error,
   onRetry,
-  onReturnToProducts,
+  onOpenBrochure,
 }: PhotoPreparationModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -119,13 +119,13 @@ export function PhotoPreparationModal({
       data-preparation-busy={busy}
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onReturnToProducts();
+        if (!busy) onOpenBrochure();
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
           event.stopPropagation();
-          if (!busy) onReturnToProducts();
+          if (!busy) onOpenBrochure();
         }
       }}
     >
@@ -136,7 +136,7 @@ export function PhotoPreparationModal({
             className="cs-photo-preparation-close"
             aria-label={t("Close")}
             title={t("Close")}
-            onClick={onReturnToProducts}
+            onClick={onOpenBrochure}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m6 6 12 12M18 6 6 18" />
@@ -169,7 +169,7 @@ export function PhotoPreparationModal({
               ? checking
                 ? "We are checking saved photos first. Finished cutouts are reused without new AI processing."
                 : "We are removing photo backgrounds and saving the finished images before opening your brochure."
-              : "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.",
+              : "Processing has finished. You can retry the unfinished photos or open the brochure and upload them manually.",
           )}
         </p>
         <div
@@ -271,7 +271,7 @@ export function PhotoPreparationModal({
             <button
               type="button"
               className="is-primary"
-              onClick={onReturnToProducts}
+              onClick={onOpenBrochure}
             >
               {t("Close and upload photos")}
             </button>

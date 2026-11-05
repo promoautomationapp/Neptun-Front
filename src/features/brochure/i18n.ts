@@ -2947,8 +2947,8 @@ const translations: Record<string, string> = {
     "Fotot e ruajtura nuk mund të kontrolloheshin. Provoni përsëri përpara se të përgatiten versione të reja.",
   "We are removing photo backgrounds and saving the finished images before opening your brochure.":
     "Po heqim sfondin e fotove dhe po ruajmë imazhet e përfunduara para hapjes së broshurës.",
-  "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.":
-    "Përpunimi përfundoi. Mund të riprovoni fotot e papërfunduara ose ta mbyllni këtë dritare dhe t’i ngarkoni vetë te Produktet dhe çmimet.",
+  "Processing has finished. You can retry the unfinished photos or open the brochure and upload them manually.":
+    "Përpunimi përfundoi. Mund të riprovoni fotot e papërfunduara ose të hapni broshurën dhe t’i ngarkoni vetë.",
   "Close and upload photos": "Mbyll dhe ngarko fotot",
   "View photo preparation details": "Shiko hollësitë e përgatitjes së fotove",
   "Photo preparation details": "Hollësitë e përgatitjes së fotove",

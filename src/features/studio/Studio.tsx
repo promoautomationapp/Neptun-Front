@@ -6376,9 +6376,9 @@ export default function App({
                     !photoPreparationStage.cacheLookupFailed,
                   );
                 }}
-                onReturnToProducts={() => {
+                onOpenBrochure={() => {
                   setPhotoPreparationStage(null);
-                  setEditorTab("products");
+                  setEditorTab("brochure");
                 }}
               />
             ) : (
