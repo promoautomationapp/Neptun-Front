@@ -129,6 +129,9 @@
   border-top: 0;
   background: transparent;
 }
+html[data-theme="dark"] .cs-brochure-preview-dialog .cs-preview-dialog-footer {
+  background: transparent;
+}
 .cs-brochure-preview-dialog .cs-preview-dialog-stage {
   container-type: size;
 }
