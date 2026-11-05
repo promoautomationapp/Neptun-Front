@@ -207,9 +207,34 @@ it("zooms and fits the selected page without editing the campaign or resetting c
   expect(props.onUpdate).not.toHaveBeenCalled();
 });
 
-it("shows the toolbar by default and lets its last control hide and restore it without editing", () => {
-  const view = render(<BrochureEditor {...props} />);
+it("keeps page navigation in the top toolbar while its editing tools are hidden and restored", () => {
+  const view = render(
+    <BrochureEditor
+      {...props}
+      campaign={{
+        ...campaign,
+        products: [
+          { code: "cover", name: "Cover offer", brochurePage: 1 },
+          { code: "inside", name: "Interior offer", brochurePage: 2 },
+        ],
+      }}
+    />,
+  );
   const dock = view.container.querySelector<HTMLElement>(".cs-canvas-dock")!;
+  const navigation = within(dock).getByRole("navigation", {
+    name: "Page navigation",
+  });
+  const picker = within(navigation).getByRole("combobox", {
+    name: "Go to page",
+  });
+  expect(
+    view.container.querySelector(".cs-brochure-pagination-dock"),
+  ).toBeNull();
+  expect(
+    view.container.querySelector(
+      ".cs-preview-viewport .cs-brochure-pagination",
+    ),
+  ).toBeNull();
   const hide = within(dock).getByRole("button", { name: "Hide toolbar" });
   expect(dock.classList.contains("is-collapsed")).toBe(false);
   expect(hide.getAttribute("aria-expanded")).toBe("true");
@@ -219,6 +244,21 @@ it("shows the toolbar by default and lets its last control hide and restore it w
   expect(dock.classList.contains("is-collapsed")).toBe(true);
   expect(show.getAttribute("aria-expanded")).toBe("false");
   expect(dock.lastElementChild).toBe(show);
+  expect(navigation.closest(".cs-canvas-dock")).toBe(dock);
+  expect(navigation.parentElement).toBe(dock);
+  fireEvent.change(picker, { target: { value: "0" } });
+  expect((picker as HTMLSelectElement).value).toBe("0");
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Previous page" }),
+  );
+  expect((picker as HTMLSelectElement).value).toBe("-1");
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Next page" }),
+  );
+  expect((picker as HTMLSelectElement).value).toBe("0");
+  expect(
+    view.container.querySelector(".cs-brochure-pagination-dock"),
+  ).toBeNull();
   fireEvent.click(show);
   expect(dock.classList.contains("is-collapsed")).toBe(false);
   expect(

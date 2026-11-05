@@ -70,10 +70,20 @@ function fixture(includeStoresPage = false, initialPage = -1) {
   return { ...view, dialog, stage, trigger, onExport };
 }
 
-it("uses the shared pager to browse only included pages and export the selected page", () => {
+it("uses the shared header pager without a bottom footer to browse included pages and export the selected page", () => {
   const view = fixture();
   const preview = within(view.dialog);
-  const picker = preview.getByRole("combobox", { name: "Go to page" });
+  const header = view.dialog.querySelector<HTMLElement>(
+    ".cs-preview-dialog-header",
+  )!;
+  const navigation = within(header).getByRole("navigation", {
+    name: "Page navigation",
+  });
+  const picker = within(navigation).getByRole("combobox", {
+    name: "Go to page",
+  });
+  expect(view.dialog.querySelector(".cs-preview-dialog-footer")).toBeNull();
+  expect(view.stage().querySelector(".cs-brochure-pagination")).toBeNull();
   expect(within(picker).getAllByRole("option")).toHaveLength(3);
   expect(preview.queryByRole("option", { name: /Stores/ })).toBeNull();
   expect(preview.getByRole("button", { name: "Previous page" })).toHaveProperty(

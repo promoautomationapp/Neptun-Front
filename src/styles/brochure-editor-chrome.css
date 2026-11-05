@@ -612,7 +612,7 @@ html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
   container: brochure-editor / inline-size;
 }
 .cs-canvas-dock {
-  max-width: 1120px;
+  max-width: 1360px;
   flex-wrap: nowrap;
 }
 .cs-canvas-dock > * {
@@ -634,10 +634,11 @@ html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
   margin-left: auto;
   margin-right: 0;
 }
-.cs-canvas-dock.is-collapsed > :not(.cs-canvas-collapse-button) {
+.cs-canvas-dock.is-collapsed
+  > :not(.cs-canvas-collapse-button):not(.cs-brochure-pagination) {
   display: none !important;
 }
-@container brochure-editor (max-width: 1100px) {
+@container brochure-editor (max-width: 1320px) {
   .cs-canvas-dock .cs-canvas-tools button > span:not(.cs-canvas-comment-count) {
     display: none;
   }
@@ -648,6 +649,29 @@ html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
     padding-inline: 8px;
   }
   .cs-canvas-images > summary > .cs-action-menu-chevron {
+    display: none;
+  }
+}
+@container brochure-editor (max-width: 800px) {
+  .cs-canvas-dock {
+    flex-wrap: wrap;
+  }
+  .cs-canvas-dock:not(.is-collapsed)::after {
+    content: "";
+    order: -1;
+    flex-basis: 100%;
+    height: 0;
+  }
+  .cs-canvas-dock > .cs-brochure-pagination {
+    order: -3;
+    margin-right: auto;
+  }
+  .cs-canvas-dock > .cs-canvas-collapse-button {
+    order: -2;
+  }
+}
+@container brochure-editor (max-width: 520px) {
+  .cs-canvas-dock.is-collapsed > .cs-canvas-collapse-button > span {
     display: none;
   }
 }

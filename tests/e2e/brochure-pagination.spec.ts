@@ -32,7 +32,10 @@ async function setup(page: Page) {
     }),
   );
   await page.goto("/__brochure-pagination");
-  await expect(page.locator(".cs-brochure-pagination-dock")).toBeVisible();
+  await expect(
+    page.locator(".cs-canvas-dock .cs-brochure-pagination"),
+  ).toBeVisible();
+  await expect(page.locator(".cs-brochure-pagination-dock")).toHaveCount(0);
   return { failures, aiCalls };
 }
 async function hittable(control: Locator) {
@@ -70,14 +73,12 @@ async function scrollBelowThumbnails(page: Page) {
   await expect(page.locator(".cs-page-navigator")).not.toBeInViewport();
 }
 
-test("editor pagination stays reachable below thumbnails, commits edits before switching and avoids document jumps", async ({
+test("top toolbar pagination stays reachable below thumbnails, commits edits before switching and avoids document jumps", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 760 });
   const { failures, aiCalls } = await setup(page);
-  const pager = page.locator(
-    ".cs-brochure-pagination-dock .cs-brochure-pagination",
-  );
+  const pager = page.locator(".cs-canvas-dock .cs-brochure-pagination");
   const picker = pager.getByRole("combobox", { name: "Go to page" });
   await expect(picker.locator("option")).toHaveCount(12);
   await expect(
@@ -142,9 +143,7 @@ test("Tab commits a valid inline price before keyboard activation of the page ar
   page,
 }) => {
   const { failures, aiCalls } = await setup(page);
-  const pager = page.locator(
-    ".cs-brochure-pagination-dock .cs-brochure-pagination",
-  );
+  const pager = page.locator(".cs-canvas-dock .cs-brochure-pagination");
   const picker = pager.getByRole("combobox", { name: "Go to page" });
   await picker.selectOption("0");
   const paper = page.locator(".cs-preview-paper");
@@ -187,14 +186,17 @@ test("preview pagination handles long brochures without moving the document and 
   await page.setViewportSize({ width: 1440, height: 760 });
   const { failures, aiCalls } = await setup(page);
   const editorPicker = page
-    .locator(".cs-brochure-pagination-dock")
+    .locator(".cs-canvas-dock .cs-brochure-pagination")
     .getByRole("combobox", { name: "Go to page" });
   await editorPicker.selectOption("7");
   await page
     .getByRole("button", { name: "Open full preview", exact: true })
     .click();
   const preview = page.getByRole("dialog", { name: "Brochure preview" });
-  const pager = preview.locator(".cs-brochure-pagination");
+  const pager = preview.locator(
+    ".cs-preview-dialog-header .cs-brochure-pagination",
+  );
+  await expect(preview.locator(".cs-preview-dialog-footer")).toHaveCount(0);
   const picker = pager.getByRole("combobox", { name: "Go to page" });
   await expect(picker).toHaveValue("7");
   await expect(picker.locator("option")).toHaveCount(12);
@@ -240,9 +242,7 @@ test("excluded stores stay editable while preview and arrow bounds include only 
 }) => {
   await setup(page);
   await page.getByRole("button", { name: "Exclude stores page" }).click();
-  const pager = page.locator(
-    ".cs-brochure-pagination-dock .cs-brochure-pagination",
-  );
+  const pager = page.locator(".cs-canvas-dock .cs-brochure-pagination");
   const picker = pager.getByRole("combobox", { name: "Go to page" });
   await expect(
     picker.getByRole("option", { name: "Stores & details · Not included" }),
@@ -278,9 +278,7 @@ test("dark mobile pagination stays within the screen with reachable touch contro
   await page.setViewportSize({ width: 390, height: 640 });
   const { failures, aiCalls } = await setup(page);
   await page.getByRole("button", { name: "Use dark mode" }).click();
-  const pager = page.locator(
-    ".cs-brochure-pagination-dock .cs-brochure-pagination",
-  );
+  const pager = page.locator(".cs-canvas-dock .cs-brochure-pagination");
   await page.evaluate(() =>
     window.scrollTo(0, document.documentElement.scrollHeight),
   );
@@ -315,7 +313,10 @@ test("dark mobile pagination stays within the screen with reachable touch contro
     .getByRole("button", { name: "Open full preview", exact: true })
     .click();
   const preview = page.getByRole("dialog", { name: "Brochure preview" });
-  const previewPager = preview.locator(".cs-brochure-pagination");
+  const previewPager = preview.locator(
+    ".cs-preview-dialog-header .cs-brochure-pagination",
+  );
+  await expect(preview.locator(".cs-preview-dialog-footer")).toHaveCount(0);
   await hittable(previewPager.getByRole("button", { name: "Next page" }));
   await previewPager.getByRole("button", { name: "Next page" }).click();
   await expect(
@@ -341,7 +342,7 @@ test("clean preview stays in place, removes edit lines and keeps pagination reac
   await page.setViewportSize({ width: 1440, height: 760 });
   const { failures, aiCalls } = await setup(page);
   const paper = page.locator(".cs-preview-paper");
-  const pager = page.locator(".cs-brochure-pagination-dock");
+  const pager = page.locator(".cs-canvas-dock .cs-brochure-pagination");
   await pager.getByRole("combobox", { name: "Go to page" }).selectOption("0");
   await scrollBelowThumbnails(page);
   const before = await paper.boundingBox();
@@ -371,3 +372,46 @@ test("clean preview stays in place, removes edit lines and keeps pagination reac
   expect(failures).toEqual([]);
   expect(aiCalls).toEqual([]);
 });
+
+for (const viewport of [
+  { width: 1440, height: 760 },
+  { width: 390, height: 640 },
+]) {
+  test(`top page navigation remains usable when the rest of the toolbar is collapsed at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    const { failures, aiCalls } = await setup(page);
+    const dock = page.locator(".cs-canvas-dock");
+    const pager = dock.locator(".cs-brochure-pagination");
+    const picker = pager.getByRole("combobox", { name: "Go to page" });
+    const before = await snapshot(page);
+    await dock
+      .getByRole("button", { name: "Hide toolbar", exact: true })
+      .click();
+    await expect(
+      dock.getByRole("button", { name: "Show toolbar", exact: true }),
+    ).toBeVisible();
+    await expect(pager).toBeVisible();
+    await hittable(pager.getByRole("button", { name: "Next page" }));
+    await pager.getByRole("button", { name: "Next page" }).click();
+    await expect(picker).toHaveValue("0");
+    await picker.selectOption("4");
+    await expect(picker).toHaveValue("4");
+    await pager.getByRole("button", { name: "Previous page" }).click();
+    await expect(picker).toHaveValue("3");
+    await expect(
+      page.locator(".cs-brochure-pagination-dock, .cs-preview-dialog-footer"),
+    ).toHaveCount(0);
+    expect(await snapshot(page)).toEqual(before);
+    await dock
+      .getByRole("button", { name: "Show toolbar", exact: true })
+      .click();
+    await expect(picker).toHaveValue("3");
+    await expect(
+      dock.getByRole("button", { name: "Pointer", exact: true }),
+    ).toBeVisible();
+    expect(failures).toEqual([]);
+    expect(aiCalls).toEqual([]);
+  });
+}

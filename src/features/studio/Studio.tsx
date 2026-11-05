@@ -3095,6 +3095,22 @@ export function BrochureEditor({
             )}
             <span className="cs-canvas-dock-divider" aria-hidden="true" />
             <BrochureZoomControls />
+            <BrochurePagination
+              pages={[
+                { index: -1, label: t("Cover") },
+                ...pages.map((item) => ({
+                  index: item.index,
+                  label: `${t("Page")} ${item.index + 2}`,
+                })),
+                {
+                  index: pages.length,
+                  label: t("Stores & details"),
+                  excluded: !hasStoresPage,
+                },
+              ]}
+              selected={selected}
+              onSelect={setSelected}
+            />
             <button
               type="button"
               className="cs-canvas-preview-button"
@@ -3464,26 +3480,6 @@ export function BrochureEditor({
               )}
             </div>
           </div>
-          {!previewMode && (
-            <div className="cs-brochure-pagination-dock">
-              <BrochurePagination
-                pages={[
-                  { index: -1, label: t("Cover") },
-                  ...pages.map((item) => ({
-                    index: item.index,
-                    label: `${t("Page")} ${item.index + 2}`,
-                  })),
-                  {
-                    index: pages.length,
-                    label: t("Stores & details"),
-                    excluded: !hasStoresPage,
-                  },
-                ]}
-                selected={selected}
-                onSelect={setSelected}
-              />
-            </div>
-          )}
         </div>
         {commentMode && (
           <aside className="cs-page-controls cs-review-sidebar">

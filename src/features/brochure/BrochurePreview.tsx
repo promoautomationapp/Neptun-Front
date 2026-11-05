@@ -113,24 +113,41 @@ export function BrochurePreview({
           <span className="cs-eyebrow">{t("Brochure preview")}</span>
           <strong>{campaign.name}</strong>
         </div>
-        <div className="cs-actions">
-          <button
-            type="button"
-            className="cs-button secondary"
-            onClick={() => {
-              onClose();
-              onExport(current + 1);
-            }}
-          >
-            ↓ {t("Download brochure")}
-          </button>
-          <button
-            type="button"
-            className="cs-button secondary"
-            onClick={onClose}
-          >
-            <span aria-hidden="true">✎</span> {t("Back to editing")}
-          </button>
+        <div className="cs-preview-header-controls">
+          <BrochurePagination
+            pages={navigationPages}
+            selected={current}
+            onSelect={onSelect}
+          />
+          <div className="cs-actions">
+            <button
+              type="button"
+              className="cs-button secondary"
+              aria-label={t("Download brochure")}
+              title={t("Download brochure")}
+              onClick={() => {
+                onClose();
+                onExport(current + 1);
+              }}
+            >
+              <span aria-hidden="true">↓</span>
+              <span className="cs-preview-action-label">
+                {t("Download brochure")}
+              </span>
+            </button>
+            <button
+              type="button"
+              className="cs-button secondary"
+              aria-label={t("Back to editing")}
+              title={t("Back to editing")}
+              onClick={onClose}
+            >
+              <span aria-hidden="true">✎</span>
+              <span className="cs-preview-action-label">
+                {t("Back to editing")}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
       <div className="cs-preview-dialog-body">
@@ -166,16 +183,6 @@ export function BrochurePreview({
           </div>
         </div>
       </div>
-      <footer className="cs-preview-dialog-footer">
-        <BrochurePagination
-          pages={navigationPages}
-          selected={current}
-          onSelect={onSelect}
-        />
-        <small className="cs-preview-pagination-hint">
-          {t("Use ← → to browse pages")}
-        </small>
-      </footer>
     </dialog>,
     document.body,
   );

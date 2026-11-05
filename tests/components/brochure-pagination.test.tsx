@@ -97,3 +97,29 @@ it("skips excluded stores with arrows while allowing them through the explicit p
     true,
   );
 });
+
+it("keeps its page navigation accessible and excluded from artwork exports", () => {
+  const select = vi.fn();
+  const view = render(
+    <BrochurePagination
+      pages={[
+        { index: -1, label: "Cover" },
+        { index: 0, label: "Page 2" },
+      ]}
+      selected={-1}
+      onSelect={select}
+    />,
+  );
+  const navigation = view.getByRole("navigation", { name: "Page navigation" });
+  expect(navigation.getAttribute("data-export-hide")).toBe("true");
+  expect(navigation.getAttribute("aria-label")).toBe("Page navigation");
+  const picker = within(navigation).getByRole("combobox", {
+    name: "Go to page",
+  });
+  expect((picker as HTMLSelectElement).value).toBe("-1");
+  expect(navigation.textContent).toContain("Cover");
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Next page" }),
+  );
+  expect(select).toHaveBeenCalledWith(0);
+});

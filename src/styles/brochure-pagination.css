@@ -96,41 +96,36 @@
   outline: 2px solid var(--np-accent, #257bad);
   outline-offset: 2px;
 }
-.cs-brochure-pagination-dock {
-  position: relative;
-  z-index: 61;
-  display: flex;
-  justify-content: center;
-  width: max-content;
-  max-width: 100%;
-  margin: 4px auto 0;
+.cs-canvas-dock > .cs-brochure-pagination {
+  flex: none;
+  grid-template-columns: 30px minmax(100px, 130px) 30px;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 0;
+  border-left: 1px solid var(--chrome-border, #dce5ed);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.campaign-app .cs-main-panel.cs-editor:has(.cs-brochure-pagination-dock) {
+.cs-canvas-dock > .cs-brochure-pagination > button {
+  background: transparent;
+}
+.cs-canvas-dock.is-collapsed > .cs-brochure-pagination {
+  margin-left: 0;
+  border-left: 0;
+}
+.campaign-app .cs-main-panel.cs-editor:has(.cs-canvas-dock) {
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
-/* Keep the paper and its controls separate without reserving a tall footer. */
-.cs-page-preview.view-only:not(.comment-view):not(.inline-preview):has(
-    > .cs-brochure-pagination-dock
-  ) {
-  gap: 4px;
-  padding-bottom: max(4px, env(safe-area-inset-bottom));
-}
-.cs-page-preview.view-only:not(.comment-view):not(.inline-preview)
-  > .cs-brochure-pagination-dock {
-  position: static;
-  flex: none;
-  margin-top: 0;
-}
-.cs-brochure-preview-dialog .cs-preview-dialog-footer {
+.cs-preview-header-controls {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 4px 12px;
-  border-top: 0;
-  background: transparent;
+  align-items: center;
+  flex: none;
+  gap: 12px;
+  min-width: 0;
 }
-html[data-theme="dark"] .cs-brochure-preview-dialog .cs-preview-dialog-footer {
-  background: transparent;
+.cs-preview-header-controls > .cs-actions {
+  flex-wrap: nowrap;
 }
 .cs-brochure-preview-dialog .cs-preview-dialog-stage {
   container-type: size;
@@ -138,17 +133,38 @@ html[data-theme="dark"] .cs-brochure-preview-dialog .cs-preview-dialog-footer {
 .cs-brochure-preview-dialog .cs-preview-dialog-paper {
   width: min(100cqw, calc(100cqh * var(--brochure-preview-ratio, 0.8)));
 }
-.cs-brochure-preview-dialog .cs-preview-pagination-hint {
-  margin: 0;
-  max-width: 150px;
-  color: var(--np-muted, #6c8091);
-  font-size: 10px;
-  line-height: 1.4;
+@media (max-width: 700px) {
+  .cs-preview-header-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cs-preview-header-controls .cs-preview-action-label {
+    display: none;
+  }
+  .cs-preview-header-controls > .cs-actions {
+    gap: 6px;
+  }
+  .cs-preview-header-controls .cs-button {
+    min-width: 34px;
+    padding-inline: 8px;
+  }
+}
+@media (max-width: 380px) {
+  .cs-preview-header-controls > .cs-brochure-pagination {
+    flex: 1 1 auto;
+    grid-template-columns: 44px minmax(74px, 1fr) 44px;
+    width: auto;
+    min-width: 172px;
+  }
 }
 @media (max-width: 620px), (pointer: coarse) {
   .cs-brochure-pagination {
     grid-template-columns: 44px minmax(100px, 140px) 44px;
     padding: 1px;
+  }
+  .cs-canvas-dock > .cs-brochure-pagination {
+    grid-template-columns: 44px minmax(100px, 140px) 44px;
   }
   .cs-brochure-pagination > button {
     width: 44px;
@@ -158,13 +174,9 @@ html[data-theme="dark"] .cs-brochure-preview-dialog .cs-preview-dialog-footer {
   .cs-brochure-pagination-picker {
     min-height: 44px;
   }
-  .cs-brochure-preview-dialog .cs-preview-pagination-hint {
-    display: none;
-  }
 }
 @media print {
-  .cs-brochure-pagination,
-  .cs-brochure-pagination-dock {
+  .cs-brochure-pagination {
     display: none !important;
   }
 }
