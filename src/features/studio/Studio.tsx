@@ -36,6 +36,7 @@ import { StudioPageBoundary } from "./StudioPageBoundary";
 import { NavIcon } from "./NavIcon";
 import { catalogFacets } from "../products/products.api";
 import { useCampaignClock } from "../campaigns/campaignValidity";
+import { CampaignEditorHeader } from "../brochure/CampaignEditorHeader";
 import { CampaignStatus } from "../campaigns/CampaignStatus";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import {
@@ -63,6 +64,10 @@ import {
   type PhotoOutcome,
 } from "../brochure/productImagePreparationQueue";
 import { PhotoPreparationModal } from "../brochure/PhotoPreparationModal";
+import {
+  reusableProductPhotos,
+  SavedPhotoLookupError,
+} from "../brochure/reusableProductPhotos";
 import {
   CatalogNavigator,
   defaultCatalogSelection,
@@ -2803,14 +2808,11 @@ export function BrochureEditor({
     >
       <style>{`@page { size: ${formatGeometry.pdfWidthMm}mm ${formatGeometry.pdfHeightMm}mm; margin:0; } @media print { html,body,#root { width:${formatGeometry.pdfWidthMm}mm!important; } .print-stack .brochure-output-page { width:${formatGeometry.pdfWidthMm}mm!important;height:${formatGeometry.pdfHeightMm}mm!important; } }`}</style>
       <div className="cs-editor-section-head">
-        <div>
-          <span className="cs-eyebrow">{t("01 / BROCHURE")}</span>
+        <div className="cs-brochure-section-title">
           <h2>{t("Your brochure")}</h2>
-          <p>
-            {t(
-              "Click brochure text or images to edit. Use Design tools for layout and colors.",
-            )}
-          </p>
+          <span className="cs-brochure-page-count">
+            {brochurePageCount(campaign, pages.length)} {t("brochure pages")}
+          </span>
         </div>
         <div className="cs-actions cs-brochure-header-actions">
           <Button onClick={onImportProducts}>
@@ -4411,6 +4413,7 @@ export default function App({
     productCodes: string[];
     busy: boolean;
     error?: string;
+    cacheLookupFailed?: boolean;
   } | null>(null);
   const photoPreparationRun = useRef(0);
   useEffect(() => {
@@ -4449,6 +4452,8 @@ export default function App({
   latestCampaigns.current = campaigns;
   const productPhotoQueue = useRef(createProductImagePreparationQueue());
   const failedPhotoTargets = useRef(new Map<string, ProductPhotoTarget>());
+  const cachedPhotoLookupFailures = useRef(new Set<string>());
+  useEffect(() => cachedPhotoLookupFailures.current.clear(), [user?.id]);
   const [photoProgress, setPhotoProgress] = useState<
     Record<string, Record<string, PhotoProgressItem>>
   >({});
@@ -4940,6 +4945,114 @@ export default function App({
       products,
       workOptions,
     );
+    const reusedOutcomes: PhotoOutcome[] = [];
+    if (!workOptions.force) {
+      const liveCampaign = latestCampaigns.current.find(
+        (item) => item.id === snapshot.id,
+      );
+      const candidates = pendingTargets.filter(
+        (target) =>
+          currentProductPhotoTarget(liveCampaign, target) &&
+          !productPhotoQueue.current.has(target.key) &&
+          !productPhotoQueue.current.hasTarget(target) &&
+          !failedPhotoTargets.current.has(target.key),
+      );
+      if (candidates.length) {
+        let reusedSnapshot: Campaign | undefined;
+        setPhotoProgress((current) => ({
+          ...current,
+          [snapshot.id]: {
+            ...current[snapshot.id],
+            ...Object.fromEntries(
+              candidates.map((target) => [
+                target.key,
+                {
+                  key: target.key,
+                  code: target.offerCode,
+                  name: target.request.name,
+                  state: "checking" as const,
+                },
+              ]),
+            ),
+          },
+        }));
+        try {
+          const cached = await reusableProductPhotos(candidates);
+          cachedPhotoLookupFailures.current.delete(snapshot.id);
+          if (cached.size) {
+            const applied: ProductPhotoTarget[] = [];
+            const changed = updateCampaign(
+              (draft) => {
+                for (const target of candidates) {
+                  const result = cached.get(target.key);
+                  if (
+                    result &&
+                    applyPreparedProductPhoto(draft, target, result)
+                  )
+                    applied.push(target);
+                }
+              },
+              { id: snapshot.id, group: `product-photos:${snapshot.id}` },
+            );
+            for (const target of applied)
+              trackProductPhotoWork(snapshot.id, target.key, "saving");
+            if (changed?.changed) await changed.saved;
+            reusedSnapshot = changed?.campaign;
+            for (const target of applied) {
+              failedPhotoTargets.current.delete(target.key);
+              trackProductPhotoWork(snapshot.id, target.key, "ready");
+              reusedOutcomes.push({ ok: true, target });
+            }
+          }
+        } catch (error) {
+          // If saved photos cannot be checked, do not silently purchase work.
+          cachedPhotoLookupFailures.current.add(snapshot.id);
+          for (const target of candidates)
+            trackProductPhotoWork(snapshot.id, target.key, "failed");
+          throw new SavedPhotoLookupError(
+            t(
+              "Saved photos could not be checked. Try again before preparing new versions.",
+            ),
+            { cause: error },
+          );
+        }
+        const current = latestCampaigns.current.find(
+          (item) => item.id === snapshot.id,
+        );
+        if (!current) {
+          forgetProductPhotoWork(
+            snapshot.id,
+            candidates.map((target) => target.key),
+          );
+          return reusedOutcomes;
+        }
+        snapshot = reusedSnapshot || current;
+        const codes = new Set(products.map((product) => product.code));
+        products = snapshot.products.filter((product) =>
+          codes.has(product.code),
+        );
+        const reusedKeys = new Set(
+          reusedOutcomes.map((outcome) => outcome.target.key),
+        );
+        // Only exact sources checked above may proceed to paid work. A newly
+        // selected photo gets its own cache check on the next explicit action.
+        pendingTargets = candidates.filter(
+          (target) =>
+            !reusedKeys.has(target.key) &&
+            currentProductPhotoTarget(current, target),
+        );
+        const settled = new Set([
+          ...pendingTargets.map((target) => target.key),
+          ...reusedKeys,
+        ]);
+        forgetProductPhotoWork(
+          snapshot.id,
+          candidates
+            .filter((target) => !settled.has(target.key))
+            .map((target) => target.key),
+        );
+      }
+    }
     if (workOptions.force) {
       pendingTargets = pendingTargets.filter(
         (target) => !productPhotoQueue.current.isRunningTarget(target),
@@ -5052,7 +5165,7 @@ export default function App({
         !productPhotoQueue.current.hasTarget(target) &&
         (retryFailed || !failedPhotoTargets.current.has(target.key)),
     );
-    if (!targets.length) return Promise.resolve([]);
+    if (!targets.length) return reusedOutcomes;
     const retries = new Set(
       retryFailed
         ? targets
@@ -5067,6 +5180,7 @@ export default function App({
         ...(Object.values(current[snapshot.id] || {}).some(
           (item) =>
             item.state === "queued" ||
+            item.state === "checking" ||
             item.state === "preparing" ||
             item.state === "retrying" ||
             item.state === "saving",
@@ -5176,7 +5290,7 @@ export default function App({
         )
       )
         setToast(t("Some product photos could not be prepared. Try again."));
-      return outcomes;
+      return [...reusedOutcomes, ...outcomes];
     });
   }
   async function finishAiReview(proposals: AiProposal[], acceptText: boolean) {
@@ -5297,6 +5411,7 @@ export default function App({
           productCodes,
           busy: false,
           error: errorMessage(error),
+          cacheLookupFailed: error instanceof SavedPhotoLookupError,
         });
       }
     })();
@@ -6118,116 +6233,74 @@ export default function App({
         )}
         {section === "editor" && campaign && (
           <div className="cs-main-panel cs-editor">
-            <div className="cs-editor-hero">
-              <div className="cs-editor-hero-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSection("campaigns");
-                    setActiveId(null);
-                  }}
-                >
-                  ← {t("All campaigns")}
-                </button>
-                <button
-                  type="button"
-                  className="cs-start-new"
-                  onClick={() => setModal("confirm-new")}
-                >
-                  ＋ {t("New campaign")}
-                </button>
-              </div>
-              <div>
-                <span className="cs-eyebrow">
-                  {t(campaign.type)} ·{" "}
-                  {campaign.startDate === campaign.endDate
-                    ? campaign.startDate
-                    : `${campaign.startDate} — ${campaign.endDate}`}
-                </span>
-                <h1>{campaign.name}</h1>
-                <p>
-                  {campaign.products.length} {t("products")} ·{" "}
-                  {brochurePageCount(campaign, splitPages(campaign).length)}{" "}
-                  {t("brochure pages")} · {t("Saved for the team")}
-                </p>
-                {access.canViewSocialPosts && (
-                  <button
-                    type="button"
-                    className="cs-social-shortcut"
-                    onClick={() => {
+            <CampaignEditorHeader
+              campaign={campaign}
+              pageCount={brochurePageCount(
+                campaign,
+                splitPages(campaign).length,
+              )}
+              now={campaignNow}
+              onAllCampaigns={() => {
+                setSection("campaigns");
+                setActiveId(null);
+              }}
+              onNewCampaign={() => setModal("confirm-new")}
+              onMakeSocial={
+                access.canViewSocialPosts
+                  ? () => {
                       setSocialSeed({
                         campaignId: campaign.id,
                         products: campaign.products.slice(0, 3),
                       });
                       setSection("social");
-                    }}
+                    }
+                  : undefined
+              }
+            >
+              {(user.role === "staff" || canManageUsers(user)) &&
+                ["in_progress", "changes_requested"].includes(
+                  campaign.status || "in_progress",
+                ) && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={(campaign.reviewComments || []).some(
+                        (comment) => !comment.fixed,
+                      )}
+                      onClick={() => runReviewAction("submit")}
+                    >
+                      {t("Send for PM review")}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={(campaign.reviewComments || []).some(
+                        (comment) => !comment.fixed,
+                      )}
+                      onClick={() => runReviewAction("complete")}
+                    >
+                      {t("Mark complete")}
+                    </button>
+                  </>
+                )}
+              {(user.role === "pm" || canManageUsers(user)) &&
+                campaign.status === "in_review" && (
+                  <button
+                    type="button"
+                    onClick={() => runReviewAction("complete")}
                   >
-                    <span
-                      className="cs-social-shortcut-icon"
-                      aria-hidden="true"
-                    >
-                      ▧
-                    </span>
-                    <span className="cs-social-shortcut-copy">
-                      <strong>{t("Create social post")}</strong>
-                      <small>{t("From this brochure")}</small>
-                    </span>
-                    <span
-                      className="cs-social-shortcut-arrow"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
+                    {t("Mark complete")}
                   </button>
                 )}
-                <div className="cs-editor-progress">
-                  <CampaignStatus campaign={campaign} now={campaignNow} />
-                  {(user.role === "staff" || canManageUsers(user)) &&
-                    ["in_progress", "changes_requested"].includes(
-                      campaign.status || "in_progress",
-                    ) && (
-                      <>
-                        <button
-                          type="button"
-                          disabled={(campaign.reviewComments || []).some(
-                            (comment) => !comment.fixed,
-                          )}
-                          onClick={() => runReviewAction("submit")}
-                        >
-                          {t("Send for PM review")}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={(campaign.reviewComments || []).some(
-                            (comment) => !comment.fixed,
-                          )}
-                          onClick={() => runReviewAction("complete")}
-                        >
-                          {t("Mark complete")}
-                        </button>
-                      </>
-                    )}
-                  {(user.role === "pm" || canManageUsers(user)) &&
-                    campaign.status === "in_review" && (
-                      <button
-                        type="button"
-                        onClick={() => runReviewAction("complete")}
-                      >
-                        {t("Mark complete")}
-                      </button>
-                    )}
-                  {(user.role === "staff" || canManageUsers(user)) &&
-                    campaign.status === "completed" && (
-                      <button
-                        type="button"
-                        onClick={() => runReviewAction("reopen")}
-                      >
-                        {t("Continue editing")}
-                      </button>
-                    )}
-                </div>
-              </div>
-            </div>
+              {(user.role === "staff" || canManageUsers(user)) &&
+                campaign.status === "completed" && (
+                  <button
+                    type="button"
+                    onClick={() => runReviewAction("reopen")}
+                  >
+                    {t("Continue editing")}
+                  </button>
+                )}
+            </CampaignEditorHeader>
             <div className="cs-editor-tabs">
               <button
                 type="button"
@@ -6243,6 +6316,25 @@ export default function App({
               >
                 02 <span>{t("Products & prices")}</span>
               </button>
+              {photoPreparationStage?.campaignId !== campaign.id && (
+                <PhotoPreparationProgress
+                  variant="inline"
+                  items={Object.values(photoProgress[campaign.id] || {})}
+                  campaign={campaign}
+                  onRetry={() =>
+                    void prepareProductPhotos(
+                      campaign,
+                      campaign.products,
+                      !cachedPhotoLookupFailures.current.has(campaign.id),
+                      {
+                        userRequested: true,
+                      },
+                    ).catch((error: unknown) => setToast(errorMessage(error)))
+                  }
+                  onCancelWaiting={() => cancelQueuedProductPhotos(campaign.id)}
+                  onEdit={setImageEditCode}
+                />
+              )}
               <CampaignHistoryControls
                 undoCount={historyCounts.undo}
                 redoCount={historyCounts.redo}
@@ -6281,7 +6373,7 @@ export default function App({
                     ),
                     searches,
                     changed?.changed ? changed.saved : saveCampaign(next),
-                    true,
+                    !photoPreparationStage.cacheLookupFailed,
                   );
                 }}
                 onReturnToProducts={() => {
@@ -6291,22 +6383,6 @@ export default function App({
               />
             ) : (
               <>
-                <PhotoPreparationProgress
-                  items={Object.values(photoProgress[campaign.id] || {})}
-                  campaign={campaign}
-                  onRetry={() =>
-                    void prepareProductPhotos(
-                      campaign,
-                      campaign.products,
-                      true,
-                      {
-                        userRequested: true,
-                      },
-                    )
-                  }
-                  onCancelWaiting={() => cancelQueuedProductPhotos(campaign.id)}
-                  onEdit={setImageEditCode}
-                />
                 {editorTab === "products" ? (
                   <ProductEditor
                     canMakeSocial={access.canViewSocialPosts}

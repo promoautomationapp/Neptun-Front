@@ -2937,6 +2937,14 @@ const translations: Record<string, string> = {
   "Campaign created. Preparing product photos…":
     "Fushata u krijua. Po përpunojmë dhe po përgatisim fotot e produkteve…",
   "AI photo preparation": "Përgatitja e fotove me AI",
+  "Saved product photos": "Fotot e ruajtura të produkteve",
+  "Campaign navigation": "Navigimi i fushatës",
+  "Checking saved product photos…": "Po kontrollojmë fotot e ruajtura…",
+  "Checking saved photo…": "Po kontrollohet fotoja e ruajtur…",
+  "We are checking saved photos first. Finished cutouts are reused without new AI processing.":
+    "Po kontrollojmë fillimisht fotot e ruajtura. Fotot me sfond të hequr ripërdoren pa përpunim të ri me AI.",
+  "Saved photos could not be checked. Try again before preparing new versions.":
+    "Fotot e ruajtura nuk mund të kontrolloheshin. Provoni përsëri përpara se të përgatiten versione të reja.",
   "We are removing photo backgrounds and saving the finished images before opening your brochure.":
     "Po heqim sfondin e fotove dhe po ruajmë imazhet e përfunduara para hapjes së broshurës.",
   "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.":

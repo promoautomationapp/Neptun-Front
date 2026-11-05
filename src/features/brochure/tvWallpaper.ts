@@ -8,6 +8,7 @@ import type { TvWallpaperFitPlan } from "./tvWallpaperFit";
 import { effectiveProductArtworks } from "./productArtwork";
 import { bundleMemberByCode } from "./bundleMemberUpdates";
 import { isBundleOffer } from "./productBundles";
+import { isAppleProduct } from "./productTypes";
 
 type ProductCollection = Pick<Campaign, "products">;
 
@@ -22,7 +23,10 @@ function campaignProducts(products: Product[], result: Product[] = []) {
 
 export function campaignTelevisions(campaign: ProductCollection) {
   return campaignProducts(campaign?.products).filter(
-    (product) => !isBundleOffer(product) && isTelevision(product),
+    (product) =>
+      !isBundleOffer(product) &&
+      !isAppleProduct(product) &&
+      isTelevision(product),
   );
 }
 
@@ -47,7 +51,10 @@ function renderedBundlePhotos(campaign: ProductCollection) {
 function editableScreenProduct(product: Product) {
   return isBundleOffer(product)
     ? campaignProducts(product.bundleProducts || []).find(
-        (member) => !isBundleOffer(member) && isTelevision(member),
+        (member) =>
+          !isBundleOffer(member) &&
+          !isAppleProduct(member) &&
+          isTelevision(member),
       ) || product
     : product;
 }
@@ -116,6 +123,7 @@ export function applyTvWallpaper(
       : [selected];
   let applied = 0;
   for (const product of targets) {
+    if (screenArtwork && isAppleProduct(product)) continue;
     if (screenArtwork == null) {
       delete product.screenArtwork;
     } else if (fitPlan) {

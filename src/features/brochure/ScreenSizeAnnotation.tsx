@@ -26,8 +26,14 @@ export function ScreenSizeAnnotation({
   ...props
 }: ScreenSizeAnnotationProps) {
   const id = useId().replace(/:/g, "");
-  const labelX = type === "television" && textPosition !== "original" ? "51.5" : "53.9218715547";
-  const labelY = type === "television" && textPosition !== "original" ? "37" : "32.0116815921";
+  const labelX =
+    type === "television" && textPosition !== "original"
+      ? "51.5"
+      : "53.9218715547";
+  const labelY =
+    type === "television" && textPosition !== "original"
+      ? "37"
+      : "32.0116815921";
   if (!inches) return null;
   return (
     <span
@@ -36,7 +42,7 @@ export function ScreenSizeAnnotation({
       {...props}
       aria-label={`${inches} inch screen`}
     >
-      {type === "television" || type === "phone" ? (
+      {type === "television" ? (
         <svg viewBox="0 0 89.0579646228 89.0579646228" aria-hidden="true">
           <defs>
             {/* Source triangle u741a4: feather 9→100%, midpoint 87%, angle −136.1°. */}

@@ -164,7 +164,7 @@ it("omits a baked TV label unless a replacement wallpaper covers it, and does no
   ).toBeNull();
 });
 
-it("uses the existing phone corner and other screen artwork for non-Apple members", () => {
+it("uses external phone measurements and other screen artwork for non-Apple members", () => {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
   const { image, container } = measuredPhoto(0.5);
   const phone: Product = {
@@ -176,7 +176,12 @@ it("uses the existing phone corner and other screen artwork for non-Apple member
   const label = bundleScreenAnnotationPlacement(phone, image, container)!;
   expect(label.type).toBe("phone");
   expect(label.inches).toBe(6.3);
-  expect(label.style.width).toBe(22.5);
+  expect(label.style.width).toBeCloseTo(46.00742142857144);
+  expect(Number(label.style.top)).toBeLessThan(75);
+  const verticalX =
+    Number(label.style.left) +
+    (Number(label.style.width) * 33.3868950515) / 67.1693479534;
+  expect(verticalX).toBeGreaterThan(300);
   const laptop: Product = {
     code: "laptop",
     name: "LAPTOP LENOVO",

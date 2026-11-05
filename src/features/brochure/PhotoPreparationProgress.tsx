@@ -10,6 +10,7 @@ export interface PhotoProgressItem {
   name: string;
   image?: string;
   state:
+    | "checking"
     | "queued"
     | "preparing"
     | "retrying"
@@ -25,17 +26,19 @@ function progressLabel(item: PhotoProgressItem) {
   if (item.state === "retrying")
     return `${t("Retrying photo")} · ${item.retryAttempt ?? 1}/${item.retryLimit ?? 3}`;
   return t(
-    item.state === "saving"
-      ? "Saving photo…"
-      : item.state === "ready"
-        ? "ready"
-        : item.state === "queued"
-          ? "waiting"
-          : item.state === "original"
-            ? "Original photo — background removal incomplete"
-            : item.state === "failed"
-              ? "Photo preparation could not finish"
-              : "Preparing / waiting for AI",
+    item.state === "checking"
+      ? "Checking saved photo…"
+      : item.state === "saving"
+        ? "Saving photo…"
+        : item.state === "ready"
+          ? "ready"
+          : item.state === "queued"
+            ? "waiting"
+            : item.state === "original"
+              ? "Original photo — background removal incomplete"
+              : item.state === "failed"
+                ? "Photo preparation could not finish"
+                : "Preparing / waiting for AI",
   );
 }
 
@@ -116,12 +119,14 @@ export function PhotoPreparationProgress({
   onRetry,
   onEdit,
   onCancelWaiting,
+  variant = "default",
 }: {
   items: PhotoProgressItem[];
   campaign: Campaign;
   onRetry: () => void;
   onEdit: (code: string) => void;
   onCancelWaiting?: () => void;
+  variant?: "default" | "inline";
 }) {
   const [dismissed, setDismissed] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -135,6 +140,7 @@ export function PhotoPreparationProgress({
   const queued = items.filter((item) => item.state === "queued").length;
   const preparing = ready + originals.length + failed.length < items.length;
   const retrying = active.some((item) => item.state === "retrying");
+  const checking = items.some((item) => item.state === "checking");
   const missing = campaign.products.flatMap((offer) =>
     (offer.bundleProducts?.length ? offer.bundleProducts : [offer])
       .filter(
@@ -157,11 +163,13 @@ export function PhotoPreparationProgress({
     originals.length + failed.length + missingPhotos.length > 0;
   const percent = items.length ? Math.round((ready / items.length) * 100) : 0;
   const title = busy
-    ? retrying
-      ? "Retrying some product photos…"
-      : preparing
-        ? "Preparing product photos…"
-        : "Searching for the exact product photo…"
+    ? checking && !active.length && !queued
+      ? "Checking saved product photos…"
+      : retrying
+        ? "Retrying some product photos…"
+        : preparing
+          ? "Preparing product photos…"
+          : "Searching for the exact product photo…"
     : needsAttention
       ? "Photo preparation needs attention"
       : "Product photos are ready";
@@ -191,7 +199,7 @@ export function PhotoPreparationProgress({
   return (
     <>
       <section
-        className={`cs-photo-progress ${busy ? "is-active" : ""}`}
+        className={`cs-photo-progress ${busy ? "is-active" : ""} ${needsAttention ? "needs-attention" : ""} ${variant === "inline" ? "is-inline" : ""}`}
         aria-label={t("Product photo preparation")}
       >
         <button
@@ -202,6 +210,7 @@ export function PhotoPreparationProgress({
           aria-haspopup="dialog"
           aria-expanded={detailsOpen}
           aria-controls={dialogId}
+          title={`${t(title)}${summary ? ` · ${summary}` : ""}`}
         >
           <span className="cs-photo-progress-icon" aria-hidden="true">
             {busy ? "◌" : needsAttention ? "!" : "✓"}
@@ -213,7 +222,8 @@ export function PhotoPreparationProgress({
             </span>
           </span>
           <span className="cs-photo-progress-view">
-            {t("View details")} <span aria-hidden="true">›</span>
+            {variant !== "inline" && t("View details")}{" "}
+            <span aria-hidden="true">›</span>
           </span>
         </button>
       </section>

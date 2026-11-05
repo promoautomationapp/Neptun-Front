@@ -1,0 +1,8 @@
+/* Product artwork defaults to layer 14; savings must remain legible above it.
+   Geometry keeps the circle away from the price instead of masking either one. */
+.brochure-page :is(.brochure-saving, .brochure-red-reference-saving) {
+  z-index: 20;
+}
+.large-bundle-offer > .large-bundle-savings-slot {
+  z-index: 5;
+}

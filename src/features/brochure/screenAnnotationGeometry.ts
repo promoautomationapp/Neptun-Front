@@ -26,10 +26,6 @@ export const TV_ANNOTATION_SCREEN_WIDTH = 0.33;
 export const TV_ANNOTATION_DEFAULT_SCALE = 0.9;
 export const TV_ANNOTATION_INSET_PX = 2;
 export const SCREEN_ANNOTATION_CANONICAL_WIDTH = 1080;
-export const PHONE_ANNOTATION_IMAGE_WIDTH = 0.25;
-// Compound front/back photos can be much wider than one handset. Limit the
-// corner by the visible height so adding a rear view does not enlarge it.
-export const PHONE_ANNOTATION_IMAGE_HEIGHT = 0.15;
 const otherAnnotationWidthRatio = 0.2147013;
 const otherAnnotationHeightRatio = 0.3067161428571429;
 const otherAnnotationGapRatio = 2 / 85.88052;
@@ -48,7 +44,7 @@ export function resolveScreenAnnotationPlacement(
       Number.isFinite(saved.y) ||
       (Number.isFinite(saved.scale) && Number(saved.scale) > 0));
   saved ||= {};
-  const television = type === "television" || type === "phone";
+  const television = type === "television";
   return {
     ...saved,
     ...(type === "television"
@@ -97,20 +93,10 @@ export function usesPhoneCornerAnnotation(product: Partial<Product>): boolean {
   return isMobilePhone(product) && !isAppleProduct(product);
 }
 
-// Phones share the folded corner artwork, proportioned to their portrait
-// photo rather than a wide television panel. Callers normalize any preview
-// scaling before passing the visible photo rectangle.
+// Keep this entry point for saved phone placements. Phones use the same
+// external measurement guide as other non-TV screens, never a photo corner.
 export function phoneAnnotationBaseBox(photo: AnnotationBox): AnnotationBox {
-  const side = Math.min(
-    photo.width * PHONE_ANNOTATION_IMAGE_WIDTH,
-    photo.height * PHONE_ANNOTATION_IMAGE_HEIGHT,
-  );
-  return {
-    left: photo.left + photo.width - side,
-    top: photo.top,
-    width: side,
-    height: side,
-  };
+  return otherScreenAnnotationBaseBox(photo);
 }
 
 /** Keep the tablet/laptop guide beside and proportional to the visible photo.

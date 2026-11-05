@@ -93,10 +93,22 @@ export function importedColor(value: unknown): ImportedColor | null {
   return name && hex ? { name, hex } : null;
 }
 
-/** Only color words are removed. Capacities, sizes and full model IDs remain. */
+function comparableModelCode(value: string, modelName = value) {
+  // These sheets include a finish-specific Samsung stock suffix as well as the
+  // shared named model. Keep the SM base and the full Buds/Watch generation and
+  // size; a different base or named model must never become a color choice.
+  return /\bsamsung\b/i.test(modelName) &&
+    /\b(?:buds|watch)\s*\d/i.test(modelName)
+    ? value.replace(/\b(sm-[rl]\d{3})[a-z0-9]{4,}\b/gi, "$1")
+    : value;
+}
+
+/** Color and stock-condition labels are not model names. Capacities, sizes,
+ * generations and identifying model bases remain part of the comparison. */
 export function colorVariantName(value: string) {
-  return normalize(value)
+  return comparableModelCode(normalize(value))
     .replace(colorPattern, "$1 ")
+    .replace(/\bdemo\b/g, " ")
     .replace(/[\s,;:()[\]{}]+/g, " ")
     .trim();
 }
@@ -123,7 +135,8 @@ function displayVariantName(value: string, color: ImportedColor | null) {
     result = result.slice(0, start) + result.slice(start + match[2]!.length);
   }
   return (
-    result
+    comparableModelCode(result)
+      .replace(/\bdemo\b/gi, " ")
       .replace(/\(\s*\)|\[\s*\]|\{\s*\}/g, " ")
       .replace(/([([{])\s*[,;]\s*/g, "$1")
       .replace(/[,;]\s*([)\]}])/g, "$1")
@@ -155,6 +168,25 @@ function comparableDetails(product: Product) {
     .join("\n");
 }
 
+function variantSpecificFact(key: string) {
+  const label = normalize(key).replace(/[_-]+/g, " ");
+  return (
+    /colou?r|ngjyr/i.test(label) ||
+    /\b(?:sku|ean|barcode|upc|gtin|mpn|asin|serial)\b/.test(label) ||
+    /^(?:name|catalog(?:ue)? (?:name|title)|emertim\w*|kodi|product (?:name|code|url|link)|item (?:name|code|number)|model code|manufacturer part number|selected variant|image url|imageurl)(?:\s|$)/.test(
+      label,
+    )
+  );
+}
+
+function comparableFact(product: Product, key: string, value: unknown) {
+  const text = comparableModelCode(normalize(String(value)), product.name);
+  return (/model/i.test(key) ? colorVariantName(text) : text).replace(
+    /\s+/g,
+    " ",
+  );
+}
+
 /** A repeated slot is not sufficient evidence that two SKUs are color options. */
 export function sameColorVariantModel(left: Product, right: Product) {
   const family = colorVariantName(left.name);
@@ -182,17 +214,19 @@ export function sameColorVariantModel(left: Product, right: Product) {
   const rightDetails = comparableDetails(right);
   if (leftDetails && rightDetails && leftDetails !== rightDetails) return false;
   const rightFacts = new Map(
-    Object.entries(right.specs || {}).map(([key, value]) => [
-      normalize(key),
-      normalize(String(value)).replace(/\s+/g, " "),
-    ]),
+    Object.entries(right.specs || {})
+      .filter(([key]) => !variantSpecificFact(key))
+      .map(([key, value]) => [
+        normalize(key),
+        comparableFact(right, key, value),
+      ]),
   );
   return Object.entries(left.specs || {}).every(([key, value]) => {
-    if (/colou?r|ngjyr/i.test(key)) return true;
+    if (variantSpecificFact(key)) return true;
     const factKey = normalize(key);
     return (
       !rightFacts.has(factKey) ||
-      rightFacts.get(factKey) === normalize(String(value)).replace(/\s+/g, " ")
+      rightFacts.get(factKey) === comparableFact(left, key, value)
     );
   });
 }

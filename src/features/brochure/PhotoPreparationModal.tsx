@@ -18,15 +18,17 @@ function photoStatus(item: PhotoProgressItem) {
   if (item.state === "retrying")
     return `${t("Retrying photo")} · ${item.retryAttempt ?? 1}/${item.retryLimit ?? 3}`;
   return t(
-    item.state === "saving"
-      ? "Saving photo…"
-      : item.state === "queued"
-        ? "waiting"
-        : item.state === "original"
-          ? "Original photo — background removal incomplete"
-          : item.state === "failed"
-            ? "Photo preparation could not finish"
-            : "Preparing / waiting for AI",
+    item.state === "checking"
+      ? "Checking saved photo…"
+      : item.state === "saving"
+        ? "Saving photo…"
+        : item.state === "queued"
+          ? "waiting"
+          : item.state === "original"
+            ? "Original photo — background removal incomplete"
+            : item.state === "failed"
+              ? "Photo preparation could not finish"
+              : "Preparing / waiting for AI",
   );
 }
 
@@ -78,7 +80,9 @@ export function PhotoPreparationModal({
   const ready = items.filter((item) => item.state === "ready").length;
   const queued = items.filter((item) => item.state === "queued").length;
   const unfinished = items.filter((item) =>
-    ["preparing", "retrying", "saving", "queued"].includes(item.state),
+    ["checking", "preparing", "retrying", "saving", "queued"].includes(
+      item.state,
+    ),
   );
   const attention = items.filter((item) =>
     ["original", "failed"].includes(item.state),
@@ -86,6 +90,7 @@ export function PhotoPreparationModal({
   const total = items.length + searching.length + searchFailures.length;
   const percent = total ? Math.round((ready / total) * 100) : null;
   const retrying = items.some((item) => item.state === "retrying");
+  const checking = items.some((item) => item.state === "checking");
   const needsAttention = Boolean(
     error ||
     attention.length ||
@@ -93,9 +98,11 @@ export function PhotoPreparationModal({
     (!busy && searching.length),
   );
   const title = busy
-    ? retrying
-      ? "Retrying some product photos…"
-      : "Preparing product photos…"
+    ? checking
+      ? "Checking saved product photos…"
+      : retrying
+        ? "Retrying some product photos…"
+        : "Preparing product photos…"
     : needsAttention
       ? "Photo preparation needs attention"
       : "Product photos are ready";
@@ -145,7 +152,7 @@ export function PhotoPreparationModal({
           </span>
           <div>
             <p className="cs-photo-preparation-kicker">
-              {t("AI photo preparation")}
+              {t(checking ? "Saved product photos" : "AI photo preparation")}
             </p>
             <h2 id={`${id}-title`} ref={heading} tabIndex={-1}>
               {t(title)}
@@ -159,7 +166,9 @@ export function PhotoPreparationModal({
         >
           {t(
             busy
-              ? "We are removing photo backgrounds and saving the finished images before opening your brochure."
+              ? checking
+                ? "We are checking saved photos first. Finished cutouts are reused without new AI processing."
+                : "We are removing photo backgrounds and saving the finished images before opening your brochure."
               : "Processing has finished. You can retry the unfinished photos or close this window and upload them manually in Products & prices.",
           )}
         </p>

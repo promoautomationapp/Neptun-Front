@@ -2,6 +2,8 @@ import { expect, it } from "vitest";
 import {
   fitArtworkInside,
   fitPhotoAroundArtwork,
+  fitSavingsBesidePhotos,
+  visiblePhotoFootprint,
   projectNativeArtworkRect,
   rectsOverlap,
   type ArtworkRect,
@@ -110,4 +112,35 @@ it("projects regular-price overflow above an SVG viewBox as a real artwork obsta
   expect(result).not.toBeNull();
   if (overflow && result)
     expect(rectsOverlap(result.rect, expanded(overflow, 3))).toBe(false);
+});
+
+it("moves a full-size savings circle beside the phone and clear of the old-price band", () => {
+  const photo = { x: 80, y: 10, width: 160, height: 190 };
+  const price = { x: 200, y: 205, width: 150, height: 80 };
+  const result = fitSavingsBesidePhotos(
+    { x: 270, y: 160, width: 80, height: 80 },
+    { x: 0, y: 0, width: 350, height: 220 },
+    [price],
+    [photo],
+    6,
+  );
+  expect(result?.scale).toBe(1);
+  expect(result!.rect.y + result!.rect.height).toBeLessThanOrEqual(price.y - 6);
+  expect(rectsOverlap(result!.rect, expanded(photo, 6))).toBe(false);
+});
+
+it("keeps a padded AI cutout as large as the same trimmed catalog photo", () => {
+  const padded = { x: -100, y: -100, width: 400, height: 400 };
+  const trimmed = { x: 0, y: 0, width: 200, height: 200 };
+  const photo = visiblePhotoFootprint(padded, {
+    left: 0.25,
+    top: 0.25,
+    right: 0.75,
+    bottom: 0.75,
+  });
+  expect(photo).toEqual(trimmed);
+  expect(fitPhotoAroundArtwork(photo, bounds, [])).toEqual(
+    fitPhotoAroundArtwork(trimmed, bounds, []),
+  );
+  expect(fitPhotoAroundArtwork(photo, bounds, [])?.scale).toBe(1);
 });

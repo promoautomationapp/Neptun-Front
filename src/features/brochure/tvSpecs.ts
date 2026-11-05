@@ -84,7 +84,7 @@ export function isTelevision(product: Partial<Product>) {
 }
 
 export function hasEditableScreen(product: Partial<Product>) {
-  if (screenAccessory(product)) return false;
+  if (isAppleProduct(product) || screenAccessory(product)) return false;
   if (isTelevision(product)) return true;
   if (otherScreenKind(product)) return true;
   return /\b(?:SMARTWATCH|WATCH)\b/.test(

@@ -30,6 +30,7 @@ it("keeps the editor notice compact and puts progress/actions in a closable dial
     cancel = vi.fn();
   const view = render(
     <PhotoPreparationProgress
+      variant="inline"
       campaign={campaign}
       items={[
         { key: "one", code: "one", name: "TV", state: "preparing" },

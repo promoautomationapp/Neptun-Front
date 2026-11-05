@@ -25,7 +25,7 @@ import {
 } from "./screenAnnotationGeometry";
 import { bundleMemberByCode, updateBundleMember } from "./bundleMemberUpdates";
 import { t } from "./i18n";
-import { isApplePhotoArtwork } from "./productTypes";
+import { isApplePhotoArtwork, isAppleProduct } from "./productTypes";
 import { useProductImageFit } from "./useProductImageFit";
 import "../../styles/product-artwork-layer.css";
 
@@ -126,7 +126,12 @@ export function bundleScreenArtworkPlacement(
   image: HTMLImageElement | null,
   container: HTMLElement | null | undefined,
 ): Box | null {
-  if (!member || !isTelevision(member) || !member.screenArtwork?.image)
+  if (
+    !member ||
+    isAppleProduct(member) ||
+    !isTelevision(member) ||
+    !member.screenArtwork?.image
+  )
     return null;
   const photo = productArtworkImageBox(image, container);
   if (!photo) return null;

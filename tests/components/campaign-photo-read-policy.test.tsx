@@ -108,6 +108,7 @@ it("opens, switches tabs, and reopens a saved brochure without preparing its pho
         },
         "/api/brand-logos": {},
         "/api/catalog/refresh": { status: "idle" },
+        "/api/ai/cutouts/reuse": { items: [] },
       };
       return new Response(JSON.stringify(responses[path] || {}));
     },
@@ -225,6 +226,11 @@ it("opens, switches tabs, and reopens a saved brochure without preparing its pho
     ).toBeTruthy(),
   );
   expect(requestAi).toHaveBeenCalledTimes(2);
+  expect(
+    fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes("/api/ai/cutouts/reuse"),
+    ),
+  ).toHaveLength(0);
   const context: { XLSX?: Window["XLSX"] } & Pick<
     typeof globalThis,
     "ArrayBuffer" | "Uint8Array"
@@ -283,10 +289,17 @@ function deferred<T>() {
 
 async function photoImportWorkspace(
   onSave?: (campaign: Campaign) => Promise<void>,
+  options: {
+    campaignId?: string;
+    catalogProducts?: Campaign["products"];
+    reuse?: (
+      items: Array<{ key: string; image: string } & Record<string, unknown>>,
+    ) => Response | Promise<Response>;
+  } = {},
 ) {
   setLanguage("en");
   const campaign: Campaign = {
-    id: "blocking-photo-import",
+    id: options.campaignId || "blocking-photo-import",
     name: "Photo import",
     products: [],
   };
@@ -303,6 +316,10 @@ async function photoImportWorkspace(
   const fetchMock = vi.fn(
     async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = new URL(String(input), "http://localhost").pathname;
+      if (path === "/api/ai/cutouts/reuse") {
+        const { items } = JSON.parse(String(init?.body));
+        return options.reuse?.(items) ?? new Response('{"items":[]}');
+      }
       if (path === "/api/team/campaigns" && init?.method === "POST") {
         latest = JSON.parse(String(init.body)).campaign;
         await onSave?.(latest);
@@ -316,7 +333,7 @@ async function photoImportWorkspace(
         [`/api/team/campaigns/${campaign.id}/presence`]: { participants: [] },
         "/api/team/settings": { settings: null, version: 0, updatedAt: null },
         "/api/products": {
-          products: [
+          products: options.catalogProducts || [
             {
               code: "77777",
               name: "Imported speaker",
@@ -324,7 +341,7 @@ async function photoImportWorkspace(
               regular: 99,
             },
           ],
-          total: 1,
+          total: options.catalogProducts?.length || 1,
           limit: 100,
           offset: 0,
           nextOffset: null,
@@ -496,14 +513,24 @@ it("keeps the brochure hidden until imported, searched and prepared photos have 
 
 it("keeps failed photo preparation in the blocking stage with retry and a route back to products", async () => {
   vi.mocked(requestAi).mockRejectedValue(new Error("Photo preparation failed"));
-  const { view, importCsv } = await photoImportWorkspace();
+  const { view, fetchMock, importCsv } = await photoImportWorkspace();
   await importCsv("Code,Sale price\n77777,79\n", 1);
   await view.findByRole("dialog", {
     name: "Photo preparation needs attention",
   });
   expect(view.container.querySelector(".cs-canvas-dock")).toBeNull();
+  expect(
+    fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes("/api/ai/cutouts/reuse"),
+    ),
+  ).toHaveLength(1);
   fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
   await waitFor(() => expect(requestAi).toHaveBeenCalledTimes(2));
+  expect(
+    fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes("/api/ai/cutouts/reuse"),
+    ),
+  ).toHaveLength(1);
   await view.findByRole("dialog", {
     name: "Photo preparation needs attention",
   });
@@ -576,3 +603,259 @@ it("lets a completed search with no exact photo close to Products and manually c
   );
   expect(requestAi).toHaveBeenCalledOnce();
 });
+
+const reuseCatalog: Campaign["products"] = [
+  {
+    code: "77777",
+    name: "Imported speaker",
+    image: "/imported-source.png",
+    regular: 99,
+  },
+  {
+    code: "88888",
+    name: "Imported headphones",
+    image: "/headphones-source.png",
+    regular: 69,
+  },
+];
+const reuseCsv =
+  "Code,Product name,Sale price,Regular price,Brochure position\n77777,Imported speaker,79,99,1.1\n88888,Imported headphones,49,69,1.2\n";
+
+function cachedPhoto(key: string, image: string, index = 1) {
+  return {
+    key,
+    resultId: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
+    result: {
+      image,
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+      annotationCleanup: true,
+      annotationHandling: "editable-overlays",
+      provider: "openai",
+    },
+  };
+}
+
+it("reuses all validated photos for a new campaign importing the same spreadsheet without orientation checks or AI work", async () => {
+  vi.mocked(requestAi).mockResolvedValue({
+    image: "/unexpected-paid-result.png",
+    cutoutValidated: true,
+    cutoutValidationVersion: 1,
+  });
+  const { view, fetchMock, importCsv } = await photoImportWorkspace(undefined, {
+    campaignId: "new-campaign-same-spreadsheet",
+    catalogProducts: reuseCatalog,
+    reuse: (items) =>
+      new Response(
+        JSON.stringify({
+          items: items.map((item, index) =>
+            cachedPhoto(
+              item.key,
+              item.image === "/imported-source.png"
+                ? "/reused-speaker.png"
+                : "/reused-headphones.png",
+              index + 1,
+            ),
+          ),
+        }),
+      ),
+  });
+  await importCsv(reuseCsv, 2);
+  await waitFor(() =>
+    expect(
+      view.container.querySelector('img[src="/reused-headphones.png"]'),
+    ).toBeTruthy(),
+  );
+  expect(
+    view.queryByRole("dialog", { name: "Preparing product photos…" }),
+  ).toBeNull();
+  expect(
+    view.container.querySelector('img[src="/reused-speaker.png"]'),
+  ).toBeTruthy();
+  expect(imageOrientation).not.toHaveBeenCalled();
+  expect(requestAi).not.toHaveBeenCalled();
+  const lookups = fetchMock.mock.calls.filter(([input]) =>
+    String(input).includes("/api/ai/cutouts/reuse"),
+  );
+  expect(lookups).toHaveLength(1);
+  expect(lookups[0]?.[1]?.method).toBe("POST");
+  expect(JSON.parse(String(lookups[0]?.[1]?.body)).items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ image: "/imported-source.png" }),
+      expect.objectContaining({ image: "/headphones-source.png" }),
+    ]),
+  );
+  const savesWithCachedPhotos = fetchMock.mock.calls
+    .filter(
+      ([input, init]) =>
+        String(input).endsWith("/api/team/campaigns") &&
+        init?.method === "POST",
+    )
+    .map(([, init]) => JSON.parse(String(init?.body)).campaign as Campaign)
+    .filter((saved) =>
+      saved.products.some((product) => product.image?.startsWith("/reused-")),
+    );
+  expect(savesWithCachedPhotos).toHaveLength(1);
+  expect(savesWithCachedPhotos[0]?.products).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        code: "77777",
+        image: "/reused-speaker.png",
+        aiOriginalImage: "/imported-source.png",
+        aiCutoutValidated: true,
+        aiCutoutValidationVersion: 1,
+        aiAnnotationCleanup: true,
+      }),
+      expect.objectContaining({
+        code: "88888",
+        image: "/reused-headphones.png",
+        aiOriginalImage: "/headphones-source.png",
+        aiCutoutValidated: true,
+      }),
+    ]),
+  );
+});
+
+it("prepares only the cache miss after applying and saving a validated cache hit", async () => {
+  const missedPhoto = deferred<Awaited<ReturnType<typeof requestAi>>>();
+  vi.mocked(requestAi).mockImplementation(() => missedPhoto.promise);
+  const { view, fetchMock, importCsv } = await photoImportWorkspace(undefined, {
+    catalogProducts: reuseCatalog,
+    reuse: (items) =>
+      new Response(
+        JSON.stringify({
+          items: items
+            .filter((item) => item.image === "/imported-source.png")
+            .map((item) => cachedPhoto(item.key, "/reused-speaker.png")),
+        }),
+      ),
+  });
+  await importCsv(reuseCsv, 2);
+  await waitFor(() => expect(requestAi).toHaveBeenCalledOnce());
+  expect(vi.mocked(requestAi).mock.calls[0]?.[0]).toBe("ai-remove-background");
+  expect(vi.mocked(requestAi).mock.calls[0]?.[1]).toMatchObject({
+    image: "/headphones-source.png",
+    name: "Imported headphones",
+  });
+  expect(imageOrientation).toHaveBeenCalledExactlyOnceWith(
+    "/headphones-source.png",
+    expect.any(Function),
+  );
+  expect(
+    view.getByRole("dialog", { name: "Preparing product photos…" }),
+  ).toBeTruthy();
+  const cachedSave = fetchMock.mock.calls
+    .filter(
+      ([input, init]) =>
+        String(input).endsWith("/api/team/campaigns") &&
+        init?.method === "POST",
+    )
+    .map(([, init]) => JSON.parse(String(init?.body)).campaign as Campaign)
+    .find((saved) =>
+      saved.products.some((product) => product.image === "/reused-speaker.png"),
+    );
+  expect(cachedSave?.products).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        code: "77777",
+        image: "/reused-speaker.png",
+        aiCutoutValidated: true,
+      }),
+      expect.objectContaining({
+        code: "88888",
+        image: "/headphones-source.png",
+      }),
+    ]),
+  );
+  await act(async () =>
+    missedPhoto.resolve({
+      image: "/newly-prepared-headphones.png",
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+    }),
+  );
+  await waitFor(() =>
+    expect(
+      view.container.querySelector('img[src="/newly-prepared-headphones.png"]'),
+    ).toBeTruthy(),
+  );
+  expect(
+    view.container.querySelector('img[src="/reused-speaker.png"]'),
+  ).toBeTruthy();
+  expect(requestAi).toHaveBeenCalledOnce();
+  expect(imageOrientation).toHaveBeenCalledOnce();
+});
+
+it.each([false, true])(
+  "blocks billable work after a failed saved-photo lookup and rechecks the cache on Retry (closed first: %s)",
+  async (closeFirst) => {
+    vi.mocked(requestAi).mockResolvedValue({
+      image: "/unexpected-paid-result.png",
+      cutoutValidated: true,
+      cutoutValidationVersion: 1,
+    });
+    let lookupFailed = true;
+    const { view, fetchMock, importCsv } = await photoImportWorkspace(
+      undefined,
+      {
+        reuse: (items) => {
+          if (lookupFailed) {
+            lookupFailed = false;
+            return new Response(
+              JSON.stringify({
+                error: "Saved product photos are unavailable.",
+              }),
+              { status: 503 },
+            );
+          }
+          return new Response(
+            JSON.stringify({
+              items: items.map((item) =>
+                cachedPhoto(item.key, "/recovered-saved-photo.png"),
+              ),
+            }),
+          );
+        },
+      },
+    );
+    await importCsv("Code,Sale price\n77777,79\n", 1);
+    await view.findByRole("dialog", {
+      name: "Photo preparation needs attention",
+    });
+    expect(view.container.querySelector(".cs-canvas-dock")).toBeNull();
+    expect(requestAi).not.toHaveBeenCalled();
+    expect(imageOrientation).not.toHaveBeenCalled();
+    expect(
+      fetchMock.mock.calls.filter(([input]) =>
+        String(input).includes("/api/ai/cutouts/reuse"),
+      ),
+    ).toHaveLength(1);
+    expect(
+      view.getByText(
+        "Saved photos could not be checked. Try again before preparing new versions.",
+      ),
+    ).toBeTruthy();
+    if (closeFirst) {
+      fireEvent.click(view.getByRole("button", { name: "Close" }));
+      fireEvent.click(
+        view.getByRole("button", { name: "View photo preparation details" }),
+      );
+    }
+    fireEvent.click(view.getByRole("button", { name: "Retry failed photos" }));
+    await waitFor(() =>
+      expect(
+        view.container.querySelector('img[src="/recovered-saved-photo.png"]'),
+      ).toBeTruthy(),
+    );
+    expect(
+      view.queryByRole("dialog", { name: "Photo preparation needs attention" }),
+    ).toBeNull();
+    expect(
+      fetchMock.mock.calls.filter(([input]) =>
+        String(input).includes("/api/ai/cutouts/reuse"),
+      ),
+    ).toHaveLength(2);
+    expect(requestAi).not.toHaveBeenCalled();
+    expect(imageOrientation).not.toHaveBeenCalled();
+  },
+);

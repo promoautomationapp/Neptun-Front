@@ -207,3 +207,37 @@ export function fitPhotoAroundArtwork(
   }
   return best;
 }
+
+/** Move a readable badge into existing whitespace before reducing any product photo. */
+export function fitSavingsBesidePhotos(
+  requested: ArtworkRect,
+  bounds: ArtworkRect,
+  prices: ArtworkRect[],
+  photos: ArtworkRect[],
+  gap = 3,
+): PhotoFit | null {
+  const beside = fitPhotoAroundArtwork(
+    requested,
+    bounds,
+    [...prices, ...photos],
+    gap,
+  );
+  if (beside && beside.scale >= 0.999999) return beside;
+  // Keep the amount readable when a very large/manual photo fills every corner.
+  // The Apple photo pass can then reserve this badge's small footprint.
+  return fitPhotoAroundArtwork(requested, bounds, prices, gap);
+}
+
+/** The transparent canvas may extend well beyond an already fitted product. */
+export function visiblePhotoFootprint(
+  canvas: ArtworkRect,
+  visible?: { left: number; top: number; right: number; bottom: number } | null,
+): ArtworkRect {
+  if (!visible) return canvas;
+  return {
+    x: canvas.x + canvas.width * visible.left,
+    y: canvas.y + canvas.height * visible.top,
+    width: canvas.width * (visible.right - visible.left),
+    height: canvas.height * (visible.bottom - visible.top),
+  };
+}

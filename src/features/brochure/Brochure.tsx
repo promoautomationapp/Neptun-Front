@@ -1182,6 +1182,10 @@ function LargeBundleProductCard(props: ProductCardProps) {
         }
       />
       <ApplePhotoClearance photoAreaRef={photoAreaRef} />
+      <DefaultSavingsClearance
+        photoAreaRef={photoAreaRef}
+        enabled={!contentPlacement.saving && !hasApplePhotos(product)}
+      />
     </article>
   );
 }
@@ -1240,6 +1244,8 @@ function StandardProductCard({
   const screenInches = tvScreenInches(product);
   const otherInches = otherScreenInches(product);
   const phoneCorner = usesPhoneCornerAnnotation(product);
+  const allowScreenArtwork =
+    !hasApplePhotos(product) && hasEditableScreen(product);
   const inches = screenInches || otherInches;
   const detailPlacement = defaultProductDetailPlacement(product, campaign);
   const productDesign = productDesignFor(campaign);
@@ -1483,6 +1489,7 @@ function StandardProductCard({
   );
   React.useLayoutEffect(() => {
     if (
+      !allowScreenArtwork ||
       !product.screenArtwork?.image ||
       !wrapRef.current ||
       !imageRef.current
@@ -1530,6 +1537,7 @@ function StandardProductCard({
       card?.removeEventListener("brochure-photo-clearance", update);
     };
   }, [
+    allowScreenArtwork,
     product.screenArtwork,
     product.image,
     imageReady,
@@ -1825,19 +1833,21 @@ function StandardProductCard({
           ) : (
             <div className="brochure-image-empty">Foto e produktit</div>
           ))}
-        {product.screenArtwork?.image && screenOverlay && (
-          <img
-            className="brochure-screen-image"
-            src={product.screenArtwork.image}
-            alt=""
-            aria-hidden="true"
-            style={{
-              ...screenOverlay,
-              objectFit: product.screenArtwork.fit || "cover",
-              background: "#000",
-            }}
-          />
-        )}
+        {allowScreenArtwork &&
+          product.screenArtwork?.image &&
+          screenOverlay && (
+            <img
+              className="brochure-screen-image"
+              src={product.screenArtwork.image}
+              alt=""
+              aria-hidden="true"
+              style={{
+                ...screenOverlay,
+                objectFit: product.screenArtwork.fit || "cover",
+                background: "#000",
+              }}
+            />
+          )}
         {inches &&
           (!screenInches ||
             product.screenArtwork?.image ||

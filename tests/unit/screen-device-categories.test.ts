@@ -128,6 +128,7 @@ describe("localized screen device categories", () => {
           screenAnnotationPlacement: { x: 0, y: 0, scale: 1.8 },
         };
         expect(otherScreenInches(product)).toBeNull();
+        expect(hasEditableScreen(product)).toBe(false);
         expect(tvScreenInches(product)).toBeNull();
         expect(screenAnnotationType(product)).toBe("none");
       }

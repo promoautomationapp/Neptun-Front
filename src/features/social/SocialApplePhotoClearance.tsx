@@ -3,6 +3,8 @@ import { APPLE_PHOTO_CLEARANCE_EVENT } from "../brochure/ApplePhotoClearance";
 import {
   fitArtworkInside,
   fitPhotoAroundArtwork,
+  fitSavingsBesidePhotos,
+  visiblePhotoFootprint,
   insetArtworkRect,
   projectNativeArtworkRect,
   unionArtworkRects,
@@ -11,6 +13,7 @@ import {
 } from "../brochure/applePhotoGeometry";
 import { requestedLayoutChanged } from "../brochure/layoutObservation";
 import redGeometry from "../brochure/redPriceGeometry.json";
+import { visibleImageBounds } from "../brochure/screenGeometry";
 
 type StyledElement = HTMLElement | SVGElement;
 const PHOTO_SELECTOR =
@@ -155,12 +158,15 @@ export function SocialApplePhotoClearance() {
                   : value?.endsWith("px")
                     ? Number.parseFloat(value)
                     : space / 2;
-          const drawn = {
-            x: rect.x + offset(position[0], rect.width - width),
-            y: rect.y + offset(position[1], rect.height - height),
-            width,
-            height,
-          };
+          const drawn = visiblePhotoFootprint(
+            {
+              x: rect.x + offset(position[0], rect.width - width),
+              y: rect.y + offset(position[1], rect.height - height),
+              width,
+              height,
+            },
+            visibleImageBounds(image),
+          );
           const shadow = style.filter.includes("drop-shadow")
             ? [...style.filter.matchAll(/(-?\d*\.?\d+)px/g)].map((match) =>
                 Number(match[1]),
@@ -176,8 +182,8 @@ export function SocialApplePhotoClearance() {
           return {
             x: drawn.x - left,
             y: drawn.y - top,
-            width: width + left + Math.max(0, extent + dx),
-            height: height + top + Math.max(0, extent + dy),
+            width: drawn.width + left + Math.max(0, extent + dx),
+            height: drawn.height + top + Math.max(0, extent + dy),
           };
         };
         const targets = [
@@ -285,6 +291,24 @@ export function SocialApplePhotoClearance() {
           if (scaled)
             element.style.translate = `${fit.rect.x - scaled.x}px ${fit.rect.y - scaled.y}px`;
         };
+        for (const saving of artwork.filter((element) =>
+          element.matches(".social-savings-block"),
+        )) {
+          const requested = unionArtworkRects(painted(saving));
+          const obstacles = artwork
+            .filter((element) => element !== saving)
+            .flatMap(painted);
+          const fit =
+            requested &&
+            fitSavingsBesidePhotos(
+              requested,
+              canvasBounds,
+              obstacles,
+              targets.map((target) => target.requested),
+              gap,
+            );
+          if (fit) apply(saving, fit, () => unionArtworkRects(painted(saving)));
+        }
         const obstacles = () => artwork.flatMap(painted);
         const fits = () =>
           targets.map((target) =>

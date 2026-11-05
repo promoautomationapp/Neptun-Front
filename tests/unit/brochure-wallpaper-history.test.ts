@@ -115,6 +115,26 @@ it("missing products and an all-scope laptop edit never change unrelated TV wall
   expect(value).toEqual(before);
 });
 
+it("excludes Apple photos from screen editing and all-TV wallpaper targets", () => {
+  const value = brochure();
+  const apple: Product = {
+    ...television("apple"),
+    brand: "Apple",
+    name: "iPad Air",
+    screenArtwork: wallpaper,
+  };
+  value.products.push(apple);
+  expect(
+    campaignTelevisions(value).some((product) => product.code === "apple"),
+  ).toBe(false);
+  expect(applyTvWallpaper(value, "apple", { image: "/new.jpg" })).toBe(0);
+  expect(apple.screenArtwork).toBe(wallpaper);
+  expect(applyTvWallpaper(value, "one", { image: "/new.jpg" }, "all")).toBe(2);
+  expect(apple.screenArtwork).toBe(wallpaper);
+  expect(applyTvWallpaper(value, "apple", null)).toBe(1);
+  expect(apple.screenArtwork).toBeUndefined();
+});
+
 it("four undo and redo steps recover wallpapers, format, cover and last-page footer while retaining the current save version", () => {
   const history = createCampaignEditHistory();
   let current = brochure();

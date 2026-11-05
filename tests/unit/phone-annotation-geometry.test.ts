@@ -7,14 +7,22 @@ import {
   usesPhoneCornerAnnotation,
 } from "../../src/features/brochure/screenAnnotationGeometry";
 
-it("places the phone corner proportionally inside the visible upper-right photo bounds", () => {
+it("places phone measurements outside the visible photograph instead of covering its corner", () => {
   const photo = { left: 40, top: 20, width: 240, height: 400 };
   const base = phoneAnnotationBaseBox(photo);
-  expect(base).toEqual({ left: 220, top: 20, width: 60, height: 60 });
+  expect(base).toEqual(otherScreenAnnotationBaseBox(photo));
   const rendered = renderedScreenAnnotationBox(base, 1080, "phone");
-  expect(rendered.left + rendered.width).toBeLessThan(photo.left + photo.width);
-  expect(rendered.top).toBeGreaterThan(photo.top);
-  expect(rendered.top + rendered.height).toBeLessThan(photo.top + photo.height);
+  const verticalX =
+    rendered.left + (rendered.width * 33.3868950515) / 67.1693479534;
+  const guideY =
+    rendered.top + (rendered.width * 25.7483815485) / 67.1693479534;
+  expect(verticalX).toBeGreaterThan(photo.left + photo.width);
+  expect(guideY).toBeLessThan(photo.top);
+  expect(resolveScreenAnnotationPlacement("phone")).toMatchObject({
+    x: 0,
+    y: 0,
+    scale: 1,
+  });
 });
 
 it("honors saved phone edits, including zero coordinates and hidden state", () => {
@@ -39,7 +47,7 @@ it("honors saved phone edits, including zero coordinates and hidden state", () =
   expect(small.width * 2).toBe(large.width);
 });
 
-it("uses the phone corner only for non-Apple phones, excluding compatible accessories and other screens", () => {
+it("uses phone measurement geometry only for non-Apple phones, excluding compatible accessories and other screens", () => {
   expect(
     usesPhoneCornerAnnotation({
       name: "Samsung Galaxy A17",
@@ -93,14 +101,16 @@ it("scales the entire tablet/laptop guide with a resized photo on the same page"
   expect(otherScreenAnnotationBaseBox(photo)).toEqual(base);
 });
 
-it("caps the phone corner by handset height for compound front/back photographs", () => {
+it("keeps phone measurements external and scales them with compound front/back photographs", () => {
   const single = { left: 30, top: 50, width: 240, height: 400 };
   const compound = { ...single, width: 480 };
   const base = phoneAnnotationBaseBox(single);
   const combined = phoneAnnotationBaseBox(compound);
-  expect(combined.width).toBe(base.width);
-  expect(combined.height).toBe(base.height);
-  expect(combined.left + combined.width).toBe(compound.left + compound.width);
+  expect(combined.width).toBeGreaterThan(base.width);
+  expect(combined.top).toBeLessThan(compound.top);
+  const verticalX =
+    combined.left + (combined.width * 33.3868950515) / 67.1693479534;
+  expect(verticalX).toBeGreaterThan(compound.left + compound.width);
   const resized = phoneAnnotationBaseBox({
     ...compound,
     width: 240,

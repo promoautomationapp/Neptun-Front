@@ -1,9 +1,12 @@
 import { useLayoutEffect, type RefObject } from "react";
 import { requestedLayoutChanged } from "./layoutObservation";
 import redGeometry from "./redPriceGeometry.json";
+import { visibleImageBounds } from "./screenGeometry";
 import {
   fitArtworkInside,
   fitPhotoAroundArtwork,
+  fitSavingsBesidePhotos,
+  visiblePhotoFootprint,
   projectNativeArtworkRect,
   unionArtworkRects,
   type ArtworkRect,
@@ -151,12 +154,15 @@ export function ApplePhotoClearance({
           const position = (style.objectPosition || "50% 50%")
             .trim()
             .split(/\s+/);
-          const drawn = {
-            x: rect.x + objectPosition(position[0], rect.width - width),
-            y: rect.y + objectPosition(position[1], rect.height - height),
-            width,
-            height,
-          };
+          const drawn = visiblePhotoFootprint(
+            {
+              x: rect.x + objectPosition(position[0], rect.width - width),
+              y: rect.y + objectPosition(position[1], rect.height - height),
+              width,
+              height,
+            },
+            visibleImageBounds(image),
+          );
           const shadow = style.filter.includes("drop-shadow")
             ? [...style.filter.matchAll(/(-?\d*\.?\d+)px/g)].map((match) =>
                 Number(match[1]),
@@ -406,7 +412,15 @@ export function ApplePhotoClearance({
         for (const saving of separateSavings) {
           const requested = groupRect(saving);
           const bounds = area.contains(saving) ? photoBounds : cardBounds;
-          const fit = requested && fitArtworkInside(requested, bounds);
+          const fit =
+            requested &&
+            fitSavingsBesidePhotos(
+              requested,
+              bounds,
+              prices.flatMap(paintedRects),
+              targets.map((target) => target.requested),
+              gap,
+            );
           if (fit) applyFit(saving, fit, () => groupRect(saving));
         }
         const obstacles = () => [

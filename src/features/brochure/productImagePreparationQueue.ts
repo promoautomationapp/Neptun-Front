@@ -80,6 +80,70 @@ export function retainPreparedProductPhoto(
   previous: Product | undefined,
   incoming: Product,
 ): Product {
+  const identity = (value: unknown) =>
+    String(value ?? "")
+      .normalize("NFKC")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  const photoName = (product: Product) => {
+    const variant = product.brochureVariants?.find(
+      (choice) => identity(choice.code) === identity(product.code),
+    );
+    return identity(
+      typeof variant?.name === "string" ? variant.name : product.name,
+    );
+  };
+  const sameMissingPhotoProduct = (left: Product, right: Product): boolean => {
+    if (
+      !identity(left.code) ||
+      identity(left.code) !== identity(right.code) ||
+      !photoName(left) ||
+      photoName(left) !== photoName(right) ||
+      (left.brand &&
+        right.brand &&
+        identity(left.brand) !== identity(right.brand))
+    )
+      return false;
+    const facts = (product: Product) =>
+      new Map(
+        Object.entries(product.specs || {}).flatMap(([key, value]) => {
+          const name = identity(key);
+          if (
+            !/model|mpn|ean|barcode|colou?r|ngjyr|selected variant|capacity|storage|memori|ram|screen|ekran/.test(
+              name,
+            )
+          )
+            return [];
+          const field = /model|mpn/.test(name)
+            ? "model"
+            : /colou?r|ngjyr|selected variant/.test(name)
+              ? "color"
+              : /ean|barcode/.test(name)
+                ? "ean"
+                : name;
+          return [[field, identity(value)] as const];
+        }),
+      );
+    const before = facts(left);
+    if (
+      [...facts(right)].some(
+        ([key, value]) => before.has(key) && before.get(key) !== value,
+      )
+    )
+      return false;
+    const leftMembers = left.bundleProducts || [];
+    const rightMembers = right.bundleProducts || [];
+    return (
+      leftMembers.length === rightMembers.length &&
+      rightMembers.every((member) => {
+        const prior = leftMembers.find(
+          (item) => identity(item.code) === identity(member.code),
+        );
+        return Boolean(prior && sameMissingPhotoProduct(prior, member));
+      })
+    );
+  };
   let next = incoming;
   if (previous?.bundleProducts?.length && incoming.bundleProducts?.length) {
     const members = new Map(
@@ -93,9 +157,33 @@ export function retainPreparedProductPhoto(
       })),
     };
   }
-  if (!previous?.image || !incoming.image) return next;
-  if (![previous.image, previous.aiOriginalImage].includes(incoming.image)) {
+  if (!previous?.image) return next;
+  // An identical Excel-only item has no catalog photo to supply on reimport.
+  // Keep its verified result rather than discarding it and searching again.
+  const missingImportedPhoto =
+    !incoming.image &&
+    !incoming.localImage &&
+    !incoming.imageUrl &&
+    incoming.catalogMissing === true &&
+    Boolean(incoming.excelSource || incoming.source === "import") &&
+    incoming.aiCutoutValidated !== false &&
+    Boolean(
+      previous.aiOriginalImage &&
+      previous.aiCutoutValidated === true &&
+      (previous.aiCutoutValidationVersion ?? 0) >= 1 &&
+      sameMissingPhotoProduct(previous, incoming),
+    );
+  if (
+    !missingImportedPhoto &&
+    (!incoming.image ||
+      ![previous.image, previous.aiOriginalImage].includes(incoming.image))
+  ) {
     const replaced = { ...next };
+    if (!incoming.image) {
+      replaced.image = "";
+      replaced.localImage = incoming.localImage || "";
+      replaced.imageUrl = incoming.imageUrl || "";
+    }
     for (const field of ["aiOriginalImage", ...metadataFields] as const)
       if (Object.hasOwn(previous, field) && !Object.hasOwn(next, field))
         Object.assign(replaced, { [field]: undefined });

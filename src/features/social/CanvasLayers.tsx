@@ -86,6 +86,7 @@ import { isBundleOffer } from "../brochure/productBundles";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   defaultProductImageScale,
+  hasEditableScreen,
   otherScreenInches,
   tvScreenInches,
 } from "../brochure/tvSpecs";
@@ -520,6 +521,8 @@ export function SocialProductVisual({
     null,
   );
   const tvInches = tvScreenInches(product);
+  const allowScreenArtwork =
+    !hasApplePhotos(product) && hasEditableScreen(product);
   const otherInches = otherScreenInches(product);
   const defaultScale = defaultProductImageScale(product);
   const [fittedPhoto, setFittedPhoto] = useState<{
@@ -659,9 +662,10 @@ export function SocialProductVisual({
         left: `${((left + contentWidth) / parent.width) * 100}%`,
         top: `${((top + contentHeight) / parent.height) * 100}%`,
       });
-      const box = product.screenArtwork?.image
-        ? televisionScreenBox(product, img)
-        : null;
+      const box =
+        allowScreenArtwork && product.screenArtwork?.image
+          ? televisionScreenBox(product, img)
+          : null;
       setOverlay(
         box && product.screenArtwork?.image
           ? {
@@ -710,6 +714,7 @@ export function SocialProductVisual({
     };
   }, [
     image,
+    allowScreenArtwork,
     product.screenArtwork,
     product.postImagePlacement,
     fittedPhoto,
@@ -781,7 +786,7 @@ export function SocialProductVisual({
           ↘
         </button>
       )}
-      {showImage && overlay && (
+      {showImage && allowScreenArtwork && overlay && (
         <img
           className="social-product-screen-image"
           src={product.screenArtwork?.image}

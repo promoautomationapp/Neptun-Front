@@ -1,0 +1,264 @@
+/* Compact application header; no selectors reach exported brochure artwork. */
+.campaign-app .cs-editor-header {
+  padding: 0 0 12px;
+}
+.campaign-app .cs-editor-header .cs-editor-hero-actions {
+  min-height: 30px;
+  margin: 0 0 10px;
+  gap: 12px;
+}
+.cs-editor-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 9px;
+  color: var(--np-muted, #71849a);
+  font-size: 11px;
+}
+.campaign-app .cs-editor-breadcrumbs button {
+  min-height: 30px;
+  padding: 3px 0;
+  flex: none;
+  color: var(--np-muted, #60758a);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cs-editor-breadcrumbs > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.campaign-app .cs-editor-header .cs-start-new {
+  min-height: 30px;
+  padding: 5px 9px;
+  flex: none;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.cs-editor-campaign-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.cs-editor-campaign-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cs-editor-campaign-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+.campaign-app .cs-editor-campaign-identity h1 {
+  margin: 0;
+  color: var(--np-text, #173d60);
+  font-size: clamp(19px, 1.8vw, 24px);
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  overflow-wrap: anywhere;
+}
+.campaign-app .cs-editor-header .cs-editor-progress {
+  margin: 0;
+  gap: 5px;
+}
+.campaign-app .cs-editor-header .cs-editor-progress > span {
+  padding: 3px 7px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.campaign-app .cs-editor-header .cs-editor-campaign-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 0;
+  margin: 5px 0 0;
+  color: var(--np-muted, #71849a);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.cs-editor-campaign-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cs-editor-campaign-meta > span + span::before {
+  content: "·";
+  margin: 0 7px;
+  color: var(--np-muted, #71849a);
+}
+.cs-editor-campaign-meta .cs-editor-saved {
+  color: var(--np-muted, #567985);
+}
+.cs-editor-campaign-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.campaign-app .cs-editor-campaign-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--np-border, #cddde9);
+  border-radius: 7px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #245477);
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.campaign-app .cs-editor-campaign-actions > button:hover:not(:disabled) {
+  background: var(--np-raised, #edf5fb);
+  border-color: var(--np-accent, #8cb6d6);
+  transform: none;
+}
+.campaign-app .cs-editor-campaign-actions > button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.campaign-app .cs-editor-campaign-actions > .cs-social-shortcut {
+  background: var(--np-selected, #eaf4fb);
+  color: var(--np-accent, #1b6a9f);
+}
+.campaign-app .cs-editor > .cs-editor-tabs {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.campaign-app .cs-editor-tabs > button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 9px 0;
+  white-space: nowrap;
+}
+.campaign-app .cs-editor-tabs > button > span {
+  display: inline;
+  margin-left: 6px;
+  font-size: 12px;
+}
+.campaign-app .cs-editor-tabs > .cs-campaign-history {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
+  padding: 0;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+.campaign-app .cs-editor-tabs .cs-campaign-history button {
+  min-height: 30px;
+  padding: 5px 7px;
+  font-size: 10px;
+}
+.campaign-app .cs-editor .cs-editor-section {
+  padding-top: 12px;
+}
+.campaign-app .cs-editor .cs-editor-section-head {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+.cs-brochure-section-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.campaign-app .cs-editor-section-head .cs-brochure-section-title h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.4px;
+}
+.cs-brochure-page-count {
+  color: var(--np-muted, #71849a);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.campaign-app .cs-editor .cs-brochure-header-actions {
+  margin-left: auto;
+  gap: 5px;
+}
+.campaign-app .cs-editor .cs-brochure-header-actions > .cs-button,
+.campaign-app .cs-editor .cs-brochure-header-actions > details > summary {
+  min-height: 32px;
+  padding: 6px 9px;
+  font-size: 11px;
+}
+@media (max-width: 1100px) {
+  .cs-editor-campaign-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .cs-editor-campaign-actions {
+    margin-left: auto;
+  }
+  .campaign-app .cs-editor-tabs .cs-history-limit {
+    display: none;
+  }
+}
+@media (max-width: 620px) {
+  .campaign-app .cs-editor-header .cs-editor-hero-actions {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .cs-editor-breadcrumbs {
+    gap: 5px;
+    font-size: 10px;
+  }
+  .campaign-app .cs-editor-breadcrumbs button,
+  .campaign-app .cs-editor-header .cs-start-new {
+    min-height: 36px;
+    font-size: 10px;
+  }
+  .campaign-app .cs-editor-header .cs-start-new {
+    padding-inline: 7px;
+  }
+  .cs-editor-campaign-summary {
+    flex-basis: 100%;
+  }
+  .cs-editor-campaign-actions {
+    margin: 0;
+    justify-content: flex-start;
+  }
+  .campaign-app .cs-editor-campaign-actions > button {
+    min-height: 36px;
+    white-space: normal;
+  }
+  .campaign-app .cs-editor > .cs-editor-tabs {
+    gap: 4px 12px;
+  }
+  .campaign-app .cs-editor-tabs > button {
+    min-height: 40px;
+    font-size: 10px;
+  }
+  .campaign-app .cs-editor-tabs > button > span {
+    font-size: 11px;
+  }
+  .campaign-app .cs-editor-tabs .cs-campaign-history button {
+    min-height: 36px;
+  }
+  .campaign-app .cs-editor .cs-editor-section-head {
+    gap: 8px;
+  }
+  .campaign-app .cs-editor .cs-brochure-header-actions {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+  .campaign-app .cs-editor .cs-brochure-header-actions > .cs-button,
+  .campaign-app .cs-editor .cs-brochure-header-actions > details > summary {
+    min-height: 36px;
+    padding: 7px 8px;
+  }
+}
