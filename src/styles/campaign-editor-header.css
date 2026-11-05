@@ -156,6 +156,12 @@
   gap: 5px;
   flex-wrap: nowrap;
 }
+.campaign-app
+  .cs-editor-tabs
+  > .cs-photo-progress.is-inline
+  + .cs-campaign-history {
+  margin-left: 0;
+}
 .campaign-app .cs-editor-tabs .cs-campaign-history button {
   min-height: 30px;
   padding: 5px 7px;
@@ -245,6 +251,12 @@
   }
   .campaign-app .cs-editor-tabs > button > span {
     font-size: 11px;
+  }
+  .campaign-app
+    .cs-editor-tabs
+    > .cs-photo-progress.is-inline
+    + .cs-campaign-history {
+    margin-left: 0;
   }
   .campaign-app .cs-editor-tabs .cs-campaign-history button {
     min-height: 36px;

@@ -75,71 +75,116 @@
   line-height: 0.8;
 }
 .campaign-app .cs-photo-progress.is-inline {
-  flex: 1 1 230px;
+  flex: 0 1 auto;
   min-width: 0;
-  max-width: 370px;
-  margin: 0;
+  max-width: 100%;
+  margin: 0 0 0 auto;
 }
 .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-notice {
   gap: 7px;
-  min-height: 34px;
+  min-height: 28px;
   padding: 5px 8px;
-  border: 1px solid var(--np-border, #d6e3f0);
-  border-radius: 7px;
-  background: var(--np-surface, #fff);
+  border: 0;
+  border-radius: 8px;
+  background: #e8f1ff;
+  color: #344f75;
   font-size: 11px;
   font-weight: 400;
 }
-.campaign-app
-  .cs-photo-progress.is-inline.needs-attention
-  .cs-photo-progress-notice {
-  border-color: #ead7b3;
-  background: #fff9ed;
-  color: #8a5b19;
+.campaign-app .cs-photo-progress.is-inline .cs-photo-progress-notice:hover {
+  background: #dceaff;
 }
 .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-copy {
-  display: grid;
-  align-items: center;
-  gap: 1px;
-}
-.campaign-app .cs-photo-progress.is-inline .cs-photo-progress-copy > strong {
-  font-size: 11px;
-  line-height: 1.25;
-}
-.campaign-app .cs-photo-progress.is-inline .cs-photo-progress-copy > span {
   display: block;
   margin: 0;
-  font-size: 10px;
-  line-height: 1.25;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-copy
+  > [role="status"] {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-copy
+  [role="status"]
+  > :is(strong, span) {
+  display: inline;
+  margin: 0;
+}
+.campaign-app .cs-photo-progress.is-inline .cs-photo-progress-copy strong {
+  font-weight: 700;
+}
+.campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-copy
+  [role="status"]
+  > span {
+  color: #70819a;
 }
 .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-icon {
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   margin: 0;
-  font-size: 13px;
+  background: #2a62bc;
+  color: #fff;
+  font:
+    700 11px/1 Arial,
+    sans-serif;
 }
 .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-view {
   display: inline-flex;
+  gap: 3px;
   margin: 0;
+  color: #2a62bc;
+  font-size: 11px;
 }
 .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-view > span {
   display: inline;
   margin: 0;
-  font-size: 20px;
+  font-size: 16px;
 }
 html[data-theme="dark"]
   .campaign-app
-  .cs-photo-progress.is-inline.needs-attention
+  .cs-photo-progress.is-inline
   .cs-photo-progress-notice {
-  border-color: #69552f;
-  background: #3b3325;
-  color: #f4d292;
+  background: #203b60;
+  color: #d4e6ff;
+}
+html[data-theme="dark"]
+  .campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-notice:hover {
+  background: #294971;
+}
+html[data-theme="dark"]
+  .campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-copy
+  [role="status"]
+  > span {
+  color: #b5c8e0;
+}
+html[data-theme="dark"]
+  .campaign-app
+  .cs-photo-progress.is-inline
+  .cs-photo-progress-view {
+  color: #9bc7ff;
 }
 @media (max-width: 620px) {
   .campaign-app .cs-photo-progress.is-inline {
-    flex-basis: 180px;
-    max-width: none;
+    margin-left: 0;
   }
   .campaign-app .cs-photo-progress.is-inline .cs-photo-progress-notice {
     min-height: 36px;

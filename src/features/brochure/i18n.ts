@@ -2964,6 +2964,8 @@ const translations: Record<string, string> = {
   "One featured product above the rest": "Një produkt i veçuar mbi të tjerët",
   "Prepared photos": "Foto të përgatitura",
   "Original photos": "Foto me sfond origjinal",
+  "photos missing": "foto mungojnë",
+  "still original": "me sfond origjinal",
   "Missing photos": "Foto që mungojnë",
   "Photos selected for preparation": "Foto të zgjedhura për përgatitje",
   "Photos needing preparation": "Foto që duhen përgatitur",

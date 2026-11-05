@@ -45,6 +45,7 @@ it("keeps the editor notice compact and puts progress/actions in a closable dial
     name: "View photo preparation details",
   });
   expect(view.container.querySelectorAll("button")).toHaveLength(1);
+  expect(notice.textContent).toContain("View details");
   expect(view.queryByRole("progressbar")).toBeNull();
   expect(view.queryByText(/Your brochure stays editable/)).toBeNull();
   notice.focus();

@@ -213,17 +213,54 @@ export function PhotoPreparationProgress({
           title={`${t(title)}${summary ? ` · ${summary}` : ""}`}
         >
           <span className="cs-photo-progress-icon" aria-hidden="true">
-            {busy ? "◌" : needsAttention ? "!" : "✓"}
+            {busy
+              ? "◌"
+              : variant === "inline" && needsAttention
+                ? "i"
+                : needsAttention
+                  ? "!"
+                  : "✓"}
           </span>
           <span className="cs-photo-progress-copy">
-            <strong>{t(title)}</strong>
-            <span role="status" aria-live="polite">
-              {summary}
-            </span>
+            {variant === "inline" ? (
+              <span role="status" aria-live="polite" aria-atomic="true">
+                {busy ? (
+                  <strong>{t(title)}</strong>
+                ) : needsAttention ? (
+                  [
+                    missing.length
+                      ? `${missing.length} ${t("photos missing")}`
+                      : "",
+                    originals.length
+                      ? `${originals.length} ${t("still original")}`
+                      : "",
+                    failed.length
+                      ? `${failed.length} ${t("need attention")}`
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .map((label, index) =>
+                      index === 0 ? (
+                        <strong key={label}>{label}</strong>
+                      ) : (
+                        <span key={label}> · {label}</span>
+                      ),
+                    )
+                ) : (
+                  <strong>{t(title)}</strong>
+                )}
+              </span>
+            ) : (
+              <>
+                <strong>{t(title)}</strong>
+                <span role="status" aria-live="polite">
+                  {summary}
+                </span>
+              </>
+            )}
           </span>
           <span className="cs-photo-progress-view">
-            {variant !== "inline" && t("View details")}{" "}
-            <span aria-hidden="true">›</span>
+            {t("View details")} <span aria-hidden="true">›</span>
           </span>
         </button>
       </section>
