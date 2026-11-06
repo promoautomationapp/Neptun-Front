@@ -104,7 +104,7 @@ it("asks whether to use a wallpaper on one TV or all TVs before saving", async (
   fireEvent.click(view.getByRole("button", { name: "All TVs (3)" }));
   await waitFor(() =>
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ image: "/wallpaper.jpg", fit: "contain" }),
+      expect.objectContaining({ image: "/wallpaper.jpg", fit: "cover" }),
       "all",
       expect.objectContaining({ fits: expect.any(Array), unfittedCodes: [] }),
     ),
@@ -482,6 +482,7 @@ it("switches the selected TV's photo, wallpaper, fit and scope together", () => 
     screenArtwork: {
       image: "/second-wallpaper.jpg",
       fit: "contain" as const,
+      fitExplicit: true,
       box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 },
     },
   };

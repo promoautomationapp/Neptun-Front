@@ -175,6 +175,7 @@ it("keeps an unrecognized screen original and honors whole-image or fill choices
             screenArtwork: {
               ...product.screenArtwork,
               fit,
+              ...(fit === "contain" ? { fitExplicit: true } : {}),
               ...(fitted
                 ? { box: { x: 0.1, y: 0.1, width: 0.8, height: 0.6 } }
                 : {}),
@@ -196,6 +197,8 @@ it("keeps an unrecognized screen original and honors whole-image or fill choices
   )!;
   expect(overlay.style.width).toBe("80%");
   expect(overlay.style.height).toBe("60%");
+  expect(overlay.style.objectFit).toBe("cover");
+  view.rerender(canvas("contain", true));
   expect(overlay.style.objectFit).toBe("contain");
   view.rerender(canvas("cover", true));
   expect(overlay.style.objectFit).toBe("cover");
@@ -260,7 +263,7 @@ it("keeps the wallpaper and inch corner attached when the social TV photo is res
   view.rerender(visual(0.5));
   expect(parseFloat(wallpaper.style.width)).toBeCloseTo(width / 2);
   expect(parseFloat(inches.style.width)).toBeCloseTo(inchWidth / 2);
-  expect(wallpaper.style.objectFit).toBe("contain");
+  expect(wallpaper.style.objectFit).toBe("cover");
   expect(view.getByAltText("TV LED 55MODEL").getAttribute("src")).toBe(
     "/resize-tv.png",
   );

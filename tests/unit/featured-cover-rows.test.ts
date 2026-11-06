@@ -113,6 +113,18 @@ it.each(["pair", "row"])(
   },
 );
 
+it("retains an explicit side-by-side layout on other Hajde cover designs", () => {
+  const value = {
+    ...campaign(3),
+    brochurePresetId: "custom-blue",
+    coverProductLayout: "pair",
+  };
+  const cards = frames(value);
+  expect(cards[0]!.y).toBe(cards[1]!.y);
+  expect(cards[0]!.x).toBeLessThan(cards[1]!.x);
+  expect(isFeaturedCoverProduct(value, "offer-0", 0, 3)).toBe(false);
+});
+
 it("retains a manually chosen featured product", () => {
   const value = { ...campaign(3), coverBannerProductCode: "offer-1" };
   const cards = frames(value);
@@ -132,3 +144,34 @@ it("keeps the three-offer UUU cover horizontal", () => {
   expect(new Set(cards.map((card) => card.y)).size).toBe(1);
   expect(cards.every((card) => card.y >= 54)).toBe(true);
 });
+
+it.each(["#1b4075", "#e3e3e3"])(
+  "uses the same automatic featured rows on %s covers without a preset marker",
+  (coverBackgroundColor) => {
+    const values = [1, 2, 3, 4].map((count) => ({
+      ...campaign(count),
+      brochurePresetId: undefined,
+      brochureFooter: undefined,
+      coverBandVariant: undefined,
+      showCoverHeadline: false,
+      coverBackgroundColor,
+    }));
+    const first = frames(values[0]!)[0]!;
+    for (const value of values) {
+      const [top, ...bottom] = frames(value);
+      expect(resolvedCoverProductLayout(value, value.products.length)).toBe(
+        "hero",
+      );
+      expect(top).toEqual(first);
+      expect(
+        isFeaturedCoverProduct(value, "offer-0", 0, value.products.length),
+      ).toBe(true);
+      expect(top!.width).toBe(92);
+      for (const secondary of bottom)
+        expect(secondary.y).toBeGreaterThan(top!.y + top!.height);
+      if (bottom.length)
+        expect(new Set(bottom.map((frame) => frame.y)).size).toBe(1);
+      if (bottom.length === 1) expect(bottom[0]!.width).toBe(top!.width);
+    }
+  },
+);

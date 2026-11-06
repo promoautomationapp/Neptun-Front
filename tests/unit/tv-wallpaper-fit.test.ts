@@ -433,7 +433,7 @@ it("selects the fitted duplicate SKU by its effective photo for a single-TV edit
   expect(first.screenArtwork).toBeUndefined();
   expect(member.screenArtwork).toEqual({
     image: "/member-wallpaper.jpg",
-    fit: "contain",
+    fit: "cover",
     detectedFor: bundle.image,
     box,
   });

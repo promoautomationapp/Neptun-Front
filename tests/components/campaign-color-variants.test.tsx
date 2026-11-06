@@ -11,13 +11,14 @@ import { useCampaignEditHistory } from "../../src/features/brochure/useCampaignE
 afterEach(cleanup);
 const products: Product[] = ["GREEN", "GREY"].map((color, index) => ({
   code: `SKU${index}`,
-  name: `A37 5G 6/128 ${color}`,
+  name: `SAMSUNG ${index === 0 ? "SM-A376BDGBEUC" : "SM-A376BZABEUC"} A37 5G 6/128GB ${color}`,
   brand: "SAMSUNG",
   regular: 449,
   sale: 299,
   image: `/phone-${index}.png`,
   brochurePage: 1,
   brochureOrder: 1,
+  specs: { Model: index === 0 ? "SM-A376BDGBEUC" : "SM-A376BZABEUC" },
 }));
 
 it("shows one model, photo and shared price with two swatches in all five cover/interior designs", () => {

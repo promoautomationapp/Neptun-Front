@@ -19,6 +19,28 @@
   min-height: 0;
 }
 
+/* Two assigned offers share the same stacked composition in every design. */
+.brochure-page.brochure-interior.layout-pair2 > .brochure-products {
+  grid-template-columns: minmax(0, 1fr);
+}
+.brochure-page.brochure-interior.layout-pair2:not(.custom-card-layout) > .brochure-products > .brochure-product {
+  width: 72%;
+  justify-self: center;
+  min-width: 0;
+}
+.brochure-page.brochure-interior.layout-pair2:not(.custom-card-layout) .brochure-product-image {
+  width: 94%; max-width: 94%; height: 94%; max-height: 94%;
+}
+.brochure-product > .brochure-product-top-name {
+  display: block;
+  flex: none;
+  margin: 0 0 .8cqw;
+  color: inherit;
+  font: 500 1.65cqw/1.2 SkolaSans, Arial, sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 /* Keep 1, 12 and 100 on one line, with a consistent center at the rule. */
 .brochure-page.brochure-october .october-footer-number {
   width: 5.4cqw;

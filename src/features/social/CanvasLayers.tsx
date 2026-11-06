@@ -1,4 +1,5 @@
 import type { Placement, Product } from "../../domain/models";
+import { screenArtworkFit } from "../brochure/screenArtworkFit";
 import type { CSSProperties, ReactNode } from "react";
 export interface CanvasAssetPlacement {
   x: number;
@@ -801,7 +802,7 @@ export function SocialProductVisual({
           aria-hidden="true"
           style={{
             ...overlay,
-            objectFit: product.screenArtwork?.fit || "contain",
+            objectFit: screenArtworkFit(product),
             background: "#000",
           }}
         />

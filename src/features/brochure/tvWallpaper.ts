@@ -9,6 +9,7 @@ import { effectiveProductArtworks } from "./productArtwork";
 import { bundleMemberByCode } from "./bundleMemberUpdates";
 import { isBundleOffer } from "./productBundles";
 import { isAppleProduct } from "./productTypes";
+import { screenArtworkFit } from "./screenArtworkFit";
 
 type ProductCollection = Pick<Campaign, "products">;
 
@@ -124,7 +125,11 @@ export function applyTvWallpaper(
   let applied = 0;
   for (const product of targets) {
     if (screenArtwork && isAppleProduct(product)) continue;
-    if (screenArtwork == null) {
+    const artwork =
+      screenArtwork && isTelevision(product)
+        ? { ...screenArtwork, fit: screenArtworkFit(product, screenArtwork) }
+        : screenArtwork;
+    if (artwork == null) {
       delete product.screenArtwork;
     } else if (fitPlan) {
       const fitted = fitPlan.fits.find(
@@ -137,23 +142,26 @@ export function applyTvWallpaper(
       );
       if (!fitted) continue;
       product.screenArtwork = {
-        image: screenArtwork.image,
-        fit: screenArtwork.fit || "contain",
+        image: artwork.image,
+        fit: artwork.fit || "contain",
+        ...(artwork.fitExplicit ? { fitExplicit: true } : {}),
         box: { ...fitted.box },
         detectedFor: fitted.detectedFor,
       };
     } else if (product === selected) {
-      product.screenArtwork = structuredClone(screenArtwork);
+      product.screenArtwork = structuredClone(artwork);
     } else if (product.screenArtwork?.box) {
       product.screenArtwork = {
         ...product.screenArtwork,
-        image: screenArtwork.image,
-        ...(screenArtwork.fit ? { fit: screenArtwork.fit } : {}),
+        image: artwork.image,
+        ...(artwork.fit ? { fit: artwork.fit } : {}),
+        ...(artwork.fitExplicit ? { fitExplicit: true } : {}),
       };
     } else {
       product.screenArtwork = {
-        image: screenArtwork.image,
-        ...(screenArtwork.fit ? { fit: screenArtwork.fit } : {}),
+        image: artwork.image,
+        ...(artwork.fit ? { fit: artwork.fit } : {}),
+        ...(artwork.fitExplicit ? { fitExplicit: true } : {}),
       };
     }
     applied++;

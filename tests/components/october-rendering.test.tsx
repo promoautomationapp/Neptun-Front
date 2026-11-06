@@ -62,6 +62,18 @@ const page = (
   ...extra,
 });
 
+it("puts Apple product names above their photos when the page carries the brand header", () => {
+  const products = [product("ipad", { brand: "Apple", name: "IPAD APPLE 11 A16 256GB" }), product("ipad-pro", { brand: "Apple", name: "IPAD APPLE PRO 11 M5 256GB" })];
+  const view = render(<ProductPage campaign={campaign(products)} page={page(products, { layout: "pair2" })} />);
+  expect(view.getByAltText("Apple Authorised Reseller")).toBeTruthy();
+  const cards = [...view.container.querySelectorAll(".brochure-product")];
+  expect(cards).toHaveLength(2);
+  for (const card of cards) {
+    expect(card.querySelector(":scope > .brochure-product-top-name")).not.toBeNull();
+    expect(card.querySelector(".brochure-product-copy [data-product-name]")).toBeNull();
+  }
+});
+
 it("prints the shared category as editable text, leaves mixed-category ribbons blank and uses Apple artwork on Apple pages", () => {
   const products = [
     product("one"),

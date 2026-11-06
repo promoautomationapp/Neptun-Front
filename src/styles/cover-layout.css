@@ -282,13 +282,13 @@
 /* Give the automatic wide cover offer the available photo height and center
    its feature row. Saved content placements keep their original geometry. */
 .brochure-page.brochure-cover.cover-editable-elements
-  .cover-featured-product
+  :is(.cover-featured-product, .cover-product-wide-default)
   > .brochure-product[data-cover-card-default="true"]
   > .brochure-specs[data-detail-layout="strip"] {
   justify-content: center;
 }
 .brochure-page.brochure-cover.cover-editable-elements
-  .cover-featured-product
+  :is(.cover-featured-product, .cover-product-wide-default)
   > .brochure-product[data-cover-card-default="true"]
   > .brochure-product-image-wrap {
   flex: 1 1 auto;
@@ -297,14 +297,14 @@
   overflow: visible;
 }
 .brochure-page.brochure-cover.cover-editable-elements
-  .cover-featured-product
+  :is(.cover-featured-product, .cover-product-wide-default)
   > .brochure-product[data-cover-card-default="true"]
   > .brochure-product-bottom {
   height: 6.5cqw;
   min-height: 6.5cqw;
 }
 .brochure-page.brochure-cover.cover-editable-elements
-  .cover-featured-product
+  :is(.cover-featured-product, .cover-product-wide-default)
   > .brochure-product[data-cover-card-default="true"]
   .brochure-product-image {
   height: 112%;

@@ -524,6 +524,7 @@ export interface Artwork {
 }
 export interface ScreenArtwork {
   fit?: "contain" | "cover";
+  fitExplicit?: boolean;
   image?: string;
   box?: Box;
   scale?: number;

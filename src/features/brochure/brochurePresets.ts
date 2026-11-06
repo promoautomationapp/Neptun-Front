@@ -5,6 +5,7 @@ import type {
 } from "../../domain/models";
 import { campaignDefaults } from "../settings/campaign-defaults";
 import { materializeCampaignColorVariants } from "./campaignColorVariants";
+import { resetDefaultCoverProductPositions } from "./coverElements";
 import {
   BROCHURE_DESIGN_KEYS,
   resolveSettings,
@@ -63,7 +64,7 @@ const blueDesign: Partial<Campaign> = {
   autoProductLayout: true,
   productDesign: blueProductDesign,
   coverTemplate: "blueClean",
-  coverProductLayout: "pair",
+  coverProductLayout: "hero",
   coverLogoSource: "/brochure-presets/october/neptun-cover.svg",
   coverBrandTagline: "Jeto më mirë, çdo ditë.",
   brandAssets: {
@@ -345,6 +346,7 @@ export function applyBrochurePreset(
   preset: BrochurePresetDefinition,
 ): void {
   materializeCampaignColorVariants(campaign);
+  resetDefaultCoverProductPositions(campaign);
   Object.assign(campaign, brochureDesignSnapshot(preset.design), {
     brochurePresetId: preset.id,
   });

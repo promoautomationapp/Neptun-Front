@@ -23,6 +23,7 @@ import { Button, Modal } from "./Modals";
 import { readImage } from "./utils";
 import { t } from "./i18n";
 import { isTelevision } from "./tvSpecs";
+import { screenArtworkFit } from "./screenArtworkFit";
 import {
   savedScreenBoxForPhoto,
   detectedTelevisionScreenBox,
@@ -98,7 +99,7 @@ export function ScreenImageEditor({
     ).values(),
   ];
   const [fit, setFit] = useState<"contain" | "cover">(
-    product.screenArtwork?.fit || "contain",
+    screenArtworkFit(product),
   );
   const [screen, setScreen] = useState(product.screenArtwork?.image || "");
   const [box, setBox] = useState(
@@ -149,7 +150,7 @@ export function ScreenImageEditor({
     const saved = savedScreenBoxForPhoto(product);
     wallpaperSelection.current++;
     setScreen(product.screenArtwork?.image || "");
-    setFit(product.screenArtwork?.fit || "contain");
+    setFit(screenArtworkFit(product));
     setScopePrompt(null);
     setAdjusting(false);
     setBox(saved || defaultBox(product));
@@ -183,7 +184,7 @@ export function ScreenImageEditor({
     setSaving(true);
     setError("");
     try {
-      const artwork = { image: screen, box, detectedFor, fit };
+      const artwork = { image: screen, box, detectedFor, fit, fitExplicit: true };
       let plan: TvWallpaperFitPlan | undefined;
       if (television && !restoring) {
         const targets =
@@ -299,7 +300,7 @@ export function ScreenImageEditor({
     if (fitting.current) return;
     wallpaperSelection.current++;
     setScreen(image);
-    setFit("contain");
+    setFit(screenArtworkFit({ ...product, screenArtwork: undefined }));
     setError("");
   }
   async function choose(file: File | undefined) {
@@ -625,8 +626,8 @@ export function ScreenImageEditor({
                   setFit(event.target.value as "contain" | "cover")
                 }
               >
-                <option value="contain">{t("Show whole image")}</option>
                 <option value="cover">{t("Fill screen")}</option>
+                <option value="contain">{t("Show whole image")}</option>
               </SearchableSelect>
             </label>
             <p className="cs-screen-fit-help">

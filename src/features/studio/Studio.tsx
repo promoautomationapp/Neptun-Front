@@ -179,6 +179,7 @@ import {
 } from "../brochure/mergeCampaignSnapshots";
 import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
 import { brochureColorVariantCampaign } from "../brochure/campaignColorVariants";
+import { hasExcelPageAssignments, restoreExcelPageAssignments } from "../brochure/excelPageAssignments";
 import { mergeBrochureImportProducts } from "../brochure/brochureReimport";
 import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
 import {
@@ -1576,6 +1577,7 @@ function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
         className="cs-reference-preset"
         onClick={() =>
           onUpdate((draft) => {
+            const excelPages = hasExcelPageAssignments(draft);
             draft.brochureVisualStyle = "current";
             draft.brochurePresetId = "neptun-current";
             draft.offerStyle = "current";
@@ -1599,8 +1601,9 @@ function CoverTemplatePicker({ campaign, onUpdate }: CampaignControlsProps) {
             draft.productBackgroundGradient = {
               ...draft.coverBackgroundGradient,
             };
+            if (excelPages) restoreExcelPageAssignments(draft);
             for (const product of draft.products) {
-              delete product.brochurePage;
+              if (!excelPages) delete product.brochurePage;
               delete product.brochureCardSize;
               delete product.brochureImagePlacement;
               delete product.brochureContentPlacement;
@@ -2894,6 +2897,15 @@ export function BrochureEditor({
               <Button onClick={() => setShowGuides((value) => !value)}>
                 <NavIcon name="filter" size={16} />
                 {t(showGuides ? "Hide guides" : "Show guides")}
+              </Button>
+            )}
+            {canEditCanvas && hasExcelPageAssignments(campaign) && (
+              <Button onClick={() => {
+                onUpdate((draft) => { restoreExcelPageAssignments(draft); });
+                setSelected(-1);
+                onToast(t("Excel pages and order restored. Photos and prices were kept."));
+              }}>
+                {t("Restore Excel pages and order")}
               </Button>
             )}
             <Button

@@ -1,6 +1,6 @@
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 import type { Campaign } from "../../domain/models";
-import { coverProducts, isFeaturedProductCollection } from "./campaignPages";
+import { coverProducts } from "./campaignPages";
 import { isOctoberBrochure } from "./octoberDesign";
 
 export const COVER_TEXT_COLORS = [
@@ -83,14 +83,15 @@ export function isFeaturedCoverProduct(
   return campaign.coverBannerProductCode
     ? String(code) === String(campaign.coverBannerProductCode)
     : count > 0 &&
-        (count >= 3 || isFeaturedProductCollection(campaign)) &&
         index === 0 &&
         resolvedCoverProductLayout(campaign, count) === "hero";
 }
 
-export function resolvedCoverProductLayout(campaign: Campaign, count: number) {
+export function resolvedCoverProductLayout(campaign: Campaign, _count: number) {
   return (
     campaign.coverProductLayout ||
-    (isFeaturedProductCollection(campaign) || count >= 3 ? "hero" : "pair")
+    (campaign.showCoverBand === true || isOctoberBrochure(campaign)
+      ? "pair"
+      : "hero")
   );
 }

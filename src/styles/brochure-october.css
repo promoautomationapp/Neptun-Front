@@ -605,13 +605,13 @@
 .brochure-page.brochure-october.brochure-interior.layout-pair2
   .brochure-products
   > .brochure-product {
-  width: 63.5%;
+  width: 72%;
 }
 .brochure-page.brochure-october.layout-pair2 .brochure-product-image {
-  width: 74.5%;
-  max-width: 74.5%;
-  height: 74.5%;
-  max-height: 74.5%;
+  width: 94%;
+  max-width: 94%;
+  height: 94%;
+  max-height: 94%;
 }
 .brochure-page.brochure-october.layout-pair2
   .brochure-product-bottom

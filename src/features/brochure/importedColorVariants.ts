@@ -94,13 +94,18 @@ export function importedColor(value: unknown): ImportedColor | null {
 }
 
 function comparableModelCode(value: string, modelName = value) {
-  // These sheets include a finish-specific Samsung stock suffix as well as the
-  // shared named model. Keep the SM base and the full Buds/Watch generation and
-  // size; a different base or named model must never become a color choice.
-  return /\bsamsung\b/i.test(modelName) &&
-    /\b(?:buds|watch)\s*\d/i.test(modelName)
-    ? value.replace(/\b(sm-[rl]\d{3})[a-z0-9]{4,}\b/gi, "$1")
-    : value;
+  if (!/\bsamsung\b/i.test(modelName)) return value;
+  // Named generation, size and connectivity remain in the comparison. Only
+  // the finish/retail suffix changes: L350 vs L355 (LTE) and R390 vs R395 stay
+  // distinct. Phone hardware letters also remain: A376B must not become A376E.
+  if (/\b(?:buds|watch|fit)\s*\d/i.test(modelName))
+    return value.replace(/\b(sm-[rl]\d{3})[a-z0-9]{4,}\b/gi, "$1");
+  if (
+    /\b[afmsz]\d{2,3}\b/i.test(modelName) &&
+    /\b(?:\d+\s*\/\s*\d+|\d+\s*(?:gb|tb))\b/i.test(modelName)
+  )
+    return value.replace(/\b(sm-[afmsz]\d{3}[a-z])[a-z0-9]{4,}\b/gi, "$1");
+  return value;
 }
 
 /** Color and stock-condition labels are not model names. Capacities, sizes,
@@ -180,7 +185,10 @@ function variantSpecificFact(key: string) {
 }
 
 function comparableFact(product: Product, key: string, value: unknown) {
-  const text = comparableModelCode(normalize(String(value)), product.name);
+  const text = comparableModelCode(
+    normalize(String(value)),
+    `${product.brand || ""} ${product.name}`,
+  );
   return (/model/i.test(key) ? colorVariantName(text) : text).replace(
     /\s+/g,
     " ",

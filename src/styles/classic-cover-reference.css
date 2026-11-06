@@ -79,11 +79,21 @@
   line-height: 1.05;
 }
 
-/* One flowing sentence matches the printed footer and wraps naturally only
-   when the user supplies longer copy or enlarges either editable text field. */
-.brochure-page .brochure-footer-element .reference-offer-footer {
-  display: block;
-  padding-top: 0.8cqw;
+/* All payment footers share the page background. Keep the payment sentence
+   together at the left edge; validity can flow after it when space is tight. */
+.brochure-page .brochure-footer-element .brochure-offer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  gap: 0.25cqw 1.2cqw;
+  width: 100%;
+  margin: 0;
+  padding: 0.35cqw 1cqw;
+  background: transparent !important;
+  box-shadow: none;
+  border: 0;
   line-height: 1.25;
   font-family: inherit;
   font-weight: 400;
@@ -91,11 +101,43 @@
 }
 .brochure-page
   .brochure-footer-element
-  .reference-offer-footer
+  .brochure-offer-footer
   > :is(.brochure-footer-dates, .brochure-footer-payment) {
-  display: inline;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow-wrap: normal;
   font-weight: 400;
   line-height: inherit;
+}
+.brochure-page
+  .brochure-footer-element
+  .brochure-offer-footer
+  > .brochure-footer-payment {
+  order: -1;
+  max-width: none;
+  white-space: nowrap;
+  text-align: left;
+}
+.brochure-page
+  .brochure-footer-element
+  .brochure-offer-footer
+  > .brochure-footer-dates {
+  flex: 0 1 auto;
+}
+.brochure-page
+  .brochure-footer-element
+  .brochure-offer-footer
+  > .brochure-awards {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0;
+  margin-left: auto;
 }
 .brochure-page .brochure-footer-element .reference-offer-footer strong {
   font-weight: 900;

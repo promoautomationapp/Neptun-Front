@@ -116,6 +116,14 @@ export function automaticProductLayout(
   );
 }
 
+function sharesAssignedPage(products: readonly Product[]) {
+  const page = products[0]?.brochurePage;
+  return (
+    Number.isInteger(page) &&
+    products.every((product) => product.brochurePage === page)
+  );
+}
+
 export function productPageLayout(
   campaign: Partial<Campaign>,
   products: Product[],
@@ -123,6 +131,33 @@ export function productPageLayout(
 ) {
   const manual = campaign.pages?.[pageIndex]?.layout;
   if (manual) return manual;
+  if (
+    automaticProductLayout(campaign, pageIndex) &&
+    sharesAssignedPage(products)
+  ) {
+    // A worksheet page is one composition. Device families choose styling,
+    // never split its .1/.2/.3/.4 offers into separate pages.
+    if (products.length === 2) return "pair2";
+    if (
+      !isOctoberLayout(campaign) &&
+      (!campaign.layout || campaign.layout === "feature3") &&
+      products.every(isTelevision)
+    )
+      return "tv8";
+    if (products.length >= 8 && products.slice(0, 8).every(isTelevision))
+      return "tv8";
+    const family = appleProductFamily(products[0] || {});
+    if (
+      (family === "macbook" || family === "ipad") &&
+      products.every((product) => appleProductFamily(product) === family)
+    )
+      return products.length <= 2 ? "pair2" : "duo4";
+    if (balancedEight(products)) return "balanced8";
+    if (products.length > 6) return "grid9";
+    if (products.length > 4) return "grid6portrait";
+    if (products.length === 3 && !isOctoberLayout(campaign)) return "feature3";
+    return products.length <= 1 ? campaign.layout || "feature3" : "duo4";
+  }
   if (
     isOctoberLayout(campaign) &&
     automaticProductLayout(campaign, pageIndex)
@@ -180,7 +215,11 @@ export function productPageChunk(
 ) {
   const layout = productPageLayout(campaign, products, pageIndex);
   let run = products;
-  if (automaticProductLayout(campaign, pageIndex) && products.length) {
+  if (
+    automaticProductLayout(campaign, pageIndex) &&
+    products.length &&
+    !sharesAssignedPage(products)
+  ) {
     if (isOctoberLayout(campaign)) run = consecutiveOctoberProducts(products);
     else {
       const kind = (product: Product) =>

@@ -154,11 +154,7 @@ export function coverProductPlacement(
     : campaign.showCoverHeadline === false
       ? 18
       : 26;
-  if (
-    featuredCollection &&
-    (mode === "hero" || featuredIndex >= 0) &&
-    count > 0
-  ) {
+  if (!band && (mode === "hero" || featuredIndex >= 0) && count > 0) {
     const hajde = campaign.coverBandVariant === "hajde";
     const reference = campaign.brochureFooter?.style === "reference";
     const top = hajde ? 19 : reference ? 12 : heroY;
@@ -225,57 +221,8 @@ export function coverProductPlacement(
       ? featuredPlacement(area, index, count, Math.max(0, chosen))
       : gridPlacement(area, index, count, balancedColumns(area, count));
   }
-  if (
-    campaign.coverBandVariant === "hajde" &&
-    count >= 3 &&
-    !featuredCollection
-  ) {
-    return index === 0
-      ? { x: 3, y: 19, width: 94, height: 35 }
-      : { x: 3 + (index - 1) * 49, y: 58, width: 45, height: 34 };
-  }
   if (isOctoberBrochure(campaign))
     return { x: 3.85 + (index % 2) * 48, y: 56.8, width: 44.5, height: 35.2 };
-  const heroHeight = 64 - heroY;
-  if (
-    campaign.brochureFooter?.style === "reference" &&
-    !belowBand &&
-    count >= 3 &&
-    (featuredIndex >= 0 || campaign.coverProductLayout === "hero")
-  ) {
-    const main = featuredIndex >= 0 ? featuredIndex : 0;
-    if (index === main) return { x: 2.25, y: 12, width: 95.5, height: 38 };
-    const secondary = index > main ? index - 1 : index;
-    return { x: 2.25 + secondary * 49, y: 54, width: 46.5, height: 38 };
-  }
-  if (featuredIndex >= 0) {
-    if (index === featuredIndex)
-      return { x: 4, y: heroY, width: 92, height: heroHeight };
-    const secondaryIndex = index > featuredIndex ? index - 1 : index;
-    return count === 2
-      ? {
-          x: 6,
-          y: messageAboveProducts ? 68 : 67,
-          width: 88,
-          height: messageAboveProducts ? 22 : 23,
-        }
-      : {
-          x: 4 + secondaryIndex * 48,
-          y: messageAboveProducts ? 68 : 67,
-          width: 44,
-          height: messageAboveProducts ? 22 : 23,
-        };
-  }
-  if (mode === "hero" && count >= 3)
-    return index === 0
-      ? { x: 4, y: heroY, width: 92, height: heroHeight }
-      : {
-          x: 4 + ((index - 1) % 2) * 48,
-          y:
-            (messageAboveProducts ? 68 : 67) + Math.floor((index - 1) / 2) * 25,
-          width: 44,
-          height: messageAboveProducts ? 22 : 23,
-        };
   if (mode === "row")
     return {
       x: 4 + (index * 92) / count,
@@ -298,6 +245,28 @@ export function coverProductPlacement(
     width: 44,
     height: belowBand ? 36 : count > 2 ? (messageAboveProducts ? 26 : 29) : 40,
   };
+}
+
+/** A saved copy of the automatic frame is not a manually arranged product.
+ * Release only those copies when applying a different design. */
+export function resetDefaultCoverProductPositions(campaign: Campaign) {
+  const products = coverProducts(campaign);
+  products.forEach((product, index) => {
+    const key = `product-${product.code}`;
+    const saved = campaign.coverElementPlacements?.[key];
+    if (!saved) return;
+    const automatic = coverProductPlacement(campaign, index, products.length);
+    if (
+      Object.entries(saved).every(([field, value]) =>
+        ["x", "y", "width", "height"].includes(field)
+          ? Number.isFinite(value) &&
+            Math.abs(Number(value) - automatic[field as keyof CoverFrame]) <
+              0.000001
+          : value === undefined,
+      )
+    )
+      delete campaign.coverElementPlacements![key];
+  });
 }
 
 interface CoverFrame {

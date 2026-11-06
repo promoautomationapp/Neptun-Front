@@ -29,6 +29,7 @@ import { t } from "./i18n";
 import { isApplePhotoArtwork, isAppleProduct } from "./productTypes";
 import { useProductImageFit } from "./useProductImageFit";
 import { screenGeometryImageUrl } from "./tvWallpaperFit";
+import { screenArtworkFit } from "./screenArtworkFit";
 import "../../styles/product-artwork-layer.css";
 import "../../styles/tv-wallpaper-fit.css";
 
@@ -361,7 +362,7 @@ function ArtworkPhoto({
           draggable={false}
           referrerPolicy="no-referrer"
           style={{
-            objectFit: member.screenArtwork.fit || "contain",
+            objectFit: screenArtworkFit(member),
             background: "#000",
             left: `${screen.x}%`,
             top: `${screen.y}%`,

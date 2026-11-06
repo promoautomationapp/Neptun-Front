@@ -64,3 +64,46 @@ it("shows the actual featured default in the layout picker even with one product
     view.getByRole("combobox", { name: "Cover product layout" }).textContent,
   ).toContain("One featured product above the rest");
 });
+
+it.each(["#1b4075", "#e3e3e3"])(
+  "gives both stacked offers a wide automatic photo slot on %s",
+  (coverBackgroundColor) => {
+    const value = { ...campaign(2), coverBackgroundColor };
+    const view = render(<CoverPage campaign={value} />);
+    expect(
+      view.container.querySelector(".classic-reference-cover"),
+    ).toBeTruthy();
+    expect(
+      view.container.querySelectorAll(".cover-product-wide-default"),
+    ).toHaveLength(2);
+    const cards = Array.from(
+      view.container.querySelectorAll<HTMLElement>(".cover-product-frame"),
+    );
+    expect(cards[0]!.style.width).toBe("94%");
+    expect(cards[1]!.style.width).toBe("94%");
+    expect(parseFloat(cards[1]!.style.top)).toBeGreaterThan(
+      parseFloat(cards[0]!.style.top) + parseFloat(cards[0]!.style.height),
+    );
+  },
+);
+
+it("keeps manually positioned cover frames and photos outside the wider automatic photo rule", () => {
+  const value = campaign(2);
+  value.coverElementPlacements = {
+    "product-offer-0": { x: 4, y: 20, width: 70, height: 25 },
+  };
+  value.products[1]!.brochureImagePlacement = { x: 48, y: 49, scale: 0.9 };
+  const view = render(<CoverPage campaign={value} />);
+  expect(
+    view.container.querySelectorAll(".cover-product-wide-default"),
+  ).toHaveLength(0);
+  const frame = view.container.querySelector<HTMLElement>(
+    ".cover-element-product-offer-0",
+  )!;
+  expect([
+    frame.style.left,
+    frame.style.top,
+    frame.style.width,
+    frame.style.height,
+  ]).toEqual(["4%", "20%", "70%", "25%"]);
+});

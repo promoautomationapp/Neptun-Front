@@ -13,8 +13,47 @@ import {
   applyPresetToSettings,
 } from "../../src/features/brochure/brochurePresets";
 import { resolvedSavingsMode } from "../../src/features/settings/savingsPolicy";
+import { coverProductPlacement } from "../../src/features/brochure/coverElements";
 
 describe("independent brochure preset snapshots", () => {
+  it("releases previous automatic cover frames on a design change and preserves custom frames", () => {
+    const campaign: Campaign = {
+      id: "cover-layout-change",
+      name: "Saved cover",
+      coverProductLayout: "pair",
+      products: [
+        { code: "one", name: "First offer", brochurePage: 1 },
+        { code: "two", name: "Second offer", brochurePage: 1 },
+        { code: "three", name: "Third offer", brochurePage: 1 },
+      ],
+    };
+    const custom = { x: 6, y: 65, width: 38, height: 23 };
+    campaign.coverElementPlacements = {
+      "product-one": coverProductPlacement(campaign, 0, 3),
+      "product-two": custom,
+      "product-three": {
+        ...coverProductPlacement(campaign, 2, 3),
+        hidden: true,
+      },
+      logo: { x: 30, y: 2, width: 40 },
+    };
+    applyBrochurePreset(
+      campaign,
+      availableBrochurePresets(resolveSettings(null))[0]!,
+    );
+    expect(campaign.coverProductLayout).toBe("hero");
+    expect(campaign.coverElementPlacements?.["product-one"]).toBeUndefined();
+    expect(campaign.coverElementPlacements?.["product-two"]).toEqual(custom);
+    expect(campaign.coverElementPlacements?.["product-three"]?.hidden).toBe(
+      true,
+    );
+    expect(campaign.coverElementPlacements?.logo).toEqual({
+      x: 30,
+      y: 2,
+      width: 40,
+    });
+  });
+
   it("keeps the current default and provides the PDF design with an empty cover photograph", () => {
     const settings = resolveSettings(null);
     const presets = availableBrochurePresets(settings);

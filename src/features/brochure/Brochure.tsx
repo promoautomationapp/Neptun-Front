@@ -125,6 +125,7 @@ import { ProductArtworkLayer } from "./ProductArtworkLayer";
 import { ApplePhotoClearance } from "./ApplePhotoClearance";
 import { DefaultSavingsClearance } from "./DefaultSavingsClearance";
 import { screenGeometryImageUrl } from "./tvWallpaperFit";
+import { screenArtworkFit } from "./screenArtworkFit";
 import "../../styles/tv-wallpaper-fit.css";
 import {
   ProductNameDivider,
@@ -908,6 +909,7 @@ interface ProductCardProps extends ProductEditingProps {
   light?: boolean;
   hero?: boolean;
   classicCover?: boolean;
+  brandHeaderAtTop?: boolean;
   priceLogo: string;
   installments: number;
   layout?: string;
@@ -1221,6 +1223,7 @@ function StandardProductCard({
   light = false,
   hero = false,
   classicCover = false,
+  brandHeaderAtTop = false,
   priceLogo,
   installments,
   onEditImage,
@@ -1312,6 +1315,7 @@ function StandardProductCard({
   const imageRef = React.useRef<HTMLImageElement>(null);
   const priceRowRef = React.useRef<HTMLDivElement>(null);
   const contentPlacement = product.brochureContentPlacement || {};
+  const nameAtTop = brandHeaderAtTop && isAppleProduct(product) && !contentPlacement.details;
   const gesture = React.useRef<ImageGesture | CardGesture | null>(null);
   const [imageReady, setImageReady] = React.useState(0);
   const [placement, setPlacement] = React.useState(
@@ -1748,6 +1752,12 @@ function StandardProductCard({
       }}
     >
       {quickEdit?.editor}
+      {nameAtTop && (
+        <span className="brochure-product-top-name" data-product-name="true"
+          {...inlineText(product.name, t("Product name"), changeProduct ? (value) => changeProduct("name", value) : undefined)}>
+          {product.name}
+        </span>
+      )}
       {onEditImage && (
         <MissingCatalogNotice
           product={product}
@@ -1882,7 +1892,7 @@ function StandardProductCard({
               aria-hidden="true"
               style={{
                 ...screenOverlay,
-                objectFit: product.screenArtwork.fit || "contain",
+                objectFit: screenArtworkFit(product),
                 background: "#000",
               }}
             />
@@ -2124,7 +2134,7 @@ function StandardProductCard({
               onChange={changeProduct}
             />
           )}
-          <span
+          {!nameAtTop && <span
             data-product-name="true"
             {...inlineText(
               product.name,
@@ -2135,7 +2145,7 @@ function StandardProductCard({
             )}
           >
             {product.name}
-          </span>
+          </span>}
           <small
             className="brochure-product-code"
             {...inlineText(
@@ -2564,7 +2574,7 @@ function CoverPageContent({
   const classicCover =
     !october &&
     campaign.brochureFooter?.style === "reference" &&
-    products.length >= 3 &&
+    products.length > 0 &&
     products.some((product, index) =>
       isFeaturedCoverProduct(campaign, product.code, index, products.length),
     );
@@ -3026,7 +3036,7 @@ function CoverPageContent({
               key={product.code}
               campaign={campaign}
               kind={`product-${product.code}`}
-              className={`cover-product-frame ${isFeaturedCoverProduct(campaign, product.code, productIndex, products.length) ? "cover-featured-product" : ""}`}
+              className={`cover-product-frame ${isFeaturedCoverProduct(campaign, product.code, productIndex, products.length) ? "cover-featured-product" : ""} ${!october && campaign.showCoverBand !== true && !campaign.coverElementPlacements?.[`product-${product.code}`] && !product.brochureImagePlacement && coverProductPlacement(campaign, productIndex, products.length).width >= 88 ? "cover-product-wide-default" : ""}`}
               defaultPlacement={coverProductPlacement(
                 campaign,
                 productIndex,
@@ -3283,6 +3293,7 @@ function ProductPageContent({
               ["feature", "feature3"].includes(page.layout) &&
               product === page.products[0]
             }
+            brandHeaderAtTop={october && page.products.every(isAppleProduct) && footerConfig.showHeader !== false}
             onEditImage={onEditImage}
             onEditDetails={onEditDetails}
             onEditPrice={onEditPrice}

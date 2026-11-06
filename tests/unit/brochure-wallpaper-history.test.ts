@@ -68,6 +68,7 @@ function brochure(): Campaign {
 
 const wallpaper: ScreenArtwork = {
   image: "/winter.jpg",
+  fit: "cover",
   box: { x: 0.1, y: 0.2, width: 0.8, height: 0.5 },
   detectedFor: "/photo-one.png",
 };
@@ -87,6 +88,7 @@ it("applies one wallpaper to all TVs, preserving each bundle member's geometry, 
   expect(applyTvWallpaper(value, "one", wallpaper, "all")).toBe(2);
   expect(member.screenArtwork).toEqual({
     image: wallpaper.image,
+    fit: "cover",
     box: { x: 0.15, y: 0.1, width: 0.7, height: 0.5 },
     detectedFor: "/member-photo.jpg",
   });
