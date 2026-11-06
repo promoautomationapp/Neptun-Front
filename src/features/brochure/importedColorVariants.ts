@@ -114,7 +114,7 @@ export function colorVariantName(value: string) {
 }
 
 /** Keep the original model typography while hiding its selected finish. */
-function displayVariantName(value: string, color: ImportedColor | null) {
+export function displayVariantName(value: string, color: ImportedColor | null) {
   if (!color) return value;
   const matches = [...normalize(value).matchAll(colorPattern)].filter(
     (match) => {

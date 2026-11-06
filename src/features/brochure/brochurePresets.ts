@@ -4,6 +4,7 @@ import type {
   Settings,
 } from "../../domain/models";
 import { campaignDefaults } from "../settings/campaign-defaults";
+import { materializeCampaignColorVariants } from "./campaignColorVariants";
 import {
   BROCHURE_DESIGN_KEYS,
   resolveSettings,
@@ -343,6 +344,7 @@ export function applyBrochurePreset(
   campaign: Campaign,
   preset: BrochurePresetDefinition,
 ): void {
+  materializeCampaignColorVariants(campaign);
   Object.assign(campaign, brochureDesignSnapshot(preset.design), {
     brochurePresetId: preset.id,
   });

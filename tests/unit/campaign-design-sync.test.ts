@@ -1,6 +1,7 @@
 import {expect, it, vi} from "vitest";
 import type {Campaign, Product} from "../../src/domain/models";
 import {productImageFit} from "../../src/features/brochure/productImageFit";
+import {otherScreenAnnotationBaseBox} from "../../src/features/brochure/screenAnnotationGeometry";
 import {occupiedProductRows} from "../../src/features/brochure/brochureLayout";
 import {brochureVisibleDetailEntries, editDisplayedDetail} from "../../src/features/brochure/detailRows";
 import {applyPreparedProductPhoto, createProductImagePreparationQueue, productImagePreparationTargets, retainPreparedProductPhoto} from "../../src/features/brochure/productImagePreparationQueue";
@@ -12,6 +13,35 @@ it("fits the visible cutout uniformly instead of sizing its transparent margins"
   const fit = productImageFit({naturalWidth: 1000, naturalHeight: 1000, imageBoxWidth: 400, imageBoxHeight: 300, wrapWidth: 400, wrapHeight: 300, bounds: {left: .25, top: .1, right: .75, bottom: .9}});
   expect(fit.scale).toBeCloseTo(1.25);
   expect(fit.x).toBe(50); expect(fit.y).toBe(50);
+});
+
+it("keeps the entire off-center phone inside its slot even when cover CSS makes its box wider", () => {
+  const fit = productImageFit({ naturalWidth: 1000, naturalHeight: 1200, imageBoxWidth: 240, imageBoxHeight: 352, wrapWidth: 300, wrapHeight: 400, bounds: null, base: { x: 63, y: 56, scale: 1 }, padding: .015 });
+  const width = 240 * fit.scale;
+  const height = 288 * fit.scale;
+  expect(fit.x * 3 - width / 2).toBeGreaterThanOrEqual(4.5);
+  expect(fit.x * 3 + width / 2).toBeLessThanOrEqual(295.5);
+  expect(fit.y * 4 - height / 2).toBeGreaterThanOrEqual(6);
+  expect(fit.y * 4 + height / 2).toBeLessThanOrEqual(394);
+});
+
+it("retains manual photo placement when it fits and contains an oversized photo instead of cropping it", () => {
+  const input = { naturalWidth: 1000, naturalHeight: 1000, imageBoxWidth: 200, imageBoxHeight: 300, wrapWidth: 400, wrapHeight: 400, preservePlacement: true };
+  expect(productImageFit({ ...input, base: { x: 40, y: 50, scale: .8 } })).toEqual({ x: 40, y: 50, scale: .8 });
+  const fit = productImageFit({ ...input, base: { x: 95, y: 95, scale: 4 } });
+  expect(fit.scale).toBe(2);
+  expect(fit.x).toBe(50);
+  expect(fit.y).toBe(50);
+});
+
+it("reserves room for the external inch label as well as the complete phone photo", () => {
+  const fit = productImageFit({ naturalWidth: 1000, naturalHeight: 1200, imageBoxWidth: 240, imageBoxHeight: 352, wrapWidth: 300, wrapHeight: 400, base: { x: 63, y: 56, scale: 1 }, padding: .015, externalAnnotation: true });
+  const photo = { left: fit.x * 3 - 120 * fit.scale, top: fit.y * 4 - 144 * fit.scale, width: 240 * fit.scale, height: 288 * fit.scale };
+  const annotation = otherScreenAnnotationBaseBox(photo);
+  expect(annotation.left + annotation.width).toBeLessThanOrEqual(295.5 + .00001);
+  expect(annotation.top).toBeGreaterThanOrEqual(6);
+  expect(photo.left).toBeGreaterThanOrEqual(4.5);
+  expect(photo.top + photo.height).toBeLessThanOrEqual(394);
 });
 
 it("fills only the occupied grid rows while retaining manual card spans", () => {

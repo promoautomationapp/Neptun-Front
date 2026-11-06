@@ -188,6 +188,10 @@ import {
   usesPhoneCornerAnnotation,
 } from "./screenAnnotationGeometry";
 import { brochureFormatStyle } from "./brochureFormat";
+import {
+  brochureColorVariantCampaign,
+  brochureColorVariantProducts,
+} from "./campaignColorVariants";
 import { BrochureFormatFrame } from "./BrochureFormatFrame";
 
 export const LAYOUTS = BROCHURE_LAYOUTS;
@@ -1335,6 +1339,7 @@ function StandardProductCard({
         ? photoBase
         : null,
     base: photoBase,
+    externalAnnotation: Boolean(otherInches),
   });
   function beginImageGesture(
     event:
@@ -2506,6 +2511,7 @@ function LastPageWithStores({
 }
 
 export function CoverPage(props: BrochurePageProps) {
+  props = { ...props, campaign: brochureColorVariantCampaign(props.campaign) };
   return (
     <BrochureFormatFrame campaign={props.campaign} kind="cover">
       <LastPageWithStores {...props}>
@@ -3146,6 +3152,14 @@ function formatDates(
 }
 
 export function ProductPage(props: ProductPageProps) {
+  props = {
+    ...props,
+    campaign: brochureColorVariantCampaign(props.campaign),
+    page: {
+      ...props.page,
+      products: brochureColorVariantProducts(props.page.products),
+    },
+  };
   return (
     <BrochureFormatFrame
       campaign={props.campaign}

@@ -1,4 +1,5 @@
 import { subscribeCampaignSaveOwner } from "./campaignDraftRecovery";
+import { materializeCampaignColorVariants } from "./campaignColorVariants";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
@@ -118,6 +119,7 @@ export function useCampaignEditHistory({
       );
       if (!before || before.disabledAt) return null;
       const after = structuredClone(before);
+      materializeCampaignColorVariants(after);
       mutator(after);
       const interaction = interactionRef.current;
       const group = Object.hasOwn(options, "group")

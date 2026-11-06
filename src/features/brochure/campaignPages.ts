@@ -1,5 +1,9 @@
 import type { Campaign, Product, JsonValue } from "../../domain/models";
 import { productPageChunk } from "./brochureLayout";
+import {
+  brochureColorVariantCampaign,
+  materializeCampaignColorVariants,
+} from "./campaignColorVariants";
 
 export interface BrochurePage {
   index: number;
@@ -24,6 +28,7 @@ export function isFeaturedProductCollection(campaign: Campaign) {
 }
 
 export function coverProducts(campaign: Campaign) {
+  campaign = brochureColorVariantCampaign(campaign);
   const products = campaign?.products || [];
   // Use a small default cover selection, while retaining every product that
   // the user explicitly assigned to the cover.
@@ -47,6 +52,7 @@ export function coverProducts(campaign: Campaign) {
 }
 
 function buildPages(campaign: Campaign) {
+  campaign = brochureColorVariantCampaign(campaign);
   const pages: BrochurePage[] = [];
   const sourceIndexes: number[] = [];
   // Older snapshots inherited the former footer default. In the featured
@@ -180,6 +186,7 @@ export function splitPages(campaign: Campaign) {
 // Materialize only after an explicit edit, so loading a saved design is pure.
 export function materializeProductPages(campaign: Campaign) {
   if (campaign.autoProductLayout !== true) return;
+  materializeCampaignColorVariants(campaign);
   const covers = coverProducts(campaign);
   const { pages, sourceIndexes } = buildPages(campaign);
   if (
@@ -259,7 +266,9 @@ export function applyProductPageLayout(
   pageIndex: number,
   layout: string,
 ) {
-  const current = splitPages(campaign);
+  let current = splitPages(campaign);
+  if (!current[pageIndex]) return false;
+  if (materializeCampaignColorVariants(campaign)) current = splitPages(campaign);
   const selected = current[pageIndex];
   if (!selected) return false;
   const chunks: Product[][] = [];

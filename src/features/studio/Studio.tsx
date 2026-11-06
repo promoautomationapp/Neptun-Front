@@ -178,6 +178,7 @@ import {
   confirmMissingCampaign,
 } from "../brochure/mergeCampaignSnapshots";
 import { useCampaignEditHistory } from "../brochure/useCampaignEditHistory";
+import { brochureColorVariantCampaign } from "../brochure/campaignColorVariants";
 import { mergeBrochureImportProducts } from "../brochure/brochureReimport";
 import { CampaignHistoryControls } from "../brochure/CampaignHistoryControls";
 import {
@@ -4720,8 +4721,15 @@ export default function App({
     const timer = setTimeout(() => setToast(""), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
-  const campaign = campaigns.find(
+  const storedCampaign = campaigns.find(
     (item) => item.id === activeId && !item.disabledAt,
+  );
+  const campaign = useMemo(
+    () =>
+      storedCampaign
+        ? brochureColorVariantCampaign(storedCampaign)
+        : undefined,
+    [storedCampaign],
   );
   const imageEditProduct = campaign?.products.find(
     (product) => product.code === imageEditCode,
