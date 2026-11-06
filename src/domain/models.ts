@@ -138,6 +138,7 @@ export interface Campaign {
   coverOverlayGradient?: Partial<Gradient> & { opacity?: number };
   coverRibbonColors?: Pick<Gradient, "from" | "to">;
   coverProductLayout?: string;
+  coverProductLayoutManual?: boolean;
   coverBannerProductCode?: string;
   coverTextColorOverrides?: Record<string, boolean>;
   coverMessageColor?: string;

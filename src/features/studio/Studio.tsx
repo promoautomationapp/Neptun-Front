@@ -6925,9 +6925,14 @@ export default function App({
               sale,
               savingMode,
               confirmedAboveRegular,
+              brochureContentPlacement,
             }: Pick<
               Product,
-              "regular" | "sale" | "savingMode" | "confirmedAboveRegular"
+              | "regular"
+              | "sale"
+              | "savingMode"
+              | "confirmedAboveRegular"
+              | "brochureContentPlacement"
             >) =>
               updateCampaign((draft: Campaign) => {
                 const product = draft.products.find(
@@ -6938,6 +6943,7 @@ export default function App({
                 product.sale = sale;
                 product.savingMode = savingMode;
                 product.confirmedAboveRegular = confirmedAboveRegular;
+                product.brochureContentPlacement = brochureContentPlacement;
               })
             }
             onClose={() => setPriceEdit(null)}

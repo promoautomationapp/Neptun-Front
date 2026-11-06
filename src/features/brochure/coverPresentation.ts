@@ -87,7 +87,22 @@ export function isFeaturedCoverProduct(
         resolvedCoverProductLayout(campaign, count) === "hero";
 }
 
+export function usesAutomaticCollectionCoverLayout(campaign: Campaign) {
+  return (
+    ["neptun-current", "neptun-gradient-all"].includes(
+      campaign.brochurePresetId || "",
+    ) &&
+    campaign.showCoverBand !== true &&
+    !isOctoberBrochure(campaign) &&
+    campaign.coverProductLayoutManual !== true &&
+    campaign.coverProductLayout !== "row"
+  );
+}
+
 export function resolvedCoverProductLayout(campaign: Campaign, _count: number) {
+  // These collection designs always start with one offer above the rest.
+  // Older snapshots copied the former pair default without an explicit choice.
+  if (usesAutomaticCollectionCoverLayout(campaign)) return "hero";
   return (
     campaign.coverProductLayout ||
     (campaign.showCoverBand === true || isOctoberBrochure(campaign)

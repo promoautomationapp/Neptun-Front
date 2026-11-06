@@ -607,6 +607,39 @@ it("protects legacy Apple text, logo and separate white badge shadows after a li
   expect(saving.style.translate).toBe("");
 });
 
+it.each(["savingManual", "nameDividerManual"])(
+  "preserves a manually placed separate badge (%s) while photos clear it after observer and print updates",
+  async (marker) => {
+    mockGeometry(0.5, { legacy: true });
+    const view = render(paintedFixture());
+    const saving = view.container.querySelector<HTMLElement>(".brochure-saving");
+    const price = view.container.querySelector<HTMLElement>(".brochure-price");
+    if (!saving || !price) throw new Error("Missing manual badge fixture");
+    const requested = { scale: "0.85", translate: "-26px 38px" };
+    await act(async () => {
+      saving.dataset[marker] = "true";
+      saving.style.scale = requested.scale;
+      saving.style.translate = requested.translate;
+      price.style.width = "45px";
+      price.style.transform = "translate(-90px, -185px)";
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(saving.style.scale).toBe(requested.scale);
+    expect(saving.style.translate).toBe(requested.translate);
+    expectLegacyPaintClearance(view.container, 0.5);
+    const snapshot = view.container.innerHTML;
+    await act(async () => {
+      window.dispatchEvent(new Event("beforeprint"));
+      for (let index = 0; index < 8; index++) await Promise.resolve();
+    });
+    expect(view.container.innerHTML).toBe(snapshot);
+    view.unmount();
+    expect(saving.style.scale).toBe(requested.scale);
+    expect(saving.style.translate).toBe(requested.translate);
+  },
+);
+
 it("includes a native higher-price warning above the SVG as a photo obstacle", async () => {
   mockGeometry(0.5);
   const view = render(fixture());

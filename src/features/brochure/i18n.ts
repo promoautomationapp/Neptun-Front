@@ -1,4 +1,7 @@
 const translations: Record<string, string> = {
+  "Remove savings badge": "Hiq shenjën e kursimit",
+  "Savings badge": "Shenja e kursimit",
+  "Edit savings badge": "Redakto shenjën e kursimit",
   "Restore Excel pages and order": "Rikthe faqet dhe renditjen nga Excel",
   "Excel pages and order restored. Photos and prices were kept.": "Faqet dhe renditja u rikthyen nga Excel. Fotot dhe çmimet u ruajtën.",
   "Show iOS version in brochure": "Shfaq versionin e iOS në broshurë",
@@ -3000,6 +3003,7 @@ const translations: Record<string, string> = {
   "Searching for product photos": "Po kërkohen fotot e produkteve",
   "Photo needed": "Nevojitet foto",
   "Return to Products & prices": "Kthehu te Produktet dhe çmimet",
+  "Show savings badge": "Shfaq shenjën e kursimit",
 };
 
 let language =

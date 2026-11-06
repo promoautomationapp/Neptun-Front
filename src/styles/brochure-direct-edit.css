@@ -96,3 +96,14 @@
 
 /* Whole-area edit overlays must not intercept a direct drag. */
 .cs-page-preview.edit-view :is(.cs-brochure-edit-details,.cs-brochure-edit-specs){display:none}
+
+.cs-page-preview.edit-view :is(.brochure-saving,.red-reference-saving,.reference-saving-tab):is(:hover,:focus-within) > .cs-region-handles > :is(.cs-region-handle,.resize-corner){opacity:1;pointer-events:auto}
+.cs-region-handle.remove{right:-1cqw;top:-1cqw;background:#fff;color:#b33f32;border-color:#e5b8b1}
+.cs-page-preview.edit-view .reference-saving-tab{touch-action:none;cursor:grab;user-select:none}
+.brochure-saving[data-saving-manual="true"]{height:auto;aspect-ratio:1}
+.cs-price-editor-saving-visibility{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--studio-text,#244b6c);font-size:13px}
+.cs-price-editor-saving-visibility input{flex:none;width:auto;margin:0}
+.cs-price-savings-settings{position:absolute;z-index:32;right:0;bottom:100%;display:none;align-items:center;gap:4px;padding:5px 7px;border:1px solid #a7c9df;border-radius:6px;background:#fff;color:#2b668f;font:600 11px/1.2 Arial,sans-serif;white-space:nowrap}
+.cs-page-preview.edit-view .brochure-price:is(:hover,:focus-within)>.cs-price-savings-settings{display:flex}
+@media(hover:none){.cs-page-preview.edit-view :is(.brochure-saving,.red-reference-saving,.reference-saving-tab) > .cs-region-handles > .cs-region-handle{opacity:1}}
+@media(hover:none){.cs-page-preview.edit-view .cs-price-savings-settings{display:flex}}

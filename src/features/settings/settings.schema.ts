@@ -228,6 +228,7 @@ export const BROCHURE_DESIGN_KEYS = [
   "autoProductLayout",
   "coverTemplate",
   "coverProductLayout",
+  "coverProductLayoutManual",
   "coverLogoStyle",
   "coverLogoSource",
   "neptunLogoOption",

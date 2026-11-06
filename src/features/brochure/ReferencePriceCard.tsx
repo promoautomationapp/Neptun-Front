@@ -30,6 +30,7 @@ export interface ReferencePriceCardProps {
   showRegular?: boolean;
   showSaving?: boolean;
   savingStyle?: React.CSSProperties;
+  savingControls?: React.ReactNode;
   showInstallments?: boolean;
   logo?: string;
 }
@@ -98,6 +99,7 @@ export function ReferencePriceCard({
   showRegular = true,
   showSaving = true,
   savingStyle,
+  savingControls,
   showInstallments = true,
   logo = "",
 }: ReferencePriceCardProps) {
@@ -114,14 +116,15 @@ export function ReferencePriceCard({
   const tab = parts.savingTab.bounds;
   return (
     <>
-      {showSaving && saving && (
+      {showSaving && saving && product.brochureContentPlacement?.saving?.hidden !== true && (
         <span
           className="reference-saving-tab"
+          data-saving-manual={product.brochureContentPlacement?.saving && Object.keys(product.brochureContentPlacement.saving).some((key) => key !== "hidden") ? "true" : undefined}
           style={{
-            ...savingStyle,
             left: `${(bound(tab, 0) / source.width) * 100}%`,
             width: `${(width(tab) / source.width) * 100}%`,
             aspectRatio: `${width(tab)} / ${-bound(tab, 1)}`,
+            ...savingStyle,
           }}
           role={onEditSavings ? "button" : "img"}
           tabIndex={onEditSavings ? 0 : undefined}
@@ -150,6 +153,7 @@ export function ReferencePriceCard({
               : undefined
           }
         >
+          {savingControls}
           <svg
             viewBox={`${tab[0]} ${tab[1]} ${width(tab)} ${-bound(tab, 1)}`}
             aria-hidden="true"

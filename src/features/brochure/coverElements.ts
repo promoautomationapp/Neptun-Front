@@ -1,6 +1,7 @@
 import {
   coverMessageVisible,
   resolvedCoverProductLayout,
+  usesAutomaticCollectionCoverLayout,
 } from "./coverPresentation";
 import type { Campaign, Placement } from "../../domain/models";
 import { coverProducts, isFeaturedProductCollection } from "./campaignPages";
@@ -249,6 +250,16 @@ export function coverProductPlacement(
 
 /** A saved copy of the automatic frame is not a manually arranged product.
  * Release only those copies when applying a different design. */
+function matchesAutomaticFrame(saved: Placement, automatic: CoverFrame) {
+  return Object.entries(saved).every(([field, value]) =>
+    ["x", "y", "width", "height"].includes(field)
+      ? Number.isFinite(value) &&
+        Math.abs(Number(value) - automatic[field as keyof CoverFrame]) <
+          0.000001
+      : value === undefined,
+  );
+}
+
 export function resetDefaultCoverProductPositions(campaign: Campaign) {
   const products = coverProducts(campaign);
   products.forEach((product, index) => {
@@ -256,17 +267,97 @@ export function resetDefaultCoverProductPositions(campaign: Campaign) {
     const saved = campaign.coverElementPlacements?.[key];
     if (!saved) return;
     const automatic = coverProductPlacement(campaign, index, products.length);
-    if (
-      Object.entries(saved).every(([field, value]) =>
-        ["x", "y", "width", "height"].includes(field)
-          ? Number.isFinite(value) &&
-            Math.abs(Number(value) - automatic[field as keyof CoverFrame]) <
-              0.000001
-          : value === undefined,
-      )
-    )
+    if (matchesAutomaticFrame(saved, automatic))
       delete campaign.coverElementPlacements![key];
   });
+}
+
+/** Retire only the old collection's automatic pair frames, never a staff
+ * arrangement. A manual layout choice and any custom frame remain authoritative. */
+export function repairAutomaticCollectionCoverLayout(
+  campaign: Campaign,
+): Campaign {
+  if (!usesAutomaticCollectionCoverLayout(campaign)) return campaign;
+  const products = coverProducts(campaign);
+  if (
+    !products.some(
+      (product) => campaign.coverElementPlacements?.[`product-${product.code}`],
+    )
+  )
+    return campaign.coverProductLayout === "pair"
+      ? { ...campaign, coverProductLayout: "hero" }
+      : campaign;
+  const legacyPair: Campaign = {
+    ...campaign,
+    coverProductLayout: "pair",
+    coverProductLayoutManual: true,
+  };
+  // Grouping colors or removing an offer can leave the two survivors in the
+  // old three-offer lower slots. Match complete known automatic shapes, not
+  // just the current product's index in a two-offer pair.
+  const historicalFrames: CoverFrame[] = [];
+  for (const count of new Set([products.length, 2, 3, 4])) {
+    for (let index = 0; index < count; index++) {
+      historicalFrames.push(coverProductPlacement(legacyPair, index, count));
+      historicalFrames.push(
+        coverProductPlacement(
+          { ...legacyPair, coverProductLayout: "hero" },
+          index,
+          count,
+        ),
+      );
+    }
+  }
+  if (campaign.coverBandVariant === "hajde") {
+    historicalFrames.push({ x: 3, y: 19, width: 94, height: 35 });
+    for (let index = 0; index < 2; index++)
+      historicalFrames.push({
+        x: 3 + index * 49,
+        y: 58,
+        width: 45,
+        height: 34,
+      });
+  } else if (campaign.brochureFooter?.style === "reference") {
+    historicalFrames.push({ x: 2.25, y: 12, width: 95.5, height: 38 });
+    for (let index = 0; index < 2; index++)
+      historicalFrames.push({
+        x: 2.25 + index * 49,
+        y: 54,
+        width: 46.5,
+        height: 38,
+      });
+  }
+  historicalFrames.push(
+    ...historicalFrames.map((frame) => coverFrame(frame, frame)),
+  );
+  const automaticKeys: string[] = [];
+  for (const [index, product] of products.entries()) {
+    const key = `product-${product.code}`;
+    const saved = campaign.coverElementPlacements?.[key];
+    if (!saved) continue;
+    if (
+      !matchesAutomaticFrame(
+        saved,
+        coverProductPlacement(campaign, index, products.length),
+      ) &&
+      !(
+        [saved.x, saved.y, saved.width, saved.height].every(Number.isFinite) &&
+        historicalFrames.some((frame) => matchesAutomaticFrame(saved, frame))
+      )
+    )
+      return campaign.coverProductLayout === "pair"
+        ? { ...campaign, coverProductLayoutManual: true }
+        : campaign;
+    automaticKeys.push(key);
+  }
+  if (campaign.coverProductLayout !== "pair" && !automaticKeys.length)
+    return campaign;
+  const result: Campaign = { ...campaign, coverProductLayout: "hero" };
+  if (automaticKeys.length) {
+    result.coverElementPlacements = { ...campaign.coverElementPlacements };
+    for (const key of automaticKeys) delete result.coverElementPlacements[key];
+  }
+  return result;
 }
 
 interface CoverFrame {
@@ -414,6 +505,7 @@ export function applyCoverProductPlacement(
 // Repair old saved frames on load without changing valid custom arrangements.
 // The returned campaign is a copy, ready for editor preview and export.
 export function repairCoverProductLayout(campaign: Campaign): Campaign {
+  campaign = repairAutomaticCollectionCoverLayout(campaign);
   const covers = coverProducts(campaign);
   if (!covers.length) return campaign;
   const savedFrames = covers.some(

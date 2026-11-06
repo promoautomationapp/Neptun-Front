@@ -101,6 +101,7 @@ import {
   coverProductPlacement,
   coverProductDensity,
   coverRibbonColors,
+  repairAutomaticCollectionCoverLayout,
 } from "./coverElements";
 import {
   cardSize,
@@ -363,6 +364,18 @@ function regionStyle(placement?: Placement): React.CSSProperties | undefined {
   };
 }
 
+function savingRegionStyle(placement?: Placement): React.CSSProperties | undefined {
+  if (!placement) return undefined;
+  return { ...regionStyle(placement), height: "auto" };
+}
+
+function manualSaving(product: Product) {
+  const placement = product.brochureContentPlacement?.saving;
+  return placement && ["x", "y", "width", "height"].some((key) =>
+    placement[key as keyof Placement] !== undefined,
+  );
+}
+
 interface LayoutHandlesProps {
   product: Product;
   kind: string;
@@ -374,6 +387,7 @@ interface LayoutHandlesProps {
   targetSelector?: string;
   containWithinCard?: boolean;
   toolbar?: boolean;
+  onRemove?: () => void;
 }
 interface LayoutGesture {
   type: string;
@@ -384,6 +398,7 @@ interface LayoutGesture {
   widthReference: number;
   originalStyle: string;
   originalManual?: string;
+  originalSavingManual?: string;
   x: number;
   y: number;
   initial: { x: number; y: number; width: number; height: number };
@@ -402,6 +417,7 @@ function LayoutHandles({
   targetSelector,
   containWithinCard = false,
   toolbar = false,
+  onRemove,
 }: LayoutHandlesProps) {
   const gesture = React.useRef<LayoutGesture | null>(null);
   const directRef = React.useRef<HTMLElement | null>(null);
@@ -438,6 +454,7 @@ function LayoutHandles({
         : card.width;
     const originalStyle = element.style.cssText;
     const originalManual = element.dataset.nameDividerManual;
+    const originalSavingManual = element.dataset.savingManual;
     const aligned =
       (kind === "details" || kind === "saving") && !placement
         ? materializeProductNameAlignment(
@@ -453,6 +470,14 @@ function LayoutHandles({
       height: (rect.height / page.width) * 100,
       ...placement,
     };
+    if (kind === "saving") {
+      element.dataset.savingManual = "true";
+      Object.assign(element.style, savingRegionStyle(initial), { scale: "" });
+      const positioned = element.getBoundingClientRect();
+      initial.x += ((rect.left - positioned.left) / page.width) * 100;
+      initial.y += ((rect.top - positioned.top) / page.width) * 100;
+      Object.assign(element.style, savingRegionStyle(initial));
+    }
     const limits =
       targetSelector || containWithinCard
         ? {
@@ -474,6 +499,7 @@ function LayoutHandles({
       widthReference,
       originalStyle,
       originalManual,
+      originalSavingManual,
       x: event.clientX,
       y: event.clientY,
       initial,
@@ -523,6 +549,7 @@ function LayoutHandles({
               (dy / action.widthReference) * 100,
               action.corner,
               {
+                lockAspect: kind === "saving",
                 minWidth: minimumWidth,
                 maxWidth:
                   action.contained && (kind === "saving" || kind === "price")
@@ -594,6 +621,9 @@ function LayoutHandles({
       if (action.originalManual === undefined)
         delete action.element.dataset.nameDividerManual;
       else action.element.dataset.nameDividerManual = action.originalManual;
+      if (action.originalSavingManual === undefined)
+        delete action.element.dataset.savingManual;
+      else action.element.dataset.savingManual = action.originalSavingManual;
     } else if (action.next) onChange(product, kind, action.next);
   }
   React.useEffect(() => {
@@ -616,10 +646,20 @@ function LayoutHandles({
     const cancel = (event: PointerEvent) => end(event, true);
     const click = (event: PointerEvent) => {
       if (suppressClick.current) {
+        if ((event.target as Element).closest("button,.cs-region-handles")) {
+          suppressClick.current = false;
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         suppressClick.current = false;
       }
+    };
+    const keydown = (event: KeyboardEvent) => {
+      if (event.target !== element || !onRemove || !["Delete", "Backspace"].includes(event.key)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onRemove();
     };
     element.addEventListener("pointerdown", down);
     element.addEventListener("pointermove", move);
@@ -627,6 +667,7 @@ function LayoutHandles({
     element.addEventListener("pointercancel", cancel);
     element.addEventListener("lostpointercapture", cancel);
     element.addEventListener("click", click, true);
+    element.addEventListener("keydown", keydown);
     return () => {
       element.removeEventListener("pointerdown", down);
       element.removeEventListener("pointermove", move);
@@ -634,6 +675,7 @@ function LayoutHandles({
       element.removeEventListener("pointercancel", cancel);
       element.removeEventListener("lostpointercapture", cancel);
       element.removeEventListener("click", click, true);
+      element.removeEventListener("keydown", keydown);
     };
   });
   if (toolbar)
@@ -656,6 +698,7 @@ function LayoutHandles({
   return (
     <span
       className="cs-region-handles"
+      data-export-hide="true"
       ref={directRef as React.Ref<HTMLSpanElement>}
     >
       {dimensions && <span className="cs-region-dimensions">{dimensions}</span>}
@@ -663,7 +706,7 @@ function LayoutHandles({
         type="button"
         className="cs-region-handle move"
         title={t("Move within product block")}
-        aria-label={`${t("Move")} ${kind}: ${product.name}`}
+        aria-label={kind === "saving" ? `${t("Move savings badge")}: ${product.name}` : `${t("Move")} ${kind}: ${product.name}`}
         onPointerDown={(event) => begin(event, "move")}
         onPointerMove={move}
         onPointerUp={end}
@@ -674,12 +717,33 @@ function LayoutHandles({
         <EditorIcon name="move" />
       </button>
       <CornerHandles
-        label={`${kind}: ${product.name}`}
+        label={`${kind === "saving" ? t("Savings badge") : kind}: ${product.name}`}
         className="cs-region-handle resize"
         onStart={(event) => begin(event, "resize")}
       />
+      {onRemove && (
+        <button type="button" className="cs-region-handle remove"
+          title={t("Remove savings badge")}
+          aria-label={`${t("Remove savings badge")}: ${product.name}`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => { event.preventDefault(); event.stopPropagation(); onRemove(); }}>
+          <EditorIcon name="trash" />
+        </button>
+      )}
     </span>
   );
+}
+
+function SavingsHandles({ product, onChange, widthScope = "parent" }: {
+  product: Product;
+  onChange: ProductEditingProps["onLayoutRegion"];
+  widthScope?: "card" | "parent";
+}) {
+  if (!onChange) return null;
+  const placement = product.brochureContentPlacement?.saving;
+  return <LayoutHandles product={product} kind="saving" placement={placement}
+    onChange={onChange} baseWidth={13} widthScope={widthScope} containWithinCard
+    onRemove={() => onChange(product, "saving", { ...placement, hidden: true })} />;
 }
 
 interface PriceProps {
@@ -794,11 +858,11 @@ function Price({
             showRegular={hasRegularPrice(product)}
             savingMode={savingMode}
             onEditSavings={onEditSavings}
-            savingStyle={defaultRegionScale(
-              campaign,
-              "saving",
-              product.brochureContentPlacement?.saving,
-            )}
+            savingStyle={{
+              ...savingRegionStyle(product.brochureContentPlacement?.saving),
+              ...defaultRegionScale(campaign, "saving", product.brochureContentPlacement?.saving),
+            }}
+            savingControls={<SavingsHandles product={product} onChange={onLayoutRegion} widthScope="parent" />}
           />
           {confirmedHigherPrice(product) && (
             <span className="brochure-price-warning reference-price-increase">
@@ -852,6 +916,14 @@ function Price({
           baseWidth={layoutBaseWidth ?? (redCard ? 50 : blueCard ? 56 : 44)}
           containWithinCard={containLayout}
         />
+      )}
+      {onEditSavings && (
+        <button type="button" className="cs-price-savings-settings" data-export-hide="true"
+          aria-label={`${t("Edit savings badge")}: ${product.name}`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => { event.preventDefault(); event.stopPropagation(); onEditSavings(product); }}>
+          <EditorIcon name="edit" /> {t("Savings badge")}
+        </button>
       )}
     </div>
   );
@@ -1026,20 +1098,11 @@ function LargeBundleProductCard(props: ProductCardProps) {
         className="brochure-red-reference-saving"
         onEditSavings={onEditSavings}
         style={{
-          ...regionStyle(contentPlacement.saving),
+          ...savingRegionStyle(contentPlacement.saving),
           ...defaultRegionScale(campaign, "saving", contentPlacement.saving),
         }}
       >
-        {onLayoutRegion && (
-          <LayoutHandles
-            product={product}
-            kind="saving"
-            placement={contentPlacement.saving}
-            onChange={onLayoutRegion}
-            baseWidth={13}
-            containWithinCard
-          />
-        )}
+        <SavingsHandles product={product} onChange={onLayoutRegion} />
       </RedReferenceSavings>
     ) : null;
   return (
@@ -1936,23 +1999,27 @@ function StandardProductCard({
                     transform: "translate(-50%, -50%)",
                   }
                 : {}),
-              ...regionStyle(contentPlacement.saving),
+              ...savingRegionStyle(contentPlacement.saving),
               ...defaultRegionScale(
                 campaign,
                 "saving",
                 contentPlacement.saving,
               ),
             }}
-          />
+          >
+            <SavingsHandles product={product} onChange={onLayoutRegion} />
+          </RedReferenceSavings>
         )}
         {validSale(product) &&
           !usesRedReferencePrice(product, campaign) &&
           !usesBlueReferencePrice(product, campaign) &&
+          contentPlacement.saving?.hidden !== true &&
           (style === "current" || style === "minimal") && (
             <span
               className="brochure-saving"
+              data-saving-manual={manualSaving(product) ? "true" : undefined}
               style={{
-                ...regionStyle(contentPlacement.saving),
+                ...savingRegionStyle(contentPlacement.saving),
                 ...defaultRegionScale(
                   campaign,
                   "saving",
@@ -1983,6 +2050,7 @@ function StandardProductCard({
                 savingMode={savingMode}
                 legacyFrame
               />
+              <SavingsHandles product={product} onChange={onLayoutRegion} />
             </span>
           )}
         {onEditImage && (
@@ -2564,6 +2632,7 @@ function CoverPageContent({
   dropCode,
 }: BrochurePageProps) {
   const chooseImage = useImagePicker();
+  campaign = repairAutomaticCollectionCoverLayout(campaign);
   const products = coverProducts(campaign);
   const ribbonGradientId = `cover-ribbon-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);

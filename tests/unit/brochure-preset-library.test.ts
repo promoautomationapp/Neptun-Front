@@ -16,6 +16,39 @@ import { resolvedSavingsMode } from "../../src/features/settings/savingsPolicy";
 import { coverProductPlacement } from "../../src/features/brochure/coverElements";
 
 describe("independent brochure preset snapshots", () => {
+  it("keeps collection rows independent of inherited workspace pair defaults and retains marked manual choices", () => {
+    const settings = resolveSettings(null);
+    settings.brochure.coverProductLayout = "pair";
+    settings.brochurePresets = [
+      {
+        id: "neptun-gradient-all",
+        name: "Saved collection",
+        design: { coverProductLayout: "pair" },
+      },
+    ];
+    for (const id of ["neptun-current", "neptun-gradient-all"]) {
+      const preset = availableBrochurePresets(settings).find(
+        (item) => item.id === id,
+      )!;
+      expect(preset.design.coverProductLayout).toBe("hero");
+    }
+    settings.brochurePresets[0]!.design.coverProductLayoutManual = true;
+    expect(
+      availableBrochurePresets(settings).find(
+        (item) => item.id === "neptun-gradient-all",
+      )!.design,
+    ).toMatchObject({
+      coverProductLayout: "pair",
+      coverProductLayoutManual: true,
+    });
+    const snapshot = brochureDesignSnapshot({
+      coverProductLayout: "pair",
+      coverProductLayoutManual: true,
+    });
+    expect(snapshot.coverProductLayoutManual).toBe(true);
+    expect(workspaceSettingsSchema.safeParse(settings).success).toBe(true);
+  });
+
   it("releases previous automatic cover frames on a design change and preserves custom frames", () => {
     const campaign: Campaign = {
       id: "cover-layout-change",

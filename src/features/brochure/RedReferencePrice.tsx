@@ -241,7 +241,7 @@ export function SavingsCircleArtwork({
   legacyFrame?: boolean;
 }) {
   const saving = artworkSaving(product.regular, product.sale, savingMode);
-  if (!saving) return null;
+  if (!saving || product.brochureContentPlacement?.saving?.hidden === true) return null;
   const circle = parts.savingCircle;
   // Scale the circle and its typography together inside the saved outer frame.
   // This keeps every manual position, resize and grouped-offer anchor intact.
@@ -321,10 +321,11 @@ export function RedReferenceSavings({
   children,
 }: RedReferenceSavingsProps) {
   const saving = artworkSaving(product.regular, product.sale, savingMode);
-  if (!saving) return null;
+  if (!saving || product.brochureContentPlacement?.saving?.hidden === true) return null;
   return (
     <span
       className={`red-reference-saving ${className}`}
+      data-saving-manual={product.brochureContentPlacement?.saving && Object.keys(product.brochureContentPlacement.saving).some((key) => key !== "hidden") ? "true" : undefined}
       style={style}
       role={onEditSavings ? "button" : "img"}
       tabIndex={onEditSavings ? 0 : undefined}

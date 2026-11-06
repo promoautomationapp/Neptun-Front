@@ -104,12 +104,84 @@ it("lets a single offer move into the lower row and retains that saved placement
 it.each(["pair", "row"])(
   "honors the explicit %s layout instead of forcing a featured row",
   (layout) => {
-    const value = { ...campaign(3), coverProductLayout: layout };
+    const value = {
+      ...campaign(3),
+      coverProductLayout: layout,
+      coverProductLayoutManual: true,
+    };
     const cards = frames(value);
     expect(cards[0]!.y).toBe(cards[1]!.y);
     expect(isFeaturedCoverProduct(value, "offer-0", 0, 3)).toBe(false);
     if (layout === "row")
       expect(new Set(cards.map((card) => card.y)).size).toBe(1);
+  },
+);
+
+it.each(["neptun-current", "neptun-gradient-all"])(
+  "upgrades the inherited pair setting in %s to the requested cover rows",
+  (brochurePresetId) => {
+    for (const count of [2, 3, 4]) {
+      const value = {
+        ...campaign(count),
+        brochurePresetId,
+        coverProductLayout: "pair",
+      };
+      const legacy = { ...value, coverProductLayoutManual: true };
+      value.coverElementPlacements = Object.fromEntries(
+        value.products.map((product, index) => [
+          `product-${product.code}`,
+          coverProductPlacement(legacy, index, count),
+        ]),
+      );
+      const original = structuredClone(value);
+      const repaired = repairCoverProductLayout(value);
+      expect(repaired).not.toBe(value);
+      expect(repaired.coverProductLayout).toBe("hero");
+      expect(repaired.coverElementPlacements).toEqual({});
+      expect(value).toEqual(original);
+      const [top, ...bottom] = frames(repaired);
+      expect(top!.width).toBe(94);
+      expect(new Set(bottom.map((frame) => frame.y)).size).toBe(1);
+      for (const frame of bottom)
+        expect(frame.y).toBeGreaterThan(top!.y + top!.height);
+      if (count === 2) expect(bottom[0]!.width).toBe(top!.width);
+      expect(frames(JSON.parse(JSON.stringify(repaired)) as Campaign)).toEqual([
+        top,
+        ...bottom,
+      ]);
+    }
+  },
+);
+
+it("keeps a genuinely custom collection arrangement while upgrading only untouched defaults", () => {
+  const value = { ...campaign(2), coverProductLayout: "pair" };
+  const custom = { x: 6, y: 60, width: 40, height: 25 };
+  value.coverElementPlacements = { "product-offer-0": custom };
+  const repaired = repairCoverProductLayout(value);
+  expect(repaired.coverProductLayout).toBe("pair");
+  expect(repaired.coverProductLayoutManual).toBe(true);
+  expect(repaired.coverElementPlacements?.["product-offer-0"]).toEqual(custom);
+  expect(value.coverElementPlacements["product-offer-0"]).toEqual(custom);
+});
+
+it.each(["neptun-current", "neptun-gradient-all"])(
+  "reflows two survivors from the historical three-offer lower row in %s",
+  (brochurePresetId) => {
+    const value: Campaign = {
+      ...campaign(2),
+      brochurePresetId,
+      coverProductLayout: "hero",
+    };
+    value.coverElementPlacements = {
+      "product-offer-0": { x: 3, y: 58, width: 45, height: 34 },
+      "product-offer-1": { x: 52, y: 58, width: 45, height: 34 },
+    };
+    const repaired = repairCoverProductLayout(value);
+    expect(repaired.coverElementPlacements).toEqual({});
+    const [top, bottom] = frames(repaired);
+    expect(top!.y).toBe(19);
+    expect(bottom!.y).toBeGreaterThan(top!.y + top!.height);
+    expect(bottom!.width).toBe(top!.width);
   },
 );
 

@@ -5,7 +5,10 @@ import type {
 } from "../../domain/models";
 import { campaignDefaults } from "../settings/campaign-defaults";
 import { materializeCampaignColorVariants } from "./campaignColorVariants";
-import { resetDefaultCoverProductPositions } from "./coverElements";
+import {
+  repairAutomaticCollectionCoverLayout,
+  resetDefaultCoverProductPositions,
+} from "./coverElements";
 import {
   BROCHURE_DESIGN_KEYS,
   resolveSettings,
@@ -65,6 +68,7 @@ const blueDesign: Partial<Campaign> = {
   productDesign: blueProductDesign,
   coverTemplate: "blueClean",
   coverProductLayout: "hero",
+  coverProductLayoutManual: false,
   coverLogoSource: "/brochure-presets/october/neptun-cover.svg",
   coverBrandTagline: "Jeto më mirë, çdo ditë.",
   brandAssets: {
@@ -140,6 +144,7 @@ const classicGradient: Partial<Campaign> = {
   brochureVisualStyle: "current",
   coverTemplate: "blueClean",
   coverProductLayout: "hero",
+  coverProductLayoutManual: false,
   coverBandVariant: "hajde",
   showCoverBand: false,
   showCoverLogo: true,
@@ -305,6 +310,16 @@ export function availableBrochurePresets(input: Settings): BrochurePreset[] {
     // Manufacturer choices belong to the workspace unless this saved design explicitly overrides them.
     if (!Object.keys(preset.design.brandLogos || {}).length)
       design.brandLogos = structuredClone(defaults.brandLogos || {});
+    const snapshot = brochureDesignSnapshot({
+      ...design,
+      ...(override?.design as Partial<Campaign> | undefined),
+    });
+    if (
+      ["neptun-current", "neptun-gradient-all"].includes(preset.id) &&
+      snapshot.coverProductLayoutManual !== true &&
+      snapshot.coverProductLayout !== "row"
+    )
+      snapshot.coverProductLayout = "hero";
     return {
       ...preset,
       customized: Boolean(override),
@@ -321,10 +336,7 @@ export function availableBrochurePresets(input: Settings): BrochurePreset[] {
         ].includes(override.name)
           ? preset.name
           : (override?.name ?? preset.name),
-      design: brochureDesignSnapshot({
-        ...design,
-        ...(override?.design as Partial<Campaign> | undefined),
-      }),
+      design: snapshot,
     };
   });
   for (const preset of settings.brochurePresets) {
@@ -346,10 +358,13 @@ export function applyBrochurePreset(
   preset: BrochurePresetDefinition,
 ): void {
   materializeCampaignColorVariants(campaign);
+  Object.assign(campaign, repairAutomaticCollectionCoverLayout(campaign));
   resetDefaultCoverProductPositions(campaign);
   Object.assign(campaign, brochureDesignSnapshot(preset.design), {
     brochurePresetId: preset.id,
+    coverProductLayoutManual: preset.design.coverProductLayoutManual === true,
   });
+  Object.assign(campaign, repairAutomaticCollectionCoverLayout(campaign));
 }
 
 export function brochurePresetFromSettings(

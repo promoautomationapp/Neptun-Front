@@ -50,6 +50,7 @@ export function CoverDesignControls({
   ) =>
     onUpdate((draft: Campaign) => {
       draft[field] = value;
+      if (field === "coverProductLayout") draft.coverProductLayoutManual = true;
       if (COVER_TEXT_COLORS.some(([colorField]) => colorField === field)) {
         draft.coverTextColorOverrides ||= {};
         draft.coverTextColorOverrides[String(field)] = true;

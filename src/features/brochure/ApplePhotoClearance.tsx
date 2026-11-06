@@ -120,7 +120,11 @@ export function ApplePhotoClearance({
       // Disconnect while applying our own corrections, so those writes cannot recursively shrink the artwork.
       mutations?.disconnect();
       try {
-        for (const element of originals.keys()) restore(element);
+        for (const element of originals.keys()) {
+          if (element.dataset.savingManual === "true" || element.dataset.nameDividerManual === "true" || element.querySelector('[data-saving-manual="true"]'))
+            originals.delete(element);
+          else restore(element);
+        }
         const cardBox = card.getBoundingClientRect();
         const visualScale = cardBox.width / (card.offsetWidth || cardBox.width);
         if (!cardBox.width || !cardBox.height || !visualScale) return;
@@ -405,11 +409,13 @@ export function ApplePhotoClearance({
           element.style.translate = `${fit.rect.x - scaled.x}px ${fit.rect.y - scaled.y}px`;
         };
         for (const price of prices) {
+          if (price.querySelector('[data-saving-manual="true"]')) continue;
           const requested = groupRect(price);
           const fit = requested && fitArtworkInside(requested, cardBounds);
           if (fit) applyFit(price, fit, () => groupRect(price));
         }
         for (const saving of separateSavings) {
+          if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
           const requested = groupRect(saving);
           const bounds = area.contains(saving) ? photoBounds : cardBounds;
           const fit =
@@ -445,12 +451,14 @@ export function ApplePhotoClearance({
             height: cardBounds.height * 0.45,
           };
           for (const price of prices) {
+            if (price.querySelector('[data-saving-manual="true"]')) continue;
             restore(price);
             const requested = groupRect(price);
             const fit = requested && fitArtworkInside(requested, lower);
             if (fit) applyFit(price, fit, () => groupRect(price));
           }
           for (const saving of separateSavings) {
+            if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
             restore(saving);
             const bounds = area.contains(saving) ? photoBounds : cardBounds;
             const gutter = {
@@ -481,12 +489,14 @@ export function ApplePhotoClearance({
             width: cardBounds.width * 0.35,
           };
           for (const price of prices) {
+            if (price.querySelector('[data-saving-manual="true"]')) continue;
             restore(price);
             const requested = groupRect(price);
             const fit = requested && fitArtworkInside(requested, gutter);
             if (fit) applyFit(price, fit, () => groupRect(price));
           }
           for (const saving of separateSavings) {
+            if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
             restore(saving);
             const bounds = area.contains(saving)
               ? {

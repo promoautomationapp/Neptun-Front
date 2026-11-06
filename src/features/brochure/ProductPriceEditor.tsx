@@ -18,7 +18,11 @@ export function ProductPriceEditor({
   onSave: (
     changes: Pick<
       Product,
-      "regular" | "sale" | "savingMode" | "confirmedAboveRegular"
+      | "regular"
+      | "sale"
+      | "savingMode"
+      | "confirmedAboveRegular"
+      | "brochureContentPlacement"
     >,
   ) => void;
   onClose: () => void;
@@ -27,6 +31,9 @@ export function ProductPriceEditor({
   const [sale, setSale] = useState(String(product.sale ?? ""));
   const [savingMode, setSavingMode] = useState(
     savingModeFor(campaign, product),
+  );
+  const [showSaving, setShowSaving] = useState(
+    product.brochureContentPlacement?.saving?.hidden !== true,
   );
   const [confirmedHigher, setConfirmedHigher] = useState(
     Boolean(product.confirmedAboveRegular),
@@ -95,6 +102,14 @@ export function ProductPriceEditor({
         <div className="cs-price-editor-saving">
           <strong>{t("Savings badge in brochure")}</strong>
           <p>{t("Choose which label and value appear for this product.")}</p>
+          <label className="cs-price-editor-saving-visibility">
+            <input
+              type="checkbox"
+              checked={showSaving}
+              onChange={(event) => setShowSaving(event.target.checked)}
+            />
+            {t("Show savings badge")}
+          </label>
           <div role="group" aria-label={t("Savings badge in brochure")}>
             <button
               type="button"
@@ -144,11 +159,24 @@ export function ProductPriceEditor({
           tone="primary"
           disabled={!valid || (higher && !confirmedHigher)}
           onClick={() => {
+            const brochureContentPlacement = {
+              ...product.brochureContentPlacement,
+            };
+            const savingPlacement = { ...brochureContentPlacement.saving };
+            if (showSaving) delete savingPlacement.hidden;
+            else savingPlacement.hidden = true;
+            if (Object.keys(savingPlacement).length)
+              brochureContentPlacement.saving = savingPlacement;
+            else delete brochureContentPlacement.saving;
             onSave({
               regular: hasRegular ? regularAmount : null,
               sale: saleAmount,
               savingMode,
               confirmedAboveRegular: higher && confirmedHigher,
+              brochureContentPlacement: Object.keys(brochureContentPlacement)
+                .length
+                ? brochureContentPlacement
+                : undefined,
             });
             onClose();
           }}
