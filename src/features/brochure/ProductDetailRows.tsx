@@ -3,6 +3,7 @@ import { SearchableSelect } from "../../components/SearchableSelect";
 import { savedDetailEntries, type DetailEntry } from "./detailFacts";
 import { EditorIcon } from "./EditorIcon";
 import { t } from "./i18n";
+import { isIphoneIosDetail } from "./optionalProductDetails";
 
 type Change = (
   field: keyof Product | Partial<Product>,
@@ -80,6 +81,24 @@ export function ProductDetailRows({
               </button>
             </div>
           </div>
+          {isIphoneIosDetail(product, key, text) && (
+            <label className="cs-detail-row-toggle">
+              <input
+                type="checkbox"
+                checked={product.detailBlockPlacements?.[key]?.hidden === false}
+                onChange={(event) =>
+                  onChange("detailBlockPlacements", {
+                    ...product.detailBlockPlacements,
+                    [key]: {
+                      ...product.detailBlockPlacements?.[key],
+                      hidden: !event.target.checked,
+                    },
+                  })
+                }
+              />
+              <span>{t("Show iOS version in brochure")}</span>
+            </label>
+          )}
           {!supplied && (
             <label>
               <span>{t("Detail label")}</span>

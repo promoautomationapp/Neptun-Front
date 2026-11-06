@@ -62,9 +62,34 @@ it("puts current Apple capacity and the one-year warranty in one compact details
   expect(
     card.querySelector(".brochure-product-copy .brochure-warranty-line"),
   ).toBeNull();
-  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain("1329");
-  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain("KËSTI");
+  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain(
+    "1329",
+  );
+  expect(card.querySelector(".red-reference-price-svg")?.textContent).toContain(
+    "KËSTI",
+  );
   expect(card.querySelector(".brochure-price-sale")).toBeNull();
+});
+
+it("hides catalog iOS facts by default without hiding iPadOS or Android facts", () => {
+  const { card } = page({ ...apple, specs: { iOS: "26", Memorje: "256 GB" } });
+  expect(card.querySelector('[data-detail-key="iOS"]')).toBeNull();
+  expect(card.querySelector('[data-detail-key="Memorje"]')?.textContent).toBe(
+    "256 GB",
+  );
+  const ipad = page({
+    ...apple,
+    name: "IPAD APPLE 11",
+    specs: { iPadOS: "26" },
+  }).card;
+  expect(ipad.querySelector('[data-detail-key="iPadOS"]')).not.toBeNull();
+  const android = page({
+    ...apple,
+    brand: "SAMSUNG",
+    name: "Samsung Galaxy S26",
+    specs: { OS: "Android 16" },
+  }).card;
+  expect(android.textContent).toContain("Android");
 });
 
 it("keeps the gray Apple card's ordinary copy and warranty beside its name rather than adopting the current strip", () => {

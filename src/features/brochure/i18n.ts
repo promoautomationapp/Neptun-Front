@@ -1,4 +1,5 @@
 const translations: Record<string, string> = {
+  "Show iOS version in brochure": "Shfaq versionin e iOS në broshurë",
   "Some photos are missing or unavailable":
     "Disa foto mungojnë ose nuk mund të hapen",
   "The photos listed below are missing or could not be loaded. Their spaces will stay blank; prices and other content will be included. Download anyway or return to the editor to add the photos.":

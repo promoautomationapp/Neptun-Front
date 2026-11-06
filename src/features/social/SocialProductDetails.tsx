@@ -22,6 +22,7 @@ import { ProductDetailBlock } from "../brochure/ProductDetailBlock";
 import { isAirConditioner } from "../brochure/productArtwork";
 import { isAppleProduct, isMobilePhone } from "../brochure/productTypes";
 import { displaySpecs } from "../brochure/tvSpecs";
+import { visibleOptionalProductDetails } from "../brochure/optionalProductDetails";
 import { warrantyDuration } from "../brochure/warranty";
 import { EditableOfferBlock } from "./CanvasLayers";
 import "../../styles/social-detail-strip.css";
@@ -78,9 +79,10 @@ export function SocialProductDetails({
     !product.hideWarranty && reference === "red"
       ? warrantyDuration(product.warranty)
       : null;
-  const preferredSpecs = imported
-    ? allSpecs
-    : brochureDefaultDetailEntries(product, allSpecs);
+  const preferredSpecs = visibleOptionalProductDetails(
+    product,
+    imported ? allSpecs : brochureDefaultDetailEntries(product, allSpecs),
+  );
   const specs = brochureVisibleDetailEntries(preferredSpecs, {
     warrantyInStrip: Boolean(warranty),
   });

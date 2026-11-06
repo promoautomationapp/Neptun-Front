@@ -6,6 +6,10 @@ import { detailTypography } from "./detailTypography";
 import { phoneMemoryAmounts } from "./mobileDetails";
 import { detailEnergyClasses } from "./conditionerDetails";
 import { normalizedDetail } from "./detailFacts";
+import {
+  isIphoneIosDetail,
+  iphoneIosDetailText,
+} from "./optionalProductDetails";
 
 type DetailReference = "blue" | "red" | "legacy";
 
@@ -53,7 +57,11 @@ export function FittedDetailValue({
             parseFloat(labelStyle.marginTop) +
             parseFloat(labelStyle.marginBottom)
           : 0;
-      const available = block.clientHeight - padding - labelHeight - (parseFloat(style.rowGap) || 0);
+      const available =
+        block.clientHeight -
+        padding -
+        labelHeight -
+        (parseFloat(style.rowGap) || 0);
       if (!(available > 0 && base > 0)) return;
       const fits = () =>
         value.scrollHeight <= available + 0.5 &&
@@ -70,7 +78,10 @@ export function FittedDetailValue({
       value.style.fontSize = `${low}px`;
     };
     fit();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(fit) : undefined;
+    const observer =
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(fit)
+        : undefined;
     observer?.observe(block);
     void document.fonts?.ready.then(fit);
     return () => {
@@ -93,6 +104,13 @@ export function DetailContent({
   layout,
   reference,
 }: DetailContentProps) {
+  if (isIphoneIosDetail(product, label, String(value)))
+    return (
+      <FittedDetailValue
+        text={iphoneIosDetailText(value)}
+        fitKey={`${reference}:${layout}`}
+      />
+    );
   const source = String(value);
   // Power is a value-only box in the supplied strip reference. Recognize only
   // that explicit label/unit pair; unrelated imported wording stays intact.

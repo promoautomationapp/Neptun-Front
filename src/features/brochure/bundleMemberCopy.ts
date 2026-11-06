@@ -1,4 +1,5 @@
 import type { Product } from "../../domain/models";
+import { visibleOptionalProductDetails } from "./optionalProductDetails";
 import {
   catalogDetailFacts,
   detailPlainText,
@@ -9,11 +10,15 @@ import {
 // Each member keeps its own copy, even though all members share one offer price.
 export function defaultBundleMemberText(member: Product): string {
   const facts = Array.isArray(member.brochureDetails)
-    ? (savedDetailEntries(member) || []).map(([, value]) => value)
+    ? visibleOptionalProductDetails(
+        member,
+        savedDetailEntries(member) || [],
+      ).map(([, value]) => value)
     : catalogDetailFacts(member)
         .filter(
-          ({ key }) =>
-            !/garanc|warrant|ngjyr|colou?r/.test(normalizedDetail(key)),
+          ({ key, value }) =>
+            !/garanc|warrant|ngjyr|colou?r/.test(normalizedDetail(key)) &&
+            visibleOptionalProductDetails(member, [[key, value]]).length > 0,
         )
         .map(({ key, value }) =>
           /^(?:fuqia|power|kapaciteti|capacity)$/i.test(normalizedDetail(key))

@@ -114,6 +114,7 @@ import {
   RedReferenceSavings,
   SavingsCircleArtwork,
 } from "./RedReferencePrice";
+import { visibleOptionalProductDetails } from "./optionalProductDetails";
 import {
   usesRedReferencePrice,
   usesBlueReferencePrice,
@@ -1281,12 +1282,13 @@ function StandardProductCard({
     !isOctoberBrochure(campaign) &&
     referenceStrip &&
     detailPlacement !== "left";
-  const preferredSpecs = importedSpecs
-    ? allSpecs
-    : brochureDefaultDetailEntries(product, allSpecs);
+  const preferredSpecs = visibleOptionalProductDetails(
+    product,
+    importedSpecs ? allSpecs : brochureDefaultDetailEntries(product, allSpecs),
+  );
   const specs =
     detailPlacement === "left"
-      ? allSpecs
+      ? visibleOptionalProductDetails(product, allSpecs)
       : classicCover
         ? preferredSpecs.slice(
             0,
