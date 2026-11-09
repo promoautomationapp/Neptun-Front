@@ -1,4 +1,10 @@
 const translations: Record<string, string> = {
+  "Edit source detail": "Redakto detajin e burimit",
+  "Choose what to show. Drag rows to reorder.": "Zgjidhni çfarë të shfaqet. Tërhiqni rreshtat për t’i renditur.",
+  "Drag to reorder detail": "Tërhiq për të renditur detajin",
+  "Drag to reorder. Use arrow keys to move.": "Tërhiq për të ndryshuar renditjen. Përdor tastet me shigjeta për ta lëvizur.",
+  "Detail moved to position": "Detaji u zhvendos në pozicionin",
+  "Edit text and appearance": "Redakto tekstin dhe pamjen",
   "Choose text size": "Zgjidh madhësinë e tekstit",
   "Text spacing": "Hapësira e tekstit",
   "Search or type a font": "Kërko ose shkruaj një font",

@@ -208,3 +208,26 @@ it("protects added and nested composite Apple photos in a mixed offer without ma
   expect(protectedPhoto("/samsung-member.png")).toBeNull();
   expect(card.querySelectorAll(".brochure-price")).toHaveLength(1);
 });
+
+it("keeps warranty last by default and respects the explicit order saved in the chooser", () => {
+  const product: Product = {
+    ...apple,
+    brochureDetails: [
+      { key: "memory", text: "256 GB" },
+      { key: "__warranty", text: "1 vit garancion" },
+      { key: "connection", text: "Bluetooth 5.3" },
+    ],
+  };
+  const keys = (item: Product) =>
+    [
+      ...page(item).card.querySelectorAll(
+        ".brochure-specs > [data-detail-key]",
+      ),
+    ].map((node) => node.getAttribute("data-detail-key"));
+  expect(keys(product)).toEqual(["memory", "connection", "__warranty"]);
+  expect(keys({ ...product, autoSpecsDisabled: true })).toEqual([
+    "memory",
+    "__warranty",
+    "connection",
+  ]);
+});

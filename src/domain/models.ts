@@ -386,6 +386,8 @@ export interface Product {
   bundleCodes?: string[];
   bundleProducts?: Product[];
   brochureDetails?: Array<string | { key: string; text: string }>;
+  /** Campaign-only wording overrides; original Excel/catalog facts stay intact. */
+  brochureSourceDetailEdits?: Record<string, string>;
   brochureVariants?: BrochureVariant[];
   productArtworks?: Artwork[];
   screenArtwork?: ScreenArtwork;

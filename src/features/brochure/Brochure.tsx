@@ -1754,6 +1754,12 @@ function StandardProductCard({
     placement,
     fittedImagePlacement,
   ]);
+  const detailRowOrder = (key: React.Key | null | undefined) => {
+    const index = allSpecs.findIndex(([sourceKey, value]) =>
+      key === "__warranty" ? isWarrantyDetail(sourceKey, value) : sourceKey === key,
+    );
+    return index < 0 ? allSpecs.length : index;
+  };
   const warrantyLine = warranty && !warrantyInStrip ? (
     <ProductDetailBlock
       product={product}
@@ -2284,7 +2290,7 @@ function StandardProductCard({
           style={regionStyle(contentPlacement.specs)}
           data-detail-layout={detailPlacement === "left" ? "left" : "strip"}
         >
-          {specs.map(([key, value], index) => (
+          {[...specs.map(([key, value], index) => (
             <ProductDetailBlock
               key={key}
               product={product}
@@ -2386,9 +2392,10 @@ function StandardProductCard({
                 }
               />
             </ProductDetailBlock>
-          ))}
-          {warranty && warrantyInStrip && (
+          )),
+          warranty && warrantyInStrip ? (
             <ProductDetailBlock
+              key="__warranty"
               product={product}
               detailKey="__warranty"
               onChange={changeProduct}
@@ -2410,7 +2417,7 @@ function StandardProductCard({
                 <span className="brochure-warranty-label">GARANCION</span>
               </small>
             </ProductDetailBlock>
-          )}
+          ) : null].sort((a, b) => product.autoSpecsDisabled ? detailRowOrder(a?.key) - detailRowOrder(b?.key) : 0)}
           {changeProduct && (
             <button
               type="button"
