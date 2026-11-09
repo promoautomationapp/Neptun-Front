@@ -41,8 +41,8 @@ it.each([1, 2, 3, 4, 10])(
     expect(root.querySelectorAll(".cover-product-frame")).toHaveLength(count);
     expect(root.querySelectorAll(".cover-featured-product")).toHaveLength(1);
     const hero = root.querySelector<HTMLElement>(".cover-featured-product")!;
-    expect(hero.style.top).toBe("19%");
-    if (count <= 4) expect(hero.style.height).toBe("34.5%");
+    expect(hero.style.top).toBe("28%");
+    if (count <= 4) expect(hero.style.height).toBe("31%");
   },
 );
 
@@ -131,8 +131,8 @@ it.each(["neptun-current", "neptun-gradient-all"])(
       const [top, ...bottom] = [
         ...root.querySelectorAll<HTMLElement>(".cover-product-frame"),
       ];
-      expect(top!.style.top).toBe("19%");
-      expect(top!.style.width).toBe("94%");
+      expect(top!.style.top).toBe("28%");
+      expect(top!.style.width).toBe("90%");
       expect(bottom).toHaveLength(count - 1);
       expect(new Set(bottom.map((frame) => frame.style.top)).size).toBe(1);
       for (const frame of bottom)
@@ -140,7 +140,7 @@ it.each(["neptun-current", "neptun-gradient-all"])(
           parseFloat(top!.style.top) + parseFloat(top!.style.height),
         );
       if (count === 2) {
-        expect(bottom[0]!.style.width).toBe("94%");
+        expect(bottom[0]!.style.width).toBe("90%");
         expect(
           root.querySelectorAll(".cover-product-wide-default"),
         ).toHaveLength(2);
@@ -164,8 +164,8 @@ it.each(["#1b4075", "#e3e3e3"])(
     const cards = Array.from(
       view.container.querySelectorAll<HTMLElement>(".cover-product-frame"),
     );
-    expect(cards[0]!.style.width).toBe("94%");
-    expect(cards[1]!.style.width).toBe("94%");
+    expect(cards[0]!.style.width).toBe("90%");
+    expect(cards[1]!.style.width).toBe("90%");
     expect(parseFloat(cards[1]!.style.top)).toBeGreaterThan(
       parseFloat(cards[0]!.style.top) + parseFloat(cards[0]!.style.height),
     );

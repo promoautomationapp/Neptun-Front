@@ -3,6 +3,7 @@ import { reflowDefaultLargeBundleImages } from "./largeBundleLayout";
 import { defaultProductImageScale } from "./tvSpecs";
 import { productDesignFor } from "../settings/product-design-defaults";
 import { bundleMemberByCode } from "./bundleMemberUpdates";
+import { catalogDetailFacts, savedDetailEntries } from "./detailFacts";
 const BADGE_ROOT = "/api/assets/legacy/assets/product-badges";
 const FEATURE_WORDS = {
   wifi: /\bwi[\s_-]?fi\b/i,
@@ -38,7 +39,10 @@ function sourceEntries(product: Partial<Product>): Array<[string, string]> {
   return [
     ...entries(product.specs),
     ...entries(product.features),
-    ...entries(product.brochureDetails),
+    ...(savedDetailEntries(product) || []),
+    ...catalogDetailFacts(product).map(
+      ({ key, value }) => [key, value] as [string, string],
+    ),
     ...entries(product.postDetails),
     ...entries(product.description),
     ...entries(product.name),

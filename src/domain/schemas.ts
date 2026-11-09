@@ -63,6 +63,7 @@ export const campaignSchema = z
     name: z.string(),
     brochureFooter: brochureFooterSchema.optional(),
     brochurePresetId: z.string().max(100).optional(),
+    brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
     coverBrandTagline: z.string().max(500).optional(),
     coverRibbonColors: z
       .object({

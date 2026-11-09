@@ -10,6 +10,8 @@ import "../../styles/page-layers.css";
 import { t } from "./i18n";
 import { EditorIcon } from "./EditorIcon";
 import { useImagePicker } from "./ImagePickerProvider";
+import { PageTextToolbar } from "./PageTextToolbar";
+import { textFontCss } from "./textFonts";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -138,6 +140,19 @@ function ArtworkItem({
   function saveText(element: HTMLElement) {
     const next = element.textContent || "";
     if (next !== (currentPosition.current.text || "")) change({ text: next });
+  }
+  function insertPlainText(element: HTMLElement, value: string) {
+    const selection = window.getSelection();
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    if (range && element.contains(range.commonAncestorContainer)) {
+      range.deleteContents();
+      const inserted = document.createTextNode(value);
+      range.insertNode(inserted);
+      range.setStartAfter(inserted);
+      range.collapse(true);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    } else element.textContent += value;
   }
   function start(
     event:
@@ -332,7 +347,16 @@ function ArtworkItem({
           className="page-layer-text"
           ref={text}
           data-text-layer={artwork.id}
-          style={{ color, fontSize: `${position.fontSize || 4}cqw` }}
+          style={{
+            color,
+            fontSize: `${position.fontSize || 4}cqw`,
+            fontWeight: position.fontWeight ?? 700,
+            fontStyle: position.fontStyle || "normal",
+            fontFamily: textFontCss(position.fontFamily),
+            letterSpacing: `${position.letterSpacing ?? 0}em`,
+            lineHeight: position.lineHeight ?? 1.1,
+            textAlign: position.textAlign || "left",
+          }}
           contentEditable={onChange ? true : undefined}
           suppressContentEditableWarning
           role={onChange ? "textbox" : undefined}
@@ -358,7 +382,31 @@ function ArtworkItem({
             onChange
               ? (event) => {
                   event.stopPropagation();
-                  if (event.key === "Enter") {
+                  if (
+                    (event.metaKey || event.ctrlKey) &&
+                    ["b", "i"].includes(event.key.toLowerCase())
+                  ) {
+                    event.preventDefault();
+                    saveText(event.currentTarget);
+                    change(
+                      event.key.toLowerCase() === "b"
+                        ? {
+                            fontWeight:
+                              (currentPosition.current.fontWeight ?? 700) >= 600
+                                ? 400
+                                : 700,
+                          }
+                        : {
+                            fontStyle:
+                              currentPosition.current.fontStyle === "italic"
+                                ? "normal"
+                                : "italic",
+                          },
+                    );
+                  } else if (event.key === "Enter" && event.shiftKey) {
+                    event.preventDefault();
+                    insertPlainText(event.currentTarget, "\n");
+                  } else if (event.key === "Enter") {
                     event.preventDefault();
                     saveText(event.currentTarget);
                     event.currentTarget.blur();
@@ -374,25 +422,12 @@ function ArtworkItem({
             onChange
               ? (event) => {
                   event.preventDefault();
-                  const content = event.clipboardData
-                    .getData("text/plain")
-                    .replace(/\r?\n/g, " ");
-                  const selection = window.getSelection();
-                  const range = selection?.rangeCount
-                    ? selection.getRangeAt(0)
-                    : null;
-                  if (
-                    range &&
-                    event.currentTarget.contains(range.commonAncestorContainer)
-                  ) {
-                    range.deleteContents();
-                    const inserted = document.createTextNode(content);
-                    range.insertNode(inserted);
-                    range.setStartAfter(inserted);
-                    range.collapse(true);
-                    selection?.removeAllRanges();
-                    selection?.addRange(range);
-                  } else event.currentTarget.textContent += content;
+                  insertPlainText(
+                    event.currentTarget,
+                    event.clipboardData
+                      .getData("text/plain")
+                      .replace(/\r\n/g, "\n"),
+                  );
                 }
               : undefined
           }
@@ -466,61 +501,15 @@ function ArtworkItem({
                 <span>{t("Move text")}</span>
               </button>
               {selected && (
-                <div
-                  className="page-text-toolbar"
-                  role="toolbar"
-                  aria-label={t("Text formatting")}
-                  style={{
-                    ...(position.y > 75
-                      ? { top: "auto", bottom: "calc(100% + 36px)" }
-                      : {}),
-                    ...(position.x > 60 ? { left: "auto", right: 0 } : {}),
+                <PageTextToolbar
+                  artwork={position}
+                  textRef={text}
+                  onChange={change}
+                  beforeFormat={() => {
+                    if (text.current) saveText(text.current);
                   }}
-                  onPointerDown={(event) => event.stopPropagation()}
-                >
-                  <label>
-                    <span>{t("Text size")}</span>
-                    <input
-                      type="number"
-                      min=".5"
-                      max="30"
-                      step=".25"
-                      aria-label={t("Text size")}
-                      value={position.fontSize || 4}
-                      onChange={(event) =>
-                        change({
-                          fontSize: clamp(
-                            Number(event.target.value) || 0.5,
-                            0.5,
-                            30,
-                          ),
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="page-text-color">
-                    <span>{t("Text color")}</span>
-                    <input
-                      type="color"
-                      aria-label={t("Text color")}
-                      value={color}
-                      onChange={(event) =>
-                        change({ color: event.target.value })
-                      }
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    aria-label={t("Delete text")}
-                    title={t("Delete text")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onRemove?.(artwork.id);
-                    }}
-                  >
-                    <EditorIcon name="trash" />
-                  </button>
-                </div>
+                  onRemove={() => onRemove?.(artwork.id)}
+                />
               )}
             </>
           ) : (

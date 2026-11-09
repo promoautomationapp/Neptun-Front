@@ -27,8 +27,9 @@ export function visibleOptionalProductDetails(
 ): DetailEntry[] {
   return entries.filter(
     ([key, value]) =>
-      !isIphoneIosDetail(product, key, value) ||
-      product.detailBlockPlacements?.[key]?.hidden === false,
+      product.detailBlockPlacements?.[key]?.hidden !== true &&
+      (!isIphoneIosDetail(product, key, value) ||
+        product.detailBlockPlacements?.[key]?.hidden === false),
   );
 }
 

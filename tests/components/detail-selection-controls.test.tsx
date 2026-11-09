@@ -143,7 +143,7 @@ it("removes exactly the selected detail without starting a move or the card's ed
   expect(view.container.querySelector(".moving, .dragging-guides")).toBeNull();
 });
 
-it("supports focus, inline text editing, and double-clicking the focused product detail", () => {
+it("opens the detail chooser on click or Enter and toggles fill on double-click without opening it", () => {
   vi.useFakeTimers();
   const save = vi.fn(),
     edit = vi.fn(),
@@ -166,18 +166,22 @@ it("supports focus, inline text editing, and double-clicking the focused product
   act(() => block.focus());
   expect(screen.getByRole("toolbar")).toBeTruthy();
   fireEvent.keyDown(block, { key: "Enter" });
-  const input = screen.getByRole("textbox", { name: "Edit this detail" });
-  expect(document.activeElement).toBe(input);
-  expect(screen.getByRole("toolbar")).toBeTruthy();
-  fireEvent.change(input, { target: { value: "256 GB" } });
-  fireEvent.keyDown(input, { key: "Enter" });
-  expect(save).toHaveBeenCalledExactlyOnceWith("256 GB");
+  expect(edit).toHaveBeenCalledExactlyOnceWith("memory");
+  expect(screen.queryByRole("textbox")).toBeNull();
+  edit.mockClear();
+  fireEvent.click(screen.getByText("128 GB"));
+  act(() => vi.advanceTimersByTime(250));
+  expect(edit).toHaveBeenCalledExactlyOnceWith("memory");
+  edit.mockClear();
   fireEvent.click(screen.getByText("128 GB"));
   fireEvent.doubleClick(screen.getByText("128 GB"));
   act(() => vi.advanceTimersByTime(250));
-  expect(edit).toHaveBeenCalledExactlyOnceWith("memory");
+  expect(edit).not.toHaveBeenCalled();
   expect(screen.queryByRole("textbox")).toBeNull();
-  expect(change).not.toHaveBeenCalled();
+  expect(change).toHaveBeenCalledExactlyOnceWith("detailBlockStyles", {
+    memory: "filled",
+  });
+  expect(save).not.toHaveBeenCalled();
 });
 
 it("moves using the contextual toolbar and keeps resizing bounded at every corner", () => {

@@ -7,6 +7,7 @@ import { CoverPage, ProductPage } from "../../src/features/brochure/Brochure";
 import { builtInBrochurePresets } from "../../src/features/brochure/brochurePresets";
 import { splitPages } from "../../src/features/brochure/campaignPages";
 import { useCampaignEditHistory } from "../../src/features/brochure/useCampaignEditHistory";
+import { brochurePage } from "../fixtures/brochure-page";
 
 afterEach(cleanup);
 const products: Product[] = ["GREEN", "GREY"].map((color, index) => ({
@@ -62,6 +63,43 @@ it("shows one model, photo and shared price with two swatches in all five cover/
       ).not.toMatch(/GREEN|GREY/);
     }
     expect(campaign).toEqual(before);
+  }
+});
+
+it("keeps color grouping independent of custom design IDs and direct export-page inputs", () => {
+  for (const [index, preset] of builtInBrochurePresets.entries()) {
+    const campaign: Campaign = {
+      ...preset.design,
+      id: `custom-${index}`,
+      name: "Team design",
+      brochurePresetId: `team-custom-${index}`,
+      products: structuredClone(products),
+      coverProductCodes: ["SKU1"],
+      includeStoresPage: false,
+    };
+    const interiorProducts = structuredClone(products).map((product) => ({
+      ...product,
+      brochurePage: 2,
+    }));
+    for (const element of [
+      <CoverPage campaign={campaign} />,
+      <ProductPage
+        campaign={{ ...campaign, products: interiorProducts }}
+        page={brochurePage(interiorProducts)}
+      />,
+    ]) {
+      const root = document.createElement("div");
+      root.innerHTML = renderToStaticMarkup(element);
+      expect(root.querySelectorAll(".brochure-product")).toHaveLength(1);
+      expect(root.querySelectorAll(".brochure-product-image")).toHaveLength(1);
+      expect(root.querySelectorAll(".brochure-color-dot")).toHaveLength(2);
+      expect(
+        root.querySelector("[data-product-name]")?.textContent,
+      ).not.toMatch(/GREEN|GREY/);
+      expect(
+        root.querySelector(".brochure-product-code")?.textContent,
+      ).toContain("SKU0");
+    }
   }
 });
 

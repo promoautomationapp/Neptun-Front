@@ -99,6 +99,7 @@ export interface BrochureFooterDesign {
 export interface Campaign {
   updatedBy?: string;
   brochurePresetId?: string;
+  brandLogoMode?: "auto" | "white" | "dark" | "original";
   coverBrandTagline?: string;
   brochureVisualStyle?: "current" | "october";
   pageDecorationDefaults?: PageDecorationDefaults;
@@ -392,6 +393,7 @@ export interface Product {
   brochureOrder?: number;
   brochureCardSize?: { width: number; height: number };
   brochureContentPlacement?: Record<string, Placement>;
+  savingsBadge?: { backgroundColor?: string; textColor?: string };
   bundlePanelColor?: string;
   bundleMemberDetails?: Record<string, string>;
   setSourceRows?: number[];
@@ -507,6 +509,12 @@ export interface Artwork {
   shadow?: boolean;
   shadowColor?: string;
   fontSize?: number;
+  fontWeight?: number;
+  fontStyle?: "normal" | "italic";
+  fontFamily?: string;
+  letterSpacing?: number;
+  lineHeight?: number;
+  textAlign?: "left" | "center" | "right" | "justify";
   text?: string;
   type?: string;
   label?: string;

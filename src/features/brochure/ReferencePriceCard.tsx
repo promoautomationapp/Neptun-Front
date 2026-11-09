@@ -1,5 +1,6 @@
 import React from "react";
 import type { Product } from "../../domain/models";
+import { savingsBadgeColors } from "./savingsBadgeAppearance";
 import geometry from "./priceCardGeometry.json";
 import {
   artworkInstallment,
@@ -114,87 +115,100 @@ export function ReferencePriceCard({
   const shadowId = `price-shadow-${React.useId().replace(/:/g, "")}`;
   const label = `${showRegular ? `Çmimi i rregullt: ${artworkPrice(product.regular).text} €. ` : ""}Çmimi haPPy: ${artworkPrice(product.sale).text} €. ${monthly}`;
   const tab = parts.savingTab.bounds;
+  const savingColors = savingsBadgeColors(product);
   return (
     <>
-      {showSaving && saving && product.brochureContentPlacement?.saving?.hidden !== true && (
-        <span
-          className="reference-saving-tab"
-          data-saving-manual={product.brochureContentPlacement?.saving && Object.keys(product.brochureContentPlacement.saving).some((key) => key !== "hidden") ? "true" : undefined}
-          style={{
-            left: `${(bound(tab, 0) / source.width) * 100}%`,
-            width: `${(width(tab) / source.width) * 100}%`,
-            aspectRatio: `${width(tab)} / ${-bound(tab, 1)}`,
-            ...savingStyle,
-          }}
-          role={onEditSavings ? "button" : "img"}
-          tabIndex={onEditSavings ? 0 : undefined}
-          aria-label={
-            savingMode === "percentage"
-              ? `Zbritje ${saving.text.slice(0, -1)} për qind`
-              : `Kurseni ${saving.text.slice(0, -1)} euro`
-          }
-          onClick={
-            onEditSavings
-              ? (event) => {
-                  event.stopPropagation();
-                  onEditSavings(product);
-                }
-              : undefined
-          }
-          onKeyDown={
-            onEditSavings
-              ? (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
+      {showSaving &&
+        saving &&
+        product.brochureContentPlacement?.saving?.hidden !== true && (
+          <span
+            className="reference-saving-tab"
+            data-saving-manual={
+              product.brochureContentPlacement?.saving &&
+              Object.keys(product.brochureContentPlacement.saving).some(
+                (key) => key !== "hidden",
+              )
+                ? "true"
+                : undefined
+            }
+            style={{
+              left: `${(bound(tab, 0) / source.width) * 100}%`,
+              width: `${(width(tab) / source.width) * 100}%`,
+              aspectRatio: `${width(tab)} / ${-bound(tab, 1)}`,
+              ...savingStyle,
+            }}
+            role={onEditSavings ? "button" : "img"}
+            tabIndex={onEditSavings ? 0 : undefined}
+            aria-label={
+              savingMode === "percentage"
+                ? `Zbritje ${saving.text.slice(0, -1)} për qind`
+                : `Kurseni ${saving.text.slice(0, -1)} euro`
+            }
+            onClick={
+              onEditSavings
+                ? (event) => {
                     event.stopPropagation();
                     onEditSavings(product);
                   }
-                }
-              : undefined
-          }
-        >
-          {savingControls}
-          <svg
-            viewBox={`${tab[0]} ${tab[1]} ${width(tab)} ${-bound(tab, 1)}`}
-            aria-hidden="true"
+                : undefined
+            }
+            onKeyDown={
+              onEditSavings
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onEditSavings(product);
+                    }
+                  }
+                : undefined
+            }
           >
-            <path
-              d={parts.savingTab.path}
-              fill="var(--brochure-price-blue, #243a6a)"
-            />
-            <text
-              x={center(parts.savingLabel.bounds)}
-              y={parts.savingLabel.baseline}
-              textAnchor="middle"
-              fill="#fff"
-              fontWeight={700}
-              fontSize={fittedArtworkFont(
-                saving.label,
-                parts.savingLabel.pointSize,
-                width(tab) - 7,
-                "bold",
-              )}
+            {savingControls}
+            <svg
+              viewBox={`${tab[0]} ${tab[1]} ${width(tab)} ${-bound(tab, 1)}`}
+              aria-hidden="true"
             >
-              {saving.label}
-            </text>
-            <text
-              x={center(parts.savingNumber.bounds)}
-              y={parts.savingNumber.baseline}
-              textAnchor="middle"
-              fill="#fff"
-              fontWeight={700}
-              fontSize={fittedArtworkFont(
-                saving.text,
-                parts.savingNumber.pointSize,
-                width(tab) - 3,
-                "bold",
-              )}
-            >
-              {saving.text}
-            </text>
-          </svg>
-        </span>
-      )}
+              <path
+                d={parts.savingTab.path}
+                fill={
+                  savingColors.backgroundColor ||
+                  "var(--brochure-price-blue, #243a6a)"
+                }
+              />
+              <text
+                x={center(parts.savingLabel.bounds)}
+                y={parts.savingLabel.baseline}
+                textAnchor="middle"
+                fill={savingColors.textColor || "#fff"}
+                fontWeight={700}
+                fontSize={fittedArtworkFont(
+                  saving.label,
+                  parts.savingLabel.pointSize,
+                  width(tab) - 7,
+                  "bold",
+                )}
+              >
+                {saving.label}
+              </text>
+              <text
+                x={center(parts.savingNumber.bounds)}
+                y={parts.savingNumber.baseline}
+                textAnchor="middle"
+                fill={savingColors.textColor || "#fff"}
+                fontWeight={700}
+                fontSize={fittedArtworkFont(
+                  saving.text,
+                  parts.savingNumber.pointSize,
+                  width(tab) - 3,
+                  "bold",
+                )}
+              >
+                {saving.text}
+              </text>
+            </svg>
+          </span>
+        )}
       <svg
         className="reference-price-svg"
         viewBox={`0 0 ${source.width} ${source.height}`}

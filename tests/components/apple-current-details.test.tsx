@@ -71,6 +71,35 @@ it("puts current Apple capacity and the one-year warranty in one compact details
   expect(card.querySelector(".brochure-price-sale")).toBeNull();
 });
 
+it("deduplicates an imported warranty and appends it to the orange detail strip, including October", () => {
+  const product = {
+    ...apple,
+    warranty: undefined,
+    brochureDetails: ["1 VIT GARANCION", "Memory: 256 GB", "Screen: OLED"],
+  };
+  const campaign: Campaign = {
+    id: "october-warranty",
+    name: "October",
+    products: [product],
+    theme: "blue",
+    offerStyle: "current",
+    brochureFooter: { style: "reference" },
+  };
+  const container = document.createElement("div");
+  container.innerHTML = renderToStaticMarkup(
+    <ProductPage campaign={campaign} page={brochurePage([product])} />,
+  );
+  const row = container.querySelector(".brochure-specs")!;
+  const blocks = row.querySelectorAll("[data-detail-key]");
+  expect(
+    container.querySelectorAll('[data-detail-key="__warranty"]'),
+  ).toHaveLength(1);
+  expect(blocks[blocks.length - 1]?.getAttribute("data-detail-key")).toBe(
+    "__warranty",
+  );
+  expect(row.querySelector('[data-detail-key="0"]')).toBeNull();
+});
+
 it("hides catalog iOS facts by default without hiding iPadOS or Android facts", () => {
   const { card } = page({ ...apple, specs: { iOS: "26", Memorje: "256 GB" } });
   expect(card.querySelector('[data-detail-key="iOS"]')).toBeNull();

@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import type { Campaign } from "../../src/domain/models";
 import {
   applyCoverProductPlacement,
+  collectionCoverHeaderPlacement,
   coverProductPlacement,
   repairCoverProductLayout,
 } from "../../src/features/brochure/coverElements";
@@ -32,12 +33,65 @@ const frames = (value: Campaign) =>
     coverProductPlacement(value, index, products.length),
   );
 
+it("keeps Hajde and the variable campaign title above the product rows", () => {
+  const hajde = collectionCoverHeaderPlacement("hajde");
+  const title = collectionCoverHeaderPlacement("message");
+  expect(hajde.y).toBe(19);
+  expect(title.y).toBe(hajde.y);
+  expect(hajde.x + hajde.width).toBeLessThan(title.x);
+  const hero = frames(campaign(3))[0]!;
+  expect(Math.max(hajde.y + hajde.height, title.y + title.height)).toBeLessThan(
+    hero.y,
+  );
+});
+
 it("keeps a single offer in the featured row and leaves the lower row available", () => {
   const value = campaign(1);
   expect(resolvedCoverProductLayout(value, 1)).toBe("hero");
   expect(frames(value)[0]).toEqual(frames(campaign(3))[0]);
-  expect(frames(value)[0]!.y + frames(value)[0]!.height).toBeLessThan(58);
+  expect(frames(value)[0]!.y + frames(value)[0]!.height).toBeLessThan(60);
   expect(isFeaturedCoverProduct(value, "offer-0", 0, 1)).toBe(true);
+});
+
+it.each(["neptun-current", "neptun-gradient-all"])(
+  "reserves the top quarter for a campaign title in %s without enlarging the product rows",
+  (brochurePresetId) => {
+    for (const count of [2, 3, 4]) {
+      const value = {
+        ...campaign(count),
+        brochurePresetId,
+        tagline: "A different campaign title",
+        showCoverHeadline: true,
+      };
+      const [top, ...bottom] = frames(value);
+      expect(top).toEqual({ x: 5, y: 28, width: 90, height: 31 });
+      expect(
+        bottom.every((frame) => frame.y === 63 && frame.height === 31),
+      ).toBe(true);
+      expect(bottom.at(-1)!.y + bottom.at(-1)!.height).toBe(94);
+    }
+  },
+);
+
+it("migrates the previous automatic hero frames to the lower title-safe rows without resetting custom frames", () => {
+  const value = campaign(3);
+  value.coverElementPlacements = {
+    "product-offer-0": { x: 3, y: 19, width: 94, height: 34.5 },
+    "product-offer-1": { x: 3, y: 57.5, width: 45.75, height: 34.5 },
+    "product-offer-2": { x: 51.25, y: 57.5, width: 45.75, height: 34.5 },
+  };
+  expect(repairCoverProductLayout(value).coverElementPlacements).toEqual({});
+  value.coverElementPlacements["product-offer-2"] = {
+    x: 70,
+    y: 65,
+    width: 25,
+    height: 24,
+  };
+  const custom = repairCoverProductLayout(value);
+  expect(custom.coverElementPlacements?.["product-offer-2"]).toEqual(
+    value.coverElementPlacements["product-offer-2"],
+  );
+  expect(custom.coverElementPlacements?.["product-offer-0"]?.y).toBe(19);
 });
 
 it.each([2, 3, 4])(
@@ -69,8 +123,8 @@ it.each([5, 7, 12, 30])(
       expect(card.height).toBeGreaterThan(0);
       expect(card.x).toBeGreaterThanOrEqual(0);
       expect(card.x + card.width).toBeLessThanOrEqual(100 + 1e-8);
-      expect(card.y).toBeGreaterThanOrEqual(19);
-      expect(card.y + card.height).toBeLessThanOrEqual(92 + 1e-8);
+      expect(card.y).toBeGreaterThanOrEqual(28);
+      expect(card.y + card.height).toBeLessThanOrEqual(94 + 1e-8);
       for (const previous of cards.slice(0, index)) {
         const overlaps =
           card.x < previous.x + previous.width &&
@@ -140,7 +194,7 @@ it.each(["neptun-current", "neptun-gradient-all"])(
       expect(repaired.coverElementPlacements).toEqual({});
       expect(value).toEqual(original);
       const [top, ...bottom] = frames(repaired);
-      expect(top!.width).toBe(94);
+      expect(top!.width).toBe(90);
       expect(new Set(bottom.map((frame) => frame.y)).size).toBe(1);
       for (const frame of bottom)
         expect(frame.y).toBeGreaterThan(top!.y + top!.height);
@@ -179,7 +233,7 @@ it.each(["neptun-current", "neptun-gradient-all"])(
     const repaired = repairCoverProductLayout(value);
     expect(repaired.coverElementPlacements).toEqual({});
     const [top, bottom] = frames(repaired);
-    expect(top!.y).toBe(19);
+    expect(top!.y).toBe(28);
     expect(bottom!.y).toBeGreaterThan(top!.y + top!.height);
     expect(bottom!.width).toBe(top!.width);
   },

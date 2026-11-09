@@ -96,6 +96,97 @@ it("keeps different slots, capacities, prices, facts and genuine bundles separat
   ).toHaveLength(2);
 });
 
+it("keeps every Excel offer on its assigned page when several slots each contain colors", () => {
+  const groups = [
+    [
+      "10.1",
+      "KUJFE SAMSUNG SM-R420NZKAEUC BUDS 3 FE BLACK",
+      "KUJFE SAMSUNG SM-R420NZAAEUC BUDS 3 FE GREY",
+    ],
+    [
+      "10.2",
+      "SMARTWATCH SAMSUNG SM-L350NZKAEUC WATCH 9 44MM BLACK",
+      "SMARTWATCH SAMSUNG SM-L350NZSAEUC WATCH 9 44MM SILVER",
+    ],
+    ["10.3", "KUJFE HUAWEI FREECLIP 2 BLACK", "KUJFE HUAWEI FREECLIP 2 WHITE"],
+    ["10.4", "SMARTWATCH GARMIN FENIX 8 PRO 51MM GREY"],
+  ];
+  const products = groups.flatMap(([slot, ...names]) =>
+    names.map((name, index) => {
+      const [page, order] = slot!.split(".").map(Number);
+      return phone(`${slot}-${index}`, "BLACK", {
+        name: name!,
+        brand: name!.includes("HUAWEI")
+          ? "HUAWEI"
+          : name!.includes("GARMIN")
+            ? "GARMIN"
+            : "SAMSUNG",
+        brochurePage: page,
+        brochureOrder: order,
+      });
+    }),
+  );
+  const value: Campaign = { id: "page-ten", name: "Excel slots", products };
+  const pages = splitPages(brochureColorVariantCampaign(value));
+  expect(pages).toHaveLength(9);
+  const pageTen = pages[8]!;
+  expect(pageTen.products.every((product) => product.brochurePage === 10)).toBe(
+    true,
+  );
+  expect(pageTen.products.map((product) => product.code)).toEqual([
+    "10.1-0",
+    "10.2-0",
+    "10.3-0",
+    "10.4-0",
+  ]);
+  expect(pageTen.products.map((product) => product.brochureOrder)).toEqual([
+    1, 2, 3, 4,
+  ]);
+  expect(
+    pageTen.products
+      .slice(0, 3)
+      .every((product) => productColors(product).length === 2),
+  ).toBe(true);
+});
+
+it("retains custom cover positions when a selected color resolves to the first SKU, including already-grouped snapshots", () => {
+  const custom = { x: 10, y: 40, width: 70, height: 28 };
+  const source: Campaign = {
+    id: "custom-colors",
+    name: "Custom colors",
+    products: [phone("green", "GREEN"), phone("grey", "GREY")],
+    brochurePresetId: "team-custom-design",
+    coverProductCodes: ["grey"],
+    coverBannerProductCode: "grey",
+    coverElementPlacements: { "product-grey": custom },
+  };
+  const original = structuredClone(source);
+  const grouped = brochureColorVariantCampaign(source);
+  expect(grouped.coverElementPlacements).toEqual({ "product-green": custom });
+  expect(grouped.coverProductCodes).toEqual(["green"]);
+  expect(grouped.coverBannerProductCode).toBe("green");
+  expect(source).toEqual(original);
+  const staleSelection: Campaign = {
+    ...grouped,
+    coverProductCodes: ["grey"],
+    coverBannerProductCode: "grey",
+    coverElementPlacements: { "product-grey": custom },
+  };
+  materializeCampaignColorVariants(staleSelection);
+  expect(staleSelection).toEqual(grouped);
+  expect(brochureColorVariantCampaign(grouped)).toBe(grouped);
+  const firstWins = brochureColorVariantCampaign({
+    ...source,
+    coverElementPlacements: {
+      "product-grey": custom,
+      "product-green": { x: 5, y: 30, width: 90, height: 30 },
+    },
+  });
+  expect(firstWins.coverElementPlacements).toEqual({
+    "product-green": { x: 5, y: 30, width: 90, height: 30 },
+  });
+});
+
 it("recognizes catalog Samsung finish suffixes while keeping hardware, generation, size and LTE distinct", () => {
   const catalogPhone = (
     suffix: string,
@@ -205,4 +296,13 @@ it("recovers the workbook FIT3 color-only legacy bundle without losing its share
       },
     ])[0]?.bundleProducts,
   ).toHaveLength(2);
+  for (const conflictingSlot of [{ brochurePage: 12 }, { brochureOrder: 2 }])
+    expect(
+      brochureColorVariantProducts([
+        {
+          ...legacy,
+          bundleProducts: [members[0]!, { ...members[1]!, ...conflictingSlot }],
+        },
+      ])[0]?.bundleProducts,
+    ).toHaveLength(2);
 });

@@ -65,6 +65,8 @@ import { ProductInformation } from "../products/ProductInformation";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import { brochureFormatSelection } from "./brochureFormat";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
+import { BrandLogoPreview } from "./BrandLogoPreview";
+import type { BrandLogoMode } from "./brandLogoAppearance";
 
 function spreadsheetColumn(index: number): string {
   let value = index + 1;
@@ -192,6 +194,9 @@ export function CreateCampaign({
     initialDesign.productBackgroundImage ??
       initialSettings.brochure.productBackground.image,
   );
+  const [brandLogoMode, setBrandLogoMode] = useState<BrandLogoMode>(
+    initialDesign.brandLogoMode || "auto",
+  );
   const [layout, setLayout] = useState<string>(
     initialDesign.layout ?? initialSettings.brochure.layout,
   );
@@ -234,6 +239,7 @@ export function CreateCampaign({
     setBackgroundColor(d.productBackgroundColor ?? "");
     setBackgroundGradient(d.productBackgroundGradient ?? null);
     setBackgroundImage(d.productBackgroundImage ?? "");
+    setBrandLogoMode(d.brandLogoMode || "auto");
     setLayout(d.layout ?? "feature3");
     setAutoProductLayout(d.autoProductLayout ?? true);
     setBrochureFormat(d.brochureFormat ?? "neptun1080x1350");
@@ -295,6 +301,7 @@ export function CreateCampaign({
       productBackgroundColor: backgroundGradient ? "" : backgroundColor,
       productBackgroundGradient: backgroundGradient,
       productBackgroundImage: backgroundImage,
+      brandLogoMode,
       coverImage: "",
       showCoverBand,
       showCoverMessage: Boolean(tagline.trim()),
@@ -343,6 +350,20 @@ export function CreateCampaign({
               value={selectedPreset.id}
               onChange={choosePreset}
               onPreview={setPreviewPreset}
+            />
+            <BrandLogoPreview
+              campaign={{
+                ...selectedPreset.design,
+                theme,
+                brandLogoMode,
+                brandLogos: selectedPreset.design.brandLogos || initialSettings.brandLogos,
+                productBackgroundColor: backgroundColor,
+                productBackgroundGradient: backgroundGradient,
+                productBackgroundImage: backgroundImage,
+                ...(coverImage ? { coverBackgroundImage: coverImage } : {}),
+              }}
+              products={importedProducts.length ? importedProducts : catalog}
+              onChange={setBrandLogoMode}
             />
             {blueDesign && (
               <div className="cs-preset-upload">
@@ -1785,13 +1806,10 @@ export function Details({
       const row = rows.find(
         (element) => element.dataset.detailEditorKey === focusDetailKey,
       );
-      const field =
-        row?.querySelector<HTMLTextAreaElement>("textarea") ||
-        row?.querySelector<HTMLInputElement>("input:last-of-type");
-      if (field) {
+      const field = row?.querySelector<HTMLButtonElement>(".cs-detail-row-edit");
+      if (row && field) {
         row?.scrollIntoView?.({ block: "center" });
         field.focus();
-        field.select();
         return;
       }
       const textarea = document.querySelector<HTMLTextAreaElement>(

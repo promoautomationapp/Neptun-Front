@@ -4,6 +4,13 @@ import { installmentCount, money } from "./Brochure";
 import { Button, Field, Modal } from "./Modals";
 import { savingModeFor } from "./offerStyles";
 import { t } from "./i18n";
+import {
+  savingsBadgeColors,
+  savingsBadgeDefaults,
+} from "./savingsBadgeAppearance";
+import { SavingsCircleArtwork } from "./RedReferencePrice";
+import { usesBlueReferencePrice } from "./priceDesign";
+import "../../styles/savings-badge-controls.css";
 
 export function ProductPriceEditor({
   product,
@@ -23,6 +30,7 @@ export function ProductPriceEditor({
       | "savingMode"
       | "confirmedAboveRegular"
       | "brochureContentPlacement"
+      | "savingsBadge"
     >,
   ) => void;
   onClose: () => void;
@@ -35,6 +43,18 @@ export function ProductPriceEditor({
   const [showSaving, setShowSaving] = useState(
     product.brochureContentPlacement?.saving?.hidden !== true,
   );
+  const [savingsBadge, setSavingsBadge] = useState<Product["savingsBadge"]>(
+    product.savingsBadge,
+  );
+  const badgeDefaults = savingsBadgeDefaults(campaign, product);
+  const badgeColors = {
+    ...badgeDefaults,
+    ...Object.fromEntries(
+      Object.entries(savingsBadgeColors({ ...product, savingsBadge })).filter(
+        ([, value]) => value,
+      ),
+    ),
+  };
   const [confirmedHigher, setConfirmedHigher] = useState(
     Boolean(product.confirmedAboveRegular),
   );
@@ -129,6 +149,70 @@ export function ProductPriceEditor({
               {t("Zbritje")} <b>{saving ? `${percent}%` : "—"}</b>
             </button>
           </div>
+          <div className="cs-savings-appearance">
+            <div
+              className="cs-savings-preview"
+              aria-label={t("Savings badge preview")}
+            >
+              {usesBlueReferencePrice(product, campaign) ? (
+                <span
+                  style={{
+                    background: badgeColors.backgroundColor,
+                    color: badgeColors.textColor,
+                  }}
+                >
+                  {t(savingMode === "percentage" ? "Zbritje" : "Kurseni")}
+                  <strong>
+                    {savingMode === "percentage"
+                      ? `${percent}%`
+                      : `${money(saving)}€`}
+                  </strong>
+                </span>
+              ) : (
+                <SavingsCircleArtwork
+                  product={{
+                    ...product,
+                    regular: regularAmount,
+                    sale: saleAmount,
+                    savingsBadge: badgeColors,
+                    brochureContentPlacement: undefined,
+                  }}
+                  savingMode={savingMode}
+                />
+              )}
+            </div>
+            <Field label={t("Badge background color")}>
+              <input
+                type="color"
+                value={badgeColors.backgroundColor}
+                onChange={(event) =>
+                  setSavingsBadge((value) => ({
+                    ...value,
+                    backgroundColor: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field label={t("Badge text color")}>
+              <input
+                type="color"
+                value={badgeColors.textColor}
+                onChange={(event) =>
+                  setSavingsBadge((value) => ({
+                    ...value,
+                    textColor: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <button
+              type="button"
+              className="cs-savings-reset"
+              onClick={() => setSavingsBadge(undefined)}
+            >
+              {t("Use design colors")}
+            </button>
+          </div>
           {!saving && (
             <small>
               {t(
@@ -172,6 +256,7 @@ export function ProductPriceEditor({
               regular: hasRegular ? regularAmount : null,
               sale: saleAmount,
               savingMode,
+              savingsBadge,
               confirmedAboveRegular: higher && confirmedHigher,
               brochureContentPlacement: Object.keys(brochureContentPlacement)
                 .length

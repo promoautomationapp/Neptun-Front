@@ -102,7 +102,32 @@ export function catalogDetailFacts(
             value: line.slice(colon + 1).trim(),
           };
     });
-  return [...specs, ...description];
+  const excel = Object.entries(product.excelSource?.cells || {})
+    .filter(([key]) =>
+      /detail|spec|karakter|pershkr|përshkr|description|feature|garanc|warrant|energ|inverter|wi[ -]?fi|\bbtu\b|temperatur|teknolog/i.test(
+        key,
+      ),
+    )
+    .flatMap(([key, value]) => {
+      if (
+        !/detail|spec|karakter|pershkr|përshkr|description|feature/i.test(key)
+      )
+        return [{ key: detailPlainText(key), value: detailPlainText(value) }];
+      return detailPlainText(value)
+        .split(/\n+/)
+        .map((line) => {
+          const text = line.replace(/^\s*[*•·]\s*/, "").trim();
+          const colon = text.indexOf(":");
+          return colon < 0
+            ? { key: "", value: text }
+            : {
+                key: text.slice(0, colon).trim(),
+                value: text.slice(colon + 1).trim(),
+              };
+        })
+        .filter(({ value }) => value);
+    });
+  return [...specs, ...description, ...excel];
 }
 
 export function isDeniedDetail(value: unknown): boolean {

@@ -140,12 +140,12 @@ it("restores a cancelled text edit and pastes only plain text", () => {
         type === "text/plain" ? "New\noffers" : "<b>New offers</b>",
     },
   });
-  expect(text.textContent).toBe("New offers");
+  expect(text.textContent).toBe("New\noffers");
   expect(text.querySelector("b")).toBeNull();
   fireEvent.blur(text);
   expect(change).toHaveBeenCalledWith("headline", {
     ...layer,
-    text: "New offers",
+    text: "New\noffers",
   });
 });
 
@@ -157,9 +157,10 @@ it("shows formatting for the selected text with size, color, removal and a dedic
   fireEvent.pointerUp(item);
   expect(change).not.toHaveBeenCalled();
   expect(item.style.left).toBe("10%");
-  fireEvent.change(getByRole("spinbutton", { name: "Text size" }), {
-    target: { value: "6" },
+  fireEvent.change(getByRole("combobox", { name: "Text size" }), {
+    target: { value: "64.8" },
   });
+  fireEvent.blur(getByRole("combobox", { name: "Text size" }));
   expect(change).toHaveBeenLastCalledWith("headline", {
     ...layer,
     fontSize: 6,
@@ -269,4 +270,92 @@ it("keeps double-click replacement and file-drop replacement available on image 
     height: 10,
   });
   expect(change.mock.calls[0]?.[1]?.image).toBe("/uploaded/replacement.svg");
+});
+
+it("keeps pending text while formatting and restores typography in a read-only brochure", () => {
+  const { text, change, getByRole, rerender, container, queryByRole } =
+    fixture();
+  fireEvent.pointerDown(text);
+  text.textContent = "Campaign title";
+  const bold = getByRole("button", { name: "Bold" });
+  fireEvent.pointerDown(bold);
+  fireEvent.click(bold);
+  fireEvent.click(getByRole("button", { name: "Italic" }));
+  fireEvent.click(getByRole("button", { name: "Text spacing" }));
+  fireEvent.change(getByRole("spinbutton", { name: "Character spacing" }), {
+    target: { value: "0.08" },
+  });
+  fireEvent.change(getByRole("spinbutton", { name: "Line height" }), {
+    target: { value: "1.4" },
+  });
+  fireEvent.click(getByRole("button", { name: "Text alignment" }));
+  fireEvent.click(getByRole("button", { name: "Center" }));
+  const saved = change.mock.calls.at(-1)![1];
+  expect(saved).toMatchObject({
+    text: "Campaign title",
+    fontWeight: 400,
+    fontStyle: "italic",
+    letterSpacing: 0.08,
+    lineHeight: 1.4,
+    textAlign: "center",
+  });
+  expect(getByRole("toolbar", { name: "Text formatting" }).parentElement).toBe(
+    document.body,
+  );
+  rerender(
+    <div className="brochure-page">
+      <PageArtwork
+        campaign={{ pageArtworks: { cover: [saved] } }}
+        pageKey="cover"
+      />
+    </div>,
+  );
+  const preview = container.querySelector<HTMLElement>(".page-layer-text")!;
+  expect(preview.textContent).toBe("Campaign title");
+  expect(preview.style.fontWeight).toBe("400");
+  expect(preview.style.fontStyle).toBe("italic");
+  expect(preview.style.letterSpacing).toBe("0.08em");
+  expect(preview.style.lineHeight).toBe("1.4");
+  expect(preview.style.textAlign).toBe("center");
+  expect(queryByRole("toolbar")).toBeNull();
+});
+
+it("keeps the floating toolbar inside a narrow viewport and removes it when deselected", () => {
+  const { text, getByRole, queryByRole } = fixture();
+  vi.spyOn(window, "innerWidth", "get").mockReturnValue(360);
+  fireEvent.pointerDown(text);
+  fireEvent(window, new Event("resize"));
+  const toolbar = getByRole("toolbar", { name: "Text formatting" });
+  expect(parseFloat(toolbar.style.left)).toBeGreaterThanOrEqual(8);
+  expect(
+    parseFloat(toolbar.style.left) + toolbar.getBoundingClientRect().width,
+  ).toBeLessThanOrEqual(352);
+  fireEvent.pointerDown(document.body);
+  expect(queryByRole("toolbar")).toBeNull();
+});
+
+it("selects preset sizes or typed sizes and searches existing or custom font names", () => {
+  const { text, change, getByRole } = fixture();
+  fireEvent.pointerDown(text);
+  expect(
+    getByRole("combobox", { name: "Text size" }).getAttribute("value"),
+  ).toBe("43.2");
+  fireEvent.click(getByRole("button", { name: "Choose text size" }));
+  fireEvent.click(getByRole("option", { name: "54" }));
+  expect(change.mock.calls.at(-1)![1].fontSize).toBe(5);
+  const size = getByRole("combobox", { name: "Text size" });
+  fireEvent.change(size, { target: { value: "81" } });
+  fireEvent.keyDown(size, { key: "Enter" });
+  expect(change.mock.calls.at(-1)![1].fontSize).toBe(7.5);
+  fireEvent.click(getByRole("combobox", { name: "Font" }));
+  const search = getByRole("searchbox", { name: "Search or type a font" });
+  fireEvent.change(search, { target: { value: "Georgia" } });
+  fireEvent.click(getByRole("option", { name: "Georgia" }));
+  expect(change.mock.calls.at(-1)![1].fontFamily).toBe("Georgia");
+  expect(text.style.fontFamily).toContain("Georgia");
+  fireEvent.click(getByRole("combobox", { name: "Font" }));
+  const custom = getByRole("searchbox", { name: "Search or type a font" });
+  fireEvent.change(custom, { target: { value: "My Installed Font" } });
+  fireEvent.keyDown(custom, { key: "Enter" });
+  expect(change.mock.calls.at(-1)![1].fontFamily).toBe("My Installed Font");
 });

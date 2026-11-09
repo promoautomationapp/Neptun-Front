@@ -1,9 +1,16 @@
 import type { Product } from "../../domain/models";
+import { useState } from "react";
 import { SearchableSelect } from "../../components/SearchableSelect";
-import { savedDetailEntries, type DetailEntry } from "./detailFacts";
+import {
+  catalogDetailFacts,
+  normalizedDetail,
+  savedDetailEntries,
+  type DetailEntry,
+} from "./detailFacts";
 import { EditorIcon } from "./EditorIcon";
 import { t } from "./i18n";
 import { isIphoneIosDetail } from "./optionalProductDetails";
+import { isWarrantyDetail } from "./warranty";
 
 type Change = (
   field: keyof Product | Partial<Product>,
@@ -20,14 +27,45 @@ export function ProductDetailRows({
   onChange: Change;
 }) {
   const supplied = Array.isArray(product.brochureDetails);
-  const rows = supplied ? savedDetailEntries(product) || [] : entries;
-  const save = (next: DetailEntry[]) =>
-    onChange(
-      supplied ? "brochureDetails" : "specs",
-      supplied
-        ? next.map(([key, text]) => ({ key, text }))
-        : Object.fromEntries(next),
-    );
+  const sourceRows: DetailEntry[] = supplied
+    ? savedDetailEntries(product) || []
+    : entries.map(([key, text]) => [key, `${key}: ${text}`]);
+  const rows: DetailEntry[] =
+    product.warranty &&
+    !sourceRows.some(([key, text]) => isWarrantyDetail(key, text))
+      ? [...sourceRows, ["__warranty", product.warranty]]
+      : sourceRows;
+  const [editing, setEditing] = useState<string | null>(null);
+  const serialize = (next: DetailEntry[]) =>
+    next.map(([key, text]) => ({ key, text }));
+  const save = (next: DetailEntry[]) => {
+    const warranty = next.find(([key, text]) => isWarrantyDetail(key, text));
+    onChange({
+      brochureDetails: serialize(next),
+      autoSpecsDisabled: true,
+      ...(warranty ? { warranty: warranty[1] } : {}),
+    });
+  };
+  const available = catalogDetailFacts(product).filter(
+    ({ key, value }, index, facts) => {
+      if (!value) return false;
+      const text = normalizedDetail(value),
+        full = normalizedDetail(`${key}: ${value}`);
+      return (
+        !rows.some(
+          ([rowKey, rowText]) =>
+            normalizedDetail(rowText) === text ||
+            normalizedDetail(rowText) === full ||
+            normalizedDetail(`${rowKey}: ${rowText}`) === full,
+        ) &&
+        !facts
+          .slice(0, index)
+          .some(
+            (fact) => normalizedDetail(`${fact.key}: ${fact.value}`) === full,
+          )
+      );
+    },
+  );
   const move = (index: number, delta: number) => {
     const next = [...rows];
     [next[index], next[index + delta]] = [next[index + delta]!, next[index]!];
@@ -42,7 +80,7 @@ export function ProductDetailRows({
         <h4>{t("Details shown in brochure")}</h4>
         <p>
           {t(
-            "Edit each block separately. Use the arrows to change their order.",
+            "Select details from Excel or the catalog. Hidden rows stay available and keep their order.",
           )}
         </p>
       </div>
@@ -50,10 +88,58 @@ export function ProductDetailRows({
         <div
           className="cs-detail-row-card"
           data-detail-editor-key={key}
-          key={supplied ? key : index}
+          key={key}
         >
           <div className="cs-detail-row-heading">
-            <span>{String(index + 1).padStart(2, "0")}</span>
+            <label className="cs-detail-row-visible">
+              <input
+                type="checkbox"
+                aria-label={
+                  isIphoneIosDetail(product, key, text)
+                    ? t("Show iOS version in brochure")
+                    : `${t("Show detail in brochure")} ${index + 1}`
+                }
+                checked={
+                  isWarrantyDetail(key, text)
+                    ? product.hideWarranty !== true
+                    : isIphoneIosDetail(product, key, text)
+                      ? product.detailBlockPlacements?.[key]?.hidden === false
+                      : product.detailBlockPlacements?.[key]?.hidden !== true
+                }
+                onChange={(event) =>
+                  onChange({
+                    brochureDetails: serialize(rows),
+                    autoSpecsDisabled: true,
+                    ...(isWarrantyDetail(key, text)
+                      ? { hideWarranty: !event.target.checked }
+                      : {}),
+                    detailBlockPlacements: {
+                      ...product.detailBlockPlacements,
+                      [key]: {
+                        ...product.detailBlockPlacements?.[key],
+                        hidden: !event.target.checked,
+                      },
+                      ...(isWarrantyDetail(key, text)
+                        ? {
+                            __warranty: {
+                              ...product.detailBlockPlacements?.__warranty,
+                              hidden: !event.target.checked,
+                            },
+                          }
+                        : {}),
+                    },
+                  })
+                }
+              />
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <b>
+                {isWarrantyDetail(key, text)
+                  ? t("Warranty")
+                  : supplied
+                    ? t("Detail block")
+                    : key}
+              </b>
+            </label>
             <div>
               <button
                 type="button"
@@ -75,57 +161,49 @@ export function ProductDetailRows({
                 type="button"
                 className="cs-detail-row-remove"
                 aria-label={`${t("Remove detail")} ${key}`}
-                onClick={() => save(rows.filter((_, i) => i !== index))}
+                onClick={() => {
+                  if (isWarrantyDetail(key, text))
+                    onChange({
+                      hideWarranty: true,
+                      detailBlockPlacements: {
+                        ...product.detailBlockPlacements,
+                        [key]: {
+                          ...product.detailBlockPlacements?.[key],
+                          hidden: true,
+                        },
+                      },
+                    });
+                  else save(rows.filter((_, i) => i !== index));
+                }}
               >
                 <EditorIcon name="trash" />
               </button>
             </div>
           </div>
-          {isIphoneIosDetail(product, key, text) && (
-            <label className="cs-detail-row-toggle">
-              <input
-                type="checkbox"
-                checked={product.detailBlockPlacements?.[key]?.hidden === false}
-                onChange={(event) =>
-                  onChange("detailBlockPlacements", {
-                    ...product.detailBlockPlacements,
-                    [key]: {
-                      ...product.detailBlockPlacements?.[key],
-                      hidden: !event.target.checked,
-                    },
-                  })
-                }
-              />
-              <span>{t("Show iOS version in brochure")}</span>
-            </label>
-          )}
-          {!supplied && (
+          <p className="cs-detail-row-preview">{text || t("New detail")}</p>
+          <button
+            type="button"
+            className="cs-detail-row-edit"
+            aria-label={`${t("Edit text")} ${index + 1}`}
+            onClick={() => setEditing(editing === key ? null : key)}
+          >
+            {t("Edit text")}
+          </button>
+          {editing === key && (
             <label>
-              <span>{t("Detail label")}</span>
-              <input
-                aria-label={`${t("Detail label")} ${index + 1}`}
-                value={key}
+              <span>{t("Detail text")}</span>
+              <textarea
+                aria-label={`${t("Detail value")} ${index + 1}`}
+                rows={Math.min(5, Math.max(2, text.split("\n").length))}
+                value={text}
                 onChange={(event) => {
                   const next = [...rows];
-                  next[index] = [event.target.value, text];
+                  next[index] = [key, event.target.value];
                   save(next);
                 }}
               />
             </label>
           )}
-          <label>
-            <span>{t("Detail text")}</span>
-            <textarea
-              aria-label={`${t("Detail value")} ${index + 1}`}
-              rows={Math.min(5, Math.max(2, text.split("\n").length))}
-              value={text}
-              onChange={(event) => {
-                const next = [...rows];
-                next[index] = [key, event.target.value];
-                save(next);
-              }}
-            />
-          </label>
           <label className="cs-detail-row-style">
             <span>{t("Block appearance")}</span>
             <SearchableSelect
@@ -149,20 +227,40 @@ export function ProductDetailRows({
           </label>
         </div>
       ))}
+      {available.length > 0 && (
+        <details className="cs-detail-source-options">
+          <summary>
+            {t("Available source details")} <span>{available.length}</span>
+          </summary>
+          {available.map(({ key, value }, index) => (
+            <label key={`${key}:${value}`}>
+              <input
+                type="checkbox"
+                checked={false}
+                onChange={() => {
+                  const sourceKey = `source-${index}-${crypto.randomUUID()}`;
+                  save([
+                    ...rows,
+                    [sourceKey, key ? `${key}: ${value}` : value],
+                  ]);
+                }}
+              />
+              <span>
+                {key && <b>{key}: </b>}
+                {value}
+              </span>
+            </label>
+          ))}
+        </details>
+      )}
       <button
         type="button"
         className="cs-button secondary"
-        onClick={() =>
-          save([
-            ...rows,
-            [
-              supplied
-                ? `detail-${crypto.randomUUID()}`
-                : `${t("New detail")} ${rows.length + 1}`,
-              "",
-            ],
-          ])
-        }
+        onClick={() => {
+          const key = `detail-${crypto.randomUUID()}`;
+          save([...rows, [key, ""]]);
+          setEditing(key);
+        }}
       >
         <EditorIcon name="plus" />
         {t("Add detail block")}

@@ -4,6 +4,8 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import type { Product } from "../../src/domain/models";
 import { Details } from "../../src/features/brochure/Modals";
 import { setLanguage } from "../../src/features/brochure/i18n";
+import { ProductDetailRows } from "../../src/features/brochure/ProductDetailRows";
+import { savedDetailEntries } from "../../src/features/brochure/detailFacts";
 
 beforeEach(() => setLanguage("en"));
 afterEach(cleanup);
@@ -38,6 +40,7 @@ it("keeps Excel iOS off by default, retains its source row, and lets the user ti
   }) as HTMLInputElement;
   expect(checkbox.checked).toBe(false);
   expect(preview.querySelector('[data-detail-key="0"]')).toBeNull();
+  fireEvent.click(view.getByRole("button", { name: "Edit text 1" }));
   expect(
     (
       view.getByRole("textbox", {
@@ -83,11 +86,13 @@ it("edits multiline details in the real preview and retains each block's identit
   }
   const view = render(<Editor />);
   const preview = view.getByRole("region", { name: "Product preview" });
+  fireEvent.click(view.getByRole("button", { name: "Edit text 1" }));
   fireEvent.change(view.getByRole("textbox", { name: "Detail value 1" }), {
     target: { value: "Battery\n6000 mAh" },
   });
   expect(preview.textContent).toContain("6000 mAh");
   fireEvent.click(view.getByRole("button", { name: "Move down 1" }));
+  fireEvent.click(view.getByRole("button", { name: "Edit text 1" }));
   expect(
     (
       view.getByRole("textbox", {
@@ -105,4 +110,61 @@ it("edits multiline details in the real preview and retains each block's identit
     target: { value: "New feature" },
   });
   expect(preview.textContent).toContain("New feature");
+});
+
+it("keeps hidden rows in place and adds source facts without losing the original catalog or Excel data", () => {
+  const original: Product = {
+    code: "facts",
+    name: "Product",
+    brochureDetails: [
+      { key: "power", text: "Power: 6W" },
+      { key: "battery", text: "Battery: 5000 mAh" },
+    ],
+    specs: { Bluetooth: "v5.4" },
+    excelSource: { row: 8, cells: { Përshkrimi: "Energy class: A++" } },
+  };
+  let current = original;
+  function Editor() {
+    const [product, setProduct] = useState(original);
+    current = product;
+    return (
+      <ProductDetailRows
+        product={product}
+        entries={savedDetailEntries(product) || []}
+        onChange={(field, value) =>
+          setProduct((old) => ({
+            ...old,
+            ...(typeof field === "object" ? field : { [field]: value }),
+          }))
+        }
+      />
+    );
+  }
+  const view = render(<Editor />);
+  expect(view.queryByRole("textbox")).toBeNull();
+  fireEvent.click(
+    view.getByRole("checkbox", { name: "Show detail in brochure 1" }),
+  );
+  expect(current.detailBlockPlacements?.power?.hidden).toBe(true);
+  expect(current.brochureDetails).toEqual(original.brochureDetails);
+  fireEvent.click(view.getByRole("button", { name: "Move down 1" }));
+  expect(savedDetailEntries(current)?.map(([key]) => key)).toEqual([
+    "battery",
+    "power",
+  ]);
+  expect(
+    (
+      view.getByRole("checkbox", {
+        name: "Show detail in brochure 2",
+      }) as HTMLInputElement
+    ).checked,
+  ).toBe(false);
+  const source = view.container.querySelector(".cs-detail-source-options")!;
+  fireEvent.click(
+    within(source as HTMLElement).getByLabelText("Bluetooth: v5.4"),
+  );
+  expect(savedDetailEntries(current)?.at(-1)?.[1]).toBe("Bluetooth: v5.4");
+  expect(current.specs).toEqual(original.specs);
+  expect(current.excelSource).toEqual(original.excelSource);
+  expect(current.autoSpecsDisabled).toBe(true);
 });

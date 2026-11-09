@@ -6926,6 +6926,7 @@ export default function App({
               savingMode,
               confirmedAboveRegular,
               brochureContentPlacement,
+              savingsBadge,
             }: Pick<
               Product,
               | "regular"
@@ -6933,6 +6934,7 @@ export default function App({
               | "savingMode"
               | "confirmedAboveRegular"
               | "brochureContentPlacement"
+              | "savingsBadge"
             >) =>
               updateCampaign((draft: Campaign) => {
                 const product = draft.products.find(
@@ -6944,6 +6946,7 @@ export default function App({
                 product.savingMode = savingMode;
                 product.confirmedAboveRegular = confirmedAboveRegular;
                 product.brochureContentPlacement = brochureContentPlacement;
+                product.savingsBadge = savingsBadge;
               })
             }
             onClose={() => setPriceEdit(null)}

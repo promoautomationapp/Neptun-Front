@@ -25,6 +25,10 @@ function legacyColorChoice(product: Product): Product {
     members.some(
       (member) =>
         member.bundleProducts?.length ||
+        (Number.isInteger(member.brochurePage) &&
+          member.brochurePage !== product.brochurePage) ||
+        (Number.isInteger(member.brochureOrder) &&
+          member.brochureOrder !== product.brochureOrder) ||
         !variantColor(member) ||
         (Number(member.regular) > 0 &&
           Number(member.regular) !== Number(product.regular)) ||
@@ -132,11 +136,9 @@ export function brochureColorVariantProducts(
 export function brochureColorVariantCampaign(campaign: Campaign): Campaign {
   const source = campaign.products || [];
   const products = brochureColorVariantProducts(source);
-  if (
+  const sameProducts =
     products.length === source.length &&
-    products.every((product, index) => product === source[index])
-  )
-    return campaign;
+    products.every((product, index) => product === source[index]);
   const aliases = new Map<string, string>();
   for (const product of products) {
     aliases.set(String(product.code), String(product.code));
@@ -158,17 +160,43 @@ export function brochureColorVariantCampaign(campaign: Campaign): Campaign {
     if (parent) aliases.set(String(product.code), String(parent.code));
   }
   const code = (value: string) => aliases.get(String(value)) || value;
+  const coverCodes = campaign.coverProductCodes
+    ? [...new Set(campaign.coverProductCodes.map(code))]
+    : undefined;
+  const coverBannerCode = campaign.coverBannerProductCode
+    ? code(campaign.coverBannerProductCode)
+    : campaign.coverBannerProductCode;
+  const placements = campaign.coverElementPlacements;
+  let remappedPlacements = placements;
+  for (const [key, placement] of Object.entries(placements || {})) {
+    if (!key.startsWith("product-")) continue;
+    const target = `product-${code(key.slice("product-".length))}`;
+    if (key === target) continue;
+    if (remappedPlacements === placements)
+      remappedPlacements = { ...placements };
+    // The primary SKU wins if both variants had saved frames. Otherwise retain
+    // the selected color's frame so custom designs do not lose manual edits.
+    remappedPlacements![target] ??= placement;
+    delete remappedPlacements![key];
+  }
+  if (
+    sameProducts &&
+    coverCodes?.length === campaign.coverProductCodes?.length &&
+    coverCodes?.every(
+      (value, index) => value === campaign.coverProductCodes?.[index],
+    ) !== false &&
+    coverBannerCode === campaign.coverBannerProductCode &&
+    remappedPlacements === placements
+  )
+    return campaign;
   return {
     ...campaign,
     products,
-    ...(campaign.coverProductCodes
-      ? {
-          coverProductCodes: [...new Set(campaign.coverProductCodes.map(code))],
-        }
+    ...(remappedPlacements
+      ? { coverElementPlacements: remappedPlacements }
       : {}),
-    ...(campaign.coverBannerProductCode
-      ? { coverBannerProductCode: code(campaign.coverBannerProductCode) }
-      : {}),
+    ...(coverCodes ? { coverProductCodes: coverCodes } : {}),
+    ...(coverBannerCode ? { coverBannerProductCode: coverBannerCode } : {}),
   };
 }
 
@@ -182,5 +210,7 @@ export function materializeCampaignColorVariants(campaign: Campaign): boolean {
     campaign.coverProductCodes = next.coverProductCodes;
   if (next.coverBannerProductCode)
     campaign.coverBannerProductCode = next.coverBannerProductCode;
+  if (next.coverElementPlacements)
+    campaign.coverElementPlacements = next.coverElementPlacements;
   return true;
 }

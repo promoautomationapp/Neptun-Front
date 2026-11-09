@@ -160,9 +160,10 @@ export function brochureVisibleDetailEntries(
   {
     columns = 2,
     warrantyInStrip = false,
-  }: { columns?: number; warrantyInStrip?: boolean } = {},
+    maxBlocks,
+  }: { columns?: number; warrantyInStrip?: boolean; maxBlocks?: number } = {},
 ): DetailEntry[] {
-  const blocks = columns >= 3 ? 3 : 5;
+  const blocks = maxBlocks ?? (columns >= 3 ? 3 : 5);
   return entries.slice(0, Math.max(1, blocks - Number(warrantyInStrip)));
 }
 

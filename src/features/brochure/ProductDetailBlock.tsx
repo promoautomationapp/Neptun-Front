@@ -178,10 +178,11 @@ export function ProductDetailBlock({
         ?.focus();
       return;
     }
-    if (onSaveText) {
+    if (onEdit) onEdit(detailKey);
+    else if (onSaveText) {
       setDraftText(editText);
       setEditing(true);
-    } else onEdit?.(detailKey);
+    }
   }
   function removeDetail() {
     if (clickTimer.current) clearTimeout(clickTimer.current);
@@ -196,11 +197,6 @@ export function ProductDetailBlock({
   }
   function toggleFill(event: React.MouseEvent<HTMLSpanElement>) {
     if (clickTimer.current) clearTimeout(clickTimer.current);
-    if (onEdit && !(event.target as Element).closest("button,input")) {
-      event.stopPropagation();
-      onEdit(detailKey);
-      return;
-    }
     if (!onChange || (event.target as HTMLElement).closest("button,input"))
       return;
     event.preventDefault();
@@ -489,11 +485,14 @@ export function ProductDetailBlock({
           event.stopPropagation();
           setSelected(true);
         }
-        if (onSaveText) {
+        if (onEdit || onSaveText) {
           if (clickTimer.current) clearTimeout(clickTimer.current);
           clickTimer.current = setTimeout(() => {
-            setDraftText(editText);
-            setEditing(true);
+            if (onEdit) onEdit(detailKey);
+            else {
+              setDraftText(editText);
+              setEditing(true);
+            }
           }, 220);
         }
       }}

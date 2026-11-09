@@ -73,7 +73,7 @@ import {
   otherScreenInches,
   tvScreenInches,
 } from "./tvSpecs";
-import { warrantyDuration } from "./warranty";
+import { isWarrantyDetail, productWarranty } from "./warranty";
 import { productColors } from "./colors";
 import { BundleVariantColors } from "./BundleVariantColors";
 import { offerStyleFor, savingModeFor } from "./offerStyles";
@@ -99,6 +99,7 @@ import {
   coverElementPlacement,
   coverGradientFill,
   coverProductPlacement,
+  collectionCoverHeaderPlacement,
   coverProductDensity,
   coverRibbonColors,
   repairAutomaticCollectionCoverLayout,
@@ -178,6 +179,7 @@ import "../../styles/mobile-details.css";
 import "../../styles/brochure-detail-strip.css";
 import "../../styles/background-readability.css";
 import "../../styles/brochure-october.css";
+import "../../styles/brand-logo-appearance.css";
 import {
   visibleImageBounds,
   televisionScreenBox,
@@ -1326,9 +1328,7 @@ function StandardProductCard({
       ).filter(
         ([key, value]) => value && !/garanc|warrant|ngjyr|colou?r/i.test(key),
       );
-  const warranty = product.hideWarranty
-    ? null
-    : warrantyDuration(product.warranty);
+  const warranty = productWarranty(product);
   const redReference = usesRedReferencePrice(product, campaign);
   const blueReference = usesBlueReferencePrice(product, campaign);
   const screenInches = tvScreenInches(product);
@@ -1348,17 +1348,15 @@ function StandardProductCard({
   // Apple's orange price uses HTML, but its current design still uses the
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
-  const warrantyInStrip =
-    !isOctoberBrochure(campaign) &&
-    referenceStrip &&
-    detailPlacement !== "left";
+  const warrantyInStrip = referenceStrip && !blueReference;
+  const printableSpecs = allSpecs.filter(([key, value]) => !isWarrantyDetail(key, value));
   const preferredSpecs = visibleOptionalProductDetails(
     product,
-    importedSpecs ? allSpecs : brochureDefaultDetailEntries(product, allSpecs),
+    importedSpecs ? printableSpecs : brochureDefaultDetailEntries(product, printableSpecs),
   );
   const specs =
-    detailPlacement === "left"
-      ? visibleOptionalProductDetails(product, allSpecs)
+    product.autoSpecsDisabled || detailPlacement === "left"
+      ? visibleOptionalProductDetails(product, printableSpecs)
       : classicCover
         ? preferredSpecs.slice(
             0,
@@ -1367,6 +1365,7 @@ function StandardProductCard({
         : brochureVisibleDetailEntries(preferredSpecs, {
             columns: layoutGrid(layout || "grid6portrait").columns,
             warrantyInStrip: Boolean(warranty && warrantyInStrip),
+            maxBlocks: isAirConditioner(product) ? 5 : undefined,
           });
   const changeProduct = onProductChange
     ? (
@@ -1755,6 +1754,18 @@ function StandardProductCard({
     placement,
     fittedImagePlacement,
   ]);
+  const warrantyLine = warranty && !warrantyInStrip ? (
+    <ProductDetailBlock
+      product={product}
+      detailKey="__warranty"
+      className={`brochure-warranty-line ${nameAtTop ? "brochure-product-top-warranty" : ""}`}
+      onChange={changeProduct}
+      onEdit={onEditDetails ? () => onEditDetails(product, "__warranty") : undefined}
+      onRemove={changeProduct ? () => changeProduct("hideWarranty", true) : undefined}
+    >
+      {warranty.count} {warranty.unit} GARANCION
+    </ProductDetailBlock>
+  ) : null;
   return (
     <article
       {...quickEdit?.events}
@@ -1821,6 +1832,7 @@ function StandardProductCard({
           {product.name}
         </span>
       )}
+      {nameAtTop && warrantyLine}
       {onEditImage && (
         <MissingCatalogNotice
           product={product}
@@ -2214,6 +2226,7 @@ function StandardProductCard({
           >
             {product.name}
           </span>}
+          {!nameAtTop && warrantyLine}
           <small
             className="brochure-product-code"
             {...inlineText(
@@ -2226,21 +2239,6 @@ function StandardProductCard({
           >
             {String(product.brochureCode ?? product.code)}
           </small>
-          {warranty && !warrantyInStrip && (
-            <ProductDetailBlock
-              product={product}
-              detailKey="__warranty"
-              className="brochure-warranty-line"
-              onChange={changeProduct}
-              onRemove={
-                changeProduct
-                  ? () => changeProduct("hideWarranty", true)
-                  : undefined
-              }
-            >
-              {warranty.count} {warranty.unit} GARANCION
-            </ProductDetailBlock>
-          )}
           {onEditDetails && (
             <button
               type="button"
@@ -2394,6 +2392,7 @@ function StandardProductCard({
               product={product}
               detailKey="__warranty"
               onChange={changeProduct}
+              onEdit={onEditDetails ? () => onEditDetails(product, "__warranty") : undefined}
               onRemove={
                 changeProduct
                   ? () => changeProduct("hideWarranty", true)
@@ -2549,6 +2548,7 @@ function LastPageWithStores({
   return (
     <section
       className={`brochure-page brochure-last-page-shell has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"}`}
+      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, color),
@@ -2725,6 +2725,7 @@ function CoverPageContent({
   return (
     <section
       className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
+      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -3032,7 +3033,7 @@ function CoverPageContent({
           }
           defaultPlacement={
             campaign.coverBandVariant === "hajde"
-              ? { x: 6, y: 12, width: 29, height: 5 }
+              ? collectionCoverHeaderPlacement("hajde")
               : campaign.coverBandVariant === "online"
                 ? { x: 7, y: 48, width: 27, height: 6 }
                 : { x: 12.31, y: 48.24, width: 21.15, height: 4.64 }
@@ -3056,7 +3057,7 @@ function CoverPageContent({
           kind="message"
           defaultPlacement={
             campaign.coverBandVariant === "hajde"
-              ? { x: 39, y: 12, width: 55, height: 5 }
+              ? collectionCoverHeaderPlacement("message")
               : campaign.coverBandVariant === "online"
                 ? { x: 39, y: 48, width: 57, height: 6 }
                 : october
@@ -3302,6 +3303,7 @@ function ProductPageContent({
   return (
     <section
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
+      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -3496,6 +3498,7 @@ export function StoresPage({
     <BrochureFormatFrame campaign={campaign} kind="stores">
       <section
         className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
+        data-brand-logo-mode={campaign.brandLogoMode || "auto"}
         style={{
           ...brochureFormatStyle(campaign),
           ...backgroundReadabilityStyle(

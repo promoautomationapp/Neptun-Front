@@ -17,6 +17,7 @@ import {
 } from "./redPriceModel";
 import type { RedPriceRun } from "./redPriceModel";
 import "../../styles/red-reference-price.css";
+import { savingsBadgeColors } from "./savingsBadgeAppearance";
 
 const { parts } = geometry;
 const width = parts.saleBand.width;
@@ -241,8 +242,10 @@ export function SavingsCircleArtwork({
   legacyFrame?: boolean;
 }) {
   const saving = artworkSaving(product.regular, product.sale, savingMode);
-  if (!saving || product.brochureContentPlacement?.saving?.hidden === true) return null;
+  if (!saving || product.brochureContentPlacement?.saving?.hidden === true)
+    return null;
   const circle = parts.savingCircle;
+  const colors = savingsBadgeColors(product);
   // Scale the circle and its typography together inside the saved outer frame.
   // This keeps every manual position, resize and grouped-offer anchor intact.
   // Reference circles were already 90% of the source artwork; reduce that
@@ -280,9 +283,9 @@ export function SavingsCircleArtwork({
       viewBox={`${frameLeft} ${frameTop} ${frameWidth} ${frameHeight}`}
       aria-hidden="true"
     >
-      <path d={circle.path} fill="#fff" />
+      <path d={circle.path} fill={colors.backgroundColor || "#fff"} />
       <g
-        fill="var(--brochure-price-saving, #ef4023)"
+        fill={colors.textColor || "var(--brochure-price-saving, #ef4023)"}
         fontFamily="TSTAR"
         textAnchor="middle"
       >
@@ -321,11 +324,19 @@ export function RedReferenceSavings({
   children,
 }: RedReferenceSavingsProps) {
   const saving = artworkSaving(product.regular, product.sale, savingMode);
-  if (!saving || product.brochureContentPlacement?.saving?.hidden === true) return null;
+  if (!saving || product.brochureContentPlacement?.saving?.hidden === true)
+    return null;
   return (
     <span
       className={`red-reference-saving ${className}`}
-      data-saving-manual={product.brochureContentPlacement?.saving && Object.keys(product.brochureContentPlacement.saving).some((key) => key !== "hidden") ? "true" : undefined}
+      data-saving-manual={
+        product.brochureContentPlacement?.saving &&
+        Object.keys(product.brochureContentPlacement.saving).some(
+          (key) => key !== "hidden",
+        )
+          ? "true"
+          : undefined
+      }
       style={style}
       role={onEditSavings ? "button" : "img"}
       tabIndex={onEditSavings ? 0 : undefined}

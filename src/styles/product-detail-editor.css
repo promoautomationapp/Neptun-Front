@@ -184,6 +184,71 @@
 .cs-detail-rows > .cs-button {
   justify-self: start;
 }
+.cs-detail-row-visible {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--np-text, #203e5b);
+  font-size: 12px;
+}
+.cs-detail-row-visible > input[type="checkbox"],
+.cs-detail-source-options input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  padding: 0;
+  accent-color: var(--np-primary, #1b638e);
+}
+.cs-detail-row-visible > span {
+  color: var(--np-muted, #6c8499);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.cs-detail-row-card > .cs-detail-row-preview {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--np-text, #203e5b);
+}
+.cs-detail-row-card:has(.cs-detail-row-visible input:not(:checked))
+  > .cs-detail-row-preview {
+  opacity: 0.55;
+}
+.cs-detail-row-edit {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  color: var(--np-primary, #1b638e);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.cs-detail-source-options {
+  border: 1px solid var(--np-border, #d7e2ed);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 13px;
+  color: var(--np-text, #203e5b);
+}
+.cs-detail-source-options > summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.cs-detail-source-options > summary > span {
+  color: var(--np-muted, #6c8499);
+  margin-left: 6px;
+}
+.cs-detail-source-options > label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
 @media (max-width: 700px) {
   .cs-product-detail-editor {
     grid-template-columns: 1fr;

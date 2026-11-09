@@ -284,6 +284,7 @@ export const BROCHURE_DESIGN_KEYS = [
   "logoRuleDefaults",
   "brandAssets",
   "brandLogos",
+  "brandLogoMode",
   "iconDefaults",
   "productDesign",
   "pageDecorationDefaults",
@@ -308,6 +309,7 @@ export const brochurePresetSchema = z.object({
   design: z
     .object({
       brochureVisualStyle: z.enum(["current", "october"]).optional(),
+      brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
       coverBrandTagline: z.string().max(500).optional(),
       offerStyle: priceStyle.optional(),
       pageDecorationDefaults: pageDecorationSchema.optional(),

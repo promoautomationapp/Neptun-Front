@@ -14,6 +14,13 @@ export const COVER_ELEMENT_DEFAULTS: Record<string, CoverPlacement> = {
   message: { x: 47, y: 39.5, width: 49, height: 7.5 },
   gradient: { x: 0, y: 13, width: 100, height: 30 },
 };
+/** The collection headline sits between the separate brand tagline and hero.
+ * CoverElement merges saved edits after these defaults, preserving staff work. */
+export function collectionCoverHeaderPlacement(kind: "hajde" | "message") {
+  return kind === "hajde"
+    ? { x: 18, y: 19, width: 28, height: 6 }
+    : { x: 49, y: 19, width: 43, height: 6 };
+}
 export const COVER_GRADIENT_REGIONS: Record<
   string,
   CoverPlacement | undefined
@@ -158,12 +165,15 @@ export function coverProductPlacement(
   if (!band && (mode === "hero" || featuredIndex >= 0) && count > 0) {
     const hajde = campaign.coverBandVariant === "hajde";
     const reference = campaign.brochureFooter?.style === "reference";
-    const top = hajde ? 19 : reference ? 12 : heroY;
+    const titleArea = hajde || reference;
+    // The collection header owns the upper quarter: logo/tagline, Hajde and
+    // the campaign-specific title. Keep both product rows below that space.
+    const top = titleArea ? 28 : heroY;
     const area = {
-      x: hajde ? 3 : reference ? 2.25 : 4,
+      x: titleArea ? 5 : 4,
       y: top,
-      width: hajde ? 94 : reference ? 95.5 : 92,
-      height: 92 - top,
+      width: titleArea ? 90 : 92,
+      height: titleArea ? 66 : 92 - top,
     };
     // Keep the featured row the same size when the lower row is still empty.
     return featuredPlacement(
@@ -306,6 +316,27 @@ export function repairAutomaticCollectionCoverLayout(
           count,
         ),
       );
+      // Earlier releases materialized the old automatic hero geometry. Once
+      // saved it must also gain the new title space, rather than pinning row
+      // one at19% forever. Exact custom frames remain authoritative below.
+      if (campaign.coverBandVariant === "hajde")
+        historicalFrames.push(
+          featuredPlacement(
+            { x: 3, y: 19, width: 94, height: 73 },
+            index,
+            Math.max(2, count),
+            0,
+          ),
+        );
+      else if (campaign.brochureFooter?.style === "reference")
+        historicalFrames.push(
+          featuredPlacement(
+            { x: 2.25, y: 12, width: 95.5, height: 80 },
+            index,
+            Math.max(2, count),
+            0,
+          ),
+        );
     }
   }
   if (campaign.coverBandVariant === "hajde") {
