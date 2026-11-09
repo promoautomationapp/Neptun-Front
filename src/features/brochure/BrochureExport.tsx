@@ -15,6 +15,7 @@ import {
   resolveBrochureFormat,
 } from "./brochureFormat";
 import { coverProducts } from "./campaignPages";
+import { productPdfLinks } from "./pdfProductLinks";
 
 function exportImageUrl(value: string): string;
 function exportImageUrl(value: undefined): undefined;
@@ -524,6 +525,17 @@ export function BrochureExport({
             undefined,
             "NONE",
           );
+          const products =
+            index === 0
+              ? coverProducts(exportCampaign)
+              : exportPages[index - 1]?.products || [];
+          for (const link of productPdfLinks(
+            page,
+            products,
+            geometry.pdfWidthMm,
+            geometry.pdfHeightMm,
+          ))
+            pdf.link(link.x, link.y, link.width, link.height, { url: link.url });
         } else {
           const extension = format === "png" ? "png" : "jpg";
           const blob = await canvasBlob(
@@ -673,6 +685,8 @@ export function BrochureExport({
               : scope === "all"
                 ? t("One PDF contains every brochure page.")
                 : t("The selected page downloads as one file.")}
+            {format === "pdf" &&
+              ` ${t("Products with a saved Neptun link are clickable in the PDF.")}`}
           </p>
           {error && (
             <p className="cs-export-error" role="alert">

@@ -7,14 +7,17 @@ import { setLanguage } from "../../src/features/brochure/i18n";
 import type { Campaign, Product } from "../../src/domain/models";
 import { toCanvas } from "html-to-image";
 
+const pdfLinks = vi.hoisted(() => ({ link: vi.fn(), addPage: vi.fn() }));
+
 vi.mock("html-to-image", () => ({
   toCanvas: vi.fn(),
   getFontEmbedCSS: async () => "",
 }));
 vi.mock("jspdf", () => ({
   jsPDF: class {
-    addPage() {}
+    addPage = pdfLinks.addPage;
     addImage() {}
+    link = pdfLinks.link;
     output() {
       return new Blob(["PDF"], { type: "application/pdf" });
     }
@@ -37,7 +40,7 @@ vi.mock("../../src/features/brochure/Brochure", () => ({
   ProductPage: ({ page }: { page: { products: Product[] } }) => (
     <section className="brochure-output-page">
       {page.products.map((product) => (
-        <div key={product.code}>
+        <div key={product.code} data-product-code={product.code}>
           {product.name}
           {product.image && <img src={product.image} alt={product.name} />}
         </div>
@@ -63,6 +66,10 @@ beforeEach(() => {
   );
   const geometry = brochureExportGeometry("neptun1080x1350");
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    left: 0,
+    top: 0,
+    right: geometry.previewWidth,
+    bottom: geometry.previewHeight,
     width: geometry.previewWidth,
     height: geometry.previewHeight,
   } as DOMRect);
@@ -90,7 +97,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
-function open(image?: string) {
+function open(image?: string, initialPage = 0) {
   return render(
     <BrochureExport
       campaign={{
@@ -102,12 +109,14 @@ function open(image?: string) {
           {
             code: "84001",
             name: "Phone",
+            url: "https://www.neptun-ks.com/products/phone",
             brochurePage: 2,
             ...(image ? { image } : {}),
           },
         ],
       }}
       settings={{ stores: [], contact: {} }}
+      initialPage={initialPage}
       onClose={close}
     />,
   );
@@ -128,6 +137,27 @@ it("shows missing product and page in Albanian and downloads after the user choo
   );
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(close).toHaveBeenCalledOnce();
+  expect(pdfLinks.link).toHaveBeenCalledOnce();
+  expect(pdfLinks.link).toHaveBeenCalledWith(
+    0,
+    0,
+    expect.any(Number),
+    expect.any(Number),
+    { url: "https://www.neptun-ks.com/products/phone" },
+  );
+});
+
+it("keeps the selected inside page's product link when downloading only that page", async () => {
+  const view = open(undefined, 1);
+  fireEvent.click(view.getByRole("button", { name: "One page" }));
+  fireEvent.click(view.getByRole("button", { name: /Download anyway PDF/ }));
+  await waitFor(() => expect(save).toHaveBeenCalledOnce());
+  expect(toCanvas).toHaveBeenCalledOnce();
+  expect(pdfLinks.addPage).not.toHaveBeenCalled();
+  expect(pdfLinks.link).toHaveBeenCalledOnce();
+  expect(pdfLinks.link.mock.calls[0]![4]).toEqual({
+    url: "https://www.neptun-ks.com/products/phone",
+  });
 });
 
 it("pauses a prepared download for a broken photo, then saves without rendering again on approval", async () => {

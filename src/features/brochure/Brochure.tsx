@@ -1113,6 +1113,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
   return (
     <article
       {...quickEdit?.events}
+      data-product-code={String(product.code)}
       data-cover-card-default={
         !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
       }
@@ -1778,6 +1779,7 @@ function StandardProductCard({
   return (
     <article
       {...quickEdit?.events}
+      data-product-code={String(product.code)}
       data-cover-card-default={
         !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
       }
@@ -1964,7 +1966,7 @@ function StandardProductCard({
               onUploadImage={() => onEditImage(product)}
             />
           ) : (
-            <div className="brochure-image-empty">Foto e produktit</div>
+            <div className="brochure-image-empty" data-export-hide="true">Foto e produktit</div>
           ))}
         {allowScreenArtwork &&
           product.screenArtwork?.image &&

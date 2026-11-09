@@ -2263,6 +2263,8 @@ const translations: Record<string, string> = {
     "Të gjitha faqet si imazhe shkarkohen së bashku në një ZIP.",
   "One PDF contains every brochure page.":
     "Një PDF përmban të gjitha faqet e broshurës.",
+  "Products with a saved Neptun link are clickable in the PDF.":
+    "Në PDF, klikimi mbi një produkt me lidhje të ruajtur hap faqen e tij në Neptun.",
   "The selected page downloads as one file.":
     "Faqja e zgjedhur shkarkohet si një skedar.",
   "Loading brochure images…": "Po ngarkohen imazhet e broshurës…",
