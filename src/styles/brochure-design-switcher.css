@@ -1,0 +1,90 @@
+.cs-brochure-design-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.cs-brochure-design-switch svg {
+  width: 17px;
+  height: 17px;
+}
+.cs-design-switch-gallery .cs-preset-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 14px;
+  overflow: visible;
+}
+.cs-design-switch-gallery .cs-preset-thumb {
+  height: 170px;
+}
+@media (max-width: 560px) {
+  .cs-design-switch-gallery .cs-preset-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cs-design-switch-gallery .cs-preset-thumb {
+    height: 145px;
+  }
+  .cs-brochure-design-switch {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+.cs-design-switch-gallery {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.cs-design-switch-gallery:disabled {
+  opacity: 0.65;
+}
+.cs-design-switch-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: cs-design-switch-turn 0.8s linear infinite;
+  margin-right: 7px;
+}
+@keyframes cs-design-switch-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-design-switch-spinner {
+    animation: none;
+  }
+}
+.cs-design-brand-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--np-selected, #e7f2fc);
+  color: var(--np-text, #264b66);
+  font-size: 12px;
+}
+.cs-design-brand-status > span:first-child {
+  flex: 1;
+  min-width: 180px;
+}
+.cs-design-brand-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #bed7e8;
+  border-top-color: #2678ae;
+  border-radius: 50%;
+  animation: design-brand-spin 0.8s linear infinite;
+}
+@keyframes design-brand-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

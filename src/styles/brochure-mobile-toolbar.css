@@ -2,8 +2,11 @@
 .cs-canvas-actions-row {
   display: contents;
 }
-.campaign-app .cs-canvas-actions-row > button,
-.campaign-app .cs-canvas-actions-row > .cs-brochure-actions-menu > summary {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-actions-row > button,
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-actions-row
+  > .cs-brochure-actions-menu
+  > summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -18,15 +21,15 @@
   font-weight: 700;
   cursor: pointer;
 }
-.campaign-app .cs-canvas-actions-row > button:hover,
-.campaign-app
+:is(.campaign-app, .cs-editor-section) .cs-canvas-actions-row > button:hover,
+:is(.campaign-app, .cs-editor-section)
   .cs-canvas-actions-row
   > .cs-brochure-actions-menu
   > summary:hover {
   background: var(--chrome-raised);
   color: var(--chrome-text);
 }
-.campaign-app
+:is(.campaign-app, .cs-editor-section)
   .cs-canvas-actions-row
   > .cs-canvas-design-button[aria-expanded="true"] {
   border-color: var(--chrome-accent);
@@ -43,15 +46,18 @@
   font-size: 11px;
 }
 @container brochure-editor (max-width: 1320px) {
-  .campaign-app .cs-canvas-actions-row > button,
-  .campaign-app .cs-canvas-actions-row > .cs-canvas-images > summary {
+  :is(.campaign-app, .cs-editor-section) .cs-canvas-actions-row > button,
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-actions-row
+    > .cs-canvas-images
+    > summary {
     gap: 0;
     padding-inline: 8px;
     font-size: 0;
   }
 }
 @container brochure-editor (max-width: 620px) {
-  .campaign-app .cs-canvas-dock:not(.is-collapsed) {
+  :is(.campaign-app, .cs-editor-section) .cs-canvas-dock:not(.is-collapsed) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto 36px;
     align-items: center;
@@ -62,7 +68,9 @@
   .cs-canvas-dock:not(.is-collapsed)::after {
     display: none;
   }
-  .campaign-app .cs-canvas-dock > .cs-brochure-pagination {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > .cs-brochure-pagination {
     grid-column: 1;
     grid-row: 1;
     grid-template-columns: 44px minmax(48px, 1fr) 44px;
@@ -103,7 +111,9 @@
   .cs-canvas-dock .cs-brochure-fit-label {
     display: none;
   }
-  .campaign-app .cs-canvas-dock > .cs-canvas-collapse-button {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > .cs-canvas-collapse-button {
     grid-column: 3;
     grid-row: 1;
     min-width: 36px;
@@ -130,12 +140,20 @@
   .cs-canvas-actions-row .cs-canvas-tools > button {
     flex: none;
   }
-  .campaign-app .cs-canvas-actions-row .cs-canvas-tools {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-actions-row
+    .cs-canvas-tools {
     gap: 0;
   }
-  .campaign-app .cs-canvas-actions-row > button,
-  .campaign-app .cs-canvas-actions-row > .cs-brochure-actions-menu > summary,
-  .campaign-app .cs-canvas-actions-row .cs-canvas-tools > button {
+  :is(.campaign-app, .cs-editor-section) .cs-canvas-actions-row > button,
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-actions-row
+    > .cs-brochure-actions-menu
+    > summary,
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-actions-row
+    .cs-canvas-tools
+    > button {
     min-width: 36px;
     min-height: 36px;
     padding: 7px;
@@ -144,7 +162,10 @@
   .cs-canvas-actions-row .cs-canvas-help {
     margin-left: 0;
   }
-  .campaign-app .cs-canvas-actions-row .cs-canvas-help > summary {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-actions-row
+    .cs-canvas-help
+    > summary {
     font-size: 16px;
   }
   .cs-canvas-actions-row .cs-canvas-help > summary > .cs-action-menu-chevron {
@@ -152,10 +173,12 @@
   }
 }
 @container brochure-editor (max-width: 330px) {
-  .campaign-app .cs-canvas-dock:not(.is-collapsed) {
+  :is(.campaign-app, .cs-editor-section) .cs-canvas-dock:not(.is-collapsed) {
     grid-template-columns: minmax(0, 1fr) 36px;
   }
-  .campaign-app .cs-canvas-dock > .cs-canvas-collapse-button {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > .cs-canvas-collapse-button {
     grid-column: 2;
   }
   .cs-canvas-dock > .cs-brochure-zoom {
@@ -203,4 +226,18 @@
   .cs-preview-header-controls .cs-brochure-zoom output {
     min-width: 34px;
   }
+}
+.cs-editor-section
+  .cs-canvas-actions-row
+  > .cs-canvas-preview-button[aria-pressed="true"] {
+  background: var(--chrome-selected);
+  color: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+}
+.cs-editor-section .cs-canvas-actions-row > button {
+  font-family: inherit;
+  line-height: 1.2;
+}
+.cs-editor-section .cs-canvas-actions-row > button svg {
+  flex-shrink: 0;
 }

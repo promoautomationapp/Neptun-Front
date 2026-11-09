@@ -156,6 +156,11 @@ import {
 } from "../brochure/brochureFormat";
 import { ProductPriceEditor } from "../brochure/ProductPriceEditor";
 import { BackgroundPicker } from "../brochure/BackgroundPicker";
+import { BackgroundCanvasControls } from "../brochure/BackgroundCanvasControls";
+import { BrochureDesignSwitcher } from "../brochure/BrochureDesignSwitcher";
+import { switchBrochureDesign } from "../brochure/switchBrochureDesign";
+import { useDesignBrandPreparation } from "../brochure/useDesignBrandPreparation";
+import { applyPageBackground, pageAppearanceKey, resolvedPageAppearance, setPageAppearance } from "../brochure/pageAppearance";
 import { BrochureGridPicker } from "../brochure/BrochureGridPicker";
 import { PageLayersControls } from "../brochure/PageLayersControls";
 import { CoverDesignControls } from "../brochure/CoverDesignControls";
@@ -2171,6 +2176,10 @@ export function BrochureEditor({
   const [showLogoPicker, setShowLogoPicker] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [showLayerPicker, setShowLayerPicker] = useState(false);
+  const [showDesignSwitcher, setShowDesignSwitcher] = useState(false);
+  const backgroundCanvasRef = useRef<HTMLDivElement>(null);
+  const [showBrandPreparationTools, setShowBrandPreparationTools] = useState(false);
+  const brandPreparation = useDesignBrandPreparation(campaign, onUpdate);
   const canEditCanvas = !previewMode && !inlinePreview && !commentMode;
   const chooseCanvasTool = (tool: CanvasTool) => {
     setTextMode(tool === "text");
@@ -2638,27 +2647,10 @@ export function BrochureEditor({
         campaign[`${backgroundPrefix}BackgroundGradient`] ||
         campaign[`${backgroundPrefix}BackgroundImage`];
   function setBackgroundValues(
-    values: Pick<
-      PageLayout,
-      "backgroundColor" | "backgroundGradient" | "backgroundImage"
-    >,
+    values: Pick<PageLayout, "backgroundColor" | "backgroundGradient" | "backgroundImage">,
   ) {
-    onUpdate((draft: Campaign) => {
-      if (backgroundKind === "product") {
-        draft.pages ||= {};
-        draft.pages[selected] = { ...(draft.pages[selected] || {}), ...values };
-      } else if (backgroundKind === "cover") {
-        draft.coverBackgroundColor = values.backgroundColor;
-        draft.coverBackgroundGradient = values.backgroundGradient;
-        draft.coverBackgroundImage = values.backgroundImage;
-        draft.coverImage = "";
-      } else {
-        draft.storesBackgroundColor = values.backgroundColor;
-        draft.storesBackgroundGradient = values.backgroundGradient;
-        draft.storesBackgroundImage = values.backgroundImage;
-      }
-      if (backgroundKind !== "stores") draft.aiBackgroundChanged = true;
-    });
+    onUpdate((draft: Campaign) => applyPageBackground(draft, backgroundKind, page?.index, values, "page"));
+    void brandPreparation.prepareMissing();
   }
   function changeBackground(color: string) {
     setBackgroundValues({
@@ -2700,7 +2692,8 @@ export function BrochureEditor({
         delete draft.storesBackgroundGradient;
         delete draft.storesBackgroundImage;
       }
-      if (backgroundKind !== "stores") draft.aiBackgroundChanged = true;
+      if (draft.pageAppearances) delete draft.pageAppearances[pageAppearanceKey(backgroundKind, page?.index)];
+      draft.aiBackgroundChanged = false;
     });
   }
   function setPage(field: string, value: JsonValue | Gradient | undefined) {
@@ -2821,6 +2814,13 @@ export function BrochureEditor({
           </span>
         </div>
         <div className="cs-actions cs-brochure-header-actions">
+          <BrochureDesignSwitcher campaign={campaign} settings={settings} open={showDesignSwitcher} onOpenChange={setShowDesignSwitcher} onApply={async (preset) => {
+            const next = structuredClone(campaign);
+            switchBrochureDesign(next, preset);
+            onUpdate((draft) => switchBrochureDesign(draft, preset));
+            await brandPreparation.prepareMissing(next);
+            onToast(t("Brochure design updated. Your content and manual positions were kept."));
+          }} />
           <Button onClick={onImportProducts}>
             <NavIcon name="catalog" size={17} />
             {t("Upload products")}
@@ -2938,6 +2938,9 @@ export function BrochureEditor({
           </Button>
         </div>
       </div>
+      {brandPreparation.busy && <div className="cs-design-brand-status" role="status"><i className="cs-design-brand-spinner"/>{t("Preparing and saving brand logos…")} <span>{brandPreparation.remaining}</span></div>}
+      {!brandPreparation.busy && brandPreparation.unresolved.length > 0 && <div className="cs-design-brand-status"><span>{t("Some brand logos need artwork. Brand names stay visible.")} {brandPreparation.unresolved.join(", ")}</span><Button onClick={()=>setShowBrandPreparationTools(true)}>{t("Brand logos")}</Button></div>}
+      {showBrandPreparationTools && <Modal wide title={t("Brand logos")} onClose={()=>setShowBrandPreparationTools(false)}><BrandLogoManager campaign={campaign} onUpdate={onUpdate}/><div className="cs-modal-actions"><Button onClick={()=>setShowBrandPreparationTools(false)}>{t("Done")}</Button></div></Modal>}
       {showLogoPicker && (
         <CoverLogoPicker
           settings={settings}
@@ -3258,6 +3261,10 @@ export function BrochureEditor({
           )}
           <div className="cs-preview-viewport">
             <div
+              ref={backgroundCanvasRef}
+              role="region"
+              aria-label={t("Brochure canvas")}
+              tabIndex={canEditCanvas && !textMode ? 0 : undefined}
               className={`cs-preview-paper ${textMode ? "cs-text-placement-mode" : ""} ${selected === pages.length && !hasStoresPage ? "cs-preview-excluded" : ""}`}
               onPointerDownCapture={placeText}
               onDragOver={
@@ -3500,6 +3507,21 @@ export function BrochureEditor({
                   onArtworkRemove={canEditCanvas ? removeArtwork : undefined}
                 />
               )}
+              <BackgroundCanvasControls
+                containerRef={backgroundCanvasRef}
+                pageKey={artworkPageKey}
+                enabled={canEditCanvas && !textMode}
+                color={backgroundColor || defaultBackground}
+                gradient={backgroundGradient}
+                image={backgroundImage}
+                appearance={resolvedPageAppearance(campaign, backgroundKind, page ?? undefined)}
+                onBackgroundChange={(values, scope) => {
+                  onUpdate((draft) => applyPageBackground(draft, backgroundKind, page?.index, values, scope));
+                  void brandPreparation.prepareMissing();
+                }}
+                onAppearanceChange={(changes, scope) => onUpdate((draft) => setPageAppearance(draft, backgroundKind, page?.index, changes, scope))}
+                onChangeDesign={() => setShowDesignSwitcher(true)}
+              />
               {commentMode && (
                 <BrochureComments
                   key={`${campaign.id}-${selected}-${notificationTarget?.id || "manual"}`}
@@ -3619,41 +3641,8 @@ export function BrochureEditor({
                       : changeBackgroundImage
                   }
                   onReset={pageOverride ? resetBackground : undefined}
-                  onAllPages={
-                    backgroundKind === "product"
-                      ? () =>
-                          onUpdate((draft: Campaign) => {
-                            draft.productBackgroundColor =
-                              backgroundColor ||
-                              (backgroundImage ? defaultBackground : "");
-                            draft.productBackgroundGradient =
-                              backgroundGradient;
-                            draft.productBackgroundImage = backgroundImage;
-                            for (const config of Object.values(
-                              draft.pages || {},
-                            )) {
-                              delete config.backgroundColor;
-                              delete config.backgroundGradient;
-                              delete config.backgroundImage;
-                            }
-                            draft.aiBackgroundChanged = true;
-                          })
-                      : undefined
-                  }
                 />
-                {backgroundKind !== "stores" &&
-                  campaign.aiBackgroundChanged && (
-                    <div className="cs-ai-background-reminder" role="status">
-                      <p>
-                        {t(
-                          "Background changed. Run AI again to match product images and inch labels.",
-                        )}
-                      </p>
-                      <Button onClick={onAiReview}>
-                        {t("✦ Run AI again")}
-                      </Button>
-                    </div>
-                  )}
+                <p className="cs-control-help">{t("Text, logos and screen labels adapt automatically. Product photos stay unchanged.")}</p>
               </SettingsGroup>
               {page && isOctoberBrochure(campaign) && (
                 <SettingsGroup

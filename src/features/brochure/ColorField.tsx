@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./studio-controls.css";
+import { t } from "./i18n";
 
 const DEFAULT_COLORS = [
   "#205184",
@@ -97,11 +98,15 @@ export function ColorField({
       {open &&
         placement &&
         createPortal(
-          <div className="studio-color-popover" ref={popover} style={{ ...placement }}>
+          <div
+            className="studio-color-popover"
+            ref={popover}
+            style={{ ...placement }}
+          >
             <div
               className="studio-color-swatches"
               role="group"
-              aria-label={`${label} presets`}
+              aria-label={`${label} ${t("presets")}`}
             >
               {colors.map((color) => (
                 <button
@@ -120,17 +125,17 @@ export function ColorField({
               ))}
             </div>
             <div className="studio-color-custom">
-              <span>Pick any color</span>
+              <span>{t("Pick any color")}</span>
               <input
                 type="color"
-                aria-label={`Pick ${label.toLowerCase()}`}
+                aria-label={`${t("Pick")} ${label.toLowerCase()}`}
                 value={value && validHex(value) ? value : "#205184"}
                 onChange={(event) => onChange(event.target.value)}
               />
             </div>
             <input
               className="studio-color-hex"
-              aria-label={`${label} hex code`}
+              aria-label={`${label} ${t("hex code")}`}
               value={typed}
               maxLength={7}
               onChange={(event) => {

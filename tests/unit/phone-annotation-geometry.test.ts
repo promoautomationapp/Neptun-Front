@@ -76,7 +76,7 @@ it("anchors tablet and laptop guides outside the visible image edge at every pre
     const verticalX =
       label.left + (label.width * 33.3868950515) / 67.1693479534;
     const guideY = label.top + (label.width * 25.7483815485) / 67.1693479534;
-    expect(verticalX).toBeCloseTo(photo.left + photo.width + 2 * factor, 5);
+    expect(verticalX).toBeCloseTo(photo.left + photo.width + 6 * factor, 5);
     expect(guideY).toBeLessThan(photo.top);
   }
 });
@@ -144,3 +144,55 @@ it("retains saved guide offsets in page units while photo resizing scales the la
   expect(small.top - smallBase.top).toBeCloseTo(21.6);
   expect(resolveScreenAnnotationPlacement("other", saved)).toEqual(saved);
 });
+
+it.each([
+  { naturalWidth: 240, naturalHeight: 400, wrapWidth: 260, wrapHeight: 300 },
+  { naturalWidth: 400, naturalHeight: 280, wrapWidth: 300, wrapHeight: 240 },
+  { naturalWidth: 480, naturalHeight: 400, wrapWidth: 180, wrapHeight: 280 },
+])(
+  "fits the full device and the more distant arrow inside a $wrapWidth×$wrapHeight slot",
+  async (dimensions) => {
+    const { productImageFit } =
+      await import("../../src/features/brochure/productImageFit");
+    const contain = Math.min(
+      dimensions.wrapWidth / dimensions.naturalWidth,
+      dimensions.wrapHeight / dimensions.naturalHeight,
+    );
+    for (const preservePlacement of [false, true]) {
+      const fit = productImageFit({
+        ...dimensions,
+        imageBoxWidth: dimensions.wrapWidth,
+        imageBoxHeight: dimensions.wrapHeight,
+        base: { x: 72, y: 55, scale: 1.2 },
+        padding: 0.015,
+        externalAnnotation: true,
+        preservePlacement,
+      });
+      const width = dimensions.naturalWidth * contain * fit.scale;
+      const height = dimensions.naturalHeight * contain * fit.scale;
+      const photo = {
+        left: (fit.x / 100) * dimensions.wrapWidth - width / 2,
+        top: (fit.y / 100) * dimensions.wrapHeight - height / 2,
+        width,
+        height,
+      };
+      const guide = otherScreenAnnotationBaseBox(photo);
+      const arrowX = guide.left + (guide.width * 33.3868950515) / 67.1693479534;
+      expect(arrowX - photo.left - photo.width).toBeCloseTo(
+        (guide.width * 6) / 85.88052,
+      );
+      expect(guide.left + guide.width).toBeLessThanOrEqual(
+        dimensions.wrapWidth * 0.985 + 0.00001,
+      );
+      expect(guide.top).toBeGreaterThanOrEqual(
+        dimensions.wrapHeight * 0.015 - 0.00001,
+      );
+      expect(photo.left).toBeGreaterThanOrEqual(
+        dimensions.wrapWidth * 0.015 - 0.00001,
+      );
+      expect(photo.top + photo.height).toBeLessThanOrEqual(
+        dimensions.wrapHeight * 0.985 + 0.00001,
+      );
+    }
+  },
+);

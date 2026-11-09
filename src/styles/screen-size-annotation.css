@@ -19,7 +19,10 @@
 .screen-size-phone {
   width: 7.9519cqw;
   aspect-ratio: 67.1693479534/34.9477117807;
-  color: inherit;
+  color: var(
+    --brochure-screen-label-color,
+    var(--brochure-foreground, inherit)
+  );
 }
 .screen-size-other > svg,
 .screen-size-phone > svg {
@@ -41,8 +44,4 @@
   max-width: 96%;
   height: 100%;
   max-height: 100%;
-}
-.brochure-page.light .screen-size-other,
-.brochure-page.light .screen-size-phone {
-  color: #000;
 }

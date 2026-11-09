@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   pageDecorationSchema,
+  pageAppearancesSchema,
   workspaceSettingsSchema,
 } from "../features/settings/settings.schema";
 import type {
@@ -64,6 +65,7 @@ export const campaignSchema = z
     brochureFooter: brochureFooterSchema.optional(),
     brochurePresetId: z.string().max(100).optional(),
     brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
+    pageAppearances: pageAppearancesSchema.optional(),
     coverBrandTagline: z.string().max(500).optional(),
     coverRibbonColors: z
       .object({

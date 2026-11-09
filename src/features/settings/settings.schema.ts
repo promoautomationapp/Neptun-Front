@@ -15,6 +15,16 @@ const json: z.ZodType<Value> = z.lazy(() =>
 );
 const text = z.string().max(20000);
 const color = z.union([z.literal(""), z.string().regex(/^#[0-9a-f]{6}$/i)]);
+export const pageAppearanceSchema = z.object({
+  textColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
+  brandColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
+  screenLabelColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
+  priceStyle: z.enum(["auto", "current", "card"]).optional(),
+});
+export const pageAppearancesSchema = z.record(
+  z.string().regex(/^(?:cover|stores|product(?:-\d{1,5})?)$/),
+  pageAppearanceSchema,
+).refine((value) => Object.keys(value).length <= 1000);
 export const pageDecorationSchema = z.object({
   showHeader: z.boolean().optional(),
   showOnlineLogo: z.boolean().optional(),
@@ -285,6 +295,7 @@ export const BROCHURE_DESIGN_KEYS = [
   "brandAssets",
   "brandLogos",
   "brandLogoMode",
+  "pageAppearances",
   "iconDefaults",
   "productDesign",
   "pageDecorationDefaults",
@@ -310,6 +321,7 @@ export const brochurePresetSchema = z.object({
     .object({
       brochureVisualStyle: z.enum(["current", "october"]).optional(),
       brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
+      pageAppearances: pageAppearancesSchema.optional(),
       coverBrandTagline: z.string().max(500).optional(),
       offerStyle: priceStyle.optional(),
       pageDecorationDefaults: pageDecorationSchema.optional(),

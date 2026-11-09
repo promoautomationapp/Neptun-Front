@@ -1,3 +1,4 @@
+import { activePagePriceStyle } from "./pageAppearance";
 import { resolvedSavingsMode } from "../settings/savingsPolicy";
 import {
   productImageBackgroundContext,
@@ -26,6 +27,8 @@ export function offerStyleFor(
   campaign: Partial<Campaign> | null | undefined,
   product?: Partial<Product> | null,
 ) {
+  const activePrice = campaign && activePagePriceStyle(campaign);
+  if (!product?.offerStyle && activePrice) return activePrice;
   const saved = product?.offerStyle || campaign?.offerStyle;
   const style =
     saved === "minimal" ? "current" : saved === "compact" ? "card" : saved;

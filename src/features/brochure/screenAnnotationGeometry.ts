@@ -28,7 +28,10 @@ export const TV_ANNOTATION_INSET_PX = 2;
 export const SCREEN_ANNOTATION_CANONICAL_WIDTH = 1080;
 const otherAnnotationWidthRatio = 0.2147013;
 const otherAnnotationHeightRatio = 0.3067161428571429;
-const otherAnnotationGapRatio = 2 / 85.88052;
+// Keep the arrow clear of the hardware edge. This is 6px beside the reference
+// 400×280 photo; photo-relative sizing keeps the same breathing room at zoom.
+const otherAnnotationHorizontalGapRatio = 6 / 85.88052;
+const otherAnnotationVerticalGapRatio = 2 / 85.88052;
 const canonicalInset =
   (TV_ANNOTATION_INSET_PX / SCREEN_ANNOTATION_CANONICAL_WIDTH) * 100;
 
@@ -112,11 +115,15 @@ export function otherScreenAnnotationBaseBox(
     photo.width * otherAnnotationWidthRatio,
     photo.height * otherAnnotationHeightRatio,
   );
-  const gap = width * otherAnnotationGapRatio;
+  const horizontalGap = width * otherAnnotationHorizontalGapRatio;
+  const verticalGap = width * otherAnnotationVerticalGapRatio;
   return {
     left:
-      photo.left + photo.width + gap - width * (33.3868950515 / 67.1693479534),
-    top: photo.top - gap * 2 - width * (30.1451137381 / 67.1693479534),
+      photo.left +
+      photo.width +
+      horizontalGap -
+      width * (33.3868950515 / 67.1693479534),
+    top: photo.top - verticalGap * 2 - width * (30.1451137381 / 67.1693479534),
     width,
     height: width * (34.9477117807 / 67.1693479534),
   };

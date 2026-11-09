@@ -1,3 +1,6 @@
+import { campaignForPageAppearance, hasPageAppearance, pageAppearanceStyle, pageAppearanceFor } from "./pageAppearance";
+import { PageAppearanceFilters } from "./PageAppearanceFilters";
+import "../../styles/page-appearance.css";
 import { EditorIcon } from "./EditorIcon";
 import { useImagePicker } from "./ImagePickerProvider";
 import { PageDecorations, type PageDecorationChange } from "./PageDecorations";
@@ -2542,6 +2545,7 @@ function LastPageWithStores({
   onContactChange,
   children,
 }: BrochurePageProps & { page?: BrochurePage; children: React.ReactNode }) {
+  const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const lastProductIndex = splitPages(campaign).at(-1)?.index ?? -1;
   if (!hasCompactStoresFooter(campaign, page?.index ?? -1, lastProductIndex))
     return children;
@@ -2556,12 +2560,15 @@ function LastPageWithStores({
     <section
       className={`brochure-page brochure-last-page-shell has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-smart-appearance={hasPageAppearance(campaign, kind, page) ? "true" : undefined}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, color),
+        ...pageAppearanceStyle(campaign, kind, page, brandFilterId),
         background: fill,
       }}
     >
+      <PageAppearanceFilters campaign={campaign} kind={kind} page={page} id={brandFilterId} />
       <div
         className="brochure-last-page-scaled"
         style={{ left: `${(1 - scale) * 50}%`, transform: `scale(${scale})` }}
@@ -2596,7 +2603,7 @@ function LastPageWithStores({
 }
 
 export function CoverPage(props: BrochurePageProps) {
-  props = { ...props, campaign: brochureColorVariantCampaign(props.campaign) };
+  props = { ...props, campaign: campaignForPageAppearance(brochureColorVariantCampaign(props.campaign), "cover") };
   return (
     <BrochureFormatFrame campaign={props.campaign} kind="cover">
       <LastPageWithStores {...props}>
@@ -2638,6 +2645,7 @@ function CoverPageContent({
   draggingCode,
   dropCode,
 }: BrochurePageProps) {
+  const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const chooseImage = useImagePicker();
   campaign = repairAutomaticCollectionCoverLayout(campaign);
   const products = coverProducts(campaign);
@@ -2718,6 +2726,8 @@ function CoverPageContent({
         })
       : pageBackgroundReadability(campaign, "cover");
   const dark = !readability.light;
+  const adaptiveCoverLogo = hasPageAppearance(campaign, "cover") && !dark && (!coverLogo || builtinLogo || /\/(?:brochure-presets\/october\/neptun-cover\.svg|branding\/neptun-logo\.png|api\/assets\/app\/logo)(?:[?#]|$)/.test(coverLogo)) ? OCTOBER_ASSETS.neptun : undefined;
+  const smartHajde = hasPageAppearance(campaign, "cover") && !dark ? OCTOBER_ASSETS.hajde : OCTOBER_ASSETS.hajdeWhite;
   const headline =
     campaign.coverHeadline == null ? campaign.name : campaign.coverHeadline;
   const tagline = campaign.tagline ?? "";
@@ -2733,12 +2743,15 @@ function CoverPageContent({
     <section
       className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-smart-appearance={hasPageAppearance(campaign, "cover") ? "true" : undefined}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
+        ...pageAppearanceStyle(campaign, "cover", undefined, brandFilterId),
         ...(backgroundFill ? { background: backgroundFill } : {}),
       }}
     >
+      <PageAppearanceFilters campaign={campaign} kind="cover" id={brandFilterId} />
       {backgroundImage && (
         <img
           className="brochure-page-background-image"
@@ -2877,7 +2890,9 @@ function CoverPageContent({
           onChange={onCoverElementChange}
           onHide={onCoverElementHide}
         >
-          {builtinLogo ? (
+          {adaptiveCoverLogo ? (
+            <img className="smart-neptun-cover-logo" data-custom-brand-color={pageAppearanceFor(campaign, "cover").brandColor ? "true" : undefined} src={adaptiveCoverLogo} alt="NEPTUN" draggable={false}/>
+          ) : builtinLogo ? (
             <NeptunCoverLogo source={coverLogo} variant={builtinLogo} />
           ) : coverLogo ? (
             (campaign.coverLogoStyle === "framed" &&
@@ -3025,7 +3040,7 @@ function CoverPageContent({
                   chooseImage({
                     source:
                       campaign.campaignAssets?.["cover-hajde"]?.image ||
-                      OCTOBER_ASSETS.hajdeWhite,
+                      smartHajde,
                     kind: "image",
                     title: t("Manage image"),
                     onSelect: (image) =>
@@ -3051,7 +3066,7 @@ function CoverPageContent({
           <img
             src={
               campaign.campaignAssets?.["cover-hajde"]?.image ||
-              OCTOBER_ASSETS.hajdeWhite
+              smartHajde
             }
             alt="hajde!"
             draggable={false}
@@ -3241,7 +3256,7 @@ function formatDates(
 export function ProductPage(props: ProductPageProps) {
   props = {
     ...props,
-    campaign: brochureColorVariantCampaign(props.campaign),
+    campaign: campaignForPageAppearance(brochureColorVariantCampaign(props.campaign), "product", props.page),
     page: {
       ...props.page,
       products: brochureColorVariantProducts(props.page.products),
@@ -3286,6 +3301,7 @@ function ProductPageContent({
   draggingCode,
   dropCode,
 }: ProductPageProps) {
+  const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
   const backgroundColor = pageBackgroundContrastColor(
     campaign,
@@ -3311,14 +3327,17 @@ function ProductPageContent({
     <section
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-smart-appearance={hasPageAppearance(campaign, "product", page) ? "true" : undefined}
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
+        ...pageAppearanceStyle(campaign, "product", page, brandFilterId),
         ...(backgroundFill
           ? { "--brochure-page-background": backgroundFill }
           : {}),
       }}
     >
+      <PageAppearanceFilters campaign={campaign} kind="product" page={page} id={brandFilterId} />
       {backgroundImage && (
         <img
           className="brochure-page-background-image"
@@ -3443,6 +3462,8 @@ export function StoresPage({
   onStoreChange,
   onContactChange,
 }: StoresPageProps) {
+  const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  campaign = campaignForPageAppearance(campaign, "stores");
   const readability = pageBackgroundReadability(campaign, "stores");
   const light = readability.light;
   const backgroundImage = pageBackgroundImage(campaign, "stores");
@@ -3506,15 +3527,18 @@ export function StoresPage({
       <section
         className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
         data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+        data-smart-appearance={hasPageAppearance(campaign, "stores") ? "true" : undefined}
         style={{
           ...brochureFormatStyle(campaign),
           ...backgroundReadabilityStyle(
             readability,
             pageBackgroundContrastColor(campaign, "stores"),
           ),
+          ...pageAppearanceStyle(campaign, "stores", undefined, brandFilterId),
           ...(backgroundFill ? { background: backgroundFill } : {}),
         }}
       >
+        <PageAppearanceFilters campaign={campaign} kind="stores" id={brandFilterId} />
         {backgroundImage && (
           <img
             className="brochure-page-background-image"

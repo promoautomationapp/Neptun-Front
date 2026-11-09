@@ -1,5 +1,5 @@
 /* A quiet workspace: page navigation first, one toolbar next to the canvas. */
-.campaign-app .cs-editor-section {
+.cs-editor-section {
   --chrome-surface: var(--np-surface, #fff);
   --chrome-raised: var(--np-raised, #f2f6fa);
   --chrome-border: var(--np-border, #dce5ed);
@@ -8,41 +8,47 @@
   --chrome-selected: var(--np-selected, #e6f2fc);
   --chrome-accent: var(--np-accent, #176fa9);
 }
-.campaign-app .cs-editor-section-head {
+:is(.campaign-app, .cs-editor-section) .cs-editor-section-head {
   margin-bottom: 20px;
   gap: 18px;
 }
-.campaign-app .cs-editor-section-head h2 {
+:is(.campaign-app, .cs-editor-section) .cs-editor-section-head h2 {
   margin-bottom: 0;
 }
-.campaign-app .cs-editor-section-head p {
+:is(.campaign-app, .cs-editor-section) .cs-editor-section-head p {
   display: none;
 }
 .cs-editor-section-head:has(.cs-brochure-actions-menu[open]) {
   position: relative;
   z-index: 120;
 }
-.campaign-app .cs-brochure-header-actions {
+:is(.campaign-app, .cs-editor-section) .cs-brochure-header-actions {
   gap: 8px;
 }
-.campaign-app .cs-brochure-header-actions > .cs-button.secondary {
+:is(.campaign-app, .cs-editor-section)
+  .cs-brochure-header-actions
+  > .cs-button.secondary {
   background: transparent;
   border-color: transparent;
 }
-.campaign-app .cs-brochure-header-actions > .cs-button.primary {
+:is(.campaign-app, .cs-editor-section)
+  .cs-brochure-header-actions
+  > .cs-button.primary {
   box-shadow: 0 3px 10px #0d3c6518;
 }
-.campaign-app
+:is(.campaign-app, .cs-editor-section)
   .cs-brochure-header-actions
   > .cs-brochure-actions-menu:not(.cs-ai-action-menu)
   > summary {
   background: transparent;
   border-color: transparent;
 }
-.campaign-app .cs-brochure-actions-menu > summary {
+:is(.campaign-app, .cs-editor-section) .cs-brochure-actions-menu > summary {
   gap: 9px;
 }
-.campaign-app .cs-brochure-actions-menu > summary::after {
+:is(.campaign-app, .cs-editor-section)
+  .cs-brochure-actions-menu
+  > summary::after {
   display: none;
 }
 .cs-action-menu-chevron {
@@ -50,7 +56,10 @@
   margin-left: auto;
   transition: transform 0.15s;
 }
-.campaign-app .cs-editor-section .cs-product-tools > summary {
+:is(.campaign-app, .cs-editor-section)
+  .cs-editor-section
+  .cs-product-tools
+  > summary {
   width: 30px;
   min-width: 30px;
   min-height: 30px;
@@ -76,16 +85,22 @@
 .cs-brochure-actions-menu[open] > summary .cs-action-menu-chevron {
   transform: rotate(180deg);
 }
-.campaign-app .cs-brochure-actions-menu > div > .cs-button {
+:is(.campaign-app, .cs-editor-section)
+  .cs-brochure-actions-menu
+  > div
+  > .cs-button {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
   min-height: 38px;
 }
-.campaign-app .cs-brochure-actions-menu > div > .cs-button:hover {
+:is(.campaign-app, .cs-editor-section)
+  .cs-brochure-actions-menu
+  > div
+  > .cs-button:hover {
   background: var(--chrome-raised);
 }
-.campaign-app .cs-brochure-workspace {
+:is(.campaign-app, .cs-editor-section) .cs-brochure-workspace {
   gap: 12px 20px;
 }
 .cs-page-navigator {
@@ -118,10 +133,15 @@
   background: var(--chrome-raised);
   font-size: 10px;
 }
-.campaign-app .cs-page-navigator .cs-inline-page-navigation {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-inline-page-navigation {
   gap: 6px;
 }
-.campaign-app .cs-page-navigator .cs-inline-page-navigation button {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-inline-page-navigation
+  button {
   display: grid;
   place-items: center;
   width: 26px;
@@ -133,12 +153,15 @@
   background: var(--chrome-surface);
   color: var(--chrome-text);
 }
-.campaign-app .cs-page-navigator .cs-inline-page-navigation span {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-inline-page-navigation
+  span {
   min-width: 42px;
   font-size: 10px;
   text-align: center;
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar {
+:is(.campaign-app, .cs-editor-section) .cs-page-navigator .cs-pages-sidebar {
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -148,7 +171,10 @@
   scrollbar-width: thin;
   scrollbar-color: var(--chrome-border) transparent;
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar > button {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-pages-sidebar
+  > button {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -163,20 +189,34 @@
   background: transparent;
   color: var(--chrome-muted);
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar > button:hover {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-pages-sidebar
+  > button:hover {
   background: var(--chrome-raised);
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar > button.active {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-pages-sidebar
+  > button.active {
   background: var(--chrome-selected);
   color: var(--chrome-text);
   border-color: var(--chrome-accent);
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar > button > strong {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-pages-sidebar
+  > button
+  > strong {
   font-size: 10px;
   line-height: 1.25;
   margin-top: 2px;
 }
-.campaign-app .cs-page-navigator .cs-pages-sidebar > button > small {
+:is(.campaign-app, .cs-editor-section)
+  .cs-page-navigator
+  .cs-pages-sidebar
+  > button
+  > small {
   font-size: 9px;
   color: var(--chrome-muted);
   line-height: 1.2;
@@ -252,7 +292,7 @@
   background: #7992a64a;
   border-radius: 2px;
 }
-.campaign-app .cs-page-miniature-number {
+:is(.campaign-app, .cs-editor-section) .cs-page-miniature-number {
   position: absolute;
   right: 2px;
   top: 2px;
@@ -270,7 +310,7 @@
   opacity: 0.45;
   filter: grayscale(1);
 }
-.campaign-app .cs-editor-section .cs-page-preview {
+:is(.campaign-app, .cs-editor-section) .cs-editor-section .cs-page-preview {
   min-width: 0;
 }
 .cs-canvas-meta {
@@ -287,7 +327,7 @@
 .cs-canvas-meta > strong {
   font-size: 12px;
 }
-.campaign-app .cs-canvas-meta .cs-save-indicator {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-meta .cs-save-indicator {
   display: inline-flex;
   align-items: center;
   border: 0;
@@ -325,20 +365,20 @@
 .cs-canvas-dock:has(.cs-brochure-actions-menu[open]) {
   z-index: 90;
 }
-.campaign-app .cs-canvas-dock .cs-canvas-tools {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-dock .cs-canvas-tools {
   padding: 0;
   gap: 2px;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
-.campaign-app .cs-canvas-dock .cs-canvas-tools button {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-dock .cs-canvas-tools button {
   gap: 6px;
   min-height: 35px;
   padding: 7px 8px;
   font-size: 11px;
 }
-.campaign-app .cs-canvas-dock .cs-canvas-tools kbd {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-dock .cs-canvas-tools kbd {
   display: none;
 }
 .cs-canvas-comment-count {
@@ -356,8 +396,11 @@
   background: var(--chrome-border);
   margin: 0 4px;
 }
-.campaign-app .cs-canvas-dock > button,
-.campaign-app .cs-canvas-dock > .cs-brochure-actions-menu > summary {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-dock > button,
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > .cs-brochure-actions-menu
+  > summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -372,12 +415,17 @@
   font-weight: 700;
   cursor: pointer;
 }
-.campaign-app .cs-canvas-dock > button:hover,
-.campaign-app .cs-canvas-dock > .cs-brochure-actions-menu > summary:hover {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-dock > button:hover,
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > .cs-brochure-actions-menu
+  > summary:hover {
   background: var(--chrome-raised);
   color: var(--chrome-text);
 }
-.campaign-app .cs-canvas-dock > .cs-canvas-design-button[aria-expanded="true"] {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > .cs-canvas-design-button[aria-expanded="true"] {
   background: var(--chrome-selected);
   color: var(--chrome-accent);
   border-color: var(--chrome-accent);
@@ -389,12 +437,17 @@
 .cs-page-preview.inline-preview .cs-preview-paper [data-export-hide="true"] {
   display: none !important;
 }
-.campaign-app .cs-canvas-dock > .cs-canvas-preview-button[aria-pressed="true"] {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > .cs-canvas-preview-button[aria-pressed="true"] {
   background: var(--chrome-selected);
   color: var(--chrome-accent);
   border-color: var(--chrome-accent);
 }
-.campaign-app .cs-canvas-dock .cs-canvas-help > summary {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  .cs-canvas-help
+  > summary {
   width: 30px;
   font-size: 14px;
   font-weight: 800;
@@ -402,7 +455,7 @@
 .cs-canvas-help .cs-action-menu-chevron {
   display: none;
 }
-.campaign-app .cs-canvas-help > div {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-help > div {
   width: 310px;
   padding: 16px;
   font-size: 12px;
@@ -425,7 +478,7 @@
 .cs-canvas-images .np-upload-control {
   display: block;
 }
-.campaign-app .cs-canvas-images .np-upload-button {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-images .np-upload-button {
   width: 100%;
   justify-content: flex-start;
   min-height: 38px;
@@ -437,10 +490,12 @@
   box-shadow: none;
   font-size: 11px;
 }
-.campaign-app .cs-canvas-images .np-upload-button:hover {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-images
+  .np-upload-button:hover {
   background: var(--chrome-raised);
 }
-.campaign-app .cs-canvas-images .ns-reusable-images {
+:is(.campaign-app, .cs-editor-section) .cs-canvas-images .ns-reusable-images {
   padding: 10px;
   margin: 0;
   border: 0;
@@ -449,7 +504,10 @@
   background: transparent;
   color: var(--chrome-text);
 }
-.campaign-app .cs-canvas-images .ns-reusable-images summary {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-images
+  .ns-reusable-images
+  summary {
   font-size: 11px;
 }
 .cs-canvas-images .ns-reusable-image-grid {
@@ -457,7 +515,7 @@
   overflow-y: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.campaign-app .cs-navigation-size-toggle {
+:is(.campaign-app, .cs-editor-section) .cs-navigation-size-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -471,89 +529,114 @@
   color: #c5d8e9;
   font-size: 10px;
 }
-.campaign-app .cs-sidebar-brand .cs-sidebar-brand-mark {
+:is(.campaign-app, .cs-editor-section)
+  .cs-sidebar-brand
+  .cs-sidebar-brand-mark {
   display: none;
 }
 @media (min-width: 851px) {
-  .campaign-app.cs-navigation-compact > .cs-sidebar {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact > .cs-sidebar {
     width: 72px;
     padding: 22px 10px 16px;
     align-items: center;
   }
-  .campaign-app.cs-navigation-compact .cs-content {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact .cs-content {
     width: calc(100% - 72px);
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-brand {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-brand {
     padding: 8px 0 28px;
     width: 46px;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-brand img {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-brand
+    img {
     width: 46px;
   }
-  .campaign-app.cs-navigation-compact
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
     .cs-sidebar-brand
     > img:not(.cs-sidebar-brand-mark) {
     display: none;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-brand .cs-sidebar-brand-mark {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-brand
+    .cs-sidebar-brand-mark {
     display: block;
     width: 36px;
     height: 36px;
     margin: auto;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-brand > span,
-  .campaign-app.cs-navigation-compact .cs-navigation-size-toggle > span,
-  .campaign-app.cs-navigation-compact .cs-sidebar-nav-label {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-brand
+    > span,
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-navigation-size-toggle
+    > span,
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-nav-label {
     display: none;
   }
-  .campaign-app.cs-navigation-compact .cs-navigation-size-toggle {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-navigation-size-toggle {
     width: 38px;
     margin: 0 0 22px;
     padding: 7px;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-nav {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact .cs-sidebar-nav {
     width: 100%;
     gap: 7px;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar-nav button {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar-nav
+    button {
     justify-content: center;
     padding: 12px;
     gap: 0;
   }
-  .campaign-app.cs-navigation-compact .cs-sidebar .np-sidebar-footer {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .cs-sidebar
+    .np-sidebar-footer {
     display: grid;
     padding: 16px 0 0;
     width: 42px;
   }
-  .campaign-app.cs-navigation-compact .np-account-profile {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-account-profile {
     padding: 5px;
     justify-content: center;
   }
-  .campaign-app.cs-navigation-compact .np-account-label,
-  .campaign-app.cs-navigation-compact .np-account-profile > svg,
-  .campaign-app.cs-navigation-compact .np-account-logout-label,
-  .campaign-app.cs-navigation-compact .np-sidebar-footer > .pa-powered-by {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-account-label,
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-account-profile
+    > svg,
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-account-logout-label,
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-sidebar-footer
+    > .pa-powered-by {
     display: none;
   }
-  .campaign-app.cs-navigation-compact .np-account-logout {
+  :is(.campaign-app, .cs-editor-section).cs-navigation-compact
+    .np-account-logout {
     height: 34px;
     padding: 8px;
   }
 }
 @media (max-width: 850px) {
-  .campaign-app .cs-navigation-size-toggle {
+  :is(.campaign-app, .cs-editor-section) .cs-navigation-size-toggle {
     display: none;
   }
 }
 @media (max-width: 620px) {
-  .campaign-app .cs-editor-section-head {
+  :is(.campaign-app, .cs-editor-section) .cs-editor-section-head {
     gap: 12px;
   }
-  .campaign-app .cs-brochure-header-actions {
+  :is(.campaign-app, .cs-editor-section) .cs-brochure-header-actions {
     flex-wrap: wrap;
   }
-  .campaign-app .cs-brochure-header-actions > *,
-  .campaign-app .cs-brochure-header-actions summary {
+  :is(.campaign-app, .cs-editor-section) .cs-brochure-header-actions > *,
+  :is(.campaign-app, .cs-editor-section) .cs-brochure-header-actions summary {
     min-height: 35px;
     padding: 8px 10px;
     font-size: 11px;
@@ -565,12 +648,18 @@
   .cs-canvas-dock-divider {
     display: none;
   }
-  .campaign-app .cs-canvas-dock > button,
-  .campaign-app .cs-canvas-dock > .cs-brochure-actions-menu > summary {
+  :is(.campaign-app, .cs-editor-section) .cs-canvas-dock > button,
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > .cs-brochure-actions-menu
+    > summary {
     padding: 7px;
     font-size: 10px;
   }
-  .campaign-app .cs-canvas-dock .cs-canvas-tools button {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    .cs-canvas-tools
+    button {
     padding: 7px;
     font-size: 10px;
   }
@@ -579,7 +668,10 @@
     right: 0;
     max-width: calc(100vw - 50px);
   }
-  .campaign-app .cs-page-navigator .cs-pages-sidebar > button {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-page-navigator
+    .cs-pages-sidebar
+    > button {
     width: 75px;
     min-width: 75px;
   }
@@ -587,12 +679,18 @@
     height: 65px;
   }
 }
-html[data-theme="dark"] .campaign-app .cs-canvas-meta .cs-save-indicator {
+html[data-theme="dark"]
+  :is(.campaign-app, .cs-editor-section)
+  .cs-canvas-meta
+  .cs-save-indicator {
   color: #a2d7bb;
 }
-html[data-theme="dark"] .campaign-app .cs-canvas-dock > button,
 html[data-theme="dark"]
-  .campaign-app
+  :is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > button,
+html[data-theme="dark"]
+  :is(.campaign-app, .cs-editor-section)
   .cs-canvas-dock
   > .cs-brochure-actions-menu
   > summary {
@@ -600,11 +698,18 @@ html[data-theme="dark"]
   color: var(--chrome-muted);
   border-color: transparent;
 }
-html[data-theme="dark"] .campaign-app .cs-canvas-images .ns-reusable-images {
+html[data-theme="dark"]
+  :is(.campaign-app, .cs-editor-section)
+  .cs-canvas-images
+  .ns-reusable-images {
   background: transparent;
   color: var(--chrome-text);
 }
-html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
+html[data-theme="dark"]
+  :is(.campaign-app, .cs-editor-section)
+  .cs-canvas-help
+  > div
+  > p {
   color: var(--chrome-muted);
 }
 
@@ -624,7 +729,9 @@ html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
 .cs-canvas-dock :is(button, summary) {
   white-space: nowrap;
 }
-.campaign-app .cs-canvas-dock > .cs-canvas-collapse-button {
+:is(.campaign-app, .cs-editor-section)
+  .cs-canvas-dock
+  > .cs-canvas-collapse-button {
   margin-left: auto;
   color: var(--chrome-accent);
   background: var(--chrome-selected);
@@ -642,8 +749,13 @@ html[data-theme="dark"] .campaign-app .cs-canvas-help > div > p {
   .cs-canvas-dock .cs-canvas-tools button > span:not(.cs-canvas-comment-count) {
     display: none;
   }
-  .campaign-app .cs-canvas-dock > button:not(.cs-canvas-collapse-button),
-  .campaign-app .cs-canvas-dock > .cs-canvas-images > summary {
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > button:not(.cs-canvas-collapse-button),
+  :is(.campaign-app, .cs-editor-section)
+    .cs-canvas-dock
+    > .cs-canvas-images
+    > summary {
     font-size: 0;
     gap: 0;
     padding-inline: 8px;

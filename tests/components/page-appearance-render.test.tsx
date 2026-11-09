@@ -1,0 +1,41 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { expect,it } from "vitest";
+import type { Campaign } from "../../src/domain/models";
+import { ProductPage,CoverPage } from "../../src/features/brochure/Brochure";
+import { brochurePage } from "../fixtures/brochure-page";
+import { applyPageBackground,setPageAppearance } from "../../src/features/brochure/pageAppearance";
+const product={code:"phone",name:"PHONE",brand:"SAMSUNG",image:"/phone.png",regular:399,sale:299,specs:{Screen:'6.7"'},brochureContentPlacement:{price:{x:3,y:2}}};
+const fixture=():Campaign=>({id:"colors",name:"Colors",products:[structuredClone(product)],offerStyle:"card",theme:"blue",includeStoresFooter:false,includeStoresPage:false,coverBandVariant:"hajde",showCoverLogo:true,showCoverMessage:true,tagline:"Your title",coverBackgroundColor:"#1c4075",productBackgroundColor:"#1c4075"});
+const documentFor=(html:string)=>{const host=document.createElement("div");host.innerHTML=html;return host;};
+it("renders matching light-page ink, page-scoped blue price and custom SVG logo color with unchanged photo and placement",()=>{
+ const c=fixture();applyPageBackground(c,"product",0,{backgroundColor:"#f1f2f4"});
+ setPageAppearance(c,"product",0,{brandColor:"#cc3366",screenLabelColor:"#223344"});
+ const host=documentFor(renderToStaticMarkup(<ProductPage campaign={c} page={{...brochurePage(c.products),backgroundColor:"#f1f2f4"}}/>));
+ const page=host.querySelector<HTMLElement>(".brochure-interior")!;
+ expect(page.dataset.smartAppearance).toBe("true");expect(page.style.getPropertyValue("--brochure-foreground")).toBe("#1c4075");
+ expect(page.style.getPropertyValue("--brochure-screen-label-color")).toBe("#223344");expect(page.style.getPropertyValue("--brochure-brand-color")).toBe("#cc3366");
+ const filter=page.querySelector("filter")!;
+ expect(filter.querySelector("feFlood")?.getAttribute("flood-color")).toBe("#cc3366");
+ expect(page.style.getPropertyValue("--brochure-brand-filter")).toContain(filter.id);
+ expect(page.querySelector(".reference-price-svg")).not.toBeNull();expect(page.querySelector('img[src="/phone.png"]')).not.toBeNull();
+ expect(c.products[0]?.brochureContentPlacement).toEqual({price:{x:3,y:2}});
+ expect(page.querySelector(".page-appearance-filters")?.getAttribute("data-export-hide")).toBeNull();
+});
+it("switches saved dark-page blue default to orange automatically and retains a specific product override",()=>{
+ const c=fixture();applyPageBackground(c,"product",0,{backgroundColor:"#173b63"});
+ const page={...brochurePage(c.products),backgroundColor:"#173b63"};
+ expect(documentFor(renderToStaticMarkup(<ProductPage campaign={c} page={page}/>)).querySelector(".red-reference-price-svg")).not.toBeNull();
+ c.products[0]!.offerStyle="card";
+ expect(documentFor(renderToStaticMarkup(<ProductPage campaign={c} page={{...page,products:c.products}}/>)).querySelector(".reference-price-svg")).not.toBeNull();
+});
+it("adapts free title text and supplied light logo variants in exported cover markup without replacing photos",()=>{
+ const c=fixture();c.coverLogoSource="/brochure-presets/october/neptun-cover.svg";c.pageArtworks={cover:[{id:"title",type:"text",text:"Custom title",color:"#ffffff",x:4,y:18,width:80}]};
+ applyPageBackground(c,"cover",undefined,{backgroundColor:"#ffffff"});
+ const host=documentFor(renderToStaticMarkup(<CoverPage campaign={c}/>));
+ const text=host.querySelector<HTMLElement>(".page-layer-text")!;
+ expect(text.style.color).toBe("rgb(28, 64, 117)");
+ expect(host.querySelector('img[alt="hajde!"]')?.getAttribute("src")).toBe("/brochure-presets/october/hajde.svg");
+ expect(host.querySelector('img[alt="NEPTUN"]')?.getAttribute("src")).toBe("/brochure-presets/october/neptun-footer.svg");
+ expect(c.pageArtworks.cover?.[0]?.color).toBe("#ffffff");
+});

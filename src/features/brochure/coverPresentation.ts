@@ -1,3 +1,4 @@
+import { hasPageAppearance, resolvedPageAppearance } from "./pageAppearance";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 import type { Campaign } from "../../domain/models";
 import { coverProducts } from "./campaignPages";
@@ -13,6 +14,7 @@ export function coverTextColor(
   campaign: Partial<Campaign>,
   field: (typeof COVER_TEXT_COLORS)[number][0],
 ) {
+  if (hasPageAppearance(campaign, "cover")) return resolvedPageAppearance(campaign, "cover").textColor;
   const value = campaign[field];
   if (
     /^#[0-9a-f]{6}$/i.test(value || "") &&

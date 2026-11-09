@@ -1,0 +1,52 @@
+.page-appearance-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.brochure-page[data-smart-appearance="true"] .brochure-brand-mark img,
+.brochure-page[data-smart-appearance="true"]
+  .product-artwork-item[data-monochrome-badge="true"]
+  img {
+  filter: var(--brochure-brand-filter) !important;
+}
+.brochure-page[data-smart-appearance="true"]
+  :is(
+    .brochure-product-copy,
+    .brochure-brand-mark,
+    .brochure-footer-payment,
+    .brochure-interior-brand-footer,
+    .stores-heading,
+    .stores-disclaimer,
+    .stores-social,
+    .stores-service,
+    .store-spot
+  ) {
+  color: var(--brochure-foreground);
+}
+.brochure-page[data-smart-appearance="true"]
+  .brochure-product-copy
+  > [data-product-name],
+.brochure-page[data-smart-appearance="true"]
+  .brochure-product-copy
+  > .brochure-product-code,
+.brochure-page[data-smart-appearance="true"] .cover-element-message > p,
+.brochure-page[data-smart-appearance="true"] .cover-element-headline > h1 {
+  color: var(--brochure-foreground) !important;
+}
+.brochure-page[data-smart-appearance="true"]
+  .brochure-specs
+  > .product-detail-block:not(.detail-filled):not(.detail-style-filled) {
+  color: var(--brochure-foreground);
+  border-color: currentColor;
+}
+
+.brochure-page[data-smart-appearance="true"] .brochure-brand-mark {
+  color: var(--brochure-brand-color) !important;
+}
+.brochure-page[data-smart-appearance="true"] .cover-element-brand-tagline,
+.brochure-page[data-smart-appearance="true"] .brochure-mark > em {
+  color: var(--brochure-foreground) !important;
+}
+.brochure-page[data-smart-appearance=true] .smart-neptun-cover-logo[data-custom-brand-color=true]{filter:var(--brochure-brand-filter)}

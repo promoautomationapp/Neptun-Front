@@ -11,6 +11,7 @@ import { t } from "./i18n";
 import { EditorIcon } from "./EditorIcon";
 import { useImagePicker } from "./ImagePickerProvider";
 import { PageTextToolbar } from "./PageTextToolbar";
+import { artworkTextColor } from "./pageAppearance";
 import { textFontCss } from "./textFonts";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -26,7 +27,7 @@ export interface PageArtworkLayer extends Artwork {
   name?: string;
 }
 export interface PageArtworkProps {
-  campaign: Pick<Campaign, "pageArtworks">;
+  campaign: Partial<Campaign>;
   pageKey: string | number;
   onChange?: (id: string, artwork: PageArtworkLayer) => void;
   onRemove?: (id: string) => void;
@@ -68,6 +69,7 @@ export function PageArtwork({
         <ArtworkItem
           key={artwork.id}
           artwork={artwork}
+          resolveColor={(value) => artworkTextColor(campaign, pageKey, value)}
           onChange={onChange}
           onRemove={onRemove}
           selected={selectedId === artwork.id}
@@ -80,12 +82,14 @@ export function PageArtwork({
 
 function ArtworkItem({
   artwork,
+  resolveColor,
   onChange,
   onRemove,
   selected,
   onSelect,
 }: {
   artwork: PageArtworkLayer;
+  resolveColor: (value?: string) => string;
   onChange?: PageArtworkProps["onChange"];
   onRemove?: PageArtworkProps["onRemove"];
   selected: boolean;
@@ -265,7 +269,7 @@ function ArtworkItem({
       .querySelectorAll(".cs-page-preview.dragging-guides")
       .forEach((preview) => preview.classList.remove("dragging-guides"));
   }
-  const color = position.color || "#1c4075";
+  const color = resolveColor(position.color);
   const fill =
     position.fade === "top"
       ? `linear-gradient(to bottom, ${color}, transparent)`

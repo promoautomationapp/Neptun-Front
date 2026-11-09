@@ -96,10 +96,18 @@ export interface BrochureFooterDesign {
   from?: string;
   to?: string;
 }
+export interface PageAppearance {
+  textColor?: string;
+  brandColor?: string;
+  screenLabelColor?: string;
+  priceStyle?: "auto" | "current" | "card";
+}
 export interface Campaign {
+  pageAppearances?: Record<string, PageAppearance>;
   updatedBy?: string;
   brochurePresetId?: string;
   brandLogoMode?: "auto" | "white" | "dark" | "original";
+  brandPreparation?: Record<string, { source: string; attemptedAt: string; status: "pending" | "ready" | "failed"; url?: string }>;
   coverBrandTagline?: string;
   brochureVisualStyle?: "current" | "october";
   pageDecorationDefaults?: PageDecorationDefaults;
