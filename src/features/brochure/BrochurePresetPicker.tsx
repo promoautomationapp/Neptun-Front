@@ -16,8 +16,13 @@ import {
 import { applyBrochurePreset } from "./brochurePresets";
 import type { BrochurePreset } from "./brochurePresets";
 import { t } from "./i18n";
+import { isBlackFridayBrochure } from "./blackFridayDesign";
+import { BlackFridayPersonChoice } from "./BlackFridayPersonChoice";
+import { blackFridaySampleProducts } from "./blackFridaySourceImages";
 import { coverRibbonColors } from "./coverElements";
 import "./brochure-presets.css";
+const isBlackFridayPreset = (preset: BrochurePresetDefinition) =>
+  isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id });
 
 export function PresetThumbnail({
   preset,
@@ -25,6 +30,8 @@ export function PresetThumbnail({
   preset: BrochurePresetDefinition;
 }) {
   const d = preset.design;
+  if (isBlackFridayPreset(preset))
+    return <img src="/brochure-presets/black-friday/thumbnail.webp" alt="" />;
   const color = (v: string | undefined, fallback: string) =>
     /^#[a-f0-9]{6}(?:[a-f0-9]{2})?$/i.test(v || "") ? v! : fallback;
   const from = color(
@@ -63,12 +70,33 @@ export function BrochurePresetPicker({
   compact?: boolean;
 }) {
   const [choosing, setChoosing] = useState(false);
+  const [personPreset, setPersonPreset] = useState<BrochurePreset | null>(null);
   const changeButton = useRef<HTMLButtonElement>(null);
   const selected = presets.find((preset) => preset.id === value) ?? presets[0];
   const closeChoices = () => {
     setChoosing(false);
     changeButton.current?.focus({ preventScroll: true });
   };
+  const choose = (preset: BrochurePreset) => {
+    if (isBlackFridayPreset(preset)) {
+      setChoosing(false);
+      setPersonPreset(preset);
+      return;
+    }
+    onChange(preset);
+    closeChoices();
+  };
+  const personChoice = personPreset && (
+    <BlackFridayPersonChoice
+      preset={personPreset}
+      onClose={() => setPersonPreset(null)}
+      onSelect={(preset) => {
+        onChange(preset);
+        setPersonPreset(null);
+        closeChoices();
+      }}
+    />
+  );
   const cards = (
     <div className={`cs-preset-cards ${compact ? "cs-preset-gallery" : ""}`}>
       {presets.map((preset) => (
@@ -93,8 +121,7 @@ export function BrochurePresetPicker({
             className="cs-preset-select"
             aria-pressed={value === preset.id}
             onClick={() => {
-              onChange(preset);
-              closeChoices();
+              choose(preset);
             }}
           >
             <span className="cs-preset-radio" aria-hidden="true" />
@@ -126,6 +153,15 @@ export function BrochurePresetPicker({
           >
             {t("Change design")}
           </button>
+          {isBlackFridayPreset(selected) && (
+            <button
+              type="button"
+              className="cs-preset-change"
+              onClick={() => setPersonPreset(selected)}
+            >
+              {t("Person image")}
+            </button>
+          )}
         </section>
         {choosing && (
           <Modal
@@ -148,16 +184,20 @@ export function BrochurePresetPicker({
             </div>
           </Modal>
         )}
+        {personChoice}
       </>
     );
   return (
-    <section className="cs-preset-picker" aria-label={t("Brochure designs")}>
-      <div className="cs-preset-picker-heading">
-        <strong>{t("Choose a brochure design")}</strong>
-        <small>{t("Everything remains editable.")}</small>
-      </div>
-      {cards}
-    </section>
+    <>
+      <section className="cs-preset-picker" aria-label={t("Brochure designs")}>
+        <div className="cs-preset-picker-heading">
+          <strong>{t("Choose a brochure design")}</strong>
+          <small>{t("Everything remains editable.")}</small>
+        </div>
+        {cards}
+      </section>
+      {personChoice}
+    </>
   );
 }
 
@@ -170,13 +210,28 @@ export function BrochurePresetPreview({
   preset: BrochurePreset;
   settings: Settings;
   onClose: () => void;
-  onUse?: () => void;
+  onUse?: (preset: BrochurePreset) => void;
 }) {
   const [page, setPage] = useState<"cover" | "products" | "stores">("cover");
+  const [personChoice, setPersonChoice] = useState(false);
   const resolved = resolveSettings(settings);
   const campaign: Campaign = settingsPreviewCampaign(resolved);
   applyBrochurePreset(campaign, preset);
+  if (isBlackFridayPreset(preset)) {
+    campaign.products = blackFridaySampleProducts();
+    campaign.coverProductCodes = campaign.products
+      .filter((product) => product.brochurePage === 1)
+      .map((product) => product.code);
+  }
   const format = resolveBrochureFormat(campaign);
+  if (personChoice)
+    return (
+      <BlackFridayPersonChoice
+        preset={preset}
+        onClose={() => setPersonChoice(false)}
+        onSelect={(next) => onUse?.(next)}
+      />
+    );
   return (
     <Modal
       title={`${t("Brochure preview")} · ${t(preset.name)}`}
@@ -234,7 +289,15 @@ export function BrochurePresetPreview({
           {t("Close")}
         </button>
         {onUse && (
-          <button type="button" className="cs-button primary" onClick={onUse}>
+          <button
+            type="button"
+            className="cs-button primary"
+            onClick={() =>
+              isBlackFridayPreset(preset)
+                ? setPersonChoice(true)
+                : onUse(preset)
+            }
+          >
             {t("Use this design")}
           </button>
         )}

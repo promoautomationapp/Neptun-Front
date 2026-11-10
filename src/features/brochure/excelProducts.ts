@@ -7,6 +7,8 @@ import {
   resolveOfferProduct,
 } from "./productBundles";
 import { normalize, parsePrice } from "./utils";
+import { applyBlackFridaySourceImage } from "./blackFridaySourceImages";
+import { discardPreparedProductPhoto } from "./imageReview";
 
 /** Optional mappings for ordinary price imports as well as positioned brochure imports. */
 export interface ExcelProductColumns {
@@ -42,7 +44,9 @@ export function inferExcelProductColumns(headers: readonly unknown[]) {
       /technical specifications|specifications|specifika|detaj|details/,
     ),
     brandCol: find(/^(?:brand|brands|brendi|marka)$/),
-    categoryCol: find(/^(?:category|category path|main cat|kategoria|kategori)$/),
+    categoryCol: find(
+      /^(?:category|category path|main cat|kategoria|kategori)$/,
+    ),
     warrantyCol: find(/garanci|warranty/),
     imageCol: find(/^(?:image|image url|photo|photo url|foto|fotografia)$/),
     headers,
@@ -133,6 +137,15 @@ export function excelRowProduct(
   };
   if (details.length)
     product.brochureDetails = groupImportedPhoneDetails(product, details);
+  if (image && /^https:\/\//i.test(image) && image !== catalogProduct?.image)
+    Object.assign(
+      product,
+      discardPreparedProductPhoto({ ...product, aiOriginalImage: "", image }),
+    );
+  applyBlackFridaySourceImage(product, image, {
+    hasDetails: details.length > 0,
+    hasWarranty: Boolean(warranty),
+  });
   return product;
 }
 

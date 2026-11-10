@@ -83,6 +83,9 @@ export function campaignDefaults(
     ...(b.brochureVisualStyle
       ? { brochureVisualStyle: b.brochureVisualStyle }
       : {}),
+    ...(b.brochureReferenceDesign
+      ? { brochureReferenceDesign: b.brochureReferenceDesign }
+      : {}),
     ...(b.pageDecorationDefaults
       ? { pageDecorationDefaults: structuredClone(b.pageDecorationDefaults) }
       : {}),

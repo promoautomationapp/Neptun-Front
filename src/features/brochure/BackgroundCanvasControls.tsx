@@ -26,6 +26,7 @@ export interface BackgroundCanvasControlsProps {
   color?: string;
   gradient?: Gradient | null;
   image?: string;
+  orangePriceVariant?: "default" | "black-friday";
   appearance: {
     textColor: string;
     brandColor: string;
@@ -84,6 +85,7 @@ export function BackgroundCanvasControls({
   color,
   gradient,
   image,
+  orangePriceVariant = "default",
   appearance,
   onBackgroundChange,
   onAppearanceChange,
@@ -713,6 +715,7 @@ export function BackgroundCanvasControls({
                 <>
                   <PriceDesignChoices
                     value={appearance.priceStyle}
+                    orangeVariant={orangePriceVariant}
                     onChange={(priceStyle) =>
                       callbacks.current.onAppearanceChange(
                         { priceStyle },

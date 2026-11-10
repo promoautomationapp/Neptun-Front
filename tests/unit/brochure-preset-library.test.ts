@@ -16,6 +16,40 @@ import { resolvedSavingsMode } from "../../src/features/settings/savingsPolicy";
 import { coverProductPlacement } from "../../src/features/brochure/coverElements";
 
 describe("independent brochure preset snapshots", () => {
+  it("adds the independent A3 Black Friday source design without changing the team default", () => {
+    const settings = resolveSettings(null);
+    const preset = availableBrochurePresets(settings).find(
+      (item) => item.id === "neptun-black-friday",
+    )!;
+    expect(settings.defaultBrochurePresetId).toBe("neptun-current");
+    expect(preset.builtin).toBe(true);
+    expect(preset.design).toMatchObject({
+      brochureFormat: "a3",
+      autoProductLayout: false,
+      offerStyle: "current",
+      showCoverLogo: false,
+      showCoverBand: false,
+      showInteriorFooter: false,
+      showFooterPageNumber: false,
+      pageDecorationDefaults: {
+        showHeader: false,
+        showOnlineLogo: false,
+        showFooterLogo: false,
+        showFooterLine: false,
+      },
+    });
+    expect(preset.design.pageArtworks?.cover?.length).toBeGreaterThan(0);
+    const campaign: Campaign = {
+      id: "bf",
+      name: "My campaign",
+      products: [{ code: "840", name: "My product" }],
+    };
+    const products = campaign.products;
+    applyBrochurePreset(campaign, preset);
+    expect(campaign.brochurePresetId).toBe("neptun-black-friday");
+    expect(campaign.products).toBe(products);
+    expect(campaign.pageArtworks).toEqual(preset.design.pageArtworks);
+  });
   it("keeps collection rows independent of inherited workspace pair defaults and retains marked manual choices", () => {
     const settings = resolveSettings(null);
     settings.brochure.coverProductLayout = "pair";
@@ -100,6 +134,7 @@ describe("independent brochure preset snapshots", () => {
       "neptun-gradient-all",
       "neptun-online",
       "neptun-october",
+      "neptun-black-friday",
     ]);
     expect(presets[0]!.design).toMatchObject({
       layout: "feature3",
@@ -151,10 +186,10 @@ describe("independent brochure preset snapshots", () => {
       },
     });
   });
-  it("applies the below €30 rule in all five ready designs without replacing explicit preset or product choices", () => {
+  it("applies the below €30 rule in every ready design without replacing explicit preset or product choices", () => {
     const settings = resolveSettings(null);
     const presets = availableBrochurePresets(settings);
-    expect(presets).toHaveLength(5);
+    expect(presets).toHaveLength(6);
     for (const preset of presets) {
       const campaign: Campaign = { id: preset.id, name: "Offer", products: [] };
       applyBrochurePreset(campaign, preset);

@@ -106,8 +106,17 @@ export interface Campaign {
   pageAppearances?: Record<string, PageAppearance>;
   updatedBy?: string;
   brochurePresetId?: string;
+  brochureReferenceDesign?: "black-friday";
   brandLogoMode?: "auto" | "white" | "dark" | "original";
-  brandPreparation?: Record<string, { source: string; attemptedAt: string; status: "pending" | "ready" | "failed"; url?: string }>;
+  brandPreparation?: Record<
+    string,
+    {
+      source: string;
+      attemptedAt: string;
+      status: "pending" | "ready" | "failed";
+      url?: string;
+    }
+  >;
   coverBrandTagline?: string;
   brochureVisualStyle?: "current" | "october";
   pageDecorationDefaults?: PageDecorationDefaults;
@@ -381,6 +390,13 @@ export interface BrochureImportWarning {
 }
 
 export interface Product {
+  brochureSavings?: {
+    value: number;
+    type: "amount" | "percentage";
+    regular: number;
+    sale: number;
+  };
+  brochureInstallment?: { amount: number; count: number; sale: number };
   brochureCode?: string;
   /** Imported offers remain editable even when their code is absent from the catalog. */
   catalogMissing?: boolean;
@@ -511,6 +527,17 @@ export interface Bounds {
   bottom: number;
 }
 export interface Artwork {
+  /** A page banner reserves the product grid beneath its visible frame. */
+  layoutRole?: "banner";
+  referenceSource?: string;
+  referenceRole?: "person" | "wifi" | "inverter" | "energy" | "promotion";
+  shapePath?: string;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  backgroundColor?: string;
+  textVerticalAlign?: "top" | "center" | "bottom";
+  padding?: number;
   fitVisiblePhoto?: boolean;
   imageFit?: "cover" | "contain";
   id: string;
@@ -524,9 +551,19 @@ export interface Artwork {
   fontStyle?: "normal" | "italic";
   fontFamily?: string;
   letterSpacing?: number;
+  wordSpacing?: number;
+  whiteSpace?: "nowrap" | "pre-wrap";
   lineHeight?: number;
   textAlign?: "left" | "center" | "right" | "justify";
   text?: string;
+  textRuns?: {
+    text: string;
+    fontScale: number;
+    verticalAlign?: "baseline" | "super" | "top";
+    fontWeight?: number;
+    fontStyle?: "normal" | "italic";
+    color?: string;
+  }[];
   type?: string;
   label?: string;
   image?: string;

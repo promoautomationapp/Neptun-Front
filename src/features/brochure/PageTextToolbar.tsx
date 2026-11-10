@@ -16,6 +16,7 @@ import {
   textFontOptions,
 } from "./textFonts";
 import "../../styles/page-text-toolbar.css";
+import "../../styles/black-friday-fonts.css";
 
 const clamp = (value: number, low: number, high: number) =>
   Math.max(low, Math.min(high, value));
@@ -34,12 +35,16 @@ export function PageTextToolbar({
   onChange,
   beforeFormat,
   onRemove,
+  preferredFonts = [],
+  extraControls,
 }: {
   artwork: Artwork;
   textRef: React.RefObject<HTMLElement | null>;
   onChange: (changes: Partial<Artwork>) => void;
   beforeFormat: () => void;
   onRemove: () => void;
+  preferredFonts?: readonly string[];
+  extraControls?: React.ReactNode;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -54,7 +59,7 @@ export function PageTextToolbar({
     [artwork.fontSize],
   );
   const font = normalizeTextFontFamily(artwork.fontFamily || "SkolaSans");
-  const fonts = textFontOptions(font).filter((option) =>
+  const fonts = textFontOptions(font, preferredFonts).filter((option) =>
     option.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
   const toggle = (next: Panel) => {
@@ -260,6 +265,7 @@ export function PageTextToolbar({
             />
           </svg>
         </button>
+        {extraControls}
         <span className="page-text-tool-divider" />
         <button
           type="button"

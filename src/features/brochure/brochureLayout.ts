@@ -50,6 +50,14 @@ export const BROCHURE_LAYOUTS = [
     rows: 3,
   },
   {
+    id: "grid12",
+    name: "Twelve offers · 3 × 4 grid",
+    detail: "Three columns and four rows",
+    capacity: 12,
+    columns: 3,
+    rows: 4,
+  },
+  {
     id: "grid9",
     name: "Nine offers",
     detail: "3 columns × 3 rows",

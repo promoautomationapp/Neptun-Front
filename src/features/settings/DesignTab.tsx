@@ -193,6 +193,7 @@ export function FormatsTab({ draft, update }: SettingsTabProps) {
             {t("Eight offers · 3 × 3 with one open slot")}
           </option>
           <option value="grid9">{t("Nine offers · 3 × 3")}</option>
+          <option value="grid12">{t("Twelve offers · 3 × 4 grid")}</option>
           <option value="duo4">{t("Four offers · two columns")}</option>
           <option value="pair2">{t("Two offers · one above the other")}</option>
         </SearchableSelect>

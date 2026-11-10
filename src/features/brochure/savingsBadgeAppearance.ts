@@ -1,4 +1,5 @@
 import type { Campaign, Product } from "../../domain/models";
+import { isBlackFridayBrochure } from "./blackFridayDesign";
 import { usesBlueReferencePrice } from "./priceDesign";
 
 const hex = (value?: string) =>
@@ -19,6 +20,8 @@ export function savingsBadgeDefaults(campaign: Campaign, product: Product) {
       }
     : {
         backgroundColor: "#ffffff",
-        textColor: hex(campaign.pricePalette?.saving) || "#ef4023",
+        textColor:
+          hex(campaign.pricePalette?.saving) ||
+          (isBlackFridayBrochure(campaign) ? "#000000" : "#ef4023"),
       };
 }

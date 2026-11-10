@@ -17,6 +17,7 @@ import "../../styles/brochure-mobile-toolbar.css";
 import { FooterDesignControls } from "../brochure/FooterDesignControls";
 import { EditorIcon } from "../brochure/EditorIcon";
 import { CanvasTools, type CanvasTool } from "../brochure/CanvasTools";
+import { PageBannerMenu } from "../brochure/PageBannerMenu";
 import {
   PageDecorationControls,
   type PageDecorationChange,
@@ -158,6 +159,7 @@ import {
 import { ProductPriceEditor } from "../brochure/ProductPriceEditor";
 import { BackgroundPicker } from "../brochure/BackgroundPicker";
 import { BackgroundCanvasControls } from "../brochure/BackgroundCanvasControls";
+import { isBlackFridayBrochure } from "../brochure/blackFridayDesign";
 import { BrochureDesignSwitcher } from "../brochure/BrochureDesignSwitcher";
 import { switchBrochureDesign } from "../brochure/switchBrochureDesign";
 import { useDesignBrandPreparation } from "../brochure/useDesignBrandPreparation";
@@ -3070,6 +3072,7 @@ export function BrochureEditor({
                     .length
                 }
               />
+              {canEditCanvas && <PageBannerMenu campaign={campaign} pageKey={artworkPageKey} onUpdate={onUpdate} onToast={onToast} />}
               {canEditCanvas && (
                 <ActionMenu
                   label={
@@ -3510,6 +3513,7 @@ export function BrochureEditor({
               )}
               <BackgroundCanvasControls
                 containerRef={backgroundCanvasRef}
+                orangePriceVariant={isBlackFridayBrochure(campaign) ? "black-friday" : "default"}
                 pageKey={artworkPageKey}
                 enabled={canEditCanvas && !textMode}
                 color={backgroundColor || defaultBackground}

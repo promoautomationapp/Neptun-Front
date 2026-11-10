@@ -1,0 +1,73 @@
+.bf-person-note {
+  color: var(--np-muted, #63798d);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.bf-person-options {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.bf-person-options > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid var(--np-border, #d6e3ee);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--np-text, #173c5b);
+  background: var(--np-surface, #fff);
+  text-align: left;
+  cursor: pointer;
+}
+.bf-person-options > button[aria-checked="true"] {
+  background: var(--np-soft, #e9f4fc);
+  border-color: var(--np-accent, #217eb8);
+  box-shadow: 0 0 0 1px var(--np-accent, #217eb8);
+}
+.bf-person-option-image {
+  display: grid;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 66px;
+  padding: 2px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1a2028;
+  color: #fff;
+}
+.bf-person-option-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.bf-person-option-image.none {
+  background: var(--np-bg, #edf3f7);
+  color: var(--np-muted, #63798d);
+}
+.bf-person-options b {
+  display: block;
+  font-size: 14px;
+}
+.bf-person-options small {
+  display: block;
+  margin-top: 4px;
+  color: var(--np-muted, #63798d);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.bf-person-radio {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  margin-left: auto;
+  border: 1.5px solid var(--np-muted, #7590a5);
+  border-radius: 50%;
+}
+.bf-person-options [aria-checked="true"] .bf-person-radio {
+  border: 5px solid var(--np-accent, #217eb8);
+  background: var(--np-surface, #fff);
+}

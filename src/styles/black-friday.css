@@ -1,0 +1,388 @@
+/* A3 source composition. Every offer and marketing element remains separate. */
+.black-friday-format > .brochure-format-content {
+  aspect-ratio: 297 / 420;
+}
+.black-friday-format .brochure-page.brochure-black-friday {
+  aspect-ratio: 297 / 420;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  color: var(--brochure-foreground, #fff);
+  font-family: SkolaSans, Arial, sans-serif;
+  isolation: isolate;
+}
+.brochure-black-friday .bf-product-frame {
+  z-index: 3;
+}
+.brochure-black-friday .bf-product-frame > .brochure-product {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: block;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-product-image-wrap {
+  position: absolute;
+  left: var(--bf-photo-x, 5%);
+  top: var(--bf-photo-y, 1%);
+  width: var(--bf-photo-width, 90%);
+  height: var(--bf-photo-height, 65%) !important;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-image {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: none;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-bottom {
+  display: contents;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy {
+  position: absolute;
+  left: var(--bf-copy-x, 0%);
+  top: var(--bf-copy-y, 76%);
+  width: max(45%, var(--bf-copy-width, 55%));
+  height: max(3%, var(--bf-copy-height, 7%));
+  margin: 0;
+  padding: 0;
+  font-family: TSTAR, Arial, sans-serif;
+  color: inherit;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy
+  > [data-product-name] {
+  color: inherit;
+  font-family: TSTAR, Arial, sans-serif;
+  font-weight: 700;
+  font-size: var(--bf-name-font, calc(1.3cqw * var(--bf-type-scale, 1)));
+  line-height: 1.08;
+  white-space: pre-line;
+  text-transform: uppercase;
+  overflow: visible;
+  overflow-wrap: normal;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy
+  > .brochure-product-code {
+  display: none;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy
+  > .brochure-brand-artwork {
+  position: absolute;
+  left: var(--bf-brand-x, 0);
+  top: var(--bf-brand-y, -200%);
+  width: var(--bf-brand-width, 35%);
+  height: var(--bf-brand-height, 160%);
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+.brochure-black-friday .brochure-brand-artwork .brochure-brand-mark {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font:
+    900 calc(2.2cqw * var(--bf-type-scale, 1))/1 SkolaSans,
+    Arial,
+    sans-serif;
+}
+.brochure-black-friday .brochure-brand-artwork .brochure-brand-mark img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-price.red-reference-price {
+  position: absolute;
+  left: var(--bf-price-x, 55%);
+  top: var(--bf-price-y, 61%);
+  width: var(--bf-price-width, 45%);
+  height: auto;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  z-index: 4;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-red-reference-saving {
+  left: var(--bf-saving-x, 80%);
+  top: var(--bf-saving-y, 45%);
+  right: auto;
+  width: var(--bf-saving-width, 18%);
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs {
+  position: absolute;
+  left: var(--bf-specs-x, 0%);
+  top: var(--bf-specs-y, 86%);
+  width: var(--bf-specs-width, 100%);
+  height: var(--bf-specs-height, 13%);
+  max-width: none;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.7cqw;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .product-detail-block {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  border: 0.16cqw solid currentColor;
+  border-radius: 0.7cqw;
+  padding: 0.35cqw;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: inherit;
+  background: transparent;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  overflow: visible;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .detail-filled,
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .detail-style-filled {
+  color: #000;
+  background: #fff;
+  border-color: #fff;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .product-detail-block
+  :is(b, small, .detail-fitted-value) {
+  font-size: calc(1.12cqw * var(--bf-type-scale, 1));
+  line-height: 1.1;
+  color: inherit;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-weight: 700;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .brochure-warranty
+  > b {
+  font-size: calc(3.6cqw * var(--bf-type-scale, 1));
+  line-height: 0.9;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .brochure-warranty
+  > small {
+  font-size: calc(0.9cqw * var(--bf-type-scale, 1));
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy
+  > .brochure-colors {
+  gap: 0.45cqw;
+}
+.brochure-black-friday .brochure-product-divider {
+  position: absolute;
+  left: var(--bf-copy-x, 0%);
+  top: calc(var(--bf-copy-y, 76%) + 3%);
+  width: 55%;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  .bf-source-detail-value {
+  display: block;
+  font: inherit;
+  color: inherit;
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.05;
+  width: 100%;
+}
+.bf-source-detail-value > img {
+  width: 100%;
+  max-height: 65%;
+  object-fit: contain;
+}
+.brochure-black-friday .bf-product-frame .brochure-product-copy::after {
+  content: "";
+  position: absolute;
+  width: calc((var(--bf-price-x, 65%) - var(--bf-copy-x, 0%)) * 1.8);
+  height: 0.1cqw;
+  top: 100%;
+  left: 0;
+  background: currentColor;
+  pointer-events: none;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  .bf-source-detail-value {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  .brochure-warranty
+  > .detail-warranty-count {
+  font-size: var(
+    --bf-warranty-count-font,
+    calc(3.6cqw * var(--bf-type-scale, 1))
+  ) !important;
+  line-height: 0.9;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  > .brochure-specs
+  .brochure-warranty
+  small
+  > span {
+  display: block;
+  border: 0;
+  padding: 0;
+  background: none;
+  margin: 0;
+  color: inherit;
+  border-radius: 0;
+  font: inherit;
+}
+.brochure-black-friday:not([data-smart-appearance="true"])
+  .brochure-brand-mark
+  img {
+  filter: none;
+}
+.brochure-black-friday .bf-product-frame .brochure-brand-mark {
+  min-height: 0;
+}
+.brochure-page.brochure-black-friday:not([data-smart-appearance="true"])
+  .brochure-brand-mark
+  img {
+  filter: none !important;
+}
+.brochure-black-friday .bf-source-detail-run {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  white-space: pre-line;
+  font-style: normal;
+  line-height: 1.05;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product-copy
+  > .brochure-colors {
+  position: absolute;
+  top: calc(var(--bf-brand-y, -200%) - 1.8cqw);
+  left: 0;
+  margin: 0;
+  padding: 0;
+  height: auto;
+  width: max-content;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-colors
+  > .brochure-color-dot {
+  width: calc(1cqw * var(--bf-type-scale, 1));
+  height: calc(1cqw * var(--bf-type-scale, 1));
+}
+/* Native source typography wins over the older generic orange-offer selector. */
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-copy
+  > [data-product-name] {
+  font-size: calc(
+    var(--bf-name-font, 1.3cqw) * var(--product-name-scale, 1)
+  ) !important;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-product-code {
+  display: none !important;
+}

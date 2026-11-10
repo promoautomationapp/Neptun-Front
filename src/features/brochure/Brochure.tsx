@@ -1,4 +1,21 @@
-import { campaignForPageAppearance, hasPageAppearance, pageAppearanceStyle, pageAppearanceFor } from "./pageAppearance";
+import {
+  isBlackFridayBrochure,
+  blackFridayFrames,
+  type BlackFridayFrame,
+} from "./blackFridayDesign";
+import {
+  BlackFridayDetailContent,
+  blackFridayDetail,
+  blackFridayDetailStyle,
+} from "./BlackFridayDetails";
+import { BlackFridayPage } from "./BlackFridayPage";
+import { fitCoverBelowBanners, pageBannerProductStyle } from "./pageBanners";
+import {
+  campaignForPageAppearance,
+  hasPageAppearance,
+  pageAppearanceStyle,
+  pageAppearanceFor,
+} from "./pageAppearance";
 import { PageAppearanceFilters } from "./PageAppearanceFilters";
 import "../../styles/page-appearance.css";
 import { EditorIcon } from "./EditorIcon";
@@ -184,7 +201,10 @@ import "../../styles/background-readability.css";
 import "../../styles/brochure-october.css";
 import "../../styles/brand-logo-appearance.css";
 import "../../styles/blue-reference-layout.css";
-import { blueReferenceDetailGroups, removeBlueReferenceDetailGroup } from "./blueReferenceDetails";
+import {
+  blueReferenceDetailGroups,
+  removeBlueReferenceDetailGroup,
+} from "./blueReferenceDetails";
 import { BlueReferenceDetailAlignment } from "./BlueReferenceDetailAlignment";
 import { BlueReferenceRowCopyAlignment } from "./BlueReferenceRowCopyAlignment";
 import {
@@ -373,15 +393,20 @@ function regionStyle(placement?: Placement): React.CSSProperties | undefined {
   };
 }
 
-function savingRegionStyle(placement?: Placement): React.CSSProperties | undefined {
+function savingRegionStyle(
+  placement?: Placement,
+): React.CSSProperties | undefined {
   if (!placement) return undefined;
   return { ...regionStyle(placement), height: "auto" };
 }
 
 function manualSaving(product: Product) {
   const placement = product.brochureContentPlacement?.saving;
-  return placement && ["x", "y", "width", "height"].some((key) =>
-    placement[key as keyof Placement] !== undefined,
+  return (
+    placement &&
+    ["x", "y", "width", "height"].some(
+      (key) => placement[key as keyof Placement] !== undefined,
+    )
   );
 }
 
@@ -665,7 +690,12 @@ function LayoutHandles({
       }
     };
     const keydown = (event: KeyboardEvent) => {
-      if (event.target !== element || !onRemove || !["Delete", "Backspace"].includes(event.key)) return;
+      if (
+        event.target !== element ||
+        !onRemove ||
+        !["Delete", "Backspace"].includes(event.key)
+      )
+        return;
       event.preventDefault();
       event.stopPropagation();
       onRemove();
@@ -715,7 +745,11 @@ function LayoutHandles({
         type="button"
         className="cs-region-handle move"
         title={t("Move within product block")}
-        aria-label={kind === "saving" ? `${t("Move savings badge")}: ${product.name}` : `${t("Move")} ${kind}: ${product.name}`}
+        aria-label={
+          kind === "saving"
+            ? `${t("Move savings badge")}: ${product.name}`
+            : `${t("Move")} ${kind}: ${product.name}`
+        }
         onPointerDown={(event) => begin(event, "move")}
         onPointerMove={move}
         onPointerUp={end}
@@ -731,11 +765,18 @@ function LayoutHandles({
         onStart={(event) => begin(event, "resize")}
       />
       {onRemove && (
-        <button type="button" className="cs-region-handle remove"
+        <button
+          type="button"
+          className="cs-region-handle remove"
           title={t("Remove savings badge")}
           aria-label={`${t("Remove savings badge")}: ${product.name}`}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => { event.preventDefault(); event.stopPropagation(); onRemove(); }}>
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onRemove();
+          }}
+        >
           <EditorIcon name="trash" />
         </button>
       )}
@@ -743,16 +784,31 @@ function LayoutHandles({
   );
 }
 
-function SavingsHandles({ product, onChange, widthScope = "parent" }: {
+function SavingsHandles({
+  product,
+  onChange,
+  widthScope = "parent",
+}: {
   product: Product;
   onChange: ProductEditingProps["onLayoutRegion"];
   widthScope?: "card" | "parent";
 }) {
   if (!onChange) return null;
   const placement = product.brochureContentPlacement?.saving;
-  return <LayoutHandles product={product} kind="saving" placement={placement}
-    onChange={onChange} baseWidth={13} widthScope={widthScope} containWithinCard
-    onRemove={() => onChange(product, "saving", { ...placement, hidden: true })} />;
+  return (
+    <LayoutHandles
+      product={product}
+      kind="saving"
+      placement={placement}
+      onChange={onChange}
+      baseWidth={13}
+      widthScope={widthScope}
+      containWithinCard
+      onRemove={() =>
+        onChange(product, "saving", { ...placement, hidden: true })
+      }
+    />
+  );
 }
 
 interface PriceProps {
@@ -845,6 +901,7 @@ function Price({
     >
       {redCard ? (
         <RedReferencePrice
+          variant={isBlackFridayBrochure(campaign) ? "black-friday" : "default"}
           product={product}
           installments={installments}
           showRegular={hasRegularPrice(product)}
@@ -869,9 +926,19 @@ function Price({
             onEditSavings={onEditSavings}
             savingStyle={{
               ...savingRegionStyle(product.brochureContentPlacement?.saving),
-              ...defaultRegionScale(campaign, "saving", product.brochureContentPlacement?.saving),
+              ...defaultRegionScale(
+                campaign,
+                "saving",
+                product.brochureContentPlacement?.saving,
+              ),
             }}
-            savingControls={<SavingsHandles product={product} onChange={onLayoutRegion} widthScope="parent" />}
+            savingControls={
+              <SavingsHandles
+                product={product}
+                onChange={onLayoutRegion}
+                widthScope="parent"
+              />
+            }
           />
           {confirmedHigherPrice(product) && (
             <span className="brochure-price-warning reference-price-increase">
@@ -927,10 +994,18 @@ function Price({
         />
       )}
       {onEditSavings && (
-        <button type="button" className="cs-price-savings-settings" data-export-hide="true"
+        <button
+          type="button"
+          className="cs-price-savings-settings"
+          data-export-hide="true"
           aria-label={`${t("Edit savings badge")}: ${product.name}`}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => { event.preventDefault(); event.stopPropagation(); onEditSavings(product); }}>
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onEditSavings(product);
+          }}
+        >
           <EditorIcon name="edit" /> {t("Savings badge")}
         </button>
       )}
@@ -984,6 +1059,7 @@ export interface ProductEditingProps {
   dropCode?: string | null;
 }
 interface ProductCardProps extends ProductEditingProps {
+  sourceFrame?: BlackFridayFrame;
   quickEdit?: ReturnType<typeof useProductQuickEdit>;
   campaign: Campaign;
   product: Product;
@@ -1090,7 +1166,13 @@ function LargeBundleProductCard(props: ProductCardProps) {
     pageColor,
   } = props;
   const photoAreaRef = React.useRef<HTMLDivElement>(null);
-  const contentPlacement = product.brochureContentPlacement || {};
+  const contentPlacement = isBlackFridayBrochure(campaign)
+    ? Object.fromEntries(
+        Object.entries(product.brochureContentPlacement || {}).filter(
+          ([key]) => key !== "frame",
+        ),
+      )
+    : product.brochureContentPlacement || {};
   const size = cardSize(product, layout || "classic8", props.gridIndex);
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
@@ -1292,6 +1374,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
 
 function StandardProductCard({
   campaign,
+  sourceFrame,
   product,
   quickEdit,
   light = false,
@@ -1337,7 +1420,9 @@ function StandardProductCard({
             ? applianceDetailEntries(product)
             : Object.entries(displaySpecs(product))
       ).filter(
-        ([key, value]) => (value || (blueReference && key)) && !/garanc|warrant|ngjyr|colou?r/i.test(key),
+        ([key, value]) =>
+          (value || (blueReference && key)) &&
+          !/garanc|warrant|ngjyr|colou?r/i.test(key),
       );
   const warranty = productWarranty(product);
   const redReference = usesRedReferencePrice(product, campaign);
@@ -1360,13 +1445,17 @@ function StandardProductCard({
   // same compact warranty/detail row shown in the brochure reference.
   const referenceStrip = redReference || style === "current";
   const warrantyInStrip = referenceStrip && !blueReference;
-  const printableSpecs = allSpecs.filter(([key, value]) => !isWarrantyDetail(key, value));
+  const printableSpecs = allSpecs.filter(
+    ([key, value]) => !isWarrantyDetail(key, value),
+  );
   const preferredSpecs = visibleOptionalProductDetails(
     product,
-    importedSpecs ? printableSpecs : brochureDefaultDetailEntries(product, printableSpecs),
+    importedSpecs
+      ? printableSpecs
+      : brochureDefaultDetailEntries(product, printableSpecs),
   );
   const legacySpecs =
-    product.autoSpecsDisabled || sideDetails
+    isBlackFridayBrochure(campaign) || product.autoSpecsDisabled || sideDetails
       ? visibleOptionalProductDetails(product, printableSpecs)
       : classicCover
         ? preferredSpecs.slice(
@@ -1380,7 +1469,8 @@ function StandardProductCard({
           });
   const blueGroups = blueReference
     ? blueReferenceDetailGroups(product, preferredSpecs, {
-        phone: sideDetails && isMobilePhone(product) && !isAppleProduct(product),
+        phone:
+          sideDetails && isMobilePhone(product) && !isAppleProduct(product),
         imported: importedSpecs,
       })
     : null;
@@ -1396,8 +1486,15 @@ function StandardProductCard({
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const imageRef = React.useRef<HTMLImageElement>(null);
   const priceRowRef = React.useRef<HTMLDivElement>(null);
-  const contentPlacement = product.brochureContentPlacement || {};
-  const nameAtTop = brandHeaderAtTop && isAppleProduct(product) && !contentPlacement.details;
+  const contentPlacement = isBlackFridayBrochure(campaign)
+    ? Object.fromEntries(
+        Object.entries(product.brochureContentPlacement || {}).filter(
+          ([key]) => key !== "frame",
+        ),
+      )
+    : product.brochureContentPlacement || {};
+  const nameAtTop =
+    brandHeaderAtTop && isAppleProduct(product) && !contentPlacement.details;
   const gesture = React.useRef<ImageGesture | CardGesture | null>(null);
   const [imageReady, setImageReady] = React.useState(0);
   const [placement, setPlacement] = React.useState(
@@ -1776,46 +1873,52 @@ function StandardProductCard({
   ]);
   const detailRowOrder = (key: React.Key | null | undefined) => {
     const index = allSpecs.findIndex(([sourceKey, value]) =>
-      key === "__warranty" ? isWarrantyDetail(sourceKey, value) : sourceKey === key,
+      key === "__warranty"
+        ? isWarrantyDetail(sourceKey, value)
+        : sourceKey === key,
     );
     return index < 0 ? allSpecs.length : index;
   };
-  const colorsAboveDetails = blueReference && !product.detailBlockPlacements?.__colors;
+  const colorsAboveDetails =
+    blueReference && !product.detailBlockPlacements?.__colors;
   const colorsRow = colors.length > 0 && product.hideColors !== true && (
-            <ProductDetailBlock
-              product={product}
-              detailKey="__colors"
-              className={`brochure-colors ${blueReference ? "blue-reference-colors" : ""}`}
-              onChange={changeProduct}
-              onRemove={
-                changeProduct
-                  ? () => changeProduct("hideColors", true)
-                  : undefined
-              }
-              aria-label={`Ngjyrat: ${colors.map((color) => color.name).join(", ")}`}
-            >
-              {colors.map((color) => (
-                <i
-                  key={color.name}
-                  className="brochure-color-dot"
-                  title={color.name}
-                  style={{ backgroundColor: color.hex }}
-                />
-              ))}
-            </ProductDetailBlock>
-          );
-  const warrantyLine = warranty && !warrantyInStrip ? (
     <ProductDetailBlock
       product={product}
-      detailKey="__warranty"
-      className={`brochure-warranty-line ${nameAtTop ? "brochure-product-top-warranty" : ""}`}
+      detailKey="__colors"
+      className={`brochure-colors ${blueReference ? "blue-reference-colors" : ""}`}
       onChange={changeProduct}
-      onEdit={onEditDetails ? () => onEditDetails(product, "__warranty") : undefined}
-      onRemove={changeProduct ? () => changeProduct("hideWarranty", true) : undefined}
+      onRemove={
+        changeProduct ? () => changeProduct("hideColors", true) : undefined
+      }
+      aria-label={`Ngjyrat: ${colors.map((color) => color.name).join(", ")}`}
     >
-      {warranty.count} {warranty.unit} GARANCION
+      {colors.map((color) => (
+        <i
+          key={color.name}
+          className="brochure-color-dot"
+          title={color.name}
+          style={{ backgroundColor: color.hex }}
+        />
+      ))}
     </ProductDetailBlock>
-  ) : null;
+  );
+  const warrantyLine =
+    warranty && !warrantyInStrip ? (
+      <ProductDetailBlock
+        product={product}
+        detailKey="__warranty"
+        className={`brochure-warranty-line ${nameAtTop ? "brochure-product-top-warranty" : ""}`}
+        onChange={changeProduct}
+        onEdit={
+          onEditDetails ? () => onEditDetails(product, "__warranty") : undefined
+        }
+        onRemove={
+          changeProduct ? () => changeProduct("hideWarranty", true) : undefined
+        }
+      >
+        {warranty.count} {warranty.unit} GARANCION
+      </ProductDetailBlock>
+    ) : null;
   return (
     <article
       {...quickEdit?.events}
@@ -1824,9 +1927,20 @@ function StandardProductCard({
         !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
       }
       data-blue-reference-defaults={blueReference ? "true" : undefined}
-      data-default-photo={!product.brochureImagePlacement && productDesign.photo.mode !== "custom" ? "true" : undefined}
-      data-default-bottom-row={blueReference && !contentPlacement.price && !contentPlacement.details && !product.detailBlockPlacements?.__brand ? "true" : undefined}
-      className={`brochure-product style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${sideDetails ? `details-${detailPlacement}` : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
+      data-default-photo={
+        !product.brochureImagePlacement && productDesign.photo.mode !== "custom"
+          ? "true"
+          : undefined
+      }
+      data-default-bottom-row={
+        blueReference &&
+        !contentPlacement.price &&
+        !contentPlacement.details &&
+        !product.detailBlockPlacements?.__brand
+          ? "true"
+          : undefined
+      }
+      className={`brochure-product ${isBlackFridayBrochure(campaign) ? "black-friday-offer" : ""} style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${sideDetails ? `details-${detailPlacement}` : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
       onDragOver={(event) => {
         if (
           [...event.dataTransfer.types].includes(
@@ -1863,7 +1977,12 @@ function StandardProductCard({
       style={{
         position: "relative",
         ...productTypographyStyle(campaign),
-        ...(blueReference && light ? { color: appearanceTextColor || "#000", "--brochure-foreground": appearanceTextColor || "#000" } : {}),
+        ...(blueReference && light
+          ? {
+              color: appearanceTextColor || "#000",
+              "--brochure-foreground": appearanceTextColor || "#000",
+            }
+          : {}),
         ...(onResizeCard ||
         product.brochureCardSize ||
         layout === "tv8" ||
@@ -1879,8 +1998,15 @@ function StandardProductCard({
     >
       {quickEdit?.editor}
       {nameAtTop && (
-        <span className="brochure-product-top-name" data-product-name="true"
-          {...inlineText(product.name, t("Product name"), changeProduct ? (value) => changeProduct("name", value) : undefined)}>
+        <span
+          className="brochure-product-top-name"
+          data-product-name="true"
+          {...inlineText(
+            product.name,
+            t("Product name"),
+            changeProduct ? (value) => changeProduct("name", value) : undefined,
+          )}
+        >
           {product.name}
         </span>
       )}
@@ -2007,7 +2133,9 @@ function StandardProductCard({
               onUploadImage={() => onEditImage(product)}
             />
           ) : (
-            <div className="brochure-image-empty" data-export-hide="true">Foto e produktit</div>
+            <div className="brochure-image-empty" data-export-hide="true">
+              Foto e produktit
+            </div>
           ))}
         {allowScreenArtwork &&
           product.screenArtwork?.image &&
@@ -2043,6 +2171,9 @@ function StandardProductCard({
           )}
         {validSale(product) && usesRedReferencePrice(product, campaign) && (
           <RedReferenceSavings
+            variant={
+              isBlackFridayBrochure(campaign) ? "black-friday" : "default"
+            }
             product={product}
             savingMode={savingMode}
             className="brochure-red-reference-saving"
@@ -2228,12 +2359,20 @@ function StandardProductCard({
         enabled={!contentPlacement.saving && !hasApplePhotos(product)}
       />
       {colorsAboveDetails && colorsRow}
-      <BlueReferenceDetailAlignment key={`${blueReference}-${validSale(product)}-${contentPlacement.saving?.hidden}`} photoAreaRef={wrapRef} enabled={blueReference && !sideDetails && !contentPlacement.specs} />
+      <BlueReferenceDetailAlignment
+        key={`${blueReference}-${validSale(product)}-${contentPlacement.saving?.hidden}`}
+        photoAreaRef={wrapRef}
+        enabled={blueReference && !sideDetails && !contentPlacement.specs}
+      />
       <div className="brochure-product-bottom" ref={priceRowRef}>
         <div
           className="brochure-product-copy"
           style={regionStyle(contentPlacement.details)}
-          data-copy-frame-manual={contentPlacement.details || product.detailBlockPlacements?.__brand ? "true" : undefined}
+          data-copy-frame-manual={
+            contentPlacement.details || product.detailBlockPlacements?.__brand
+              ? "true"
+              : undefined
+          }
         >
           {!colorsAboveDetails && colorsRow}
           {isBundleOffer(product) && <BundleVariantColors product={product} />}
@@ -2247,32 +2386,38 @@ function StandardProductCard({
               onChange={changeProduct}
             />
           )}
-          {!nameAtTop && <span
-            data-product-name="true"
-            {...inlineText(
-              product.name,
-              t("Product name"),
-              changeProduct
-                ? (value) => changeProduct("name", value)
-                : undefined,
-            )}
-          >
-            {product.name}
-          </span>}
+          {!nameAtTop && (
+            <span
+              data-product-name="true"
+              {...inlineText(
+                product.name,
+                t("Product name"),
+                changeProduct
+                  ? (value) => changeProduct("name", value)
+                  : undefined,
+              )}
+            >
+              {product.name}
+            </span>
+          )}
           {!nameAtTop && warrantyLine}
-          {(!blueReference || Boolean(product.brochureCode?.trim())) && <small
-            className="brochure-product-code"
-            data-manual-code={product.brochureCode?.trim() ? "true" : undefined}
-            {...inlineText(
-              String(product.brochureCode ?? product.code),
-              t("Product code in brochure"),
-              changeProduct
-                ? (value) => changeProduct("brochureCode", value)
-                : undefined,
-            )}
-          >
-            {String(product.brochureCode ?? product.code)}
-          </small>}
+          {(!blueReference || Boolean(product.brochureCode?.trim())) && (
+            <small
+              className="brochure-product-code"
+              data-manual-code={
+                product.brochureCode?.trim() ? "true" : undefined
+              }
+              {...inlineText(
+                String(product.brochureCode ?? product.code),
+                t("Product code in brochure"),
+                changeProduct
+                  ? (value) => changeProduct("brochureCode", value)
+                  : undefined,
+              )}
+            >
+              {String(product.brochureCode ?? product.code)}
+            </small>
+          )}
           {onEditDetails && (
             <button
               type="button"
@@ -2306,156 +2451,211 @@ function StandardProductCard({
           onEditPrice={onEditPrice}
           onEditSavings={onEditSavings}
         />
-        <ProductNameDivider
-          rowRef={priceRowRef}
-          alignName={!contentPlacement.details}
-          defaults={productDesign.divider}
-        />
+        {!isBlackFridayBrochure(campaign) && (
+          <ProductNameDivider
+            rowRef={priceRowRef}
+            alignName={!contentPlacement.details}
+            defaults={productDesign.divider}
+          />
+        )}
       </div>
       {(specs.length > 0 || (warranty && warrantyInStrip)) && (
         <div
           className={`brochure-specs ${importedSpecs ? "brochure-imported-specs" : ""}`}
           style={regionStyle(contentPlacement.specs)}
           data-detail-layout={sideDetails ? detailPlacement : "strip"}
-          data-detail-frame-manual={contentPlacement.specs && (contentPlacement.specs.x || contentPlacement.specs.y || contentPlacement.specs.height || (contentPlacement.specs.width && contentPlacement.specs.width !== 100)) ? "true" : undefined}
+          data-detail-frame-manual={
+            contentPlacement.specs &&
+            (contentPlacement.specs.x ||
+              contentPlacement.specs.y ||
+              contentPlacement.specs.height ||
+              (contentPlacement.specs.width &&
+                contentPlacement.specs.width !== 100))
+              ? "true"
+              : undefined
+          }
           data-blue-default-groups={blueGroups ? "true" : undefined}
         >
-          {[...specs.map(([key, value], index) => (
-            <ProductDetailBlock
-              key={key}
-              product={product}
-              detailKey={key}
-              className={`${isMemoryDetail(key, value) ? "detail-memory" : ""} ${defaultDetailFill(campaign, referenceStrip && defaultFilledDetail(product, key, value, index)) ? "detail-filled" : ""}`}
-              onChange={changeProduct}
-              draggable={Boolean(onReorderDetails) && !((blueGroups?.[index]?.entries.length || 0) > 1)}
-              onDragStart={
-                onReorderDetails
-                  ? (event: {
-                      stopPropagation: () => void;
-                      dataTransfer: {
-                        setData: (arg0: string, arg1: string) => void;
-                      };
-                    }) => {
-                      event.stopPropagation();
-                      event.dataTransfer.setData(
-                        "application/x-brochure-detail",
-                        `${product.code}:${allSpecs.findIndex(([sourceKey]) => sourceKey === key)}`,
-                      );
-                    }
-                  : undefined
-              }
-              onDragOver={
-                onReorderDetails
-                  ? (event) => {
-                      if (
-                        [...event.dataTransfer.types].includes(
-                          "application/x-brochure-detail",
-                        )
-                      )
-                        event.preventDefault();
-                    }
-                  : undefined
-              }
-              onDrop={
-                onReorderDetails
-                  ? (event) => {
-                      const source = event.dataTransfer.getData(
-                        "application/x-brochure-detail",
-                      );
-                      if (source.startsWith(`${product.code}:`)) {
-                        event.preventDefault();
+          {[
+            ...specs.map(([key, value], index) => (
+              <ProductDetailBlock
+                key={key}
+                product={product}
+                detailKey={key}
+                style={blackFridayDetailStyle(
+                  sourceFrame,
+                  blackFridayDetail(sourceFrame, index),
+                )}
+                className={`${isMemoryDetail(key, value) ? "detail-memory" : ""} ${(blackFridayDetail(sourceFrame, index) ? blackFridayDetail(sourceFrame, index)!.fill === "#ffffff" : defaultDetailFill(campaign, referenceStrip && defaultFilledDetail(product, key, value, index))) ? "detail-filled" : ""}`}
+                onChange={changeProduct}
+                draggable={
+                  Boolean(onReorderDetails) &&
+                  !((blueGroups?.[index]?.entries.length || 0) > 1)
+                }
+                onDragStart={
+                  onReorderDetails
+                    ? (event: {
+                        stopPropagation: () => void;
+                        dataTransfer: {
+                          setData: (arg0: string, arg1: string) => void;
+                        };
+                      }) => {
                         event.stopPropagation();
-                        onReorderDetails(
-                          product,
-                          Number(source.slice(String(product.code).length + 1)),
-                          allSpecs.findIndex(
-                            ([sourceKey]) => sourceKey === key,
-                          ),
-                          allSpecs,
+                        event.dataTransfer.setData(
+                          "application/x-brochure-detail",
+                          `${product.code}:${allSpecs.findIndex(([sourceKey]) => sourceKey === key)}`,
                         );
                       }
-                    }
-                  : undefined
-              }
-              onEdit={
-                onEditDetails
-                  ? () => onEditDetails(product, String(key))
-                  : undefined
-              }
-              onRemove={
-                changeProduct
-                  ? () => {
-                      const changes = blueGroups?.[index]
-                        ? removeBlueReferenceDetailGroup(product, allSpecs, blueGroups[index]!.entries.map(([sourceKey]) => sourceKey))
-                        : deleteDisplayedDetail(
+                    : undefined
+                }
+                onDragOver={
+                  onReorderDetails
+                    ? (event) => {
+                        if (
+                          [...event.dataTransfer.types].includes(
+                            "application/x-brochure-detail",
+                          )
+                        )
+                          event.preventDefault();
+                      }
+                    : undefined
+                }
+                onDrop={
+                  onReorderDetails
+                    ? (event) => {
+                        const source = event.dataTransfer.getData(
+                          "application/x-brochure-detail",
+                        );
+                        if (source.startsWith(`${product.code}:`)) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onReorderDetails(
+                            product,
+                            Number(
+                              source.slice(String(product.code).length + 1),
+                            ),
+                            allSpecs.findIndex(
+                              ([sourceKey]) => sourceKey === key,
+                            ),
+                            allSpecs,
+                          );
+                        }
+                      }
+                    : undefined
+                }
+                onEdit={
+                  onEditDetails
+                    ? () => onEditDetails(product, String(key))
+                    : undefined
+                }
+                onRemove={
+                  changeProduct
+                    ? () => {
+                        const changes = blueGroups?.[index]
+                          ? removeBlueReferenceDetailGroup(
+                              product,
+                              allSpecs,
+                              blueGroups[index]!.entries.map(
+                                ([sourceKey]) => sourceKey,
+                              ),
+                            )
+                          : deleteDisplayedDetail(
+                              product,
+                              allSpecs,
+                              allSpecs.findIndex(
+                                ([sourceKey]) => sourceKey === key,
+                              ),
+                            );
+                        changeProduct(changes);
+                      }
+                    : undefined
+                }
+                editText={importedSpecs ? String(value) : `${key}: ${value}`}
+                onSaveText={
+                  changeProduct &&
+                  !((blueGroups?.[index]?.entries.length || 0) > 1)
+                    ? (text) =>
+                        changeProduct(
+                          editDisplayedDetail(
                             product,
                             allSpecs,
-                            allSpecs.findIndex(([sourceKey]) => sourceKey === key),
-                          );
-                      changeProduct(changes);
-                    }
-                  : undefined
-              }
-              editText={importedSpecs ? String(value) : `${key}: ${value}`}
-              onSaveText={
-                changeProduct && !((blueGroups?.[index]?.entries.length || 0) > 1)
-                  ? (text) =>
-                      changeProduct(
-                        editDisplayedDetail(
-                          product,
-                          allSpecs,
-                          allSpecs.findIndex(
-                            ([sourceKey]) => sourceKey === key,
+                            allSpecs.findIndex(
+                              ([sourceKey]) => sourceKey === key,
+                            ),
+                            text,
                           ),
-                          text,
-                        ),
-                      )
-                  : undefined
-              }
-            >
-              {blueGroups?.[index] && (blueGroups[index]!.entries.length > 1 || sideDetails || !blueGroups[index]!.entries[0]?.[1]) ? (
-                <FittedDetailValue
-                  text={blueGroups[index]!.text}
-                  className={`detail-blue-reference ${isMemoryDetail(key, value) ? "detail-memory" : ""}`}
-                  fitKey={detailPlacement}
-                />
-              ) : <DetailContent
-                product={product}
-                label={key}
-                value={blueGroups?.[index]?.entries[0]?.[1] ?? value}
-                imported={importedSpecs}
-                layout={sideDetails ? "left" : "strip"}
-                reference={
-                  blueReference ? "blue" : redReference ? "red" : "legacy"
+                        )
+                    : undefined
                 }
-              />}
-            </ProductDetailBlock>
-          )),
-          warranty && warrantyInStrip ? (
-            <ProductDetailBlock
-              key="__warranty"
-              product={product}
-              detailKey="__warranty"
-              onChange={changeProduct}
-              onEdit={onEditDetails ? () => onEditDetails(product, "__warranty") : undefined}
-              onRemove={
-                changeProduct
-                  ? () => changeProduct("hideWarranty", true)
-                  : undefined
-              }
-              className="brochure-warranty"
-              aria-label={`${warranty.count} ${warranty.unit.toLowerCase()} garancion`}
-            >
-              <FittedDetailValue
-                text={warranty.count}
-                className="detail-warranty-count"
-              />
-              <small>
-                <span className="brochure-warranty-unit">{warranty.unit}</span>
-                <span className="brochure-warranty-label">GARANCION</span>
-              </small>
-            </ProductDetailBlock>
-          ) : null].sort((a, b) => product.autoSpecsDisabled ? detailRowOrder(a?.key) - detailRowOrder(b?.key) : 0)}
+              >
+                {blackFridayDetail(sourceFrame, index) ? (
+                  <BlackFridayDetailContent
+                    detail={blackFridayDetail(sourceFrame, index)!}
+                    text={String(value)}
+                  />
+                ) : blueGroups?.[index] &&
+                  (blueGroups[index]!.entries.length > 1 ||
+                    sideDetails ||
+                    !blueGroups[index]!.entries[0]?.[1]) ? (
+                  <FittedDetailValue
+                    text={blueGroups[index]!.text}
+                    className={`detail-blue-reference ${isMemoryDetail(key, value) ? "detail-memory" : ""}`}
+                    fitKey={detailPlacement}
+                  />
+                ) : (
+                  <DetailContent
+                    product={product}
+                    label={key}
+                    value={blueGroups?.[index]?.entries[0]?.[1] ?? value}
+                    imported={importedSpecs}
+                    layout={sideDetails ? "left" : "strip"}
+                    reference={
+                      blueReference ? "blue" : redReference ? "red" : "legacy"
+                    }
+                  />
+                )}
+              </ProductDetailBlock>
+            )),
+            warranty && warrantyInStrip ? (
+              <ProductDetailBlock
+                key="__warranty"
+                product={product}
+                detailKey="__warranty"
+                onChange={changeProduct}
+                onEdit={
+                  onEditDetails
+                    ? () => onEditDetails(product, "__warranty")
+                    : undefined
+                }
+                onRemove={
+                  changeProduct
+                    ? () => changeProduct("hideWarranty", true)
+                    : undefined
+                }
+                className="brochure-warranty"
+                style={blackFridayDetailStyle(
+                  sourceFrame,
+                  blackFridayDetail(sourceFrame, 0, true),
+                )}
+                aria-label={`${warranty.count} ${warranty.unit.toLowerCase()} garancion`}
+              >
+                <FittedDetailValue
+                  text={warranty.count}
+                  className="detail-warranty-count"
+                />
+                <small>
+                  <span className="brochure-warranty-unit">
+                    {warranty.unit}
+                  </span>
+                  <span className="brochure-warranty-label">GARANCION</span>
+                </small>
+              </ProductDetailBlock>
+            ) : null,
+          ].sort((a, b) =>
+            product.autoSpecsDisabled
+              ? detailRowOrder(a?.key) - detailRowOrder(b?.key)
+              : 0,
+          )}
           {changeProduct && (
             <button
               type="button"
@@ -2503,14 +2703,16 @@ function StandardProductCard({
           )}
         </div>
       )}
-      <ProductArtworkLayer
-        campaign={campaign}
-        product={product}
-        imageRef={imageRef}
-        photoAreaRef={wrapRef}
-        onChange={changeProduct}
-        editable={Boolean(changeProduct)}
-      />
+      {!isBlackFridayBrochure(campaign) && (
+        <ProductArtworkLayer
+          campaign={campaign}
+          product={product}
+          imageRef={imageRef}
+          photoAreaRef={wrapRef}
+          onChange={changeProduct}
+          editable={Boolean(changeProduct)}
+        />
+      )}
       {changeProduct &&
         ["left", "right", "bottom"].map((target) => (
           <div
@@ -2542,7 +2744,13 @@ function StandardProductCard({
                 ?.classList.remove("cs-details-dragging");
             }}
           >
-            {t(target === "left" ? "Left of image" : target === "right" ? "Right of image" : "Below image")}
+            {t(
+              target === "left"
+                ? "Left of image"
+                : target === "right"
+                  ? "Right of image"
+                  : "Below image",
+            )}
           </div>
         ))}
       {onResizeCard && (
@@ -2595,7 +2803,9 @@ function LastPageWithStores({
     <section
       className={`brochure-page brochure-last-page-shell has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
-      data-smart-appearance={hasPageAppearance(campaign, kind, page) ? "true" : undefined}
+      data-smart-appearance={
+        hasPageAppearance(campaign, kind, page) ? "true" : undefined
+      }
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, color),
@@ -2603,7 +2813,12 @@ function LastPageWithStores({
         background: fill,
       }}
     >
-      <PageAppearanceFilters campaign={campaign} kind={kind} page={page} id={brandFilterId} />
+      <PageAppearanceFilters
+        campaign={campaign}
+        kind={kind}
+        page={page}
+        id={brandFilterId}
+      />
       <div
         className="brochure-last-page-scaled"
         style={{ left: `${(1 - scale) * 50}%`, transform: `scale(${scale})` }}
@@ -2638,13 +2853,70 @@ function LastPageWithStores({
 }
 
 export function CoverPage(props: BrochurePageProps) {
-  props = { ...props, campaign: campaignForPageAppearance(brochureColorVariantCampaign(props.campaign), "cover") };
+  props = {
+    ...props,
+    campaign: campaignForPageAppearance(
+      brochureColorVariantCampaign(props.campaign),
+      "cover",
+    ),
+  };
   return (
     <BrochureFormatFrame campaign={props.campaign} kind="cover">
       <LastPageWithStores {...props}>
-        <CoverPageContent {...props} />
+        {isBlackFridayBrochure(props.campaign) ? (
+          <BlackFridayPageContent {...props} />
+        ) : (
+          <CoverPageContent {...props} />
+        )}
       </LastPageWithStores>
     </BrochureFormatFrame>
+  );
+}
+
+function BlackFridayPageContent(
+  props: BrochurePageProps & { page?: BrochurePage; closing?: boolean },
+) {
+  const { campaign, page, closing } = props;
+  const products = closing ? [] : page?.products || coverProducts(campaign);
+  const frames = blackFridayFrames(page ? page.index + 2 : 1, products);
+  const kind = closing ? "stores" : page ? "product" : "cover";
+  const color = pageBackgroundContrastColor(campaign, kind, page);
+  const light = pageBackgroundReadability(campaign, kind, page).light;
+  return (
+    <BlackFridayPage
+      campaign={campaign}
+      page={page}
+      products={products}
+      closing={closing}
+      onArtworkChange={props.onArtworkChange}
+      onArtworkRemove={props.onArtworkRemove}
+      onProductChange={props.onProductChange}
+      renderProduct={(product, index) => (
+        <ProductCard
+          {...props}
+          campaign={campaign}
+          product={{
+            ...product,
+            ...(product.brandLogo === undefined && frames[index]?.brandImage
+              ? { brandLogo: frames[index]!.brandImage }
+              : {}),
+            ...(product.brochureImagePlacement
+              ? {}
+              : { brochureImagePlacement: { x: 50, y: 50, scale: 1 } }),
+          }}
+          sourceFrame={frames[index]}
+          priceLogo={priceLogoSource(campaign)}
+          installments={installmentCount(campaign)}
+          layout={page?.layout || "grid6portrait"}
+          gridIndex={index}
+          light={light}
+          pageColor={color}
+          appearanceTextColor={
+            pageAppearanceFor(campaign, kind, page).textColor
+          }
+        />
+      )}
+    />
   );
 }
 
@@ -2762,8 +3034,20 @@ function CoverPageContent({
         })
       : pageBackgroundReadability(campaign, "cover");
   const dark = !readability.light;
-  const adaptiveCoverLogo = hasPageAppearance(campaign, "cover") && !dark && (!coverLogo || builtinLogo || /\/(?:brochure-presets\/october\/neptun-cover\.svg|branding\/neptun-logo\.png|api\/assets\/app\/logo)(?:[?#]|$)/.test(coverLogo)) ? OCTOBER_ASSETS.neptun : undefined;
-  const smartHajde = hasPageAppearance(campaign, "cover") && !dark ? OCTOBER_ASSETS.hajde : OCTOBER_ASSETS.hajdeWhite;
+  const adaptiveCoverLogo =
+    hasPageAppearance(campaign, "cover") &&
+    !dark &&
+    (!coverLogo ||
+      builtinLogo ||
+      /\/(?:brochure-presets\/october\/neptun-cover\.svg|branding\/neptun-logo\.png|api\/assets\/app\/logo)(?:[?#]|$)/.test(
+        coverLogo,
+      ))
+      ? OCTOBER_ASSETS.neptun
+      : undefined;
+  const smartHajde =
+    hasPageAppearance(campaign, "cover") && !dark
+      ? OCTOBER_ASSETS.hajde
+      : OCTOBER_ASSETS.hajdeWhite;
   const headline =
     campaign.coverHeadline == null ? campaign.name : campaign.coverHeadline;
   const tagline = campaign.tagline ?? "";
@@ -2780,7 +3064,9 @@ function CoverPageContent({
       ref={pageRef}
       className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
-      data-smart-appearance={hasPageAppearance(campaign, "cover") ? "true" : undefined}
+      data-smart-appearance={
+        hasPageAppearance(campaign, "cover") ? "true" : undefined
+      }
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -2789,7 +3075,11 @@ function CoverPageContent({
       }}
     >
       <BlueReferenceRowCopyAlignment pageRef={pageRef} />
-      <PageAppearanceFilters campaign={campaign} kind="cover" id={brandFilterId} />
+      <PageAppearanceFilters
+        campaign={campaign}
+        kind="cover"
+        id={brandFilterId}
+      />
       {backgroundImage && (
         <img
           className="brochure-page-background-image"
@@ -2929,7 +3219,17 @@ function CoverPageContent({
           onHide={onCoverElementHide}
         >
           {adaptiveCoverLogo ? (
-            <img className="smart-neptun-cover-logo" data-custom-brand-color={pageAppearanceFor(campaign, "cover").brandColor ? "true" : undefined} src={adaptiveCoverLogo} alt="NEPTUN" draggable={false}/>
+            <img
+              className="smart-neptun-cover-logo"
+              data-custom-brand-color={
+                pageAppearanceFor(campaign, "cover").brandColor
+                  ? "true"
+                  : undefined
+              }
+              src={adaptiveCoverLogo}
+              alt="NEPTUN"
+              draggable={false}
+            />
           ) : builtinLogo ? (
             <NeptunCoverLogo source={coverLogo} variant={builtinLogo} />
           ) : coverLogo ? (
@@ -3102,10 +3402,7 @@ function CoverPageContent({
           onHide={onCoverElementHide}
         >
           <img
-            src={
-              campaign.campaignAssets?.["cover-hajde"]?.image ||
-              smartHajde
-            }
+            src={campaign.campaignAssets?.["cover-hajde"]?.image || smartHajde}
             alt="hajde!"
             draggable={false}
           />
@@ -3167,10 +3464,16 @@ function CoverPageContent({
               campaign={campaign}
               kind={`product-${product.code}`}
               className={`cover-product-frame ${isFeaturedCoverProduct(campaign, product.code, productIndex, products.length) ? "cover-featured-product" : ""} ${!october && campaign.showCoverBand !== true && !campaign.coverElementPlacements?.[`product-${product.code}`] && !product.brochureImagePlacement && coverProductPlacement(campaign, productIndex, products.length).width >= 88 ? "cover-product-wide-default" : ""}`}
-              defaultPlacement={coverProductPlacement(
+              defaultPlacement={fitCoverBelowBanners(
+                coverProductPlacement(campaign, productIndex, products.length),
                 campaign,
-                productIndex,
-                products.length,
+                "cover",
+                Math.min(
+                  ...products.map(
+                    (_, index) =>
+                      coverProductPlacement(campaign, index, products.length).y,
+                  ),
+                ),
               )}
               style={
                 {
@@ -3200,7 +3503,9 @@ function CoverPageContent({
                 )}
                 light={!dark}
                 pageColor={backgroundColor}
-                appearanceTextColor={pageAppearanceFor(campaign, "cover").textColor}
+                appearanceTextColor={
+                  pageAppearanceFor(campaign, "cover").textColor
+                }
                 priceLogo={priceLogo}
                 installments={installmentCount(campaign)}
                 onEditImage={onEditImage}
@@ -3295,7 +3600,11 @@ function formatDates(
 export function ProductPage(props: ProductPageProps) {
   props = {
     ...props,
-    campaign: campaignForPageAppearance(brochureColorVariantCampaign(props.campaign), "product", props.page),
+    campaign: campaignForPageAppearance(
+      brochureColorVariantCampaign(props.campaign),
+      "product",
+      props.page,
+    ),
     page: {
       ...props.page,
       products: brochureColorVariantProducts(props.page.products),
@@ -3308,7 +3617,11 @@ export function ProductPage(props: ProductPageProps) {
       kind="product"
     >
       <LastPageWithStores {...props}>
-        <ProductPageContent {...props} />
+        {isBlackFridayBrochure(props.campaign) ? (
+          <BlackFridayPageContent {...props} page={props.page} />
+        ) : (
+          <ProductPageContent {...props} />
+        )}
       </LastPageWithStores>
     </BrochureFormatFrame>
   );
@@ -3343,7 +3656,9 @@ function ProductPageContent({
   const pageRef = React.useRef<HTMLElement>(null);
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
-  const bluePage = page.products.length > 0 && page.products.every((product) => usesBlueReferencePrice(product, campaign));
+  const bluePage =
+    page.products.length > 0 &&
+    page.products.every((product) => usesBlueReferencePrice(product, campaign));
   const backgroundColor = pageBackgroundContrastColor(
     campaign,
     "product",
@@ -3357,11 +3672,12 @@ function ProductPageContent({
   const light = readability.light;
   const priceLogo = priceLogoSource(campaign);
   const pageConfig = campaign.pages?.[page.index];
-  const categoryTitle = typeof pageConfig?.title === "string"
-    ? pageConfig.title
-    : page.title && !/^(?:page|faqja)\s+\d+$/i.test(page.title.trim())
-      ? page.title
-      : undefined;
+  const categoryTitle =
+    typeof pageConfig?.title === "string"
+      ? pageConfig.title
+      : page.title && !/^(?:page|faqja)\s+\d+$/i.test(page.title.trim())
+        ? page.title
+        : undefined;
   const footerConfig = {
     ...campaign.pageDecorationDefaults,
     ...(isFeaturedProductCollection(campaign) && pageConfig?.showFooter === true
@@ -3375,8 +3691,12 @@ function ProductPageContent({
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       data-blue-reference-page={bluePage ? "true" : undefined}
-      data-default-stacked-pair={page.products.length === 2 && !pageConfig?.layout ? "true" : undefined}
-      data-smart-appearance={hasPageAppearance(campaign, "product", page) ? "true" : undefined}
+      data-default-stacked-pair={
+        page.products.length === 2 && !pageConfig?.layout ? "true" : undefined
+      }
+      data-smart-appearance={
+        hasPageAppearance(campaign, "product", page) ? "true" : undefined
+      }
       style={{
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, backgroundColor),
@@ -3387,7 +3707,12 @@ function ProductPageContent({
       }}
     >
       <BlueReferenceRowCopyAlignment pageRef={pageRef} />
-      <PageAppearanceFilters campaign={campaign} kind="product" page={page} id={brandFilterId} />
+      <PageAppearanceFilters
+        campaign={campaign}
+        kind="product"
+        page={page}
+        id={brandFilterId}
+      />
       {backgroundImage && (
         <img
           className="brochure-page-background-image"
@@ -3410,9 +3735,17 @@ function ProductPageContent({
       />
       {(october || bluePage) && (
         <PageDecorations
-          campaign={categoryTitle !== undefined && pageConfig?.headerText === undefined
-            ? { ...campaign, pages: { ...campaign.pages, [page.index]: { ...pageConfig, headerText: categoryTitle } } }
-            : campaign}
+          campaign={
+            categoryTitle !== undefined && pageConfig?.headerText === undefined
+              ? {
+                  ...campaign,
+                  pages: {
+                    ...campaign.pages,
+                    [page.index]: { ...pageConfig, headerText: categoryTitle },
+                  },
+                }
+              : campaign
+          }
           page={page}
           onAssetChange={onCampaignAssetChange}
           onChange={onPageDecorationChange}
@@ -3424,9 +3757,16 @@ function ProductPageContent({
           gridTemplateRows:
             !page.products.some((item) => item.brochureCardSize) &&
             (page.layout === "tv8" || page.layout === "balanced8")
-              ? page.layout === "tv8" ? "1fr 1.6fr 1fr" : "1fr 1.18fr 1.03fr"
+              ? page.layout === "tv8"
+                ? "1fr 1.6fr 1fr"
+                : "1fr 1.18fr 1.03fr"
               : `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`,
           ...productGridStyle(campaign, page.spacing),
+          ...pageBannerProductStyle(
+            campaign,
+            `product-${page.index}`,
+            october ? 10 : 3,
+          ),
         }}
       >
         {page.products.map((product: Product, gridIndex: number) => (
@@ -3436,14 +3776,20 @@ function ProductPageContent({
             product={product}
             light={light}
             pageColor={backgroundColor}
-            appearanceTextColor={pageAppearanceFor(campaign, "product", page).textColor}
+            appearanceTextColor={
+              pageAppearanceFor(campaign, "product", page).textColor
+            }
             priceLogo={priceLogo}
             installments={installmentCount(campaign)}
             hero={
               ["feature", "feature3"].includes(page.layout) &&
               product === page.products[0]
             }
-            brandHeaderAtTop={(october || bluePage) && page.products.every(isAppleProduct) && footerConfig.showHeader !== false}
+            brandHeaderAtTop={
+              (october || bluePage) &&
+              page.products.every(isAppleProduct) &&
+              footerConfig.showHeader !== false
+            }
             onEditImage={onEditImage}
             onEditDetails={onEditDetails}
             onEditPrice={onEditPrice}
@@ -3501,7 +3847,17 @@ export interface StoresPageProps extends BrochurePageProps {
   onElementHide?: StoresElementProps["onHide"];
 }
 
-export function StoresPage({
+export function StoresPage(props: StoresPageProps) {
+  return isBlackFridayBrochure(props.campaign) ? (
+    <BrochureFormatFrame campaign={props.campaign} kind="stores">
+      <BlackFridayPageContent {...props} closing />
+    </BrochureFormatFrame>
+  ) : (
+    <RegularStoresPage {...props} />
+  );
+}
+
+function RegularStoresPage({
   settings = defaultStores,
   campaign,
   onPlaceStore,
@@ -3580,7 +3936,9 @@ export function StoresPage({
       <section
         className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
         data-brand-logo-mode={campaign.brandLogoMode || "auto"}
-        data-smart-appearance={hasPageAppearance(campaign, "stores") ? "true" : undefined}
+        data-smart-appearance={
+          hasPageAppearance(campaign, "stores") ? "true" : undefined
+        }
         style={{
           ...brochureFormatStyle(campaign),
           ...backgroundReadabilityStyle(
@@ -3591,7 +3949,11 @@ export function StoresPage({
           ...(backgroundFill ? { background: backgroundFill } : {}),
         }}
       >
-        <PageAppearanceFilters campaign={campaign} kind="stores" id={brandFilterId} />
+        <PageAppearanceFilters
+          campaign={campaign}
+          kind="stores"
+          id={brandFilterId}
+        />
         {backgroundImage && (
           <img
             className="brochure-page-background-image"

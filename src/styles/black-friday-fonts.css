@@ -1,0 +1,121 @@
+/* Typeface files supplied with the November Black Friday InDesign package. */
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/brochure-presets/black-friday/fonts/SkolaSans-Regular.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/brochure-presets/black-friday/fonts/SkolaSans-Medium.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/brochure-presets/black-friday/fonts/SkolaSans-Bold.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/brochure-presets/black-friday/fonts/SkolaSans-Black.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "SkolaSans";
+  src: url("/brochure-presets/black-friday/fonts/SkolaSans-BlackItalic.otf")
+    format("opentype");
+  font-style: italic;
+  font-weight: 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "TSTAR";
+  src: url("/brochure-presets/black-friday/fonts/TSTAR-Regular.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "TSTAR";
+  src: url("/brochure-presets/black-friday/fonts/TSTAR-Bold.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "TSTAR Headline";
+  src: url("/brochure-presets/black-friday/fonts/TSTAR-Headline.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Cera Pro";
+  src: url("/brochure-presets/black-friday/fonts/CeraPro-Regular.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Cera Pro";
+  src: url("/brochure-presets/black-friday/fonts/CeraPro-Bold.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Cera Pro";
+  src: url("/brochure-presets/black-friday/fonts/CeraPro-Black.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "Cera Pro";
+  src: url("/brochure-presets/black-friday/fonts/CeraPro-BlackItalic.otf")
+    format("opentype");
+  font-style: italic;
+  font-weight: 900;
+  font-display: block;
+}
+@font-face {
+  font-family: "Gotham";
+  src: url("/brochure-presets/black-friday/fonts/Gotham-Bold.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Hand of Sean";
+  src: url("/brochure-presets/black-friday/fonts/HandOfSean.ttf")
+    format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Minion Pro";
+  src: url("/brochure-presets/black-friday/fonts/MinionPro-Regular.otf")
+    format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}

@@ -58,7 +58,7 @@ export function PageLayersControls({
       layer.name ||
         (layer.type === "text"
           ? "Text"
-          : layer.type === "overlay"
+          : ["overlay", "shape"].includes(layer.type || "")
             ? "Color / shadow layer"
             : "Image"),
     );
@@ -181,14 +181,17 @@ export function PageLayersControls({
                 <span
                   className="cs-page-layer-thumbnail"
                   style={
-                    layer.type === "overlay"
-                      ? { backgroundColor: layer.color || backgroundColor }
+                    ["overlay", "shape"].includes(layer.type || "")
+                      ? {
+                          backgroundColor:
+                            layer.fill || layer.color || backgroundColor,
+                        }
                       : undefined
                   }
                 >
                   {layer.type === "text" ? (
                     <b aria-hidden="true">T</b>
-                  ) : layer.type === "overlay" ? null : (
+                  ) : ["overlay", "shape"].includes(layer.type || "") ? null : (
                     <img src={layer.image} alt="" />
                   )}
                 </span>
@@ -198,7 +201,7 @@ export function PageLayersControls({
                     {t(
                       layer.type === "text"
                         ? "Text layer"
-                        : layer.type === "overlay"
+                        : ["overlay", "shape"].includes(layer.type || "")
                           ? "Color layer"
                           : "Image layer",
                     )}
@@ -269,11 +272,48 @@ export function PageLayersControls({
               </label>
             </>
           )}
-          {selected.type === "text" || selected.type === "overlay" ? (
+          {selected.layoutRole === "banner" && selected.type === "text" && (
+            <fieldset className="cs-page-layer-color">
+              <legend>{t("Banner background")}</legend>
+              <ColorField
+                label={t("Banner background")}
+                value={selected.backgroundColor || "#00000000"}
+                onChange={(backgroundColor) => change({ backgroundColor })}
+              />
+              <button
+                type="button"
+                onClick={() => change({ backgroundColor: "#00000000" })}
+              >
+                {t("Transparent background")}
+              </button>
+              <label>
+                {t("Text position")}
+                <SearchableSelect
+                  aria-label={t("Banner text position")}
+                  value={selected.textVerticalAlign || "center"}
+                  onChange={(event) =>
+                    change({
+                      textVerticalAlign: event.target.value as
+                        "top" | "center" | "bottom",
+                    })
+                  }
+                >
+                  <option value="top">{t("Top")}</option>
+                  <option value="center">{t("Center")}</option>
+                  <option value="bottom">{t("Bottom")}</option>
+                </SearchableSelect>
+              </label>
+            </fieldset>
+          )}
+          {selected.type === "text" ||
+          selected.type === "overlay" ||
+          selected.type === "shape" ? (
             <LayerColorControl
               key={`color-${selected.id}`}
-              value={selected.color || "#1c4075"}
-              onChange={(color) => change({ color })}
+              value={selected.fill || selected.color || "#1c4075"}
+              onChange={(color) =>
+                change(selected.type === "shape" ? { fill: color } : { color })
+              }
             />
           ) : (
             <>
@@ -331,6 +371,33 @@ export function PageLayersControls({
               )}
             </>
           )}
+          {selected.type === "shape" && (
+            <>
+              <ColorField
+                label={t("Outline color")}
+                value={selected.stroke || "#00000000"}
+                onChange={(stroke) => change({ stroke })}
+              />
+              <label>
+                {t("Outline width")}
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step=".1"
+                  value={selected.strokeWidth || 0}
+                  onChange={(event) =>
+                    change({
+                      strokeWidth: Math.max(
+                        0,
+                        Math.min(10, Number(event.target.value) || 0),
+                      ),
+                    })
+                  }
+                />
+              </label>
+            </>
+          )}
           {selected.type === "overlay" && (
             <label>
               {t("Fade")}
@@ -357,7 +424,11 @@ export function PageLayersControls({
                 <input
                   type="number"
                   min="0"
-                  max="100"
+                  max={
+                    selected.layoutRole === "banner" && field === "height"
+                      ? "70"
+                      : "100"
+                  }
                   step=".5"
                   aria-label={`${t("Page layer")} ${t({ x: "Left", y: "Top", width: "Width", height: "Height" }[field])}`}
                   value={selected[field] ?? 0}
@@ -365,7 +436,12 @@ export function PageLayersControls({
                     change({
                       [field]: Math.max(
                         0,
-                        Math.min(100, Number(event.target.value)),
+                        Math.min(
+                          selected.layoutRole === "banner" && field === "height"
+                            ? 70
+                            : 100,
+                          Number(event.target.value),
+                        ),
                       ),
                     })
                   }

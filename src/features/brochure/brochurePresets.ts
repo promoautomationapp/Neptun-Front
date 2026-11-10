@@ -6,6 +6,12 @@ import type {
 import { campaignDefaults } from "../settings/campaign-defaults";
 import { materializeCampaignColorVariants } from "./campaignColorVariants";
 import {
+  BLACK_FRIDAY_ID,
+  blackFridayDesignDefaults,
+  blackFridayPageArtworks,
+  isBlackFridayBrochure,
+} from "./blackFridayDesign";
+import {
   repairAutomaticCollectionCoverLayout,
   resetDefaultCoverProductPositions,
 } from "./coverElements";
@@ -274,6 +280,32 @@ export const builtInBrochurePresets: readonly BrochurePreset[] = [
     builtin: true,
     design: { ...currentDesign, ...blueDesign },
   },
+  {
+    id: BLACK_FRIDAY_ID,
+    name: "Black Friday · November Edition",
+    description:
+      "Original Black Friday brochure · A3 · editable banners and artwork",
+    builtin: true,
+    design: {
+      ...currentDesign,
+      ...blackFridayDesignDefaults(),
+      productDesign: {
+        ...currentDesign.productDesign!,
+        photo: {
+          mode: "automatic",
+          x: 50,
+          y: 50,
+          scale: 1,
+          automaticTvSizing: false,
+        },
+        details: { placement: "bottom", fill: "automatic" },
+        typography: {
+          ...currentDesign.productDesign!.typography,
+          font: "automatic",
+        },
+      },
+    },
+  },
 ];
 
 /** Built-ins can be customized without losing their original reset point. */
@@ -307,6 +339,8 @@ export function availableBrochurePresets(input: Settings): BrochurePreset[] {
       Object.assign(design, customized);
       if (Object.keys(customized).length) delete design.tagline;
     }
+    if (preset.design.brochureReferenceDesign === undefined)
+      delete design.brochureReferenceDesign;
     // Manufacturer choices belong to the workspace unless this saved design explicitly overrides them.
     if (!Object.keys(preset.design.brandLogos || {}).length)
       design.brandLogos = structuredClone(defaults.brandLogos || {});
@@ -357,6 +391,24 @@ export function applyBrochurePreset(
   campaign: Campaign,
   preset: BrochurePresetDefinition,
 ): void {
+  if (
+    isBlackFridayBrochure(campaign) &&
+    !isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id })
+  ) {
+    const sourceIds = new Set(
+      Object.values(blackFridayPageArtworks()).flatMap((artworks) =>
+        artworks.map((artwork) => artwork.id),
+      ),
+    );
+    if (campaign.pageArtworks)
+      campaign.pageArtworks = Object.fromEntries(
+        Object.entries(campaign.pageArtworks).map(([key, artworks]) => [
+          key,
+          artworks.filter((artwork) => !sourceIds.has(artwork.id)),
+        ]),
+      );
+  }
+  delete campaign.brochureReferenceDesign;
   materializeCampaignColorVariants(campaign);
   Object.assign(campaign, repairAutomaticCollectionCoverLayout(campaign));
   resetDefaultCoverProductPositions(campaign);
@@ -383,6 +435,9 @@ export function applyPresetToSettings(
 ): void {
   const d = preset.design;
   const b = settings.brochure;
+  if (d.brochureReferenceDesign)
+    b.brochureReferenceDesign = d.brochureReferenceDesign;
+  else delete b.brochureReferenceDesign;
   if (includeStores && d.storesSnapshot) {
     settings.stores = structuredClone(d.storesSnapshot.stores).map((store) => ({
       ...store,

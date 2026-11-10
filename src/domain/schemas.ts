@@ -22,11 +22,100 @@ export const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
   ]),
 );
 export const jsonObject = z.record(z.string(), jsonValue);
+export const pageArtworkSchema = z
+  .object({
+    layoutRole: z.literal("banner").optional(),
+    referenceSource: z.string().max(500).optional(),
+    referenceRole: z
+      .enum(["person", "wifi", "inverter", "energy", "promotion"])
+      .optional(),
+    textRuns: z
+      .array(
+        z
+          .object({
+            text: z.string().max(2000),
+            fontScale: z.number().min(0.1).max(5),
+            verticalAlign: z.enum(["baseline", "super", "top"]).optional(),
+            fontWeight: z.number().int().min(100).max(1000).optional(),
+            fontStyle: z.enum(["normal", "italic"]).optional(),
+            color: z
+              .string()
+              .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+              .optional(),
+          })
+          .strict(),
+      )
+      .max(200)
+      .optional(),
+    wordSpacing: z.number().min(-1).max(5).optional(),
+    whiteSpace: z.enum(["nowrap", "pre-wrap"]).optional(),
+    shapePath: z
+      .string()
+      .max(20000)
+      .regex(/^[MmLlHhVvCcSsQqTtAaZzEe0-9.,+\s-]*$/)
+      .optional(),
+    fill: z
+      .string()
+      .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+      .optional(),
+    stroke: z
+      .string()
+      .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+      .optional(),
+    strokeWidth: z.number().min(0).max(10).optional(),
+    backgroundColor: z
+      .string()
+      .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+      .optional(),
+    textVerticalAlign: z.enum(["top", "center", "bottom"]).optional(),
+    padding: z.number().min(0).max(10).optional(),
+  })
+  .catchall(jsonValue)
+  .superRefine((artwork, context) => {
+    if (artwork.layoutRole !== "banner") return;
+    for (const [key, minimum, maximum] of [
+      ["x", 0, 100],
+      ["y", 0, 100],
+      ["width", 1, 100],
+      ["height", 1, 70],
+    ] as const) {
+      const value = artwork[key];
+      if (
+        typeof value !== "number" ||
+        !Number.isFinite(value) ||
+        value < minimum ||
+        value > maximum
+      )
+        context.addIssue({
+          code: "custom",
+          path: [key],
+          message: `Banner ${key} must be between ${minimum} and ${maximum}.`,
+        });
+    }
+  });
 // Open layouts preserve every reference field; mandatory identity/content fields are validated here.
 export const productSchema = z
   .object({
     code: z.string(),
     name: z.string(),
+    productArtworks: z.array(pageArtworkSchema).max(200).optional(),
+    brochureSavings: z
+      .object({
+        value: z.number().positive().finite(),
+        type: z.enum(["amount", "percentage"]),
+        regular: z.number().positive().finite(),
+        sale: z.number().positive().finite(),
+      })
+      .strict()
+      .optional(),
+    brochureInstallment: z
+      .object({
+        amount: z.number().positive().finite(),
+        count: z.number().int().min(1).max(60),
+        sale: z.number().positive().finite(),
+      })
+      .strict()
+      .optional(),
     specs: z.record(z.string(), z.string()).optional(),
     regular: z.union([z.number(), z.string(), z.null()]).optional(),
     image: z.string().optional(),
@@ -64,6 +153,10 @@ export const campaignSchema = z
     name: z.string(),
     brochureFooter: brochureFooterSchema.optional(),
     brochurePresetId: z.string().max(100).optional(),
+    brochureReferenceDesign: z.literal("black-friday").optional(),
+    pageArtworks: z
+      .record(z.string(), z.array(pageArtworkSchema).max(200))
+      .optional(),
     brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
     pageAppearances: pageAppearancesSchema.optional(),
     coverBrandTagline: z.string().max(500).optional(),

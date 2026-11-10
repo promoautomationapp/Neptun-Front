@@ -14,17 +14,31 @@ const json: z.ZodType<Value> = z.lazy(() =>
   ]),
 );
 const text = z.string().max(20000);
-const color = z.union([z.literal(""), z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)]);
+const color = z.union([
+  z.literal(""),
+  z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+]);
 export const pageAppearanceSchema = z.object({
-  textColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
-  brandColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
-  screenLabelColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
+  textColor: z
+    .string()
+    .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+    .optional(),
+  brandColor: z
+    .string()
+    .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+    .optional(),
+  screenLabelColor: z
+    .string()
+    .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
+    .optional(),
   priceStyle: z.enum(["auto", "current", "card"]).optional(),
 });
-export const pageAppearancesSchema = z.record(
-  z.string().regex(/^(?:cover|stores|product(?:-\d{1,5})?)$/),
-  pageAppearanceSchema,
-).refine((value) => Object.keys(value).length <= 1000);
+export const pageAppearancesSchema = z
+  .record(
+    z.string().regex(/^(?:cover|stores|product(?:-\d{1,5})?)$/),
+    pageAppearanceSchema,
+  )
+  .refine((value) => Object.keys(value).length <= 1000);
 export const pageDecorationSchema = z.object({
   showHeader: z.boolean().optional(),
   showOnlineLogo: z.boolean().optional(),
@@ -101,7 +115,9 @@ export const productDesignSchema = z.object({
     .prefault({}),
   details: z
     .object({
-      placement: z.enum(["automatic", "left", "right", "bottom"]).default("automatic"),
+      placement: z
+        .enum(["automatic", "left", "right", "bottom"])
+        .default("automatic"),
       fill: z.enum(["automatic", "filled", "outline"]).default("automatic"),
     })
     .prefault({}),
@@ -143,6 +159,7 @@ export const brochureDefaultsSchema = z
       .default("neptun1080x1350"),
     automaticProductLayout: z.boolean().default(true),
     brochureVisualStyle: z.enum(["current", "october"]).optional(),
+    brochureReferenceDesign: z.literal("black-friday").optional(),
     pageDecorationDefaults: pageDecorationSchema.optional(),
     layout: z
       .enum([
@@ -152,6 +169,7 @@ export const brochureDefaultsSchema = z
         "grid6portrait",
         "grid6",
         "grid9",
+        "grid12",
         "classic8",
         "duo4",
         "pair2",
@@ -232,6 +250,7 @@ export const brochureDefaultsSchema = z
 /** Only presentation fields belong to a reusable brochure design. */
 export const BROCHURE_DESIGN_KEYS = [
   "brochureVisualStyle",
+  "brochureReferenceDesign",
   "brochureFormat",
   "brochureFormatSnapshot",
   "layout",
@@ -320,6 +339,7 @@ export const brochurePresetSchema = z.object({
   design: z
     .object({
       brochureVisualStyle: z.enum(["current", "october"]).optional(),
+      brochureReferenceDesign: z.literal("black-friday").optional(),
       brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
       pageAppearances: pageAppearancesSchema.optional(),
       coverBrandTagline: z.string().max(500).optional(),

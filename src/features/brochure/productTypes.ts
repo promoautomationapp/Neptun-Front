@@ -106,7 +106,7 @@ const otherDevice =
 const phoneCategory =
   /^(?:SMARTPHONES?|MOBILE(?:\s+PHONES?)?|CELL(?:ULAR)?\s+PHONES?|CELULAR|TELEFON(?:A|E)?(?:\s+MOBIL(?:E|I)?)?|TELEFONA\s+CELULARE)$/;
 const phoneFamily =
-  /^(?:APPLE\s+)?IPHONE\b|^(?:SMARTPHONE|MOBILE\s+PHONE|CELL\s+PHONE|TELEFON(?:A|E)?\s+MOBIL)\b|^(?:XIAOMI\s+)?REDMI\b|^XIAOMI\s+\d{1,2}(?:[A-Z]|\s|$)|^SAMSUNG\s+(?:SM-[ASMGZ]|GALAXY\s+(?:[ASMGZ]\d|NOTE\b))|^(?:GOOGLE\s+)?PIXEL\s+\d|^(?:REALME|ONEPLUS|OPPO|VIVO|HONOR|MOTOROLA|NOKIA)\s+\S/;
+  /^(?:APPLE\s+)?IPHONE\b|^(?:SMARTPHONE|MOBILE\s+PHONE|CELL\s+PHONE|TELEFON(?:A|E)?\s+MOBIL)\b|^(?:XIAOMI\s+)?REDMI\b|^XIAOMI\s+\d{1,2}(?:[A-Z]|\s|$)|^SAMSUNG\s+SM-[ASMGZ]|^(?:SAMSUNG\s+)?GALAXY\s+(?:[ASMGZ]\d|NOTE\b)|^(?:GOOGLE\s+)?PIXEL\s+\d|^(?:REALME|ONEPLUS|OPPO|VIVO|HONOR|MOTOROLA|NOKIA)\s+\S/;
 
 export function isMobilePhone(product: Partial<Product> = {}) {
   const name = normalized(product.name);

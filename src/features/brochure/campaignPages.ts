@@ -58,6 +58,9 @@ function buildPages(campaign: Campaign) {
   // Older snapshots inherited the former footer default. In the featured
   // collection, a page-level choice is the explicit opt-in to restore it.
   const featuredCollection = isFeaturedProductCollection(campaign);
+  const preserveAssignedComposition =
+    campaign.brochurePresetId === "neptun-black-friday" ||
+    campaign.brochureReferenceDesign === "black-friday";
   const appendPage = (
     products: Product[],
     layout: string,
@@ -140,6 +143,7 @@ function buildPages(campaign: Campaign) {
       ];
       if (
         products.length &&
+        !preserveAssignedComposition &&
         ((number === 2 && overflowCover.length > 0) ||
           campaign.autoProductLayout === true ||
           products.some((product) => product.brochureCardSize))
@@ -154,10 +158,21 @@ function buildPages(campaign: Campaign) {
               ? "grid6"
               : products.length <= 8
                 ? "classic8"
-                : "grid9";
+                : products.length <= 9
+                  ? "grid9"
+                  : "grid12";
         appendPage(
           products,
-          campaign.pages?.[number - 2]?.layout || campaign.layout || fallback,
+          campaign.pages?.[number - 2]?.layout ||
+            (preserveAssignedComposition
+              ? products.length <= 2
+                ? "pair2"
+                : products.length <= 4
+                  ? "duo4"
+                  : products.length <= 6
+                    ? "grid6portrait"
+                    : fallback
+              : campaign.layout || fallback),
           `Page ${number}`,
           number - 2,
         );

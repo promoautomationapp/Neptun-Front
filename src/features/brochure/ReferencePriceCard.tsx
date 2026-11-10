@@ -2,6 +2,7 @@ import React from "react";
 import type { Product } from "../../domain/models";
 import { savingsBadgeColors } from "./savingsBadgeAppearance";
 import geometry from "./priceCardGeometry.json";
+import { productInstallmentAmount } from "./productInstallment";
 import {
   artworkInstallment,
   artworkPrice,
@@ -110,8 +111,17 @@ export function ReferencePriceCard({
       : geometry.fiftyPercent
     : geometry.iphone;
   const { parts } = source;
-  const saving = artworkSaving(product.regular, product.sale, savingMode);
-  const monthly = artworkInstallment(product.sale, installments);
+  const saving = artworkSaving(
+    product.regular,
+    product.sale,
+    savingMode,
+    product.brochureSavings,
+  );
+  const monthly = artworkInstallment(
+    product.sale,
+    installments,
+    productInstallmentAmount(product, installments),
+  );
   const shadowId = `price-shadow-${React.useId().replace(/:/g, "")}`;
   const label = `${showRegular ? `Çmimi i rregullt: ${artworkPrice(product.regular).text} €. ` : ""}Çmimi haPPy: ${artworkPrice(product.sale).text} €. ${monthly}`;
   const tab = parts.savingTab.bounds;

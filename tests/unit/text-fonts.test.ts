@@ -5,6 +5,8 @@ import {
   TEXT_FONTS,
   textFontCss,
   textFontOptions,
+  preferredTextFonts,
+  BLACK_FRIDAY_TEXT_FONTS,
 } from "../../src/features/brochure/textFonts";
 
 it("offers the actual supplied brochure families before app and installed-font suggestions", () => {
@@ -19,10 +21,28 @@ it("offers the actual supplied brochure families before app and installed-font s
   ).toEqual([300, 400, 500, 700, 900]);
   expect(
     TEXT_FONTS.find((font) => font.family === "Cera Pro")?.weights,
-  ).toEqual([700]);
+  ).toEqual([400, 700, 900]);
   expect(TEXT_FONTS.find((font) => font.family === "Georgia")?.source).toBe(
     "system",
   );
+});
+
+it("puts every supplied Black Friday family first while preserving other design order", () => {
+  const preferred = preferredTextFonts("neptun-black-friday");
+  expect(preferred).toEqual(BLACK_FRIDAY_TEXT_FONTS);
+  expect(
+    textFontOptions("Arial", preferred)
+      .slice(0, preferred.length)
+      .map((font) => font.family),
+  ).toEqual([...preferred]);
+  expect(preferredTextFonts("neptun-current")).toEqual([]);
+  expect(textFontOptions("Arial", preferredTextFonts("neptun-current"))).toBe(
+    TEXT_FONTS,
+  );
+  for (const family of preferred)
+    expect(TEXT_FONTS.find((font) => font.family === family)?.source).toBe(
+      "bundled",
+    );
 });
 
 it("uses canonical bundled names and accepts a user's installed font name", () => {

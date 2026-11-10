@@ -11,6 +11,9 @@ import {
 } from "./savingsBadgeAppearance";
 import { SavingsCircleArtwork } from "./RedReferencePrice";
 import { usesBlueReferencePrice } from "./priceDesign";
+import { isBlackFridayBrochure } from "./blackFridayDesign";
+import { productInstallmentAmount } from "./productInstallment";
+import { artworkSaving } from "./priceCardModel";
 import "../../styles/savings-badge-controls.css";
 
 export function ProductPriceEditor({
@@ -71,8 +74,21 @@ export function ProductPriceEditor({
   const higher = valid && hasRegular && saleAmount > regularAmount;
   const saving =
     valid && saleAmount < regularAmount ? regularAmount - saleAmount : 0;
-  const percent = saving ? Math.round((saving / regularAmount) * 100) : 0;
+  const percent = saving
+    ? Number(
+        artworkSaving(
+          regularAmount,
+          saleAmount,
+          "percentage",
+          product.brochureSavings,
+        )?.text.replace("%", ""),
+      )
+    : 0;
   const installments = installmentCount(campaign);
+  const monthlyAmount = productInstallmentAmount(
+    { ...product, sale: saleAmount },
+    installments,
+  );
   return (
     <Modal
       title={t("Edit price and savings")}
@@ -117,7 +133,7 @@ export function ProductPriceEditor({
           </span>
           <span>
             {installments} {t("installments")}{" "}
-            <b>{valid ? `${money(saleAmount / installments)} €` : "—"}</b>
+            <b>{valid ? `${money(monthlyAmount)} €` : "—"}</b>
           </span>
         </div>
         <div className="cs-price-editor-saving">
@@ -179,6 +195,9 @@ export function ProductPriceEditor({
                     brochureContentPlacement: undefined,
                   }}
                   savingMode={savingMode}
+                  variant={
+                    isBlackFridayBrochure(campaign) ? "black-friday" : "default"
+                  }
                 />
               )}
             </div>

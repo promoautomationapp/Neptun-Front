@@ -75,15 +75,19 @@ export function redPriceRuns(
 export function redInstallmentRuns(
   sale: unknown,
   installments: number | string = 12,
+  runs: readonly RedGeometryRun[] = geometry.parts.installment.runs,
+  monthlyAmount?: number,
 ): RedPriceRun[] {
   const count = Math.min(
     60,
     Math.max(1, Number.parseInt(String(installments), 10) || 12),
   );
-  const [whole, decimal] = (Number(sale) / count).toFixed(1).split(".");
+  const [whole, decimal] = (monthlyAmount ?? Number(sale) / count)
+    .toFixed(1)
+    .split(".");
   if (decimal === undefined) throw new Error("Invalid red installment amount.");
-  const prefixSize = redReferenceRunSize(geometry.parts.installment.runs, 0);
-  const priceSize = redReferenceRunSize(geometry.parts.installment.runs, 1);
+  const prefixSize = redReferenceRunSize(runs, 0);
+  const priceSize = redReferenceRunSize(runs, 1);
   return [
     { text: `${count}x`, size: prefixSize, tracking: -0.07 },
     { text: `${whole}.`, size: priceSize, tracking: -0.07 },

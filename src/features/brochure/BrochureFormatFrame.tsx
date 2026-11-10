@@ -1,7 +1,10 @@
 import React from "react";
 import type { Campaign } from "../../domain/models";
 import type { BackgroundPage } from "./pageBackground";
-import { brochureFormatFrameStyle } from "./brochureFormat";
+import {
+  brochureFormatFrameStyle,
+  resolveBrochureFormat,
+} from "./brochureFormat";
 import {
   lightBackground,
   pageBackgroundColor,
@@ -23,6 +26,9 @@ export function BrochureFormatFrame({
   kind: string;
   children: React.ReactNode;
 }) {
+  const blackFriday =
+    campaign.brochurePresetId === "neptun-black-friday" ||
+    campaign.brochureReferenceDesign === "black-friday";
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const light = color ? lightBackground(color) : campaign.theme === "light";
   const image = pageBackgroundImage(campaign, kind, page);
@@ -34,9 +40,14 @@ export function BrochureFormatFrame({
       : pageBackgroundFill(campaign, kind, page)) || fallback;
   return (
     <section
-      className={`brochure-format-frame brochure-output-page ${light ? "light" : "blue"}`}
+      className={`brochure-format-frame brochure-output-page ${blackFriday ? "black-friday-format" : ""} ${light ? "light" : "blue"}`}
       style={{
         ...brochureFormatFrameStyle(campaign),
+        ...(blackFriday
+          ? {
+              "--brochure-format-content-width": `${Math.min(1, 297 / 420 / resolveBrochureFormat(campaign).ratio) * 100}%`,
+            }
+          : {}),
         background: fill,
         ...(campaign.pricePalette
           ? {

@@ -11,6 +11,7 @@ export interface PriceDesignChoicesProps {
   value: DefaultPriceStyle;
   onChange: (style: DefaultPriceStyle) => void;
   className?: string;
+  orangeVariant?: "default" | "black-friday";
 }
 
 const sample: Product = {
@@ -29,6 +30,7 @@ export function PriceDesignChoices({
   value,
   onChange,
   className = "",
+  orangeVariant = "default",
 }: PriceDesignChoicesProps) {
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
   return (
@@ -75,7 +77,7 @@ export function PriceDesignChoices({
             <span className="cs-price-design-preview" aria-hidden="true">
               <span className={`cs-price-design-native ${choice.value}`}>
                 {choice.value === "current" ? (
-                  <RedReferencePrice product={sample} />
+                  <RedReferencePrice product={sample} variant={orangeVariant} />
                 ) : (
                   <ReferencePriceCard product={sample} showSaving={false} />
                 )}

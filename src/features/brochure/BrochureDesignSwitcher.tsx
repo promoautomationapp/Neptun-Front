@@ -132,8 +132,8 @@ export function BrochureDesignSwitcher({
           preset={preview}
           settings={settings}
           onClose={() => setPreview(null)}
-          onUse={() => {
-            setChosen(preview);
+          onUse={(preset) => {
+            setChosen(preset);
             setPreview(null);
           }}
         />

@@ -69,7 +69,31 @@ export const TEXT_FONTS: readonly TextFontOption[] = [
     group: "Brand fonts",
     source: "bundled",
     fallback: "sans-serif",
+    weights: [400, 700, 900],
+  },
+  {
+    family: "Gotham",
+    label: "Gotham",
+    group: "Brand fonts",
+    source: "bundled",
+    fallback: "sans-serif",
     weights: [700],
+  },
+  {
+    family: "Hand of Sean",
+    label: "Hand of Sean",
+    group: "Brand fonts",
+    source: "bundled",
+    fallback: "cursive",
+    weights: [400],
+  },
+  {
+    family: "Minion Pro",
+    label: "Minion Pro",
+    group: "Brand fonts",
+    source: "bundled",
+    fallback: "serif",
+    weights: [400],
   },
   {
     family: "DM Sans",
@@ -202,9 +226,28 @@ export function normalizeTextFontFamily(value: unknown): string {
 }
 
 /** Keeps the current custom choice visible in an editable font selector. */
-export function textFontOptions(current?: string): readonly TextFontOption[] {
+export const BLACK_FRIDAY_TEXT_FONTS = [
+  "SkolaSans",
+  "TSTAR",
+  "TSTAR Headline",
+  "Cera Pro",
+  "Gotham",
+  "Hand of Sean",
+  "Minion Pro",
+] as const;
+
+export function preferredTextFonts(presetId?: string): readonly string[] {
+  return presetId === "neptun-black-friday" ? BLACK_FRIDAY_TEXT_FONTS : [];
+}
+
+export function textFontOptions(
+  current?: string,
+  preferred: readonly string[] = [],
+): readonly TextFontOption[] {
   const family = normalizeTextFontFamily(current);
-  return optionsByFamily.has(family.toLowerCase())
+  const options: readonly TextFontOption[] = optionsByFamily.has(
+    family.toLowerCase(),
+  )
     ? TEXT_FONTS
     : [
         ...TEXT_FONTS,
@@ -216,6 +259,15 @@ export function textFontOptions(current?: string): readonly TextFontOption[] {
           fallback: "sans-serif",
         },
       ];
+  if (!preferred.length) return options;
+  const order = new Map(
+    preferred.map((value, index) => [value.toLowerCase(), index]),
+  );
+  return [...options].sort(
+    (a, b) =>
+      (order.get(a.family.toLowerCase()) ?? preferred.length) -
+      (order.get(b.family.toLowerCase()) ?? preferred.length),
+  );
 }
 
 /** CSS-string quoting preserves spaces/non-Latin names without permitting a font stack injection. */

@@ -649,8 +649,8 @@ export function CreateCampaign({
           preset={previewPreset}
           settings={initialSettings}
           onClose={() => setPreviewPreset(null)}
-          onUse={() => {
-            choosePreset(previewPreset);
+          onUse={(preset) => {
+            choosePreset(preset);
             setPreviewPreset(null);
           }}
         />

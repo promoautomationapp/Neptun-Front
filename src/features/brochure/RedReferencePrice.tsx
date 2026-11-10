@@ -2,6 +2,7 @@ import React from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product } from "../../domain/models";
 import geometry from "./redPriceGeometry.json";
+import blackFridayGeometry from "./blackFridayPriceGeometry.json";
 import {
   artworkPrice,
   artworkSaving,
@@ -18,10 +19,8 @@ import {
 import type { RedPriceRun } from "./redPriceModel";
 import "../../styles/red-reference-price.css";
 import { savingsBadgeColors } from "./savingsBadgeAppearance";
+import { productInstallmentAmount } from "./productInstallment";
 
-const { parts } = geometry;
-const width = parts.saleBand.width;
-const height = parts.installmentBand.y + parts.installmentBand.height;
 const blue = "#1c4075";
 
 interface AmountFrame {
@@ -42,6 +41,7 @@ export interface RedReferencePriceProps {
   showRegular?: boolean;
   showInstallments?: boolean;
   logo?: string;
+  variant?: "default" | "black-friday";
 }
 
 export interface RedReferenceSavingsProps {
@@ -51,9 +51,13 @@ export interface RedReferenceSavingsProps {
   onEditSavings?: (product: Product) => void;
   style?: CSSProperties;
   children?: ReactNode;
+  variant?: "default" | "black-friday";
 }
 
-function savingBaseline(index: number) {
+function savingBaseline(
+  parts: { saving: { centerBaselines: number[][] } },
+  index: number,
+) {
   const baseline = parts.saving.centerBaselines[index];
   if (!baseline) throw new Error(`Missing red savings baseline ${index}.`);
   return baseline;
@@ -92,7 +96,12 @@ export function RedReferencePrice({
   showRegular = true,
   showInstallments = true,
   logo = "",
+  variant = "default",
 }: RedReferencePriceProps) {
+  const blackFriday = variant === "black-friday";
+  const { parts } = blackFriday ? blackFridayGeometry : geometry;
+  const width = parts.saleBand.width;
+  const height = parts.installmentBand.y + parts.installmentBand.height;
   const id = React.useId().replace(/:/g, "");
   const saleRuns = redPriceRuns(
     product.sale,
@@ -110,14 +119,39 @@ export function RedReferencePrice({
     0.01,
   );
   const label = `Çmimi haPPy: ${artworkPrice(product.sale).text} €`;
+  const monthlyAmount = productInstallmentAmount(product, installments);
   const gradientEnd = [172, 173, 176];
   const gradientPower = Math.log(0.5) / Math.log(0.818681001663208);
+  const regularColor = blackFriday ? "#000000" : blue;
+  const installmentStops = blackFriday
+    ? [
+        {
+          offset: "0%",
+          color: "rgb(63.9066094763 63.9066094763 63.9066094763)",
+        },
+        { offset: "80.9090909091%", color: "#2c2c2c" },
+        { offset: "100%", color: "#2c2c2c" },
+      ]
+    : [
+        "#01a2dd",
+        "#0097d2",
+        "#008cc7",
+        "#0083be",
+        "#0079b4",
+        "#0071ab",
+        "#0069a3",
+        "#00619b",
+        "#005992",
+        "#00508a",
+        "#004981",
+      ].map((color, index) => ({ offset: `${index * 10}%`, color }));
   return (
     <svg
-      className="red-reference-price-svg"
+      className={`red-reference-price-svg${blackFriday ? " black-friday-price-svg" : ""}`}
+      data-price-variant={blackFriday ? "black-friday" : undefined}
       viewBox={`0 0 ${width} ${showInstallments ? height : parts.saleBand.height}`}
       role="img"
-      aria-label={`${showRegular ? `Çmimi i rregullt: ${artworkPrice(product.regular).text} €. ` : ""}${label}${showInstallments ? `. KËSTI ${installments}x${(Number(product.sale) / Number(installments)).toFixed(1)} €` : ""}`}
+      aria-label={`${showRegular ? `Çmimi i rregullt: ${artworkPrice(product.regular).text} €. ` : ""}${label}${showInstallments ? `. KËSTI ${installments}x${monthlyAmount.toFixed(1)} €` : ""}`}
     >
       <defs>
         <linearGradient id={`red-old-${id}`} x1="0" x2="1" y1="0" y2="0">
@@ -133,31 +167,19 @@ export function RedReferencePrice({
           })}
         </linearGradient>
         <linearGradient id={`red-month-${id}`} x1="0" x2="1" y1="0" y2="0">
-          {[
-            "#01a2dd",
-            "#0097d2",
-            "#008cc7",
-            "#0083be",
-            "#0079b4",
-            "#0071ab",
-            "#0069a3",
-            "#00619b",
-            "#005992",
-            "#00508a",
-            "#004981",
-          ].map((color, index) => (
-            <stop key={color} offset={`${index * 10}%`} stopColor={color} />
+          {installmentStops.map(({ color, offset }) => (
+            <stop key={offset} offset={offset} stopColor={color} />
           ))}
         </linearGradient>
       </defs>
       {showRegular && (
-        <g fill={blue}>
+        <g fill={regularColor}>
           <path d={parts.oldBand.path} fill={`url(#red-old-${id})`} />
           <Amount runs={regularRuns} frame={parts.old} />
           <path
             d={parts.oldStrike.openPath}
             fill="none"
-            stroke={blue}
+            stroke={regularColor}
             strokeWidth={parts.oldStrike.strokeWidth}
             strokeLinecap="round"
           />
@@ -170,12 +192,12 @@ export function RedReferencePrice({
         y={parts.priceLabel.baseline}
         textAnchor="middle"
         fontFamily="SkolaSans"
-        fontWeight={700}
+        fontWeight={blackFriday ? 400 : 700}
         fontSize={fittedArtworkFont(
           "ÇMIMI",
           redReferenceRunSize(parts.priceLabel.runs, 0),
           parts.priceLabel.width,
-          "bold",
+          blackFriday ? "regular" : "bold",
         )}
         fill="#fff"
       >
@@ -215,7 +237,12 @@ export function RedReferencePrice({
           />
           <path d={parts.installmentBand.path} fill={`url(#red-month-${id})`} />
           <Amount
-            runs={redInstallmentRuns(product.sale, installments)}
+            runs={redInstallmentRuns(
+              product.sale,
+              installments,
+              parts.installment.runs,
+              monthlyAmount,
+            )}
             frame={parts.installment}
           />
           <text
@@ -238,10 +265,18 @@ export function SavingsCircleArtwork({
   product,
   savingMode = "amount",
   legacyFrame = false,
-}: Pick<RedReferenceSavingsProps, "product" | "savingMode"> & {
+  variant = "default",
+}: Pick<RedReferenceSavingsProps, "product" | "savingMode" | "variant"> & {
   legacyFrame?: boolean;
 }) {
-  const saving = artworkSaving(product.regular, product.sale, savingMode);
+  const blackFriday = variant === "black-friday";
+  const { parts } = blackFriday ? blackFridayGeometry : geometry;
+  const saving = artworkSaving(
+    product.regular,
+    product.sale,
+    savingMode,
+    product.brochureSavings,
+  );
   if (!saving || product.brochureContentPlacement?.saving?.hidden === true)
     return null;
   const circle = parts.savingCircle;
@@ -250,14 +285,14 @@ export function SavingsCircleArtwork({
   // This keeps every manual position, resize and grouped-offer anchor intact.
   // Reference circles were already 90% of the source artwork; reduce that
   // visible circle a further 10%. Legacy HTML circles used the whole frame.
-  const artworkScale = legacyFrame ? 0.9 : 0.81;
-  const outlineMargin = legacyFrame ? 0 : 1.4;
+  const artworkScale = blackFriday ? 1 : legacyFrame ? 0.9 : 0.81;
+  const outlineMargin = blackFriday || legacyFrame ? 0 : 1.4;
   const frameWidth = (circle.width + outlineMargin) / artworkScale;
   const frameHeight = (circle.height + outlineMargin) / artworkScale;
   const frameLeft = circle.x + circle.width / 2 - frameWidth / 2;
   const frameTop = circle.y + circle.height / 2 - frameHeight / 2;
-  const labelBaseline = savingBaseline(0);
-  const amountBaseline = savingBaseline(1);
+  const labelBaseline = savingBaseline(parts, 0);
+  const amountBaseline = savingBaseline(parts, 1);
   // Text lies above/below the center, where the circular edge is narrower.
   // Reserve a safe chord for both lines, including the rotated euro glyph.
   const textWidth = circle.width * 0.7;
@@ -267,7 +302,7 @@ export function SavingsCircleArtwork({
     saving.label,
     redReferenceRunSize(parts.saving.runs, 0),
     textWidth,
-    "bold",
+    blackFriday ? "regular" : "bold",
     -0.06,
   );
   const amountSize = fittedRedText(
@@ -285,7 +320,10 @@ export function SavingsCircleArtwork({
     >
       <path d={circle.path} fill={colors.backgroundColor || "#fff"} />
       <g
-        fill={colors.textColor || "var(--brochure-price-saving, #ef4023)"}
+        fill={
+          colors.textColor ||
+          (blackFriday ? "#000000" : "var(--brochure-price-saving, #ef4023)")
+        }
         fontFamily="TSTAR"
         textAnchor="middle"
       >
@@ -293,7 +331,7 @@ export function SavingsCircleArtwork({
           x={labelBaseline[0]}
           y={labelBaseline[1]}
           fontSize={labelSize}
-          fontWeight={700}
+          fontWeight={blackFriday ? 400 : 700}
           letterSpacing={labelSize * -0.06}
           transform={`rotate(-1 ${labelBaseline.join(" ")})`}
         >
@@ -322,8 +360,14 @@ export function RedReferenceSavings({
   onEditSavings,
   style,
   children,
+  variant = "default",
 }: RedReferenceSavingsProps) {
-  const saving = artworkSaving(product.regular, product.sale, savingMode);
+  const saving = artworkSaving(
+    product.regular,
+    product.sale,
+    savingMode,
+    product.brochureSavings,
+  );
   if (!saving || product.brochureContentPlacement?.saving?.hidden === true)
     return null;
   return (
@@ -361,7 +405,11 @@ export function RedReferenceSavings({
           : undefined
       }
     >
-      <SavingsCircleArtwork product={product} savingMode={savingMode} />
+      <SavingsCircleArtwork
+        product={product}
+        savingMode={savingMode}
+        variant={variant}
+      />
       {children}
     </span>
   );

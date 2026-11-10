@@ -12,7 +12,9 @@ import { EditorIcon } from "./EditorIcon";
 import { useImagePicker } from "./ImagePickerProvider";
 import { PageTextToolbar } from "./PageTextToolbar";
 import { artworkTextColor } from "./pageAppearance";
-import { textFontCss } from "./textFonts";
+import { preferredTextFonts, textFontCss } from "./textFonts";
+import { PageBannerFields } from "./PageBannerFields";
+import "../../styles/page-banners.css";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -70,23 +72,31 @@ export function PageArtwork({
       className={`brochure-floating-artworks ${onChange ? "editable" : ""}`}
       aria-label={t("Page artwork")}
     >
-      {artworks.map((artwork) => (
-        <ArtworkItem
-          key={artwork.id}
-          artwork={artwork}
-          resolveColor={(value) => artworkTextColor(campaign, pageKey, value)}
-          onChange={onChange}
-          onRemove={onRemove}
-          selected={selectedId === artwork.id}
-          onSelect={() => setSelectedId(artwork.id)}
-        />
-      ))}
+      {artworks
+        .filter((artwork) => !artwork.hidden)
+        .map((artwork) => (
+          <ArtworkItem
+            key={artwork.id}
+            artwork={artwork}
+            preferredFonts={preferredTextFonts(
+              campaign.brochureReferenceDesign === "black-friday"
+                ? "neptun-black-friday"
+                : campaign.brochurePresetId,
+            )}
+            resolveColor={(value) => artworkTextColor(campaign, pageKey, value)}
+            onChange={onChange}
+            onRemove={onRemove}
+            selected={selectedId === artwork.id}
+            onSelect={() => setSelectedId(artwork.id)}
+          />
+        ))}
     </div>
   );
 }
 
 function ArtworkItem({
   artwork,
+  preferredFonts,
   resolveColor,
   onChange,
   onRemove,
@@ -94,6 +104,7 @@ function ArtworkItem({
   onSelect,
 }: {
   artwork: PageArtworkLayer;
+  preferredFonts: readonly string[];
   resolveColor: (value?: string) => string;
   onChange?: PageArtworkProps["onChange"];
   onRemove?: PageArtworkProps["onRemove"];
@@ -105,8 +116,11 @@ function ArtworkItem({
   const upload = useRef<HTMLInputElement>(null);
   const chooseImage = useImagePicker();
   const text = useRef<HTMLParagraphElement>(null);
+  const [textRevision, setTextRevision] = useState(0);
   const isText = artwork.type === "text";
-  const isImage = !isText && artwork.type !== "overlay";
+  const isBanner = artwork.layoutRole === "banner";
+  const isShape = artwork.type === "shape";
+  const isImage = !isText && !isShape && artwork.type !== "overlay";
   const [error, setError] = useState("");
   async function replace(file?: File) {
     if (!file || !onChange) return;
@@ -148,7 +162,8 @@ function ArtworkItem({
   }
   function saveText(element: HTMLElement) {
     const next = element.textContent || "";
-    if (next !== (currentPosition.current.text || "")) change({ text: next });
+    if (next !== (currentPosition.current.text || ""))
+      change({ text: next, textRuns: undefined });
   }
   function insertPlainText(element: HTMLElement, value: string) {
     const selection = window.getSelection();
@@ -174,7 +189,9 @@ function ArtworkItem({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const pageElement = event.currentTarget.closest(".brochure-page");
+    const pageElement = event.currentTarget.closest(
+      ".bf-product-frame, .brochure-page",
+    );
     if (!pageElement) return;
     const page = pageElement.getBoundingClientRect();
     event.currentTarget
@@ -206,8 +223,16 @@ function ArtworkItem({
       action.kind === "move"
         ? {
             ...action.original,
-            x: clamp(action.original.x + dx, 0, 95),
-            y: clamp(action.original.y + dy, 0, 95),
+            x: clamp(
+              action.original.x + dx,
+              0,
+              isBanner ? Math.max(0, 100 - action.original.width) : 95,
+            ),
+            y: clamp(
+              action.original.y + dy,
+              0,
+              isBanner ? Math.max(0, 90 - (action.original.height || 7)) : 95,
+            ),
           }
         : (() => {
             const next = resizeFromCorner(
@@ -224,11 +249,14 @@ function ArtworkItem({
                 minWidth: 3,
                 minHeight: 2,
                 maxWidth: 100,
-                maxHeight: 100,
+                maxHeight: isBanner
+                  ? Math.min(70, 90 - action.original.y)
+                  : 100,
                 lockAspect:
-                  isText ||
+                  (isText && !isBanner) ||
                   (action.original.height == null &&
-                    artwork.type !== "overlay"),
+                    artwork.type !== "overlay" &&
+                    !isShape),
               },
             );
             return {
@@ -236,7 +264,7 @@ function ArtworkItem({
               x: next.x,
               y: next.y,
               width: next.width,
-              ...(isText
+              ...(isText && !isBanner
                 ? {
                     fontSize: clamp(
                       ((action.original.fontSize || 4) * next.width) /
@@ -274,7 +302,12 @@ function ArtworkItem({
       .querySelectorAll(".cs-page-preview.dragging-guides")
       .forEach((preview) => preview.classList.remove("dragging-guides"));
   }
-  const color = resolveColor(position.color);
+  const color =
+    isBanner &&
+    position.backgroundColor &&
+    !/^#[0-9a-f]{6}00$/i.test(position.backgroundColor)
+      ? position.color || "#ffffff"
+      : resolveColor(position.color);
   const fill =
     position.fade === "top"
       ? `linear-gradient(to bottom, ${color}, transparent)`
@@ -285,7 +318,7 @@ function ArtworkItem({
           : color;
   return (
     <div
-      className={`brochure-floating-artwork${isText ? " page-text-artwork" : ""}${selected ? " is-selected" : ""}`}
+      className={`brochure-floating-artwork${isText ? " page-text-artwork" : ""}${isBanner ? " page-banner-artwork" : ""}${selected ? " is-selected" : ""}`}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
@@ -298,6 +331,9 @@ function ArtworkItem({
             ? Math.max(position.zIndex ?? 2, 20)
             : (position.zIndex ?? 2),
         opacity: position.opacity ?? 1,
+        ...(isBanner && position.backgroundColor
+          ? { background: position.backgroundColor }
+          : {}),
         transform: `rotate(${position.rotation || 0}deg)`,
         ...(position.shadow
           ? {
@@ -353,6 +389,7 @@ function ArtworkItem({
     >
       {artwork.type === "text" ? (
         <p
+          key={`${position.textRuns?.length ? "runs" : "plain"}-${textRevision}`}
           className="page-layer-text"
           ref={text}
           data-text-layer={artwork.id}
@@ -363,8 +400,23 @@ function ArtworkItem({
             fontStyle: position.fontStyle || "normal",
             fontFamily: textFontCss(position.fontFamily),
             letterSpacing: `${position.letterSpacing ?? 0}em`,
+            ...(position.wordSpacing != null
+              ? { wordSpacing: `${position.wordSpacing}em` }
+              : {}),
+            ...(position.whiteSpace ? { whiteSpace: position.whiteSpace } : {}),
             lineHeight: position.lineHeight ?? 1.1,
             textAlign: position.textAlign || "left",
+            ...(isBanner
+              ? {
+                  padding: `${position.padding ?? 1.2}cqw`,
+                  justifyContent:
+                    position.textVerticalAlign === "top"
+                      ? "flex-start"
+                      : position.textVerticalAlign === "bottom"
+                        ? "flex-end"
+                        : "center",
+                }
+              : {}),
           }}
           contentEditable={onChange ? true : undefined}
           suppressContentEditableWarning
@@ -422,6 +474,7 @@ function ArtworkItem({
                   } else if (event.key === "Escape") {
                     event.preventDefault();
                     event.currentTarget.textContent = position.text || "";
+                    setTextRevision((value) => value + 1);
                     event.currentTarget.blur();
                   }
                 }
@@ -441,8 +494,62 @@ function ArtworkItem({
               : undefined
           }
         >
-          {position.text}
+          {position.textRuns?.length &&
+          position.textRuns.map((run) => run.text).join("") ===
+            (position.text || "") ? (
+            <span className="page-text-runs">
+              {position.textRuns.map((run, index) => (
+                <em
+                  key={index}
+                  style={{
+                    fontSize: `${run.fontScale}em`,
+                    verticalAlign: run.verticalAlign || "baseline",
+                    fontWeight: run.fontWeight ?? "inherit",
+                    fontStyle: run.fontStyle || "normal",
+                    color: run.color || "inherit",
+                    lineHeight: 1,
+                  }}
+                >
+                  {run.text}
+                </em>
+              ))}
+            </span>
+          ) : (
+            position.text
+          )}
         </p>
+      ) : isShape ? (
+        <svg
+          className="page-layer-shape"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          width="100%"
+          height="100%"
+          aria-label={artwork.name || t("Color layer")}
+          role="img"
+          style={{
+            display: "block",
+            overflow: "visible",
+            pointerEvents: "none",
+          }}
+        >
+          {position.shapePath ? (
+            <path
+              d={position.shapePath}
+              fill={position.fill || position.color || "#ffffff"}
+              stroke={position.stroke || "none"}
+              strokeWidth={position.strokeWidth || 0}
+            />
+          ) : (
+            <rect
+              width="100"
+              height="100"
+              fill={position.fill || position.color || "#ffffff"}
+              stroke={position.stroke || "none"}
+              strokeWidth={position.strokeWidth || 0}
+            />
+          )}
+        </svg>
       ) : artwork.type === "overlay" ? (
         <div className="page-layer-overlay" style={{ background: fill }} />
       ) : (
@@ -512,6 +619,12 @@ function ArtworkItem({
               {selected && (
                 <PageTextToolbar
                   artwork={position}
+                  preferredFonts={preferredFonts}
+                  extraControls={
+                    isBanner ? (
+                      <PageBannerFields artwork={position} onChange={change} />
+                    ) : undefined
+                  }
                   textRef={text}
                   onChange={change}
                   beforeFormat={() => {

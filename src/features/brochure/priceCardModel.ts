@@ -2,6 +2,7 @@ export type FontWeight="regular"|"bold"|"black";
 interface FontMetrics{advances:Record<string,number>;kerning?:Record<string,number>}
 export interface PriceRun{text:string;superscript?:boolean}
 import fontMetrics from "./priceCardFontMetrics.json" with { type: "json" };
+import type { Product } from "../../domain/models";
 
 // Prices in the supplied InDesign artwork use decimal dots and no thousands separators.
 export function artworkPrice(value:unknown) {
@@ -11,13 +12,16 @@ export function artworkPrice(value:unknown) {
   return { whole, cents: fraction ? String(fraction).padStart(2, "0") : "", text: fraction ? `${whole}.${String(fraction).padStart(2, "0")}` : whole };
 }
 
-export function artworkInstallment(sale:unknown, installments:number|string = 12) {
+export function artworkInstallment(sale:unknown, installments:number|string = 12, monthlyAmount?:number) {
   const count = Math.min(60, Math.max(1, Number.parseInt(String(installments), 10) || 12));
-  return `${count} x muaj: ${(Number(sale) / count).toFixed(1)} €`;
+  return `${count} x muaj: ${(monthlyAmount ?? Number(sale) / count).toFixed(1)} €`;
 }
 
-export function artworkSaving(regular:unknown, sale:unknown, mode = "amount") {
+export function artworkSaving(regular:unknown, sale:unknown, mode = "amount", source?:Product["brochureSavings"]) {
   if (!(Number(sale) > 0 && Number(regular) > Number(sale))) return null;
+  const type = mode === "percentage" ? "percentage" : "amount";
+  if (source && source.type === type && Number(source.regular) === Number(regular) && Number(source.sale) === Number(sale) && Number.isFinite(source.value) && source.value > 0)
+    return { label: type === "percentage" ? "ZBRITJE" : "KURSENI", text: `${artworkPrice(source.value).text}${type === "percentage" ? "%" : "€"}` };
   return mode === "percentage"
     ? { label: "ZBRITJE", text: `${Math.round((1 - Number(sale) / Number(regular)) * 100)}%` }
     : { label: "KURSENI", text: `${artworkPrice(Number(regular) - Number(sale)).text}€` };
