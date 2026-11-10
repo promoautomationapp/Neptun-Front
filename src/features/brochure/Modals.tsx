@@ -330,7 +330,10 @@ export function CreateCampaign({
       updatedAt: new Date().toISOString(),
     };
     if (brandLogoOverride)
-      applyBrandLogoAppearance(createdCampaign, { brandLogoMode, brandLogoColor });
+      applyBrandLogoAppearance(createdCampaign, {
+        brandLogoMode,
+        brandLogoColor,
+      });
     onCreate(createdCampaign);
   }
   if (importOpen)
@@ -462,6 +465,29 @@ export function CreateCampaign({
                 </button>
               )}
             </section>
+            <BrandLogoPreview
+              campaign={{
+                ...selectedPreset.design,
+                theme,
+                brandLogoMode,
+                brandLogoColor,
+                brandLogos:
+                  selectedPreset.design.brandLogos ||
+                  initialSettings.brandLogos,
+                productBackgroundColor: backgroundColor,
+                productBackgroundGradient: backgroundGradient,
+                productBackgroundImage: backgroundImage,
+                ...(coverImage ? { coverBackgroundImage: coverImage } : {}),
+              }}
+              products={importedProducts.length ? importedProducts : catalog}
+              onChange={(changes) => {
+                if (changes.brandLogoMode)
+                  setBrandLogoMode(changes.brandLogoMode);
+                if ("brandLogoColor" in changes)
+                  setBrandLogoColor(changes.brandLogoColor);
+                setBrandLogoOverride(true);
+              }}
+            />
             <div
               className="cs-date-mode"
               role="group"
@@ -516,25 +542,6 @@ export function CreateCampaign({
               value={brochureFormat}
               customFormats={initialSettings.customFormats}
               onChange={setBrochureFormat}
-            />
-            <BrandLogoPreview
-              campaign={{
-                ...selectedPreset.design,
-                theme,
-                brandLogoMode,
-                brandLogoColor,
-                brandLogos: selectedPreset.design.brandLogos || initialSettings.brandLogos,
-                productBackgroundColor: backgroundColor,
-                productBackgroundGradient: backgroundGradient,
-                productBackgroundImage: backgroundImage,
-                ...(coverImage ? { coverBackgroundImage: coverImage } : {}),
-              }}
-              products={importedProducts.length ? importedProducts : catalog}
-              onChange={(changes) => {
-                if (changes.brandLogoMode) setBrandLogoMode(changes.brandLogoMode);
-                if ("brandLogoColor" in changes) setBrandLogoColor(changes.brandLogoColor);
-                setBrandLogoOverride(true);
-              }}
             />
 
             <details className="cs-create-options">
@@ -1823,7 +1830,9 @@ export function Details({
       const row = rows.find(
         (element) => element.dataset.detailEditorKey === focusDetailKey,
       );
-      const field = row?.querySelector<HTMLButtonElement>(".cs-detail-row-edit");
+      const field = row?.querySelector<HTMLButtonElement>(
+        ".cs-detail-row-edit",
+      );
       if (row && field) {
         row?.scrollIntoView?.({ block: "center" });
         field.focus();
@@ -2132,7 +2141,10 @@ export function Details({
                 campaign={campaign}
                 onChange={onProductChange}
               />
-              <DetailsPlacementChoices value={defaultProductDetailPlacement(product, campaign || {})} onChange={(value) => onProductChange("detailPlacement", value)} />
+              <DetailsPlacementChoices
+                value={defaultProductDetailPlacement(product, campaign || {})}
+                onChange={(value) => onProductChange("detailPlacement", value)}
+              />
               <ProductDetailRows
                 product={product}
                 entries={savedSpecs}

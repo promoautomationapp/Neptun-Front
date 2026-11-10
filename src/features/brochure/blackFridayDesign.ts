@@ -174,6 +174,12 @@ export function blackCollectionDesignDefaults(): Partial<Campaign> {
   return {
     ...blackFridayDesignDefaults(),
     brochureReferenceDesign: "black-collection",
+    coverBackgroundColor: "#000000",
+    coverBackgroundImage: "",
+    productBackgroundColor: "#000000",
+    productBackgroundImage: "",
+    storesBackgroundColor: "#000000",
+    storesBackgroundImage: "",
     brandLogoMode: "white",
     autoProductLayout: true,
     includeStoresPage: false,

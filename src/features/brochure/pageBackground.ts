@@ -76,11 +76,22 @@ function backgroundSource(
     };
   const prefix =
     kind === "cover" ? "cover" : kind === "stores" ? "stores" : "product";
-  return {
+  const source = {
     color: campaign[`${prefix}BackgroundColor`],
     gradient: campaign[`${prefix}BackgroundGradient`],
     image: campaign[`${prefix}BackgroundImage`],
   };
+  // Earlier clean presets inherited the reference's texture. Resolve only that
+  // exact old default to solid black; deliberate page/background edits survive.
+  if (
+    (campaign.brochurePresetId === "neptun-black-collection" ||
+      campaign.brochureReferenceDesign === "black-collection") &&
+    source.color?.toLowerCase() === "#111213" &&
+    source.image === "/brochure-presets/black-friday/background.webp" &&
+    !validBackgroundGradient(source.gradient)
+  )
+    return { color: "#000000", gradient: null, image: "" };
+  return source;
 }
 export function pageBackgroundImage(
   campaign: Partial<Campaign>,

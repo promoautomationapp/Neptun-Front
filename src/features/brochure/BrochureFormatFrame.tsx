@@ -28,7 +28,9 @@ export function BrochureFormatFrame({
 }) {
   const blackFriday =
     campaign.brochurePresetId === "neptun-black-friday" ||
-    campaign.brochureReferenceDesign === "black-friday";
+    campaign.brochureReferenceDesign === "black-friday" ||
+    campaign.brochurePresetId === "neptun-black-collection" ||
+    campaign.brochureReferenceDesign === "black-collection";
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const light = color ? lightBackground(color) : campaign.theme === "light";
   const image = pageBackgroundImage(campaign, kind, page);

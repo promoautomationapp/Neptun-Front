@@ -127,7 +127,7 @@ it("uses a compact color picker, previews the tint and offers automatic/original
   ).toBe("white");
 });
 
-it("places the creation picker below size and keeps a custom color through validation and design snapshots", () => {
+it("places the creation picker directly below products and keeps a custom color through validation and design snapshots", () => {
   setLanguage("en");
   const create = vi.fn();
   const view = render(
@@ -137,12 +137,10 @@ it("places the creation picker below size and keeps a custom color through valid
       onClose={vi.fn()}
     />,
   );
-  const format = view.container.querySelector(".cs-brochure-format-picker")!;
+  const products = view.container.querySelector(".cs-create-products")!;
   const preview = view.container.querySelector(".cs-brand-logo-preview")!;
   const optional = view.container.querySelector(".cs-create-options")!;
-  expect(
-    format.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy();
+  expect(products.nextElementSibling).toBe(preview);
   expect(
     preview.compareDocumentPosition(optional) &
       Node.DOCUMENT_POSITION_FOLLOWING,

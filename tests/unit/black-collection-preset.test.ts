@@ -15,6 +15,10 @@ import { resolveSettings } from "../../src/features/settings/settings.schema";
 import { campaignSchema } from "../../src/domain/schemas";
 import type { Campaign } from "../../src/domain/models";
 import { withBlackFridayPerson } from "../../src/features/brochure/blackFridayPerson";
+import {
+  pageBackgroundFill,
+  pageBackgroundImage,
+} from "../../src/features/brochure/pageBackground";
 
 it("creates a separate reusable black design without people or campaign-specific source art", () => {
   const preset = availableBrochurePresets(resolveSettings(null)).find(
@@ -30,6 +34,10 @@ it("creates a separate reusable black design without people or campaign-specific
     autoProductLayout: true,
     offerStyle: "current",
     brandLogoMode: "white",
+    coverBackgroundColor: "#000000",
+    coverBackgroundImage: "",
+    productBackgroundColor: "#000000",
+    productBackgroundImage: "",
   });
   const artwork = Object.values(campaign.pageArtworks || {}).flat();
   expect(artwork.map((item) => item.id)).toEqual([
@@ -59,6 +67,31 @@ it("creates a separate reusable black design without people or campaign-specific
   );
   expect(isBlackFridayBrochure(campaign)).toBe(false);
   expect(Object.values(campaign.pageArtworks || {}).flat()).toEqual([]);
+});
+
+it("repairs the inherited clean texture while retaining deliberate background edits", () => {
+  const campaign: Partial<Campaign> = {
+    brochureReferenceDesign: "black-collection",
+    productBackgroundColor: "#111213",
+    productBackgroundImage: "/brochure-presets/black-friday/background.webp",
+  };
+  expect(pageBackgroundFill(campaign, "product")).toBe("#000000");
+  expect(pageBackgroundImage(campaign, "product")).toBe("");
+  expect(
+    pageBackgroundFill(campaign, "product", { backgroundColor: "#223344" }),
+  ).toBe("#223344");
+  expect(
+    pageBackgroundImage(
+      { ...campaign, productBackgroundImage: "/custom.webp" },
+      "product",
+    ),
+  ).toBe("/custom.webp");
+  expect(
+    pageBackgroundImage(
+      { ...campaign, brochureReferenceDesign: "black-friday" },
+      "product",
+    ),
+  ).toBe(campaign.productBackgroundImage);
 });
 
 it("uses dynamic frames for arbitrary products even when their count matches a source page", () => {
