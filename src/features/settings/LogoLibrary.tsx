@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import { t } from "../brochure/i18n";
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
@@ -285,12 +286,13 @@ export function LogoLibrary({ draft, update }: SettingsTabProps) {
               </Field>
               {rule.background === "color" && (
                 <Field label={`${t("Logo rule")} ${index + 1} ${t("color")}`}>
-                  <input
-                    type="color"
+                  <ColorField
+                    compact
+                    label={`${t("Logo rule")} ${index + 1} ${t("color")}`}
                     value={rule.color || "#1c4075"}
-                    onChange={(event) =>
+                    onChange={(color) =>
                       update((next) => {
-                        next.logoRules[index]!.color = event.target.value;
+                        next.logoRules[index]!.color = color;
                       })
                     }
                   />

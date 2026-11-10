@@ -32,7 +32,14 @@ export function defaultPhotoPlacement(
   // made 55/65/75-inch TVs share the same default size in the Classic preset.
   const scale = photo.automaticTvSizing ? defaultProductImageScale(product) : 1;
   return {
-    x: detailPlacement === "left" ? 63 : otherScreenInches(product) ? 46 : 50,
+    x:
+      detailPlacement === "left"
+        ? 63
+        : detailPlacement === "right"
+          ? 37
+          : otherScreenInches(product)
+            ? 46
+            : 50,
     y: otherScreenInches(product) ? 56 : 50,
     scale,
   };

@@ -13,7 +13,7 @@ it("renders matching light-page ink, page-scoped blue price and custom SVG logo 
  setPageAppearance(c,"product",0,{brandColor:"#cc3366",screenLabelColor:"#223344"});
  const host=documentFor(renderToStaticMarkup(<ProductPage campaign={c} page={{...brochurePage(c.products),backgroundColor:"#f1f2f4"}}/>));
  const page=host.querySelector<HTMLElement>(".brochure-interior")!;
- expect(page.dataset.smartAppearance).toBe("true");expect(page.style.getPropertyValue("--brochure-foreground")).toBe("#1c4075");
+ expect(page.dataset.smartAppearance).toBe("true");expect(page.style.getPropertyValue("--brochure-foreground")).toBe("#000000");
  expect(page.style.getPropertyValue("--brochure-screen-label-color")).toBe("#223344");expect(page.style.getPropertyValue("--brochure-brand-color")).toBe("#cc3366");
  const filter=page.querySelector("filter")!;
  expect(filter.querySelector("feFlood")?.getAttribute("flood-color")).toBe("#cc3366");
@@ -34,7 +34,7 @@ it("adapts free title text and supplied light logo variants in exported cover ma
  applyPageBackground(c,"cover",undefined,{backgroundColor:"#ffffff"});
  const host=documentFor(renderToStaticMarkup(<CoverPage campaign={c}/>));
  const text=host.querySelector<HTMLElement>(".page-layer-text")!;
- expect(text.style.color).toBe("rgb(28, 64, 117)");
+ expect(text.style.color).toBe("rgb(0, 0, 0)");
  expect(host.querySelector('img[alt="hajde!"]')?.getAttribute("src")).toBe("/brochure-presets/october/hajde.svg");
  expect(host.querySelector('img[alt="NEPTUN"]')?.getAttribute("src")).toBe("/brochure-presets/october/neptun-footer.svg");
  expect(c.pageArtworks.cover?.[0]?.color).toBe("#ffffff");

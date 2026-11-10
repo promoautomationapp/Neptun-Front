@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
@@ -246,12 +247,11 @@ export function CoverDesignControls({
         {COVER_TEXT_COLORS.map(([field, label]) => (
           <label key={field}>
             {t(label)}
-            <input
-              type="color"
-              aria-label={label}
+            <ColorField
+              compact
+              label={label}
               value={coverTextColor(campaign, field)}
-              onInput={(event) => update(field, event.currentTarget.value)}
-              onChange={(event) => update(field, event.target.value)}
+              onChange={(color) => update(field, color)}
             />
           </label>
         ))}
@@ -282,18 +282,18 @@ export function CoverDesignControls({
                   {t(
                     key === "from" ? "Ribbon start color" : "Ribbon end color",
                   )}
-                  <input
-                    type="color"
-                    aria-label={t(
+                  <ColorField
+                    compact
+                    label={t(
                       key === "from"
                         ? "Ribbon start color"
                         : "Ribbon end color",
                     )}
                     value={coverRibbonColors(campaign)[key]}
-                    onChange={(event) =>
+                    onChange={(color) =>
                       update("coverRibbonColors", {
                         ...coverRibbonColors(campaign),
-                        [key]: event.target.value,
+                        [key]: color,
                       })
                     }
                   />
@@ -364,14 +364,14 @@ export function CoverDesignControls({
               {(["from", "to"] as const).map((key) => (
                 <label key={key}>
                   {key === "from" ? "Start" : "End"}
-                  <input
-                    type="color"
-                    aria-label={`Cover gradient ${key}`}
+                  <ColorField
+                    compact
+                    label={`Cover gradient ${key}`}
                     value={gradient[key]}
-                    onChange={(event) =>
+                    onChange={(color) =>
                       update("coverOverlayGradient", {
                         ...gradient,
-                        [key]: event.target.value,
+                        [key]: color,
                       })
                     }
                   />

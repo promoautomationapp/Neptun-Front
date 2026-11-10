@@ -1,0 +1,63 @@
+.cs-details-placement-choices {
+  display: grid;
+  gap: 7px;
+  margin: 10px 0;
+  color: var(--np-text, #254b68);
+  font:
+    500 12px/1.35 Arial,
+    sans-serif;
+}
+.cs-details-placement-choices > strong {
+  font-size: 12px;
+}
+.cs-details-placement-choices > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.cs-details-placement-choices > div > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--np-border, #d3e1eb);
+  border-radius: 8px;
+  background: var(--np-surface, #fff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.cs-details-placement-choices > div > button[aria-pressed="true"] {
+  border-color: #2789c2;
+  background: #eef7fd;
+  color: #176292;
+  box-shadow: 0 0 0 1px #2789c2;
+}
+.cs-details-placement-choices > div > button:focus-visible {
+  outline: 2px solid #2789c2;
+  outline-offset: 2px;
+}
+.cs-details-placement-choices svg {
+  width: 42px;
+  height: 30px;
+  flex: none;
+}
+.cs-details-placement-choices small {
+  color: var(--np-muted, #6c8497);
+  font-size: 10px;
+}
+.cs-details-drop-zone.right {
+  right: 0;
+  top: 12%;
+  width: 25%;
+  height: 55%;
+}
+@media (max-width: 480px) {
+  .cs-details-placement-choices > div > button {
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 4px;
+  }
+}

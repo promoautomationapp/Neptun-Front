@@ -183,6 +183,9 @@ import "../../styles/brochure-detail-strip.css";
 import "../../styles/background-readability.css";
 import "../../styles/brochure-october.css";
 import "../../styles/brand-logo-appearance.css";
+import "../../styles/blue-reference-layout.css";
+import { blueReferenceDetailGroups, removeBlueReferenceDetailGroup } from "./blueReferenceDetails";
+import { BlueReferenceDetailAlignment } from "./BlueReferenceDetailAlignment";
 import {
   visibleImageBounds,
   televisionScreenBox,
@@ -992,6 +995,7 @@ interface ProductCardProps extends ProductEditingProps {
   layout?: string;
   gridIndex?: number;
   pageColor?: string;
+  appearanceTextColor?: string;
 }
 export interface BrochurePageProps extends ProductEditingProps {
   onCampaignAssetChange?: CampaignAssetChange;
@@ -1293,6 +1297,7 @@ function StandardProductCard({
   hero = false,
   classicCover = false,
   brandHeaderAtTop = false,
+  appearanceTextColor,
   priceLogo,
   installments,
   onEditImage,
@@ -1319,6 +1324,7 @@ function StandardProductCard({
   const style = offerStyleFor(campaign, product);
   const savingMode = savingModeFor(campaign, product);
   const colors = productColors(product);
+  const blueReference = usesBlueReferencePrice(product, campaign);
   const importedSpecs = Array.isArray(product.brochureDetails);
   const allSpecs = importedSpecs
     ? savedDetailEntries(product) || []
@@ -1330,11 +1336,10 @@ function StandardProductCard({
             ? applianceDetailEntries(product)
             : Object.entries(displaySpecs(product))
       ).filter(
-        ([key, value]) => value && !/garanc|warrant|ngjyr|colou?r/i.test(key),
+        ([key, value]) => (value || (blueReference && key)) && !/garanc|warrant|ngjyr|colou?r/i.test(key),
       );
   const warranty = productWarranty(product);
   const redReference = usesRedReferencePrice(product, campaign);
-  const blueReference = usesBlueReferencePrice(product, campaign);
   const screenInches = tvScreenInches(product);
   const otherInches = otherScreenInches(product);
   const phoneCorner = usesPhoneCornerAnnotation(product);
@@ -1342,6 +1347,7 @@ function StandardProductCard({
     !hasApplePhotos(product) && hasEditableScreen(product);
   const inches = screenInches || otherInches;
   const detailPlacement = defaultProductDetailPlacement(product, campaign);
+  const sideDetails = detailPlacement === "left" || detailPlacement === "right";
   const productDesign = productDesignFor(campaign);
   const photoBase = defaultPhotoPlacement(
     product,
@@ -1358,8 +1364,8 @@ function StandardProductCard({
     product,
     importedSpecs ? printableSpecs : brochureDefaultDetailEntries(product, printableSpecs),
   );
-  const specs =
-    product.autoSpecsDisabled || detailPlacement === "left"
+  const legacySpecs =
+    product.autoSpecsDisabled || sideDetails
       ? visibleOptionalProductDetails(product, printableSpecs)
       : classicCover
         ? preferredSpecs.slice(
@@ -1371,6 +1377,15 @@ function StandardProductCard({
             warrantyInStrip: Boolean(warranty && warrantyInStrip),
             maxBlocks: isAirConditioner(product) ? 5 : undefined,
           });
+  const blueGroups = blueReference
+    ? blueReferenceDetailGroups(product, preferredSpecs, {
+        phone: sideDetails && isMobilePhone(product) && !isAppleProduct(product),
+        imported: importedSpecs,
+      })
+    : null;
+  const specs = blueGroups
+    ? blueGroups.map((group) => [group.key, group.text] as [string, string])
+    : legacySpecs;
   const changeProduct = onProductChange
     ? (
         field: keyof Product | Partial<Product>,
@@ -1764,6 +1779,30 @@ function StandardProductCard({
     );
     return index < 0 ? allSpecs.length : index;
   };
+  const colorsAboveDetails = blueReference && !product.detailBlockPlacements?.__colors;
+  const colorsRow = colors.length > 0 && product.hideColors !== true && (
+            <ProductDetailBlock
+              product={product}
+              detailKey="__colors"
+              className={`brochure-colors ${blueReference ? "blue-reference-colors" : ""}`}
+              onChange={changeProduct}
+              onRemove={
+                changeProduct
+                  ? () => changeProduct("hideColors", true)
+                  : undefined
+              }
+              aria-label={`Ngjyrat: ${colors.map((color) => color.name).join(", ")}`}
+            >
+              {colors.map((color) => (
+                <i
+                  key={color.name}
+                  className="brochure-color-dot"
+                  title={color.name}
+                  style={{ backgroundColor: color.hex }}
+                />
+              ))}
+            </ProductDetailBlock>
+          );
   const warrantyLine = warranty && !warrantyInStrip ? (
     <ProductDetailBlock
       product={product}
@@ -1783,10 +1822,9 @@ function StandardProductCard({
       data-cover-card-default={
         !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
       }
-      data-blue-reference-defaults={
-        isOctoberBrochure(campaign) ? "true" : undefined
-      }
-      className={`brochure-product style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${detailPlacement === "left" ? "details-left" : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
+      data-blue-reference-defaults={blueReference ? "true" : undefined}
+      data-default-photo={!product.brochureImagePlacement && productDesign.photo.mode !== "custom" ? "true" : undefined}
+      className={`brochure-product style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${sideDetails ? `details-${detailPlacement}` : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
       onDragOver={(event) => {
         if (
           [...event.dataTransfer.types].includes(
@@ -1823,6 +1861,7 @@ function StandardProductCard({
       style={{
         position: "relative",
         ...productTypographyStyle(campaign),
+        ...(blueReference && light ? { color: appearanceTextColor || "#000", "--brochure-foreground": appearanceTextColor || "#000" } : {}),
         ...(onResizeCard ||
         product.brochureCardSize ||
         layout === "tv8" ||
@@ -2186,36 +2225,17 @@ function StandardProductCard({
         photoAreaRef={wrapRef}
         enabled={!contentPlacement.saving && !hasApplePhotos(product)}
       />
+      {colorsAboveDetails && colorsRow}
+      <BlueReferenceDetailAlignment key={`${blueReference}-${validSale(product)}-${contentPlacement.saving?.hidden}`} photoAreaRef={wrapRef} enabled={blueReference && !sideDetails && !contentPlacement.specs} />
       <div className="brochure-product-bottom" ref={priceRowRef}>
         <div
           className="brochure-product-copy"
           style={regionStyle(contentPlacement.details)}
+          data-copy-frame-manual={contentPlacement.details || product.detailBlockPlacements?.__brand ? "true" : undefined}
         >
-          {colors.length > 0 && product.hideColors !== true && (
-            <ProductDetailBlock
-              product={product}
-              detailKey="__colors"
-              className="brochure-colors"
-              onChange={changeProduct}
-              onRemove={
-                changeProduct
-                  ? () => changeProduct("hideColors", true)
-                  : undefined
-              }
-              aria-label={`Ngjyrat: ${colors.map((color) => color.name).join(", ")}`}
-            >
-              {colors.map((color) => (
-                <i
-                  key={color.name}
-                  className="brochure-color-dot"
-                  title={color.name}
-                  style={{ backgroundColor: color.hex }}
-                />
-              ))}
-            </ProductDetailBlock>
-          )}
+          {!colorsAboveDetails && colorsRow}
           {isBundleOffer(product) && <BundleVariantColors product={product} />}
-          {(!isOctoberBrochure(campaign) ||
+          {(!brandHeaderAtTop ||
             !isAppleProduct(product) ||
             product.hideBrandLogo === false ||
             product.brandLogo) && (
@@ -2238,8 +2258,9 @@ function StandardProductCard({
             {product.name}
           </span>}
           {!nameAtTop && warrantyLine}
-          <small
+          {(!blueReference || Boolean(product.brochureCode?.trim())) && <small
             className="brochure-product-code"
+            data-manual-code={product.brochureCode?.trim() ? "true" : undefined}
             {...inlineText(
               String(product.brochureCode ?? product.code),
               t("Product code in brochure"),
@@ -2249,7 +2270,7 @@ function StandardProductCard({
             )}
           >
             {String(product.brochureCode ?? product.code)}
-          </small>
+          </small>}
           {onEditDetails && (
             <button
               type="button"
@@ -2293,7 +2314,9 @@ function StandardProductCard({
         <div
           className={`brochure-specs ${importedSpecs ? "brochure-imported-specs" : ""}`}
           style={regionStyle(contentPlacement.specs)}
-          data-detail-layout={detailPlacement === "left" ? "left" : "strip"}
+          data-detail-layout={sideDetails ? detailPlacement : "strip"}
+          data-detail-frame-manual={contentPlacement.specs && (contentPlacement.specs.x || contentPlacement.specs.y || contentPlacement.specs.height || (contentPlacement.specs.width && contentPlacement.specs.width !== 100)) ? "true" : undefined}
+          data-blue-default-groups={blueGroups ? "true" : undefined}
         >
           {[...specs.map(([key, value], index) => (
             <ProductDetailBlock
@@ -2302,7 +2325,7 @@ function StandardProductCard({
               detailKey={key}
               className={`${isMemoryDetail(key, value) ? "detail-memory" : ""} ${defaultDetailFill(campaign, referenceStrip && defaultFilledDetail(product, key, value, index)) ? "detail-filled" : ""}`}
               onChange={changeProduct}
-              draggable={Boolean(onReorderDetails)}
+              draggable={Boolean(onReorderDetails) && !((blueGroups?.[index]?.entries.length || 0) > 1)}
               onDragStart={
                 onReorderDetails
                   ? (event: {
@@ -2360,18 +2383,20 @@ function StandardProductCard({
               onRemove={
                 changeProduct
                   ? () => {
-                      const changes = deleteDisplayedDetail(
-                        product,
-                        allSpecs,
-                        allSpecs.findIndex(([sourceKey]) => sourceKey === key),
-                      );
+                      const changes = blueGroups?.[index]
+                        ? removeBlueReferenceDetailGroup(product, allSpecs, blueGroups[index]!.entries.map(([sourceKey]) => sourceKey))
+                        : deleteDisplayedDetail(
+                            product,
+                            allSpecs,
+                            allSpecs.findIndex(([sourceKey]) => sourceKey === key),
+                          );
                       changeProduct(changes);
                     }
                   : undefined
               }
               editText={importedSpecs ? String(value) : `${key}: ${value}`}
               onSaveText={
-                changeProduct
+                changeProduct && !((blueGroups?.[index]?.entries.length || 0) > 1)
                   ? (text) =>
                       changeProduct(
                         editDisplayedDetail(
@@ -2386,16 +2411,22 @@ function StandardProductCard({
                   : undefined
               }
             >
-              <DetailContent
+              {blueGroups?.[index] && (blueGroups[index]!.entries.length > 1 || sideDetails || !blueGroups[index]!.entries[0]?.[1]) ? (
+                <FittedDetailValue
+                  text={blueGroups[index]!.text}
+                  className={`detail-blue-reference ${isMemoryDetail(key, value) ? "detail-memory" : ""}`}
+                  fitKey={detailPlacement}
+                />
+              ) : <DetailContent
                 product={product}
                 label={key}
-                value={value}
+                value={blueGroups?.[index]?.entries[0]?.[1] ?? value}
                 imported={importedSpecs}
-                layout={detailPlacement === "left" ? "left" : "strip"}
+                layout={sideDetails ? "left" : "strip"}
                 reference={
                   blueReference ? "blue" : redReference ? "red" : "legacy"
                 }
-              />
+              />}
             </ProductDetailBlock>
           )),
           warranty && warrantyInStrip ? (
@@ -2446,7 +2477,7 @@ function StandardProductCard({
               }
               aria-label={`Drag all details: ${product.name}`}
             >
-              ⠿ Details
+              <EditorIcon name="drag" /> {t("Product details")}
             </button>
           )}
           {onEditDetails && (
@@ -2479,7 +2510,7 @@ function StandardProductCard({
         editable={Boolean(changeProduct)}
       />
       {changeProduct &&
-        ["left", "bottom"].map((target) => (
+        ["left", "right", "bottom"].map((target) => (
           <div
             key={target}
             className={`cs-details-drop-zone ${target}`}
@@ -2509,7 +2540,7 @@ function StandardProductCard({
                 ?.classList.remove("cs-details-dragging");
             }}
           >
-            {target === "left" ? "Details beside photo" : "Details below photo"}
+            {t(target === "left" ? "Left of image" : target === "right" ? "Right of image" : "Below image")}
           </div>
         ))}
       {onResizeCard && (
@@ -3164,6 +3195,7 @@ function CoverPageContent({
                 )}
                 light={!dark}
                 pageColor={backgroundColor}
+                appearanceTextColor={pageAppearanceFor(campaign, "cover").textColor}
                 priceLogo={priceLogo}
                 installments={installmentCount(campaign)}
                 onEditImage={onEditImage}
@@ -3305,6 +3337,7 @@ function ProductPageContent({
 }: ProductPageProps) {
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
+  const bluePage = page.products.length > 0 && page.products.every((product) => usesBlueReferencePrice(product, campaign));
   const backgroundColor = pageBackgroundContrastColor(
     campaign,
     "product",
@@ -3318,6 +3351,11 @@ function ProductPageContent({
   const light = readability.light;
   const priceLogo = priceLogoSource(campaign);
   const pageConfig = campaign.pages?.[page.index];
+  const categoryTitle = typeof pageConfig?.title === "string"
+    ? pageConfig.title
+    : page.title && !/^(?:page|faqja)\s+\d+$/i.test(page.title.trim())
+      ? page.title
+      : undefined;
   const footerConfig = {
     ...campaign.pageDecorationDefaults,
     ...(isFeaturedProductCollection(campaign) && pageConfig?.showFooter === true
@@ -3329,6 +3367,8 @@ function ProductPageContent({
     <section
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-blue-reference-page={bluePage ? "true" : undefined}
+      data-default-stacked-pair={page.products.length === 2 && !pageConfig?.layout ? "true" : undefined}
       data-smart-appearance={hasPageAppearance(campaign, "product", page) ? "true" : undefined}
       style={{
         ...brochureFormatStyle(campaign),
@@ -3360,9 +3400,11 @@ function ProductPageContent({
         onChange={onArtworkChange}
         onRemove={onArtworkRemove}
       />
-      {october && (
+      {(october || bluePage) && (
         <PageDecorations
-          campaign={campaign}
+          campaign={categoryTitle !== undefined && pageConfig?.headerText === undefined
+            ? { ...campaign, pages: { ...campaign.pages, [page.index]: { ...pageConfig, headerText: categoryTitle } } }
+            : campaign}
           page={page}
           onAssetChange={onCampaignAssetChange}
           onChange={onPageDecorationChange}
@@ -3386,13 +3428,14 @@ function ProductPageContent({
             product={product}
             light={light}
             pageColor={backgroundColor}
+            appearanceTextColor={pageAppearanceFor(campaign, "product", page).textColor}
             priceLogo={priceLogo}
             installments={installmentCount(campaign)}
             hero={
               ["feature", "feature3"].includes(page.layout) &&
               product === page.products[0]
             }
-            brandHeaderAtTop={october && page.products.every(isAppleProduct) && footerConfig.showHeader !== false}
+            brandHeaderAtTop={(october || bluePage) && page.products.every(isAppleProduct) && footerConfig.showHeader !== false}
             onEditImage={onEditImage}
             onEditDetails={onEditDetails}
             onEditPrice={onEditPrice}

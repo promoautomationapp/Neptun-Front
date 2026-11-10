@@ -165,7 +165,8 @@ it("shows formatting for the selected text with size, color, removal and a dedic
     ...layer,
     fontSize: 6,
   });
-  fireEvent.change(document.querySelector('input[type="color"]')!, {
+  fireEvent.click(getByRole("button", { name: /^Text color:/ }));
+  fireEvent.change(getByRole("textbox", { name: "Text color hex code" }), {
     target: { value: "#cc1122" },
   });
   expect(change).toHaveBeenLastCalledWith("headline", {

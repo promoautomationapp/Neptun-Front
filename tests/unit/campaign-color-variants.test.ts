@@ -96,6 +96,98 @@ it("keeps different slots, capacities, prices, facts and genuine bundles separat
   ).toHaveLength(2);
 });
 
+it("recovers interchangeable colors in old slotless and page-only snapshots without crossing known assignments", () => {
+  for (const assignment of [
+    { brochurePage: undefined, brochureOrder: undefined },
+    { brochurePage: 1, brochureOrder: undefined },
+  ]) {
+    const green = phone("green", "GREEN", assignment);
+    const grey = phone("grey", "GREY", assignment);
+    const original = structuredClone([green, grey]);
+    const [offer] = brochureColorVariantProducts([green, grey]);
+    expect(offer).toMatchObject({
+      code: "green",
+      name: "A37 5G 6/128",
+      regular: 449,
+      sale: 299,
+    });
+    expect(productColors(offer!)).toHaveLength(2);
+    expect([green, grey]).toEqual(original);
+    expect(
+      brochureColorVariantProducts([green, { ...grey, sale: 279 }]),
+    ).toHaveLength(2);
+  }
+  expect(
+    brochureColorVariantProducts([
+      phone("green", "GREEN", { brochureOrder: undefined }),
+      phone("grey", "GREY", { brochurePage: 2, brochureOrder: undefined }),
+    ]),
+  ).toHaveLength(2);
+});
+
+it("uses retained worksheet slots when old imports lost typed positions, keeping separate Excel offers separate", () => {
+  const old = (color: string, slot: string) =>
+    phone(color, color.toUpperCase(), {
+      brochurePage: undefined,
+      brochureOrder: undefined,
+      excelSource: { row: 10, cells: { "Brochure Position": slot } },
+    });
+  const value = brochureColorVariantProducts([
+    old("green", "1.1"),
+    old("grey", "1.1000000000000001"),
+  ]);
+  expect(value).toHaveLength(1);
+  expect(value[0]).toMatchObject({ brochurePage: 1, brochureOrder: 1 });
+  expect(productColors(value[0]!)).toHaveLength(2);
+  expect(
+    brochureColorVariantProducts([old("green", "1.1"), old("grey", "1.2")]),
+  ).toHaveLength(2);
+  const moved = { ...old("grey", "1.1"), brochurePage: 2 };
+  expect(
+    brochureColorVariantProducts([old("green", "1.1"), moved]),
+  ).toHaveLength(2);
+  expect(brochureColorVariantProducts([moved])[0]!.brochurePage).toBe(2);
+});
+
+it("recovers a slotless color-choice bundle while retaining genuine shared-price collaborations", () => {
+  const members = [
+    phone("green", "GREEN", {
+      brochurePage: undefined,
+      brochureOrder: undefined,
+    }),
+    phone("grey", "GREY", {
+      brochurePage: undefined,
+      brochureOrder: undefined,
+    }),
+  ];
+  const set = {
+    ...phone("old-set", "GREEN", {
+      brochurePage: undefined,
+      brochureOrder: undefined,
+    }),
+    name: members.map((member) => member.name).join(" & "),
+    bundleProducts: members,
+  };
+  const [offer] = brochureColorVariantProducts([set]);
+  expect(offer!.bundleProducts).toBeUndefined();
+  expect(offer!.code).toBe("green");
+  expect(productColors(offer!)).toHaveLength(2);
+  expect(
+    brochureColorVariantProducts([{ ...set, regular: 898 }])[0]!.bundleProducts,
+  ).toHaveLength(2);
+  expect(
+    brochureColorVariantProducts([
+      {
+        ...set,
+        bundleProducts: [
+          members[0]!,
+          { ...members[1]!, name: "TV LED BEKO 55BHU7800 GREY" },
+        ],
+      },
+    ])[0]!.bundleProducts,
+  ).toHaveLength(2);
+});
+
 it("keeps every Excel offer on its assigned page when several slots each contain colors", () => {
   const groups = [
     [

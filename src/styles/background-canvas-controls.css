@@ -4,7 +4,7 @@
   box-sizing: border-box;
   width: max-content;
   max-width: calc(100vw - 16px);
-  color: var(--np-text, #264b66);
+  color: #264b66;
   font:
     500 12px/1.35 Arial,
     sans-serif;
@@ -13,6 +13,10 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
+}
+.cs-background-canvas-controls button:focus-visible {
+  outline: 2px solid #3295c9;
+  outline-offset: 2px;
 }
 .cs-background-canvas-toolbar {
   display: flex;
@@ -23,9 +27,9 @@
   padding: 4px;
   overflow-x: auto;
   white-space: nowrap;
-  border: 1px solid var(--np-border, #d3e0e9);
-  border-radius: 9px;
-  background: var(--np-surface, #fff);
+  border: 1px solid #d3e0e9;
+  border-radius: 10px;
+  background: #fff;
   box-shadow: 0 4px 18px #173c6329;
   scrollbar-width: thin;
 }
@@ -35,10 +39,10 @@
   justify-content: center;
   gap: 5px;
   flex: none;
-  height: 31px;
+  height: 32px;
   padding: 5px 7px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   font-size: 11px;
 }
@@ -48,10 +52,6 @@
   background: #e8f2fa;
   color: #176092;
 }
-.cs-background-canvas-controls button:focus-visible {
-  outline: 2px solid #5b9eca;
-  outline-offset: 1px;
-}
 .cs-background-menu-swatch,
 .cs-background-gradient-icon {
   display: block;
@@ -59,7 +59,7 @@
   width: 16px;
   height: 16px;
   box-sizing: border-box;
-  border: 1px solid #beced9;
+  border: 1px solid #173c6340;
   border-radius: 4px;
 }
 .cs-background-gradient-icon {
@@ -69,27 +69,26 @@
   height: 18px;
   width: 1px;
   flex: none;
-  background: var(--np-border, #d3e0e9);
+  background: #d3e0e9;
   margin: 0 2px;
 }
 .cs-background-canvas-toolbar .cs-background-close {
-  font-size: 20px;
-  width: 24px;
+  width: 28px;
   padding: 0;
   color: #70849a;
 }
 .cs-background-canvas-panel {
   box-sizing: border-box;
-  width: 340px;
+  width: 326px;
   max-width: calc(100vw - 16px);
-  max-height: calc(100dvh - 76px);
+  max-height: calc(100dvh - 68px);
   overflow-y: auto;
   overscroll-behavior: contain;
   margin-top: 6px;
   padding: 13px;
-  border: 1px solid var(--np-border, #d3e0e9);
-  border-radius: 10px;
-  background: var(--np-surface, #fff);
+  border: 1px solid #d3e0e9;
+  border-radius: 11px;
+  background: #fff;
   box-shadow: 0 5px 20px #173c6329;
 }
 .cs-background-panel-head {
@@ -97,65 +96,96 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
 }
 .cs-background-panel-head strong {
   font-size: 12px;
 }
 .cs-background-panel-head > small {
-  color: var(--np-muted, #6b8196);
+  color: #6b8196;
   font-size: 10px;
   text-align: right;
 }
 .cs-background-automatic-note {
-  margin: 9px 0;
-  color: var(--np-muted, #6b8196);
+  margin: 9px 0 0;
+  color: #6b8196;
   font-size: 10px;
   line-height: 1.5;
 }
-.cs-background-canvas-swatches {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 7px;
+.cs-background-fill-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
   margin-bottom: 12px;
+  border-radius: 7px;
+  background: #eff4f8;
 }
-.cs-background-canvas-swatches > button {
-  height: 27px;
-  border: 1px solid #bacbd9;
-  border-radius: 5px;
-  padding: 0;
-}
-.cs-background-canvas-swatches > button[aria-pressed="true"] {
-  outline: 2px solid #328dc4;
-  outline-offset: 2px;
-}
-.cs-background-canvas-panel .studio-color-trigger {
+.cs-background-fill-tabs > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
   min-height: 31px;
-  height: 31px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
   font-size: 11px;
 }
+.cs-background-fill-tabs > button[aria-selected="true"] {
+  background: #fff;
+  border-color: #d3e0e9;
+  color: #17567e;
+  box-shadow: 0 1px 3px #173c6310;
+}
 .cs-background-gradient-sample {
-  height: 45px;
+  height: 40px;
   border: 1px solid #cad9e5;
   border-radius: 6px;
   margin-bottom: 10px;
 }
-.cs-background-gradient-fields {
+.cs-background-gradient-stops {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
-.cs-background-gradient-fields > label {
-  display: grid;
-  gap: 4px;
+.cs-background-gradient-stops > button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
-  font-size: 10px;
+  padding: 6px;
+  border: 1px solid #d3e0e9;
+  border-radius: 6px;
+  background: #fff;
+  text-align: left;
+  font-size: 11px;
+}
+.cs-background-gradient-stops > button[aria-pressed="true"] {
+  border-color: #2786be;
+  box-shadow: 0 0 0 1px #2786be;
+}
+.cs-background-gradient-stops i {
+  display: block;
+  flex: none;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #173c6333;
+  border-radius: 5px;
+}
+.cs-background-gradient-stops small {
+  display: block;
+  margin-top: 2px;
+  color: #6b8196;
+  font-size: 9px;
 }
 .cs-background-canvas-directions {
   display: flex;
+  justify-content: space-between;
   gap: 4px;
-  margin: 10px 0;
-  flex-wrap: wrap;
+  margin: 11px 0;
 }
 .cs-background-canvas-directions > button {
   width: 29px;
@@ -168,166 +198,199 @@
   background: #e3f1fc;
   border-color: #67a5ce;
 }
-.cs-background-gradient-apply,
-.cs-background-advanced-toggle,
-.cs-background-auto-reset {
+.cs-background-gradient-apply {
   width: 100%;
-  min-height: 30px;
+  min-height: 31px;
   padding: 5px 8px;
   border: 1px solid #d3e0e9;
   border-radius: 6px;
   background: #f5f9fb;
   font-size: 11px !important;
 }
-.cs-background-appearance-summary {
+.cs-background-color-rows {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-  margin: 10px 0;
+  gap: 6px;
+  margin-top: 11px;
 }
-.cs-background-appearance-summary > button {
-  display: grid;
-  grid-template-columns: 18px 1fr;
+.cs-background-color-rows > button {
+  display: flex;
   align-items: center;
-  gap: 3px 5px;
+  gap: 9px;
+  width: 100%;
   min-width: 0;
-  padding: 7px 5px;
-  border: 1px solid #d3e0e9;
-  border-radius: 6px;
-  background: #f7fafc;
-  text-align: left;
-  font-size: 10px;
-}
-.cs-background-appearance-summary i {
-  width: 17px;
-  height: 17px;
-  border: 1px solid #bbcdd9;
-  border-radius: 50%;
-}
-.cs-background-appearance-summary small {
-  grid-column: 1/-1;
-  font-size: 9px;
-  opacity: 0.7;
-}
-.cs-background-price-choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 11px 0;
-}
-.cs-background-price-choices > button {
-  display: grid;
-  gap: 5px;
-  padding: 7px;
-  border: 1px solid #d3e0e9;
+  padding: 8px;
+  border: 1px solid #d8e3ec;
   border-radius: 7px;
   background: #fff;
-  text-align: center;
-  font-size: 10px;
+  text-align: left;
 }
-.cs-background-price-choices > button[aria-pressed="true"] {
-  border-color: #3c91c2;
-  box-shadow: 0 0 0 1px #3c91c2;
-  background: #f1f8fd;
+.cs-background-color-rows > button:hover,
+.cs-background-color-rows > button[aria-expanded="true"] {
+  border-color: #91b9d3;
+  background: #f3f8fc;
 }
-.cs-background-price-mini {
+.cs-background-color-example {
   display: grid;
-  justify-items: end;
-  max-width: 100%;
-  width: 90px;
-  margin: auto;
-  line-height: 1;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 32px;
+  border: 1px solid #173c6326;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 700;
 }
-.cs-background-price-mini del {
-  padding: 2px 4px;
-  background: #e9edf2;
-  color: #234173;
-  font-size: 12px;
+.cs-background-color-rows > button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
 }
-.cs-background-price-mini b {
+.cs-background-color-rows strong {
   display: block;
-  width: 100%;
-  box-sizing: border-box;
-  background: #ff4228;
-  color: #fff;
-  font-size: 24px;
-  padding: 3px;
+  font-size: 11px;
+  font-weight: 600;
 }
-.cs-background-price-mini small {
+.cs-background-color-rows small {
   display: block;
-  padding: 2px 5px;
-  background: #009ed4;
-  color: #fff;
+  color: #71879b;
   font-size: 9px;
+  margin-top: 3px;
 }
-.cs-background-price-mini.card b {
-  background: #243a6a;
-  border-radius: 0 0 7px 7px;
+.cs-background-color-rows > button > i {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 1px solid #173c6333;
+  border-radius: 50%;
 }
-.cs-background-price-mini.card small {
-  background: #243a6a;
+.cs-background-inline-color {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #d3e0e9;
+  border-radius: 8px;
+  background: #f7fafc;
 }
-.cs-background-advanced-toggle {
+.cs-background-color-editor-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: transparent;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
 }
-.cs-background-advanced-colors {
-  display: grid;
-  gap: 8px;
-  padding: 10px 0;
-}
-.cs-background-advanced-colors > label {
-  display: grid;
-  grid-template-columns: 1fr 135px;
-  align-items: center;
-  gap: 8px;
+.cs-background-color-editor-head button {
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: #e5f0f8;
+  color: #176092;
   font-size: 10px;
 }
 .cs-background-auto-reset {
-  margin-top: 8px;
+  display: block;
+  width: 100%;
+  min-height: 29px;
+  margin-top: 9px;
+  padding: 5px 8px;
   border: 0;
+  border-radius: 5px;
   background: transparent;
   color: #176092 !important;
+  font-size: 10px !important;
+}
+.cs-background-auto-reset:hover {
+  background: #f0f6fb;
+}
+.cs-screen-label-color-presets {
+  display: flex;
+  gap: 7px;
+  margin: 0 0 12px;
+}
+.cs-screen-label-color-presets button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #d3e0e9;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 10px;
+}
+.cs-screen-label-color-presets button[aria-pressed="true"] {
+  border-color: #2786be;
+}
+.cs-screen-label-color-presets button > span {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
 }
 .cs-background-context-menu {
   box-sizing: border-box;
-  width: 265px;
+  width: 288px;
   max-width: calc(100vw - 16px);
-  padding: 5px;
-  border: 1px solid var(--np-border, #d3e0e9);
-  border-radius: 9px;
-  background: var(--np-surface, #fff);
+  padding: 6px;
+  border: 1px solid #d3e0e9;
+  border-radius: 11px;
+  background: #fff;
   box-shadow: 0 5px 20px #173c6329;
 }
 .cs-background-context-menu button {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   width: 100%;
-  min-height: 35px;
+  min-height: 49px;
   padding: 8px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
-  font-size: 11px;
   text-align: left;
 }
 .cs-background-context-menu button:hover,
 .cs-background-context-menu button:focus-visible {
   background: #e8f2fa;
 }
-.cs-background-context-menu button > span:first-child {
+.cs-background-context-icon {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 17px;
   flex: none;
-  font-size: 16px;
+  width: 33px;
+  height: 33px;
+  border: 1px solid #d6e5ef;
+  border-radius: 7px;
+  background: #edf5fb;
+  color: #216897;
+}
+.cs-background-context-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.cs-background-context-icon i {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+}
+.cs-background-context-menu strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cs-background-context-menu small {
+  display: block;
+  font-size: 9px;
+  color: #71879b;
+  margin-top: 3px;
 }
 .cs-background-context-menu hr {
   border: 0;
-  border-top: 1px solid #d3e0e9;
+  border-top: 1px solid #e2ebf1;
   margin: 4px;
 }
 @media (max-width: 480px) {
@@ -342,25 +405,4 @@
   .cs-background-panel-head {
     align-items: flex-start;
   }
-  .cs-background-canvas-swatches {
-    gap: 6px;
-  }
-}
-.cs-screen-label-color-presets {
-  display: flex;
-  gap: 7px;
-  margin: 9px 0;
-}
-.cs-screen-label-color-presets button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  font-size: 11px;
-}
-.cs-screen-label-color-presets button > span {
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 700;
 }

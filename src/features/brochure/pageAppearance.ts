@@ -60,7 +60,8 @@ export function resolvedPageAppearance(
   const saved = pageAppearanceFor(campaign, kind, page);
   const readability = pageBackgroundReadability(campaign, kind, page);
   const textColor =
-    validBackgroundColor(saved.textColor) || readability.foreground;
+    validBackgroundColor(saved.textColor) ||
+    (readability.light ? "#000000" : readability.foreground);
   const nativePrice = ["card", "compact"].includes(campaign.offerStyle || "")
     ? "card"
     : "current";

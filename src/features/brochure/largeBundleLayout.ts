@@ -1,5 +1,6 @@
 import type { Artwork, Product } from "../../domain/models";
 import { readableForeground } from "./backgroundContrast";
+import { parseColorInput } from "./parseColorInput";
 
 export interface BundlePanelRect {
   x: number;
@@ -182,7 +183,8 @@ export function reflowDefaultLargeBundleImages(
 }
 
 function color(value: unknown): string {
-  return typeof value === "string" && /^#[\da-f]{6}$/i.test(value)
+  return typeof value === "string" &&
+    /^#[\da-f]{6}(?:[\da-f]{2})?$/i.test(value)
     ? value.toLowerCase()
     : "";
 }
@@ -192,12 +194,13 @@ export function largeBundlePanelColors(
   override?: string,
 ): { background: string; foreground: string } {
   const base = color(pageColor) || "#245b89";
+  const rgba = parseColorInput(base)!.rgba;
   const background =
     color(override) ||
     "#" +
-      [1, 3, 5]
-        .map((offset) =>
-          Math.round(parseInt(base.slice(offset, offset + 2), 16) * 0.88)
+      (["r", "g", "b"] as const)
+        .map((key) =>
+          Math.round((rgba[key] * rgba.a + 255 * (1 - rgba.a)) * 0.88)
             .toString(16)
             .padStart(2, "0"),
         )

@@ -1,3 +1,5 @@
+import { ColorField } from "../brochure/ColorField";
+import { parseColorInput } from "../brochure/parseColorInput";
 import { CloseButton } from "../../components/CloseButton";
 import React, { useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -68,6 +70,7 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
+  const [textColor, setTextColor] = useState("#ffffff");
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -79,6 +82,11 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
       Image.configure({ allowBase64: true }),
     ],
     content: safeRichHtml(html),
+    onSelectionUpdate: ({ editor }) =>
+      setTextColor(
+        parseColorInput(editor.getAttributes("textStyle").color || "")?.hex ||
+          "#ffffff",
+      ),
     editorProps: {
       attributes: {
         role: "textbox",
@@ -187,21 +195,15 @@ export function RichTextModal({ html, onSave, onClose }: RichTextModalProps) {
           {button("Right", () =>
             editor?.chain().focus().setTextAlign("right").run(),
           )}
-          <label className="social-rich-color" title={t("Text color")}>
-            A
-            <input
-              type="color"
-              aria-label={t("Text color")}
-              defaultValue="#ffffff"
-              onInput={(event) =>
-                editor
-                  ?.chain()
-                  .focus()
-                  .setColor(event.currentTarget.value)
-                  .run()
-              }
-            />
-          </label>
+          <ColorField
+            compact
+            label={t("Text color")}
+            value={textColor}
+            onChange={(color) => {
+              setTextColor(color);
+              editor?.chain().setColor(color).run();
+            }}
+          />
           {button(
             "Link",
             () => setLinkOpen((open) => !open),

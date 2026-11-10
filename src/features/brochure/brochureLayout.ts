@@ -237,7 +237,16 @@ export function productPageChunk(
   const count = run.length
     ? fittingProductCount(run, layout, layoutCapacity(layout))
     : 0;
-  return { layout, products: run.slice(0, count) };
+  const selected = run.slice(0, count);
+  // Apply this after category runs are formed, so one remaining TV followed
+  // by one MacBook does not accidentally become a two-product composition.
+  return {
+    layout:
+      selected.length === 2 && !campaign.pages?.[pageIndex]?.layout
+        ? "pair2"
+        : layout,
+    products: selected,
+  };
 }
 
 function octoberProductGroup(product: Product) {

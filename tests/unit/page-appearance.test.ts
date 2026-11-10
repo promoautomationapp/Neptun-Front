@@ -10,7 +10,7 @@ it("keeps native preset choices until a smart background change, then matches ea
  const original=structuredClone(c.products);
  applyPageBackground(c,"product",0,{backgroundColor:"#f1f2f4"},"page");
  const light=resolvedPageAppearance(c,"product",{index:0,...c.pages?.["0"]});
- expect(light).toMatchObject({textColor:"#1c4075",brandColor:"#343534",screenLabelColor:"#1c4075",priceStyle:"card",light:true});
+ expect(light).toMatchObject({textColor:"#000000",brandColor:"#343534",screenLabelColor:"#000000",priceStyle:"card",light:true});
  expect(c.pages?.["1"]?.backgroundColor).toBe("#e4e4e4");
  expect(c.coverBackgroundColor).toBe("#1c4075");
  expect(c.products).toEqual(original);
@@ -43,7 +43,7 @@ it("page price defaults never override an explicit product choice or mutate the 
 });
 it("unreadable saved white text adapts on light pages while readable custom text remains editable",()=>{
  const c=campaign();applyPageBackground(c,"cover",undefined,{backgroundColor:"#ffffff"});
- expect(artworkTextColor(c,"cover","#ffffff")).toBe("#1c4075");
+ expect(artworkTextColor(c,"cover","#ffffff")).toBe("#000000");
  expect(artworkTextColor(c,"cover","#112233")).toBe("#112233");
  setPageAppearance(c,"cover",undefined,{textColor:"#ff3300"});expect(artworkTextColor(c,"cover","#112233")).toBe("#ff3300");
  expect(campaignSchema.safeParse({...c,pageAppearances:{cover:{textColor:"url(attack)"}}}).success).toBe(false);

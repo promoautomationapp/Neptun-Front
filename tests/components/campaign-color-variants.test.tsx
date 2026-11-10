@@ -22,6 +22,41 @@ const products: Product[] = ["GREEN", "GREY"].map((color, index) => ({
   specs: { Model: index === 0 ? "SM-A376BDGBEUC" : "SM-A376BZABEUC" },
 }));
 
+it("also collapses old slotless color snapshots on cover and directly supplied export pages in every design", () => {
+  for (const preset of builtInBrochurePresets) {
+    const legacy = products.map(
+      ({ brochurePage: _page, brochureOrder: _order, ...product }) => product,
+    );
+    const campaign: Campaign = {
+      ...preset.design,
+      id: preset.id,
+      name: "Old colors",
+      products: legacy,
+      includeStoresPage: false,
+      coverProductCodes: legacy.map((product) => product.code),
+    };
+    for (const element of [
+      <CoverPage campaign={campaign} />,
+      <ProductPage campaign={campaign} page={brochurePage(legacy)} />,
+    ]) {
+      const root = document.createElement("div");
+      root.innerHTML = renderToStaticMarkup(element);
+      expect(
+        root.querySelectorAll(".brochure-product"),
+        preset.id,
+      ).toHaveLength(1);
+      expect(
+        root.querySelectorAll(".brochure-color-dot"),
+        preset.id,
+      ).toHaveLength(2);
+      expect(
+        root.querySelector("[data-product-name]")?.textContent,
+        preset.id,
+      ).not.toMatch(/GREEN|GREY/);
+    }
+  }
+});
+
 it("shows one model, photo and shared price with two swatches in all five cover/interior designs", () => {
   for (const preset of builtInBrochurePresets) {
     const campaign: Campaign = {

@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import React from "react";
 import type {
   Campaign,
@@ -121,31 +122,34 @@ export function FooterDesignControls({
       <div className="cs-two-fields">
         <label>
           {t("Orange color")}
-          <input
-            type="color"
+          <ColorField
+            compact
+            label={t("Orange color")}
             value={design.from || "#f3432b"}
-            onChange={(event) => update("from", event.target.value)}
+            onChange={(color) => update("from", color)}
           />
         </label>
         {!design.fadeEnd && (
           <label>
             {t("End color")}
-            <input
-              type="color"
+            <ColorField
+              compact
+              label={t("End color")}
               value={design.to || "#205785"}
-              onChange={(event) => update("to", event.target.value)}
+              onChange={(color) => update("to", color)}
             />
           </label>
         )}
       </div>
       <label>
         {t("Text color")}
-        <input
-          type="color"
+        <ColorField
+          compact
+          label={t("Text color")}
           value={campaign.coverFooterColor || "#ffffff"}
-          onChange={(event) =>
+          onChange={(color) =>
             onUpdate((draft) => {
-              draft.coverFooterColor = event.target.value;
+              draft.coverFooterColor = color;
               draft.coverTextColorOverrides = {
                 ...draft.coverTextColorOverrides,
                 coverFooterColor: true,

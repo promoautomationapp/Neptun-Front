@@ -2590,38 +2590,16 @@ export function SocialStudio({
                           {artwork.type === "overlay" && (
                             <label className="social-layer-color-control">
                               {t("Color")}
-                              <span>
-                                <input
-                                  type="color"
-                                  aria-label={`${t("Layer color")}: ${name}`}
-                                  value={
-                                    validBackgroundColor(artwork.color) ||
-                                    "#1b4075"
-                                  }
-                                  onChange={(event) =>
-                                    changeLayer(artwork.id, {
-                                      color: event.target.value,
-                                    })
-                                  }
-                                />
-                                <input
-                                  type="text"
-                                  key={artwork.color}
-                                  defaultValue={artwork.color || "#1b4075"}
-                                  maxLength={7}
-                                  aria-label={`${t("Color code")}: ${name}`}
-                                  onBlur={(event) => {
-                                    const color = validBackgroundColor(
-                                      event.currentTarget.value,
-                                    );
-                                    if (color)
-                                      changeLayer(artwork.id, { color });
-                                    else
-                                      event.currentTarget.value =
-                                        artwork.color || "#1b4075";
-                                  }}
-                                />
-                              </span>
+                              <ColorField
+                                label={`${t("Layer color")}: ${name}`}
+                                value={
+                                  validBackgroundColor(artwork.color) ||
+                                  "#1b4075"
+                                }
+                                onChange={(color) =>
+                                  changeLayer(artwork.id, { color })
+                                }
+                              />
                             </label>
                           )}
                           <LayerOpacityControl

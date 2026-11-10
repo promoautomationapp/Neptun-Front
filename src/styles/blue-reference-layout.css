@@ -1,0 +1,332 @@
+/* The blue PRICE artwork carries its own composition in every preset.
+   These selectors deliberately use the effective price class, not October. */
+.brochure-page .brochure-product.blue-reference-offer {
+  --detail-copy-size: 1.12cqw;
+  --detail-copy-long-size: 0.95cqw;
+  --detail-metric-size: 1.12cqw;
+  --detail-number-size: 1.12cqw;
+  --detail-label-size: 1cqw;
+  --detail-text-weight: 300;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-product-bottom {
+  flex: none;
+  order: 3;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.7cqw;
+  height: 9.5cqw;
+  min-height: 9.5cqw;
+  border-bottom: 0;
+}
+.brochure-page .brochure-product.blue-reference-offer .brochure-product-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-weight: 300;
+  line-height: 1.18;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  .brochure-product-copy
+  > :is([data-product-name], .brochure-warranty-line) {
+  color: inherit;
+  font-family: SkolaSans, Arial, sans-serif;
+  font-size: 1.388889cqw;
+  font-weight: 300;
+  line-height: 1.18;
+  opacity: 1;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  .brochure-product-code[data-manual-code="true"] {
+  display: block;
+}
+/* Savings uses the existing artwork and saved coordinates unchanged. */
+.brochure-page
+  .brochure-product.blue-reference-offer:not(.details-left):not(.details-right)
+  > .brochure-product-image-wrap {
+  order: 0;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:not(.details-left):not(.details-right)
+  > .brochure-specs[data-detail-layout="strip"] {
+  order: 2;
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  gap: 0.9cqw;
+  width: 59%;
+  height: 3.7cqw;
+  min-height: 3.7cqw;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:not(.details-left):not(.details-right)
+  > .brochure-specs[data-detail-layout="strip"]
+  > .product-detail-block {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  max-width: none;
+  height: 3.7cqw;
+  min-height: 3.7cqw;
+  aspect-ratio: auto;
+  padding: 0.22cqw 0.3cqw;
+  border: 0.085cqw solid #003970;
+  border-radius: 0.42cqw;
+  background: transparent;
+  color: inherit;
+}
+.brochure-page:not(.light)
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block {
+  border-color: #d8e9f4;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block
+  > .detail-blue-reference {
+  display: block;
+  font:
+    300 var(--detail-copy-size)/1.15 SkolaSans,
+    Arial,
+    sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: pre-line;
+  color: inherit;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block
+  > .detail-blue-reference.detail-memory {
+  font-weight: 700;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block.detail-style-filled {
+  background: #fff;
+  color: #003970;
+}
+/* Compact vertical phone facts never inherit full-width strip geometry. The
+   saved frame remains authoritative once a user moves/resizes it. */
+.brochure-page
+  .brochure-product.blue-reference-offer:is(.details-left, .details-right)
+  > .brochure-specs[data-detail-layout]:not([data-detail-layout="strip"]):not(
+    [data-detail-frame-manual="true"]
+  ) {
+  position: absolute;
+  z-index: 6;
+  inset: 19% auto auto 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.25cqw;
+  width: 22% !important;
+  max-width: 22%;
+  height: 48%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:is(.details-left, .details-right)
+  > .brochure-specs[data-detail-layout]:not([data-detail-layout="strip"])
+  > .product-detail-block {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  min-height: 3.5cqw;
+  height: 3.5cqw;
+  aspect-ratio: auto;
+  margin: 0;
+  padding: 0.3cqw;
+  border: 0.085cqw solid #003970;
+  border-radius: 0.42cqw;
+  background: transparent;
+  color: inherit;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:is(.details-left, .details-right)
+  > .brochure-product-image-wrap {
+  order: 0;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:is(
+    .details-left,
+    .details-right
+  )[data-default-photo="true"]
+  .brochure-product-image {
+  width: 66%;
+  max-width: 66%;
+  height: 90%;
+  max-height: 90%;
+}
+/* Color alternatives belong below the photo, before either details or name. */
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-colors.blue-reference-colors {
+  position: relative;
+  inset: auto;
+  translate: none;
+  display: flex;
+  order: 1;
+  flex: none;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.5cqw;
+  width: max-content;
+  max-width: 100%;
+  min-height: 1.5cqw;
+  margin: 0.2cqw 0 0.6cqw;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  line-height: 1;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-colors.blue-reference-colors
+  > .brochure-color-dot {
+  display: block;
+  flex: none;
+  width: 1.4cqw;
+  height: 1.4cqw;
+  border: 0.07cqw solid #b6bec6;
+  border-radius: 50%;
+}
+/* First-row cover artwork uses the wider hero frame, not a secondary tile's
+   image cap. Manual photo positions and scales remain untouched. */
+.brochure-page.brochure-cover
+  .cover-product-frame.cover-featured-product
+  > .brochure-product.hero[data-default-photo="true"]
+  .brochure-product-image {
+  width: 82%;
+  max-width: 82%;
+  height: 96%;
+  max-height: 26cqw;
+}
+.brochure-page.brochure-cover
+  .cover-product-frame:not(.cover-featured-product)
+  > .brochure-product[data-default-photo="true"]
+  .brochure-product-image {
+  max-height: 18cqw;
+}
+.brochure-page.brochure-interior[data-blue-reference-page="true"]
+  > .brochure-products {
+  top: 11.5%;
+  bottom: 8.7%;
+}
+.brochure-page.brochure-interior[data-default-stacked-pair="true"]:not(
+    .custom-card-layout
+  )
+  > .brochure-products {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+}
+.brochure-page.brochure-interior[data-default-stacked-pair="true"]:not(
+    .custom-card-layout
+  )
+  > .brochure-products
+  > .brochure-product {
+  grid-column: 1 !important;
+  width: 72%;
+  justify-self: center;
+}
+
+.brochure-page.brochure-interior[data-blue-reference-page="true"]
+  .october-decoration {
+  position: absolute;
+  z-index: 8;
+}
+
+/* Mirrored side layout also supports a user's explicit right placement for a
+   red-price offer; manual width/translation overrides remain inline. */
+.brochure-page .brochure-product.details-right > .brochure-specs {
+  position: absolute;
+  z-index: 6;
+  inset: 19% 0 auto auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1.25cqw;
+  width: 22%;
+  height: 48%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+.brochure-page
+  .brochure-product.details-right
+  > .brochure-specs
+  > .product-detail-block {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3.5cqw;
+  min-height: 3.5cqw;
+  max-width: none;
+  aspect-ratio: auto;
+  padding: 0.3cqw;
+  border: 0.085cqw solid currentColor;
+  border-radius: 0.42cqw;
+  background: transparent;
+  color: inherit;
+}
+.brochure-page .brochure-product.details-right > .brochure-product-image-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.brochure-page
+  .brochure-product.details-right[data-default-photo="true"]
+  .brochure-product-image {
+  width: 66%;
+  max-width: 66%;
+  height: 90%;
+  max-height: 90%;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer.details-right
+  > .brochure-specs[data-detail-layout="right"]:not(
+    [data-detail-frame-manual="true"]
+  ) {
+  left: auto;
+  right: 0;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:not(.details-left):not(
+    .details-right
+  )[data-default-photo="true"]
+  .brochure-product-image {
+  top: var(--blue-reference-photo-center, 50%) !important;
+  height: var(--blue-reference-photo-height, 96%);
+  max-height: var(--blue-reference-photo-height, 96%);
+}

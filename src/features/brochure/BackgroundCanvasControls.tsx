@@ -7,6 +7,8 @@ import {
   validBackgroundGradient,
 } from "./pageBackground";
 import { ColorField } from "./ColorField";
+import { EditorIcon } from "./EditorIcon";
+import { PriceDesignChoices } from "./PriceDesignChoices";
 import { SCREEN_LABEL_COLOR_PRESETS } from "./screenLabelColors";
 import { GRADIENT_DIRECTIONS } from "./gradientDirections";
 import { t } from "./i18n";
@@ -63,7 +65,8 @@ export function isBackgroundCanvasTarget(
   return ["DIV", "SECTION", "MAIN", "ARTICLE"].includes(element.tagName);
 }
 
-type Panel = "color" | "gradient" | "appearance" | null;
+type Panel = "color" | "gradient" | "appearance" | "price" | null;
+type ColorKey = "textColor" | "brandColor" | "screenLabelColor";
 type OpenState = {
   x: number;
   y: number;
@@ -89,7 +92,8 @@ export function BackgroundCanvasControls({
   const host = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<OpenState | null>(null);
   const [position, setPosition] = useState({ left: 8, top: 8, ready: false });
-  const [advanced, setAdvanced] = useState(false);
+  const [editingColor, setEditingColor] = useState<ColorKey | null>(null);
+  const [gradientStop, setGradientStop] = useState<"from" | "to">("from");
   const selected = validBackgroundColor(color) || "#1c4075";
   const activeGradient = validBackgroundGradient(gradient) || {
     from: selected,
@@ -109,7 +113,7 @@ export function BackgroundCanvasControls({
 
   useEffect(() => {
     setOpen(null);
-    setAdvanced(false);
+    setEditingColor(null);
   }, [pageKey, enabled]);
   useEffect(() => {
     const container = containerRef.current;
@@ -122,7 +126,7 @@ export function BackgroundCanvasControls({
         return;
       if (event.type === "click" && event.button !== 0) return;
       if (event.type === "contextmenu") event.preventDefault();
-      setAdvanced(false);
+      setEditingColor(null);
       setOpen({
         x: event.clientX,
         y: event.clientY + 10,
@@ -212,7 +216,7 @@ export function BackgroundCanvasControls({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [open, advanced]);
+  }, [open, editingColor]);
   useEffect(() => {
     if (open?.menu)
       host.current
@@ -254,6 +258,35 @@ export function BackgroundCanvasControls({
     : gradient
       ? `linear-gradient(${activeGradient.angle}deg,${activeGradient.from},${activeGradient.to})`
       : selected;
+  const colorOptions = [
+    {
+      key: "textColor" as const,
+      label: "Text color",
+      hint: "Product names and details",
+      sample: "Aa",
+    },
+    {
+      key: "brandColor" as const,
+      label: "Logo color",
+      hint: "Product brand logos",
+      sample: "N",
+    },
+    {
+      key: "screenLabelColor" as const,
+      label: "Screen label color",
+      hint: "Inch labels and arrows",
+      sample: "6.7″",
+    },
+  ];
+  const editorLabel =
+    colorOptions.find((option) => option.key === editingColor)?.label ||
+    "Text color";
+  const heading =
+    open.panel === "price"
+      ? "Price design"
+      : open.panel === "appearance"
+        ? "Text & logos"
+        : "Page background";
   return createPortal(
     <div
       ref={host}
@@ -301,33 +334,49 @@ export function BackgroundCanvasControls({
           <button
             type="button"
             role="menuitem"
+            aria-label={t("Change background of this page")}
             onClick={() => panel("color", "page")}
           >
-            <span
-              className="cs-background-menu-swatch"
-              style={{ background: fill }}
-            />
-            {t("Change background of this page")}
+            <span className="cs-background-context-icon" aria-hidden="true">
+              <EditorIcon name="page" />
+              <i style={{ background: fill }} />
+            </span>
+            <span>
+              <strong>{t("Change background of this page")}</strong>
+              <small>{t("Only the selected page")}</small>
+            </span>
           </button>
           <button
             type="button"
             role="menuitem"
+            aria-label={t("Change background of all pages")}
             onClick={() => panel("color", "all")}
           >
-            <span aria-hidden="true">▧</span>
-            {t("Change background of all pages")}
+            <span className="cs-background-context-icon" aria-hidden="true">
+              <EditorIcon name="pages" />
+            </span>
+            <span>
+              <strong>{t("Change background of all pages")}</strong>
+              <small>{t("Use the same background throughout")}</small>
+            </span>
           </button>
           <hr />
           <button
             type="button"
             role="menuitem"
+            aria-label={t("Change brochure design")}
             onClick={() => {
               setOpen(null);
               callbacks.current.onChangeDesign();
             }}
           >
-            <span aria-hidden="true">▦</span>
-            {t("Change brochure design")}
+            <span className="cs-background-context-icon" aria-hidden="true">
+              <EditorIcon name="layout" />
+            </span>
+            <span>
+              <strong>{t("Change brochure design")}</strong>
+              <small>{t("Choose another default layout")}</small>
+            </span>
           </button>
         </div>
       ) : (
@@ -340,8 +389,9 @@ export function BackgroundCanvasControls({
             <button
               type="button"
               aria-label={t("Background color")}
-              title={t("Background color")}
-              aria-expanded={open.panel === "color"}
+              aria-expanded={
+                open.panel === "color" || open.panel === "gradient"
+              }
               onClick={() => panel("color")}
             >
               <i
@@ -352,23 +402,21 @@ export function BackgroundCanvasControls({
             </button>
             <button
               type="button"
-              aria-label={t("Gradient")}
-              title={t("Gradient")}
-              aria-expanded={open.panel === "gradient"}
-              onClick={() => panel("gradient")}
-            >
-              <i className="cs-background-gradient-icon" />
-              <span>{t("Gradient")}</span>
-            </button>
-            <button
-              type="button"
               aria-label={t("Text & logos")}
-              title={t("Text & logos")}
               aria-expanded={open.panel === "appearance"}
               onClick={() => panel("appearance")}
             >
-              <b>Aa</b>
-              <span>{t("Appearance")}</span>
+              <EditorIcon name="palette" />
+              <span>{t("Colors")}</span>
+            </button>
+            <button
+              type="button"
+              aria-label={t("Price design")}
+              aria-expanded={open.panel === "price"}
+              onClick={() => panel("price")}
+            >
+              <EditorIcon name="price" />
+              <span>{t("Price design")}</span>
             </button>
             <span className="cs-background-toolbar-divider" />
             <button
@@ -392,7 +440,7 @@ export function BackgroundCanvasControls({
                 )
               }
             >
-              <span aria-hidden="true">▧</span>
+              <EditorIcon name="pages" />
               <span>{t("All pages")}</span>
             </button>
             <button
@@ -401,30 +449,16 @@ export function BackgroundCanvasControls({
               aria-label={t("Close background controls")}
               onClick={() => setOpen(null)}
             >
-              ×
+              <EditorIcon name="close" />
             </button>
           </div>
           {open.panel && (
             <section
               className="cs-background-canvas-panel"
-              aria-label={t(
-                open.panel === "appearance"
-                  ? "Page appearance"
-                  : open.panel === "gradient"
-                    ? "Gradient"
-                    : "Background color",
-              )}
+              aria-label={t(heading)}
             >
               <div className="cs-background-panel-head">
-                <strong>
-                  {t(
-                    open.panel === "appearance"
-                      ? "Page appearance"
-                      : open.panel === "gradient"
-                        ? "Gradient"
-                        : "Background color",
-                  )}
-                </strong>
+                <strong>{t(heading)}</strong>
                 <small>
                   {t(
                     scope === "all"
@@ -433,31 +467,50 @@ export function BackgroundCanvasControls({
                   )}
                 </small>
               </div>
+              {(open.panel === "color" || open.panel === "gradient") && (
+                <div
+                  className="cs-background-fill-tabs"
+                  role="tablist"
+                  aria-label={t("Background fill")}
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={open.panel === "color"}
+                    onClick={() =>
+                      setOpen((current) =>
+                        current ? { ...current, panel: "color" } : null,
+                      )
+                    }
+                  >
+                    <span
+                      className="cs-background-menu-swatch"
+                      style={{ background: selected }}
+                    />
+                    {t("Solid color")}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={open.panel === "gradient"}
+                    onClick={() =>
+                      setOpen((current) =>
+                        current ? { ...current, panel: "gradient" } : null,
+                      )
+                    }
+                  >
+                    <span className="cs-background-gradient-icon" />
+                    {t("Gradient")}
+                  </button>
+                </div>
+              )}
               {open.panel === "color" && (
                 <>
-                  <div
-                    className="cs-background-canvas-swatches"
-                    role="group"
-                    aria-label={t("Page background presets")}
-                  >
-                    {BACKGROUND_PRESETS.map((preset) => (
-                      <button
-                        type="button"
-                        key={preset.color}
-                        style={{ background: preset.color }}
-                        aria-label={`${t(preset.label)} ${preset.color}`}
-                        aria-pressed={
-                          !image &&
-                          !gradient &&
-                          preset.color.toLowerCase() === selected.toLowerCase()
-                        }
-                        title={t(preset.label)}
-                        onClick={() => chooseColor(preset.color)}
-                      />
-                    ))}
-                  </div>
                   <ColorField
+                    inline
                     label={t("Background color")}
+                    presetsLabel={t("Page background presets")}
+                    colors={BACKGROUND_PRESETS.map((preset) => preset.color)}
                     value={selected}
                     onChange={chooseColor}
                   />
@@ -474,28 +527,42 @@ export function BackgroundCanvasControls({
                       background: `linear-gradient(${activeGradient.angle}deg,${activeGradient.from},${activeGradient.to})`,
                     }}
                   />
-                  <div className="cs-background-gradient-fields">
-                    <label>
-                      <span>{t("From")}</span>
-                      <ColorField
-                        label={t("Gradient start")}
-                        value={activeGradient.from}
-                        onChange={(value) =>
-                          chooseGradient({ ...activeGradient, from: value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      <span>{t("To")}</span>
-                      <ColorField
-                        label={t("Gradient end")}
-                        value={activeGradient.to}
-                        onChange={(value) =>
-                          chooseGradient({ ...activeGradient, to: value })
-                        }
-                      />
-                    </label>
+                  <div
+                    className="cs-background-gradient-stops"
+                    role="group"
+                    aria-label={t("Gradient colors")}
+                  >
+                    {(["from", "to"] as const).map((stop) => (
+                      <button
+                        type="button"
+                        key={stop}
+                        aria-pressed={gradientStop === stop}
+                        onClick={() => setGradientStop(stop)}
+                      >
+                        <i style={{ background: activeGradient[stop] }} />
+                        <span>
+                          {t(stop === "from" ? "From" : "To")}
+                          <small>{activeGradient[stop].toUpperCase()}</small>
+                        </span>
+                      </button>
+                    ))}
                   </div>
+                  <ColorField
+                    inline
+                    label={t(
+                      gradientStop === "from"
+                        ? "Gradient start"
+                        : "Gradient end",
+                    )}
+                    value={activeGradient[gradientStop]}
+                    colors={[]}
+                    onChange={(value) =>
+                      chooseGradient({
+                        ...activeGradient,
+                        [gradientStop]: value,
+                      })
+                    }
+                  />
                   <div
                     className="cs-background-canvas-directions"
                     role="group"
@@ -533,120 +600,95 @@ export function BackgroundCanvasControls({
                   <p className="cs-background-automatic-note">
                     {t("Readable colors are selected for this background.")}
                   </p>
-                  <div className="cs-background-appearance-summary">
-                    {(
-                      [
-                        ["textColor", "Text"],
-                        ["brandColor", "Logos"],
-                        ["screenLabelColor", "Screen labels"],
-                      ] as const
-                    ).map(([key, label]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        title={t("Advanced colors")}
-                        onClick={() => setAdvanced(true)}
-                      >
-                        <i style={{ background: appearance[key] }} />
-                        <span>{t(label)}</span>
-                        <small>{appearance[key].toUpperCase()}</small>
-                      </button>
-                    ))}
-                  </div>
-                  <div
-                    className="cs-background-price-choices"
-                    role="group"
-                    aria-label={t("Price design")}
-                  >
-                    {(["current", "card"] as const).map((style) => (
+                  <div className="cs-background-color-rows">
+                    {colorOptions.map((option) => (
                       <button
                         type="button"
-                        key={style}
-                        aria-pressed={appearance.priceStyle === style}
-                        aria-label={t(
-                          style === "current"
-                            ? "Red haPPy offer"
-                            : "Blue price card",
-                        )}
+                        key={option.key}
+                        aria-label={t(option.label)}
+                        aria-expanded={editingColor === option.key}
                         onClick={() =>
-                          callbacks.current.onAppearanceChange(
-                            { priceStyle: style },
-                            scope,
+                          setEditingColor((current) =>
+                            current === option.key ? null : option.key,
                           )
                         }
                       >
-                        <span className={`cs-background-price-mini ${style}`}>
-                          <del>399€</del>
-                          <b>299€</b>
-                          <small>12×24.9€</small>
-                        </span>
-                        <span>
-                          {t(
-                            style === "current"
-                              ? "Red haPPy offer"
-                              : "Blue price card",
-                          )}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div
-                    className="cs-screen-label-color-presets"
-                    role="group"
-                    aria-label={t("Screen label color")}
-                  >
-                    {SCREEN_LABEL_COLOR_PRESETS.map((preset) => (
-                      <button
-                        key={preset.color}
-                        type="button"
-                        aria-label={t(preset.name)}
-                        title={t(preset.name)}
-                        aria-pressed={
-                          appearance.screenLabelColor === preset.color
-                        }
-                        onClick={() =>
-                          appearanceColor("screenLabelColor", preset.color)
-                        }
-                      >
                         <span
+                          className="cs-background-color-example"
                           style={{
-                            background: preset.background,
-                            color: preset.color,
+                            background: fill,
+                            color: appearance[option.key],
                           }}
                         >
-                          6.7″ ↴
+                          {option.sample}
                         </span>
-                        {t(preset.color === "#ffffff" ? "White" : "Black")}
+                        <span>
+                          <strong>{t(option.label)}</strong>
+                          <small>{t(option.hint)}</small>
+                        </span>
+                        <i
+                          style={{ backgroundColor: appearance[option.key] }}
+                        />
+                        <EditorIcon name="chevron-down" />
                       </button>
                     ))}
                   </div>
-                  <button
-                    type="button"
-                    className="cs-background-advanced-toggle"
-                    aria-expanded={advanced}
-                    onClick={() => setAdvanced((value) => !value)}
-                  >
-                    {t("Advanced colors")}{" "}
-                    <span aria-hidden="true">{advanced ? "⌃" : "⌄"}</span>
-                  </button>
-                  {advanced && (
-                    <div className="cs-background-advanced-colors">
-                      {(
-                        [
-                          ["textColor", "Text color"],
-                          ["brandColor", "Logo color"],
-                          ["screenLabelColor", "Screen label color"],
-                        ] as const
-                      ).map(([key, label]) => (
-                        <label key={key}>
-                          <span>{t(label)}</span>
-                          <ColorField
-                            label={t(label)}
-                            value={appearance[key]}
-                            onChange={(value) => appearanceColor(key, value)}
-                          />
-                        </label>
-                      ))}
+                  {editingColor && (
+                    <div className="cs-background-inline-color">
+                      <div className="cs-background-color-editor-head">
+                        <strong>{t(editorLabel)}</strong>
+                        <button
+                          type="button"
+                          onClick={() => setEditingColor(null)}
+                        >
+                          {t("Done")}
+                        </button>
+                      </div>
+                      {editingColor === "screenLabelColor" && (
+                        <div
+                          className="cs-screen-label-color-presets"
+                          role="group"
+                          aria-label={t("Screen label color")}
+                        >
+                          {SCREEN_LABEL_COLOR_PRESETS.map((preset) => (
+                            <button
+                              key={preset.color}
+                              type="button"
+                              aria-label={t(preset.name)}
+                              aria-pressed={
+                                appearance.screenLabelColor === preset.color
+                              }
+                              onClick={() =>
+                                appearanceColor(
+                                  "screenLabelColor",
+                                  preset.color,
+                                )
+                              }
+                            >
+                              <span
+                                style={{
+                                  background: preset.background,
+                                  color: preset.color,
+                                }}
+                              >
+                                6.7″ ↴
+                              </span>
+                              {t(
+                                preset.color === "#ffffff" ? "White" : "Black",
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <ColorField
+                        key={editingColor}
+                        inline
+                        label={t(editorLabel)}
+                        value={appearance[editingColor]}
+                        onChange={(value) =>
+                          appearanceColor(editingColor, value)
+                        }
+                      />
                     </div>
                   )}
                   <button
@@ -658,7 +700,6 @@ export function BackgroundCanvasControls({
                           textColor: undefined,
                           brandColor: undefined,
                           screenLabelColor: undefined,
-                          priceStyle: "auto",
                         },
                         scope,
                       )
@@ -666,6 +707,24 @@ export function BackgroundCanvasControls({
                   >
                     {t("Use automatic colors")}
                   </button>
+                </>
+              )}
+              {open.panel === "price" && (
+                <>
+                  <PriceDesignChoices
+                    value={appearance.priceStyle}
+                    onChange={(priceStyle) =>
+                      callbacks.current.onAppearanceChange(
+                        { priceStyle },
+                        scope,
+                      )
+                    }
+                  />
+                  <p className="cs-background-automatic-note">
+                    {t(
+                      "Choose a default price design. Product prices stay the same.",
+                    )}
+                  </p>
                 </>
               )}
             </section>

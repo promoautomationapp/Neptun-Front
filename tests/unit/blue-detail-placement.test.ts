@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import type { Campaign, Product } from "../../src/domain/models";
 import { defaultProductDetailPlacement } from "../../src/features/brochure/mobileDetails";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
+import { defaultPhotoPlacement } from "../../src/features/settings/product-design-defaults";
 
 const blue = (
   placement: "left" | "bottom",
@@ -80,4 +81,33 @@ it("preserves deliberate per-product placement and first-preset workspace defaul
   expect(defaultProductDetailPlacement({ name: "Soundbar S40T" }, first)).toBe(
     "left",
   );
+});
+
+it("supports a deliberate right stack in every preset and mirrors only an automatic photo", () => {
+  const phone = { name: "Samsung Galaxy A57", detailPlacement: "right" };
+  expect(defaultProductDetailPlacement(phone, blue("bottom"))).toBe("right");
+  expect(defaultPhotoPlacement(phone, {}, "right").x).toBe(37);
+  const productDesign = resolveSettings(null).productDesign;
+  productDesign.details.placement = "right";
+  expect(
+    defaultProductDetailPlacement({ name: "Soundbar" }, { productDesign }),
+  ).toBe("right");
+  expect(
+    defaultProductDetailPlacement(
+      { name: "Galaxy A37" },
+      { ...blue("left"), productDesign },
+    ),
+  ).toBe("right");
+  productDesign.photo = {
+    ...productDesign.photo,
+    mode: "custom",
+    x: 44,
+    y: 55,
+    scale: 1.2,
+  };
+  expect(defaultPhotoPlacement(phone, { productDesign }, "right")).toEqual({
+    x: 44,
+    y: 55,
+    scale: 1.2,
+  });
 });

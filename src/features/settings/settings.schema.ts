@@ -14,11 +14,11 @@ const json: z.ZodType<Value> = z.lazy(() =>
   ]),
 );
 const text = z.string().max(20000);
-const color = z.union([z.literal(""), z.string().regex(/^#[0-9a-f]{6}$/i)]);
+const color = z.union([z.literal(""), z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)]);
 export const pageAppearanceSchema = z.object({
-  textColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
-  brandColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
-  screenLabelColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
+  textColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
+  brandColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
+  screenLabelColor: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i).optional(),
   priceStyle: z.enum(["auto", "current", "card"]).optional(),
 });
 export const pageAppearancesSchema = z.record(
@@ -51,8 +51,8 @@ const source = z.union([
     ),
 ]);
 const gradient = z.object({
-  from: z.string().regex(/^#[0-9a-f]{6}$/i),
-  to: z.string().regex(/^#[0-9a-f]{6}$/i),
+  from: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+  to: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
   angle: z.number().min(0).max(360),
 });
 const ribbonColors = gradient.pick({ from: true, to: true });
@@ -101,7 +101,7 @@ export const productDesignSchema = z.object({
     .prefault({}),
   details: z
     .object({
-      placement: z.enum(["automatic", "left", "bottom"]).default("automatic"),
+      placement: z.enum(["automatic", "left", "right", "bottom"]).default("automatic"),
       fill: z.enum(["automatic", "filled", "outline"]).default("automatic"),
     })
     .prefault({}),
@@ -170,10 +170,10 @@ export const brochureDefaultsSchema = z
     customPriceLogo: source.default(""),
     pricePalette: z
       .object({
-        red: z.string().regex(/^#[0-9a-f]{6}$/i),
-        blue: z.string().regex(/^#[0-9a-f]{6}$/i),
-        blueBand: z.string().regex(/^#[0-9a-f]{6}$/i),
-        saving: z.string().regex(/^#[0-9a-f]{6}$/i),
+        red: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+        blue: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+        blueBand: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+        saving: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
       })
       .prefault(defaults.brochure.pricePalette),
     installments: z.number().int().min(1).max(60).default(12),
@@ -419,7 +419,7 @@ export const workspaceSettingsSchema = z
           .superRefine((rule, ctx) => {
             if (
               rule.background === "color" &&
-              !/^#[0-9a-f]{6}$/i.test(rule.color)
+              !/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(rule.color)
             )
               ctx.addIssue({
                 code: "custom",

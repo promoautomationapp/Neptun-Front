@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import { FileUpload } from "../../components/FileUpload";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
@@ -320,13 +321,11 @@ export function PageLayersControls({
               {selected.shadow && (
                 <label>
                   {t("Shadow color")}
-                  <input
-                    type="color"
-                    aria-label={t("Page image shadow color")}
+                  <ColorField
+                    compact
+                    label={t("Page image shadow color")}
                     value={selected.shadowColor || "#1c4075"}
-                    onChange={(event) =>
-                      change({ shadowColor: event.target.value })
-                    }
+                    onChange={(color) => change({ shadowColor: color })}
                   />
                 </label>
               )}
@@ -407,17 +406,6 @@ export function PageLayersControls({
   );
 }
 
-function normalizedHex(value: string) {
-  const candidate = value.trim().replace(/^#/, "");
-  if (/^[a-f0-9]{6}$/i.test(candidate)) return `#${candidate.toLowerCase()}`;
-  if (/^[a-f0-9]{3}$/i.test(candidate))
-    return `#${[...candidate]
-      .map((character) => character.repeat(2))
-      .join("")
-      .toLowerCase()}`;
-  return "";
-}
-
 function LayerColorControl({
   value,
   onChange,
@@ -425,57 +413,14 @@ function LayerColorControl({
   value: string;
   onChange: (color: string) => void;
 }) {
-  const color = normalizedHex(value) || "#1c4075";
-  const [draft, setDraft] = React.useState(color);
-  React.useEffect(() => setDraft(color), [color]);
   return (
     <fieldset className="cs-page-layer-color">
       <legend>{t("Color")}</legend>
-      <div>
-        <input
-          type="color"
-          value={color}
-          aria-label={t("Page layer color")}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            onChange(event.target.value);
-          }}
-        />
-        <label>
-          <span>{t("Color code")}</span>
-          <input
-            type="text"
-            value={draft}
-            maxLength={7}
-            spellCheck={false}
-            autoComplete="off"
-            aria-label={t("Page layer color code")}
-            aria-invalid={Boolean(draft) && !normalizedHex(draft)}
-            onChange={(event) => {
-              const next = event.target.value;
-              setDraft(next);
-              const valid = /^#?[a-f0-9]{6}$/i.test(next.trim())
-                ? normalizedHex(next)
-                : "";
-              if (valid) onChange(valid);
-            }}
-            onBlur={() => {
-              const valid = normalizedHex(draft);
-              if (valid) {
-                setDraft(valid);
-                if (valid !== color) onChange(valid);
-              } else setDraft(color);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                event.currentTarget.blur();
-              }
-            }}
-          />
-        </label>
-      </div>
-      <small>{t("Choose a color or enter its code, such as #1B4075.")}</small>
+      <ColorField
+        label={t("Page layer color")}
+        value={value || "#1c4075"}
+        onChange={onChange}
+      />
     </fieldset>
   );
 }

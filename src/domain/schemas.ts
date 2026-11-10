@@ -51,11 +51,11 @@ export const brochureFooterSchema = z.object({
   paymentSize: z.number().min(0.7).max(3).optional(),
   from: z
     .string()
-    .regex(/^#[0-9a-f]{6}$/i)
+    .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
     .optional(),
   to: z
     .string()
-    .regex(/^#[0-9a-f]{6}$/i)
+    .regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i)
     .optional(),
 });
 export const campaignSchema = z
@@ -69,8 +69,8 @@ export const campaignSchema = z
     coverBrandTagline: z.string().max(500).optional(),
     coverRibbonColors: z
       .object({
-        from: z.string().regex(/^#[0-9a-f]{6}$/i),
-        to: z.string().regex(/^#[0-9a-f]{6}$/i),
+        from: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
+        to: z.string().regex(/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i),
       })
       .optional(),
     brochureVisualStyle: z.enum(["current", "october"]).optional(),

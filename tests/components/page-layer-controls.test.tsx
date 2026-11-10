@@ -241,11 +241,12 @@ it("updates a color layer from a custom hex or swatch without saving incomplete 
   const save = vi.fn();
   const view = render(<Workspace empty onSave={save} />);
   fireEvent.click(view.getByRole("button", { name: "Add color layer" }));
-  const hex = view.getByRole("textbox", { name: "Page layer color code" });
+  fireEvent.click(view.getByRole("button", { name: /^Page layer color:/ }));
+  const hex = view.getByRole("textbox", { name: "Page layer color hex code" });
   save.mockClear();
-  for (const value of ["#", "#2", "#23", "#234", "#2341", "#23417"]) {
+  for (const value of ["#", "#2", "#23", "#23417"]) {
     fireEvent.change(hex, { target: { value } });
-    expect((hex as HTMLInputElement).value).toBe(value);
+    expect((hex as HTMLInputElement).value).toBe(value.toUpperCase());
   }
   expect(save).not.toHaveBeenCalled();
   fireEvent.change(hex, { target: { value: "#234173" } });
@@ -253,19 +254,20 @@ it("updates a color layer from a custom hex or swatch without saving incomplete 
     (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[0]?.color,
   ).toBe("#234173");
   expect(
-    (view.getByLabelText("Page layer color") as HTMLInputElement).value,
-  ).toBe("#234173");
+    view
+      .getByRole("button", { name: "Page layer color: #234173" })
+      .getAttribute("aria-expanded"),
+  ).toBe("true");
   save.mockClear();
   fireEvent.change(hex, { target: { value: "#ZZZZZZ" } });
   expect(hex.getAttribute("aria-invalid")).toBe("true");
   fireEvent.blur(hex);
   expect((hex as HTMLInputElement).value).toBe("#234173");
   expect(save).not.toHaveBeenCalled();
-  fireEvent.change(view.getByLabelText("Page layer color"), {
-    target: { value: "#e64e3a" },
-  });
+  fireEvent.change(hex, { target: { value: "rgba(230, 78, 58, 1)" } });
   expect(
     (save.mock.lastCall?.[0] as Campaign).pageArtworks?.cover?.[0]?.color,
   ).toBe("#e64e3a");
-  expect((hex as HTMLInputElement).value).toBe("#e64e3a");
+  fireEvent.blur(hex);
+  expect((hex as HTMLInputElement).value).toBe("#E64E3A");
 });

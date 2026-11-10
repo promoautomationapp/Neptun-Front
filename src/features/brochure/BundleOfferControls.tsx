@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import React, { useState } from "react";
 import type { Campaign, Product } from "../../domain/models";
 import { ImageUploadButton } from "./ImageUploadButton";
@@ -58,11 +59,11 @@ export function BundleOfferControls({ product, campaign, onChange }: Props) {
       </p>
       <label>
         {t("Panel color")}{" "}
-        <input
-          aria-label={t("Set panel color")}
-          type="color"
+        <ColorField
+          compact
+          label={t("Set panel color")}
           value={panelColor}
-          onChange={(event) => onChange("bundlePanelColor", event.target.value)}
+          onChange={(color) => onChange("bundlePanelColor", color)}
         />
       </label>
       <button

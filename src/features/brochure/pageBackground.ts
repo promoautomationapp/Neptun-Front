@@ -8,6 +8,7 @@ import { coverProducts, splitPages } from "./campaignPages";
 import {
   backgroundReadability,
   readableForeground,
+  blendBackgroundColors,
 } from "./backgroundContrast";
 import type { BackgroundContext } from "./backgroundContrast";
 export const BACKGROUND_PRESETS = [
@@ -27,7 +28,8 @@ export type BackgroundPage = Pick<
   "backgroundColor" | "backgroundGradient" | "backgroundImage"
 >;
 export function validBackgroundColor(value: unknown): string {
-  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+  return typeof value === "string" &&
+    /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value)
     ? value.toLowerCase()
     : "";
 }
@@ -133,20 +135,7 @@ export function pageBackgroundContrastColor(
 ) {
   const gradient = pageBackgroundGradient(campaign, kind, page);
   if (!gradient) return pageBackgroundColor(campaign, kind, page);
-  const channel = (hex: string, offset: number) =>
-    parseInt(hex.slice(offset, offset + 2), 16);
-  return (
-    "#" +
-    [1, 3, 5]
-      .map((offset) =>
-        Math.round(
-          (channel(gradient.from, offset) + channel(gradient.to, offset)) / 2,
-        )
-          .toString(16)
-          .padStart(2, "0"),
-      )
-      .join("")
-  );
+  return blendBackgroundColors(gradient.from, gradient.to, 0.5);
 }
 export function lightBackground(value: unknown) {
   const hex = validBackgroundColor(value);

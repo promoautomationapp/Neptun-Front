@@ -17,7 +17,7 @@ export function coverTextColor(
   if (hasPageAppearance(campaign, "cover")) return resolvedPageAppearance(campaign, "cover").textColor;
   const value = campaign[field];
   if (
-    /^#[0-9a-f]{6}$/i.test(value || "") &&
+    /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value || "") &&
     (campaign.coverTextColorOverrides?.[field] ||
       value?.toLowerCase() !== "#ffffff")
   )

@@ -53,7 +53,7 @@ export function coverGradientFill(
 ) {
   const value = campaign.coverOverlayGradient || {};
   const color = (value: string | undefined, fallback: string) =>
-    /^#[\da-f]{6}$/i.test(value || "") ? value : fallback;
+    /^#[\da-f]{6}(?:[\da-f]{2})?$/i.test(value || "") ? value : fallback;
   return `linear-gradient(${Number.isFinite(Number(value.angle)) ? Number(value.angle) : 90}deg, ${color(value.from, "#0d5192")}, ${color(value.to, "#58a5ce")})`;
 }
 
@@ -62,7 +62,7 @@ export function coverRibbonColors(
   campaign: Pick<Campaign, "coverRibbonColors">,
 ) {
   const color = (value: string | undefined, fallback: string) =>
-    /^#[\da-f]{6}$/i.test(value || "") ? value! : fallback;
+    /^#[\da-f]{6}(?:[\da-f]{2})?$/i.test(value || "") ? value! : fallback;
   return {
     from: color(campaign.coverRibbonColors?.from, "#144c83"),
     to: color(campaign.coverRibbonColors?.to, "#70acdc"),
@@ -190,6 +190,17 @@ export function coverProductPlacement(
       count,
       count,
     );
+  if (count === 2 && campaign.coverProductLayoutManual !== true) {
+    const area = band
+      ? {
+          x: 4,
+          y: isOctoberBrochure(campaign) ? 56.8 : 54,
+          width: 92,
+          height: isOctoberBrochure(campaign) ? 35.2 : 38,
+        }
+      : { x: 5, y: 28, width: 90, height: 66 };
+    return gridPlacement(area, index, count, 1);
+  }
   if (band && count > 2) {
     const area = isOctoberBrochure(campaign)
       ? { x: 3.85, y: 56.8, width: 92.5, height: 35.2 }

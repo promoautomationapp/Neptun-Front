@@ -1,4 +1,4 @@
-import { SearchableSelect } from "../../components/SearchableSelect";
+import { DetailsPlacementChoices } from "./DetailsPlacementChoices";
 import React from "react";
 import type { Campaign, Product } from "../../domain/models";
 import {
@@ -71,19 +71,13 @@ export function ProductLayoutControls({
   return (
     <section className="cs-product-layout-controls">
       <h4>{t("Position & size")}</h4>
-      <label className="cs-details-placement">
-        <span>{t("Product details")}</span>
-        <SearchableSelect
-          value={defaultProductDetailPlacement(product, campaign)}
-          onChange={(event) => onChange("detailPlacement", event.target.value)}
-        >
-          <option value="left">{t("Left of image")}</option>
-          <option value="bottom">{t("Below image")}</option>
-        </SearchableSelect>
-      </label>
+      <DetailsPlacementChoices
+        value={defaultProductDetailPlacement(product, campaign)}
+        onChange={(value) => onChange("detailPlacement", value)}
+      />
       <p>
         {t(
-          "Drag the details handle to the left or bottom of the photo. Move, resize or delete each block on the page.",
+          "Drag the details handle to the left, right or bottom of the photo. Move, resize or delete each block on the page.",
         )}
       </p>
       <strong>{t("Product photo")}</strong>

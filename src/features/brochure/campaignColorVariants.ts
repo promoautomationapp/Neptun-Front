@@ -4,6 +4,40 @@ import {
   displayVariantName,
   productImportColor,
 } from "./importedColorVariants";
+import { parseBrochurePosition } from "./brochureImport";
+import { normalize } from "./utils";
+
+const positionNumber = (value: unknown, minimum: number) => {
+  if (value === undefined || value === null || value === "") return undefined;
+  const number = Number(value);
+  return Number.isInteger(number) && number >= minimum && number <= 999
+    ? number
+    : undefined;
+};
+
+/** Older snapshots retained the worksheet cell but lost the typed slot fields.
+ * Recover missing fields only; a later explicit page move remains authoritative. */
+function retainedColorSlot(product: Product): Product {
+  const page = positionNumber(product.brochurePage, 1);
+  const order = positionNumber(product.brochureOrder, 0);
+  const cell = Object.entries(product.excelSource?.cells || {}).find(([key]) =>
+    /^(?:brochure\s*position|position|pozicion(?:i)?(?:\s+i\s+broshures)?)$/.test(
+      normalize(key).trim(),
+    ),
+  );
+  const source = parseBrochurePosition(cell?.[1]);
+  const nextPage = page ?? source?.page;
+  const nextOrder =
+    order ??
+    (source && (!page || page === source.page) ? source.order : undefined);
+  if (nextPage === product.brochurePage && nextOrder === product.brochureOrder)
+    return product;
+  return {
+    ...product,
+    ...(nextPage === undefined ? {} : { brochurePage: nextPage }),
+    ...(nextOrder === undefined ? {} : { brochureOrder: nextOrder }),
+  };
+}
 
 const variantColor = (product: Product) =>
   productImportColor(product) ||
@@ -14,21 +48,29 @@ const variantColor = (product: Product) =>
  * bundle members. A single-model group is recoverable only when the source
  * slot and shared one-item price agree; a true multi-unit bundle stays intact. */
 function legacyColorChoice(product: Product): Product {
-  const members = product.bundleProducts;
+  const members = product.bundleProducts?.map(retainedColorSlot);
+  const page =
+    product.brochurePage ??
+    members?.find((member) => Number.isInteger(member.brochurePage))
+      ?.brochurePage;
+  const order =
+    product.brochureOrder ??
+    members?.find((member) => Number.isInteger(member.brochureOrder))
+      ?.brochureOrder;
   if (
     !members ||
     members.length < 2 ||
-    !Number.isInteger(product.brochurePage) ||
-    !Number.isInteger(product.brochureOrder) ||
     !(Number(product.regular) > 0) ||
     !(Number(product.sale) > 0) ||
     members.some(
       (member) =>
         member.bundleProducts?.length ||
-        (Number.isInteger(member.brochurePage) &&
-          member.brochurePage !== product.brochurePage) ||
-        (Number.isInteger(member.brochureOrder) &&
-          member.brochureOrder !== product.brochureOrder) ||
+        (Number.isInteger(page) &&
+          Number.isInteger(member.brochurePage) &&
+          member.brochurePage !== page) ||
+        (Number.isInteger(order) &&
+          Number.isInteger(member.brochureOrder) &&
+          member.brochureOrder !== order) ||
         !variantColor(member) ||
         (Number(member.regular) > 0 &&
           Number(member.regular) !== Number(product.regular)) ||
@@ -59,8 +101,8 @@ function legacyColorChoice(product: Product): Product {
     categoryPath: primary.categoryPath,
     regular: product.regular,
     sale: product.sale,
-    brochurePage: product.brochurePage,
-    brochureOrder: product.brochureOrder,
+    brochurePage: page,
+    brochureOrder: order,
   };
   delete result.bundleProducts;
   delete result.bundleCodes;
@@ -99,16 +141,13 @@ export function brochureColorVariantProducts(
   const result: Product[] = [];
   const slots = new Map<string, number[]>();
   for (const source of products) {
-    const product = displayColorChoice(legacyColorChoice(source));
-    const positioned =
-      Number.isInteger(product.brochurePage) &&
-      Number(product.brochurePage) >= 1 &&
-      Number.isInteger(product.brochureOrder) &&
-      Number(product.brochureOrder) >= 0;
+    const product = displayColorChoice(
+      legacyColorChoice(retainedColorSlot(source)),
+    );
     const color = variantColor(product);
     const slot =
-      positioned && color && !product.bundleProducts?.length
-        ? `${product.brochurePage}:${product.brochureOrder}`
+      color && !product.bundleProducts?.length
+        ? `${product.brochurePage ?? "unassigned"}:${product.brochureOrder ?? "unassigned"}`
         : null;
     let merged = false;
     if (slot) {

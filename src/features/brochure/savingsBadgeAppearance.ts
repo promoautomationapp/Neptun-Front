@@ -2,7 +2,7 @@ import type { Campaign, Product } from "../../domain/models";
 import { usesBlueReferencePrice } from "./priceDesign";
 
 const hex = (value?: string) =>
-  /^#[0-9a-f]{6}$/i.test(value || "") ? value : undefined;
+  /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value || "") ? value : undefined;
 
 export function savingsBadgeColors(product: Product) {
   return {

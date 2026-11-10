@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import React from "react";
 import type { Campaign, PageLayout } from "../../domain/models";
 import type { BrochurePage } from "./campaignPages";
@@ -216,40 +217,38 @@ export function PageDecorationControls({
       ))}
       <label>
         {t("Ribbon color")}
-        <input
-          type="color"
+        <ColorField
+          compact
+          label={t("Ribbon color")}
           value={config.headerColor || "#007dc5"}
-          onChange={(event) => onChange({ headerColor: event.target.value })}
+          onChange={(color) => onChange({ headerColor: color })}
         />
       </label>
       <label>
         {t("Ribbon text color")}
-        <input
-          type="color"
+        <ColorField
+          compact
+          label={t("Ribbon text color")}
           value={config.headerTextColor || "#ffffff"}
-          onChange={(event) =>
-            onChange({ headerTextColor: event.target.value })
-          }
+          onChange={(color) => onChange({ headerTextColor: color })}
         />
       </label>
       <label>
         {t("Footer line color")}
-        <input
-          type="color"
+        <ColorField
+          compact
+          label={t("Footer line color")}
           value={config.footerLineColor || "#003870"}
-          onChange={(event) =>
-            onChange({ footerLineColor: event.target.value })
-          }
+          onChange={(color) => onChange({ footerLineColor: color })}
         />
       </label>
       <label>
         {t("Footer logo color")}
-        <input
-          type="color"
+        <ColorField
+          compact
+          label={t("Footer logo color")}
           value={config.footerLogoColor || "#003870"}
-          onChange={(event) =>
-            onChange({ footerLogoColor: event.target.value })
-          }
+          onChange={(color) => onChange({ footerLogoColor: color })}
         />
       </label>
       <label>

@@ -117,7 +117,7 @@ describe("automatic MacBook grids", () => {
     expect(
       splitPages(value).map((page) => [page.layout, page.products.length]),
     ).toEqual([
-      ["grid6", 2],
+      ["pair2", 2],
       ["duo4", 4],
       ["duo4", 1],
       ["grid6", 1],

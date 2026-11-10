@@ -26,7 +26,7 @@ export function PresetThumbnail({
 }) {
   const d = preset.design;
   const color = (v: string | undefined, fallback: string) =>
-    /^#[a-f0-9]{6}$/i.test(v || "") ? v! : fallback;
+    /^#[a-f0-9]{6}(?:[a-f0-9]{2})?$/i.test(v || "") ? v! : fallback;
   const from = color(
     d.coverBackgroundGradient?.from || d.coverBackgroundColor,
     "#234173",

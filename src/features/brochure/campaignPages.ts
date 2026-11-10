@@ -69,7 +69,7 @@ function buildPages(campaign: Campaign) {
     sourceIndexes.push(sourceIndex);
     pages.push({
       index,
-      layout,
+      layout: products.length === 2 && !config.layout ? "pair2" : layout,
       image: config.image || "",
       backgroundColor: config.backgroundColor || "",
       backgroundGradient: config.backgroundGradient || null,
@@ -268,7 +268,8 @@ export function applyProductPageLayout(
 ) {
   let current = splitPages(campaign);
   if (!current[pageIndex]) return false;
-  if (materializeCampaignColorVariants(campaign)) current = splitPages(campaign);
+  if (materializeCampaignColorVariants(campaign))
+    current = splitPages(campaign);
   const selected = current[pageIndex];
   if (!selected) return false;
   const chunks: Product[][] = [];

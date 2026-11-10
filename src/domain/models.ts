@@ -407,6 +407,7 @@ export interface Product {
   bundlePanelColor?: string;
   bundleMemberDetails?: Record<string, string>;
   setSourceRows?: number[];
+  /** Optional left/right/bottom choice; older snapshots may retain an open string. */
   detailPlacement?: string;
   detailBlockPlacements?: Record<string, Placement>;
   detailBlockStyles?: Record<

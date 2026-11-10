@@ -35,7 +35,7 @@ export function NeptunWordmark({
   const renderedSource =
     source === "/brochure-presets/october/neptun-footer.svg" &&
     color &&
-    /^#[\da-f]{6}$/i.test(color)
+    /^#[\da-f]{6}(?:[\da-f]{2})?$/i.test(color)
       ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(blueFooterSvg.replaceAll("#003d78", color))}`
       : source;
   // Keep the original wordmark treatment for the original artwork. Selected

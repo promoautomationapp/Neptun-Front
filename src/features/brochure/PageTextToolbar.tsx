@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import React, {
   useEffect,
   useId,
@@ -227,21 +228,12 @@ export function PageTextToolbar({
         >
           <i>I</i>
         </button>
-        <label className="page-text-color" title={t("Text color")}>
-          <input
-            type="color"
-            aria-label={t("Text color")}
-            value={
-              /^#[\da-f]{6}$/i.test(artwork.color || "")
-                ? artwork.color
-                : "#1c4075"
-            }
-            onChange={(event) => onChange({ color: event.target.value })}
-          />
-          <span style={{ borderBottomColor: artwork.color || "#1c4075" }}>
-            A
-          </span>
-        </label>
+        <ColorField
+          compact
+          label={t("Text color")}
+          value={artwork.color || "#1c4075"}
+          onChange={(color) => onChange({ color })}
+        />
         <button
           type="button"
           className="page-text-spacing-trigger"

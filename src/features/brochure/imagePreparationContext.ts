@@ -1,32 +1,73 @@
-import type {Gradient}from "../../domain/models";
-export interface ImageBackgroundContext {kind:string;description?:string;image?:string;color?:string;gradient?:Gradient}
-function record(value:unknown):Record<string,unknown>|null{return value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:null;}
+import type { Gradient } from "../../domain/models";
+export interface ImageBackgroundContext {
+  kind: string;
+  description?: string;
+  image?: string;
+  color?: string;
+  gradient?: Gradient;
+}
+function record(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
 export const IMAGE_PREPARATION_REVISION = 3;
 
-const color = (value: unknown) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "";
+// Preserve every existing opaque signature. Translucent paint uses its actual
+// appearance on white paper, identically to the server's canonical context.
+function color(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    !/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value)
+  )
+    return "";
+  const hex = value.toLowerCase();
+  if (hex.length === 7) return hex;
+  const alpha = parseInt(hex.slice(7, 9), 16) / 255;
+  return (
+    "#" +
+    [1, 3, 5]
+      .map((offset) =>
+        Math.round(
+          parseInt(hex.slice(offset, offset + 2), 16) * alpha +
+            255 * (1 - alpha),
+        )
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
+}
 
 // Keep the same canonical context on the client and server. Image URLs identify
 // the background; the signature stored on a product never contains image data.
-export function normalizeImageBackgroundContext(input:unknown) {
-  const value=record(input);
+export function normalizeImageBackgroundContext(input: unknown) {
+  const value = record(input);
   if (!value) return { kind: "none" };
-  const gradient=record(value.gradient);
-  const description = String(value.description || "").trim().slice(0, 500);
+  const gradient = record(value.gradient);
+  const description = String(value.description || "")
+    .trim()
+    .slice(0, 500);
   const image = typeof value.image === "string" ? value.image : "";
   const from = color(gradient?.from);
   const to = color(gradient?.to);
   const angle = Number(gradient?.angle);
   const solid = color(value.color);
-  let result:ImageBackgroundContext;
-  if (value.kind === "image" && image) result = { kind: "image", ...(solid ? { color: solid } : {}), image };
-  else if (value.kind === "gradient" && from && to && Number.isFinite(angle)) result = { kind: "gradient", gradient: { from, to, angle: Math.max(0, Math.min(360, angle)) } };
+  let result: ImageBackgroundContext;
+  if (value.kind === "image" && image)
+    result = { kind: "image", ...(solid ? { color: solid } : {}), image };
+  else if (value.kind === "gradient" && from && to && Number.isFinite(angle))
+    result = {
+      kind: "gradient",
+      gradient: { from, to, angle: Math.max(0, Math.min(360, angle)) },
+    };
   else if (solid) result = { kind: "solid", color: solid };
   else result = { kind: "none" };
   if (description) result.description = description;
   return result;
 }
 
-export function imageBackgroundSignature(value:unknown) {
+export function imageBackgroundSignature(value: unknown) {
   const canonical = JSON.stringify(normalizeImageBackgroundContext(value));
   let hash = 2166136261;
   for (let index = 0; index < canonical.length; index += 1) {

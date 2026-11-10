@@ -1,5 +1,6 @@
 import type { Gradient } from "../../domain/models";
 import type { CSSProperties } from "react";
+import { parseColorInput } from "./parseColorInput";
 
 export type BackgroundContext =
   | { kind: "solid"; color: string }
@@ -7,12 +8,15 @@ export type BackgroundContext =
   | { kind: "image"; color: string; image: string };
 
 export function colorLuminance(color: string): number {
-  if (!/^#[\da-f]{6}$/i.test(color)) return 0;
-  const channel = (offset: number) => {
-    const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
+  const parsed = parseColorInput(color);
+  if (!parsed) return 0;
+  const { r, g, b, a } = parsed.rgba;
+  // Transparent brochure paint is viewed/exported on white paper.
+  const channel = (component: number) => {
+    const value = (component * a + 255 * (1 - a)) / 255;
     return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   };
-  return channel(1) * 0.2126 + channel(3) * 0.7152 + channel(5) * 0.0722;
+  return channel(r) * 0.2126 + channel(g) * 0.7152 + channel(b) * 0.0722;
 }
 
 export function colorContrast(foreground: string, background: string): number {
@@ -35,14 +39,22 @@ export function readableForeground(background: string): string {
   return colorContrast(brand, background) >= 4.5 ? brand : ranked[0]!;
 }
 
-function blend(from: string, to: string, amount: number): string {
+export function blendBackgroundColors(
+  from: string,
+  to: string,
+  amount: number,
+): string {
+  const first = parseColorInput(from)?.rgba;
+  const last = parseColorInput(to)?.rgba;
+  if (!first || !last) return "#ffffff";
+  const alpha = first.a + (last.a - first.a) * amount;
   return (
     "#" +
-    [1, 3, 5]
-      .map((offset) => {
-        const a = parseInt(from.slice(offset, offset + 2), 16);
-        const b = parseInt(to.slice(offset, offset + 2), 16);
-        return Math.round(a + (b - a) * amount)
+    (["r", "g", "b"] as const)
+      .map((key) => {
+        const a = first[key] * first.a;
+        const b = last[key] * last.a;
+        return Math.round(a + (b - a) * amount + 255 * (1 - alpha))
           .toString(16)
           .padStart(2, "0");
       })
@@ -66,7 +78,11 @@ export function backgroundReadability(
   const samples =
     context.kind === "gradient"
       ? [0, 0.25, 0.5, 0.75, 1].map((amount) =>
-          blend(context.gradient.from, context.gradient.to, amount),
+          blendBackgroundColors(
+            context.gradient.from,
+            context.gradient.to,
+            amount,
+          ),
         )
       : [context.color];
   const foreground = readableForeground(

@@ -1,3 +1,5 @@
+import { DetailsPlacementChoices } from "./DetailsPlacementChoices";
+import { defaultProductDetailPlacement } from "./mobileDetails";
 import { ProductDetailRows } from "./ProductDetailRows";
 import { ProductDetailLivePreview } from "./ProductDetailLivePreview";
 import "../../styles/product-detail-editor.css";
@@ -2115,6 +2117,7 @@ export function Details({
                 campaign={campaign}
                 onChange={onProductChange}
               />
+              <DetailsPlacementChoices value={defaultProductDetailPlacement(product, campaign || {})} onChange={(value) => onProductChange("detailPlacement", value)} />
               <ProductDetailRows
                 product={product}
                 entries={savedSpecs}

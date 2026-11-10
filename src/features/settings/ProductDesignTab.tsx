@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
@@ -169,6 +170,7 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
               {t("Automatic for the product and price design")}
             </option>
             <option value="left">{t("Left of photo")}</option>
+            <option value="right">{t("Right of image")}</option>
             <option value="bottom">{t("Below photo")}</option>
           </SearchableSelect>
         </Field>
@@ -310,14 +312,12 @@ export function ProductDesignTab({ draft, update }: SettingsTabProps) {
             />
             {d.divider[key] && (
               <Field label={label}>
-                <input
-                  type="color"
+                <ColorField
+                  compact
+                  label={t(label)}
                   value={d.divider[key]}
-                  onChange={(event) =>
-                    change("divider", {
-                      ...d.divider,
-                      [key]: event.target.value,
-                    })
+                  onChange={(value) =>
+                    change("divider", { ...d.divider, [key]: value })
                   }
                 />
               </Field>

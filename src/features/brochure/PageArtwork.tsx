@@ -54,6 +54,11 @@ export function PageArtwork({
   const layers = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const clear = (event: PointerEvent) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest(".studio-color-popover,[data-page-text-toolbar]")
+      )
+        return;
       if (!layers.current?.contains(event.target as Node)) setSelectedId("");
     };
     document.addEventListener("pointerdown", clear);

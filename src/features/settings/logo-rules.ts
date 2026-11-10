@@ -1,3 +1,4 @@
+import { colorLuminance } from "../brochure/backgroundContrast";
 import type { Campaign } from "../../domain/models";
 import { logoRuleDefaults } from "./logoLibraryData";
 export { logoRuleDefaults };
@@ -17,9 +18,11 @@ export function logoForBackground(
   // A deliberate logo edit in an individual brochure wins over its inherited rules.
   if (snapshot && selected !== snapshot[target === "cover" ? "cover" : "pages"])
     return fallback;
-  const hex = /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : "";
+  const hex = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(color)
+    ? color.toLowerCase()
+    : "";
   const isLight =
-    light ?? (hex ? luminance(hex) > 0.45 : campaign.theme === "light");
+    light ?? (hex ? colorLuminance(hex) > 0.45 : campaign.theme === "light");
   const rules = (campaign.logoRules || [])
     .filter(
       (rule) =>
@@ -35,11 +38,4 @@ export function logoForBackground(
     (rule) => rule.background === (isLight ? "light" : "dark"),
   );
   return (exact || contrast)?.image || fallback;
-}
-function luminance(color: string) {
-  const values = [1, 3, 5].map((offset) => {
-    const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * values[0]! + 0.7152 * values[1]! + 0.0722 * values[2]!;
 }

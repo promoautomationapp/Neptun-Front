@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup, SettingsPreviewContext } from "./components";
@@ -348,14 +349,19 @@ export function DesignTab({
                     key === "from" ? "Ribbon start color" : "Ribbon end color",
                   )}
                 >
-                  <input
-                    type="color"
+                  <ColorField
+                    compact
+                    label={t(
+                      key === "from"
+                        ? "Ribbon start color"
+                        : "Ribbon end color",
+                    )}
                     value={coverRibbonColors(b)[key]}
-                    onChange={(event) =>
+                    onChange={(color) =>
                       update((next) => {
                         next.brochure.coverRibbonColors = {
                           ...coverRibbonColors(next.brochure),
-                          [key]: event.target.value,
+                          [key]: color,
                         };
                       })
                     }
@@ -376,12 +382,13 @@ export function DesignTab({
               ] as const
             ).map(([key, label]) => (
               <Field key={key} label={`${t(label)} ${t("color")}`}>
-                <input
-                  type="color"
+                <ColorField
+                  compact
+                  label={`${t(label)} ${t("color")}`}
                   value={b[key] || "#ffffff"}
-                  onChange={(event) =>
+                  onChange={(color) =>
                     update((next) => {
-                      next.brochure[key] = event.target.value;
+                      next.brochure[key] = color;
                     })
                   }
                 />
@@ -427,14 +434,14 @@ export function DesignTab({
               ] as const
             ).map(([key, label, fallback]) => (
               <Field key={key} label={t(label)}>
-                <input
-                  type="color"
+                <ColorField
+                  compact
+                  label={t(label)}
                   value={b.pageDecorationDefaults?.[key] || fallback}
-                  onChange={(event) =>
+                  onChange={(color) =>
                     update((next) => {
                       next.brochure.pageDecorationDefaults ??= {};
-                      next.brochure.pageDecorationDefaults[key] =
-                        event.target.value;
+                      next.brochure.pageDecorationDefaults[key] = color;
                     })
                   }
                 />
@@ -526,12 +533,13 @@ export function DesignTab({
                 ))}
               </div>
               <Field label={`${t(label)} ${t("color")}`}>
-                <input
-                  type="color"
+                <ColorField
+                  compact
+                  label={`${t(label)} ${t("color")}`}
                   value={background.color || "#1c4075"}
-                  onChange={(event) =>
+                  onChange={(color) =>
                     update((next) => {
-                      next.brochure[key].color = event.target.value;
+                      next.brochure[key].color = color;
                       next.brochure[key].gradient = null;
                       next.brochure[key].image = "";
                     })
@@ -541,26 +549,27 @@ export function DesignTab({
               {background.gradient && (
                 <div className="ns-grid">
                   <Field label={`${t(label)} ${t("gradient start")}`}>
-                    <input
-                      type="color"
+                    <ColorField
+                      compact
+                      label={`${t(label)} ${t("gradient start")}`}
                       value={background.gradient.from}
-                      onChange={(event) =>
+                      onChange={(color) =>
                         update((next) => {
                           if (next.brochure[key].gradient)
-                            next.brochure[key].gradient.from =
-                              event.target.value;
+                            next.brochure[key].gradient.from = color;
                         })
                       }
                     />
                   </Field>
                   <Field label={`${t(label)} ${t("gradient end")}`}>
-                    <input
-                      type="color"
+                    <ColorField
+                      compact
+                      label={`${t(label)} ${t("gradient end")}`}
                       value={background.gradient.to}
-                      onChange={(event) =>
+                      onChange={(color) =>
                         update((next) => {
                           if (next.brochure[key].gradient)
-                            next.brochure[key].gradient.to = event.target.value;
+                            next.brochure[key].gradient.to = color;
                         })
                       }
                     />

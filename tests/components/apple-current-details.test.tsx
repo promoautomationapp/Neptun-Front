@@ -121,7 +121,7 @@ it("hides catalog iOS facts by default without hiding iPadOS or Android facts", 
   expect(android.textContent).toContain("Android");
 });
 
-it("keeps the gray Apple card's ordinary copy and warranty beside its name rather than adopting the current strip", () => {
+it("keeps the gray Apple card warranty below its top name, outside the detail strip", () => {
   const { container, card } = page(apple, "card", "light");
   expect(container.querySelector(".brochure-page.light")).not.toBeNull();
   const row = card.querySelector(".brochure-specs");
@@ -131,7 +131,7 @@ it("keeps the gray Apple card's ordinary copy and warranty beside its name rathe
   ).toBe("Bluetooth 5.3");
   expect(row?.querySelector('[data-detail-key="__warranty"]')).toBeNull();
   const warranty = card.querySelector(
-    ".brochure-product-copy .brochure-warranty-line",
+    ".brochure-product-top-warranty",
   );
   expect(warranty?.textContent).toBe("1 VIT GARANCION");
   expect(card.querySelectorAll('[data-detail-key="__warranty"]')).toHaveLength(

@@ -331,6 +331,9 @@ export async function captureBrochurePage(
   }, 15_000);
   try {
     const canvas = await toCanvas(page, {
+      // Translucent brochure paint is printed on white paper. This also avoids
+      // the browser's black JPEG fallback for transparent canvas pixels.
+      backgroundColor: "#ffffff",
       width: rect.width,
       height: rect.height,
       canvasWidth: geometry.canvasWidth,

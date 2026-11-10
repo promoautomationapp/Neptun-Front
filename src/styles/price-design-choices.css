@@ -1,0 +1,97 @@
+.cs-price-design-choices {
+  --brochure-price-red: #ef4023;
+  --brochure-price-blue: #243a6a;
+  --brochure-price-blue-band: #e7eae9;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+.cs-price-design-choices > .cs-price-design-choice {
+  display: grid;
+  grid-template-rows: 74px auto;
+  justify-items: stretch;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--np-border, #d6e1eb);
+  border-radius: 9px;
+  background: var(--np-surface, #fff);
+  color: var(--np-text, #264b66);
+  font:
+    500 11px/1.3 Arial,
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms,
+    background 120ms;
+}
+.cs-price-design-choices > .cs-price-design-choice:hover {
+  border-color: #86afcc;
+  background: #f7fbff;
+}
+.cs-price-design-choices > .cs-price-design-choice[aria-checked="true"] {
+  border-color: #2786bf;
+  background: #f2f8fd;
+  box-shadow: 0 0 0 1px #2786bf;
+}
+.cs-price-design-choices > .cs-price-design-choice:focus-visible {
+  outline: 2px solid #2786bf;
+  outline-offset: 3px;
+}
+.cs-price-design-preview {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border-radius: 5px;
+  background: #eef2f6;
+  pointer-events: none;
+}
+.cs-price-design-native {
+  display: block;
+  width: min(116px, 100% - 12px);
+  line-height: 1;
+}
+.cs-price-design-native.current {
+  width: min(98px, 100% - 16px);
+  padding-top: 18px;
+}
+.cs-price-design-native > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.cs-price-design-native.card > svg {
+  font-family: "SkolaSans", Arial, sans-serif;
+  letter-spacing: 0;
+}
+.cs-price-design-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cs-price-design-radio {
+  display: block;
+  flex: none;
+  width: 13px;
+  height: 13px;
+  border: 1px solid #9db3c4;
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+}
+[aria-checked="true"] > .cs-price-design-caption > .cs-price-design-radio {
+  border: 4px solid #2786bf;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-price-design-choices > .cs-price-design-choice {
+    transition: none;
+  }
+}

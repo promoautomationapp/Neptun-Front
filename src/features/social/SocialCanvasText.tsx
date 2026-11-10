@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import React, { useRef, useState } from "react";
 import type { Artwork } from "../../domain/models";
 import {
@@ -118,7 +119,13 @@ export function SocialCanvasText({
       onPointerUp={() => finish()}
       onPointerCancel={() => finish(true)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+        if (
+          !event.currentTarget.contains(event.relatedTarget as Node | null) &&
+          !(
+            event.relatedTarget instanceof Element &&
+            event.relatedTarget.closest(".studio-color-popover")
+          )
+        )
           setSelected(false);
       }}
     >
@@ -218,11 +225,11 @@ export function SocialCanvasText({
                     }
                   />
                 </label>
-                <input
-                  aria-label={t("Text color")}
-                  type="color"
+                <ColorField
+                  compact
+                  label={t("Text color")}
                   value={artwork.color || "#ffffff"}
-                  onChange={(event) => onChange({ color: event.target.value })}
+                  onChange={(color) => onChange({ color: color })}
                 />
                 <button
                   type="button"

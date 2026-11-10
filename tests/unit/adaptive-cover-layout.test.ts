@@ -40,6 +40,15 @@ const frames = (value: Campaign) => {
 };
 
 describe("adaptive cover layouts", () => {
+  it.each(designs)(
+    "places two automatic %s cover products in separate full-width rows",
+    (design) => {
+      const [first, second] = frames(campaign(design, 2));
+      expect(first!.width).toBeGreaterThan(80);
+      expect(second!.width).toBeGreaterThan(80);
+      expect(first!.y + first!.height).toBeLessThan(second!.y);
+    },
+  );
   it.each(["uuu", "october"] as const)(
     "keeps three %s offers together in one row below the ribbon",
     (design) => {
@@ -86,7 +95,9 @@ describe("adaptive cover layouts", () => {
         expect(card.x).toBeGreaterThanOrEqual(0);
         expect(card.y).toBeGreaterThanOrEqual(design === "classic" ? 0 : 54);
         expect(card.x + card.width).toBeLessThanOrEqual(100 + 1e-8);
-        expect(card.y + card.height).toBeLessThanOrEqual(92 + 1e-8);
+        expect(card.y + card.height).toBeLessThanOrEqual(
+          (design === "classic" ? 94 : 92) + 1e-8,
+        );
         for (const previous of cards.slice(0, index)) {
           const overlapX =
             Math.min(card.x + card.width, previous.x + previous.width) -

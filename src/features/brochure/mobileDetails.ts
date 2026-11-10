@@ -22,26 +22,30 @@ export function defaultProductDetailPlacement(
 ) {
   if (
     product.detailPlacement === "left" ||
+    product.detailPlacement === "right" ||
     product.detailPlacement === "bottom"
   )
     return product.detailPlacement;
+  const choice = productDesignFor(campaign).details.placement;
+  if (choice === "right") return "right";
   // The Blue preset's reference layout is based on the device, independently
   // of inherited workspace placement or the selected price design.
   if (isOctoberBrochure(campaign))
     return isMobilePhone(product) && !isAppleProduct(product)
       ? "left"
       : "bottom";
-  const choice = productDesignFor(campaign).details.placement;
-  if (choice !== "automatic") return choice;
   const priceProduct: Product = {
     ...product,
     name: product.name ?? "",
     code: product.code ?? "",
   };
-  return isMobilePhone(product) &&
+  if (
+    isMobilePhone(product) &&
+    !isAppleProduct(product) &&
     usesBlueReferencePrice(priceProduct, campaign)
-    ? "left"
-    : "bottom";
+  )
+    return "left";
+  return choice === "automatic" ? "bottom" : choice;
 }
 
 export function isMemoryDetail(key: unknown, value: unknown) {

@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import {
   readWorkspaceRoute,
   workspaceRouteUrl,
@@ -3934,8 +3935,9 @@ export function BrochureEditor({
                     (key) => (
                       <label key={key}>
                         <span>{t(`Price artwork color: ${key}`)}</span>
-                        <input
-                          type="color"
+                        <ColorField
+                          compact
+                          label={t(`Price artwork color: ${key}`)}
                           value={
                             campaign.pricePalette?.[key] ||
                             {
@@ -3945,7 +3947,7 @@ export function BrochureEditor({
                               saving: "#ef4023",
                             }[key]
                           }
-                          onChange={(event) =>
+                          onChange={(color) =>
                             onUpdate((draft: Campaign) => {
                               draft.pricePalette ??= {
                                 red: "#ef4023",
@@ -3953,7 +3955,7 @@ export function BrochureEditor({
                                 blueBand: "#e7eae9",
                                 saving: "#ef4023",
                               };
-                              draft.pricePalette[key] = event.target.value;
+                              draft.pricePalette[key] = color;
                             })
                           }
                         />

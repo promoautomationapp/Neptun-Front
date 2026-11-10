@@ -138,23 +138,25 @@ it("offers current-page, all-page and design actions in the right-click menu", (
   expect(view.queryByRole("menu")).toBeNull();
 });
 
-it("uses the resolved appearance, offers both prices and keeps the nested color picker usable", () => {
+it("offers native price previews and edits colors inline without resetting the selected price", () => {
   const view = fixture();
   fireEvent.click(view.getByTestId("empty"));
-  fireEvent.click(view.getByRole("button", { name: "Text & logos" }));
+  fireEvent.click(view.getByRole("button", { name: "Price design" }));
   expect(
     view
-      .getByRole("button", { name: "Red haPPy offer" })
-      .getAttribute("aria-pressed"),
+      .getByRole("radio", { name: "Orange price" })
+      .getAttribute("aria-checked"),
   ).toBe("true");
-  fireEvent.click(view.getByRole("button", { name: "Blue price card" }));
+  fireEvent.click(view.getByRole("radio", { name: "Blue price" }));
   expect(view.appearance).toHaveBeenLastCalledWith(
     { priceStyle: "card" },
     "page",
   );
-  fireEvent.click(view.getByRole("button", { name: "Advanced colors" }));
-  fireEvent.click(view.getByRole("button", { name: "Text color: #ffffff" }));
-  const picker = view.getByLabelText("Pick text color");
+  fireEvent.click(view.getByRole("button", { name: "Text & logos" }));
+  fireEvent.click(
+    view.getByRole("button", { name: "Text color" }),
+  );
+  const picker = view.getByLabelText("Text color hex code");
   fireEvent.pointerDown(picker);
   fireEvent.change(picker, { target: { value: "#243a6a" } });
   expect(view.appearance).toHaveBeenLastCalledWith(
@@ -168,7 +170,6 @@ it("uses the resolved appearance, offers both prices and keeps the nested color 
       textColor: undefined,
       brandColor: undefined,
       screenLabelColor: undefined,
-      priceStyle: "auto",
     },
     "page",
   );
@@ -177,7 +178,8 @@ it("uses the resolved appearance, offers both prices and keeps the nested color 
 it("applies a gradient deterministically and closes for Escape, page changes or disabled modes", () => {
   const view = fixture();
   fireEvent.click(view.getByTestId("empty"));
-  fireEvent.click(view.getByRole("button", { name: "Gradient" }));
+  fireEvent.click(view.getByRole("button", { name: "Background color" }));
+  fireEvent.click(view.getByRole("tab", { name: "Gradient" }));
   fireEvent.click(view.getByRole("button", { name: "Apply gradient" }));
   expect(view.background).toHaveBeenLastCalledWith(
     {

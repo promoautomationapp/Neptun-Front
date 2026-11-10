@@ -1,3 +1,4 @@
+import { ColorField } from "../brochure/ColorField";
 import { t } from "../brochure/i18n";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import { SettingsGroup } from "./components";
@@ -144,12 +145,13 @@ export function OffersTab({
             ] as const
           ).map(([key, label]) => (
             <Field key={key} label={t(label)}>
-              <input
-                type="color"
+              <ColorField
+                compact
+                label={t(label)}
                 value={draft.brochure.pricePalette[key]}
-                onChange={(event) =>
+                onChange={(color) =>
                   update((next) => {
-                    next.brochure.pricePalette[key] = event.target.value;
+                    next.brochure.pricePalette[key] = color;
                   })
                 }
               />

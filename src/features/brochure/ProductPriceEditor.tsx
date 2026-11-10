@@ -1,3 +1,4 @@
+import { ColorField } from "./ColorField";
 import React, { useState } from "react";
 import type { Product, Campaign } from "../../domain/models";
 import { installmentCount, money } from "./Brochure";
@@ -182,25 +183,27 @@ export function ProductPriceEditor({
               )}
             </div>
             <Field label={t("Badge background color")}>
-              <input
-                type="color"
+              <ColorField
+                compact
+                label={t("Badge background color")}
                 value={badgeColors.backgroundColor}
-                onChange={(event) =>
+                onChange={(color) =>
                   setSavingsBadge((value) => ({
                     ...value,
-                    backgroundColor: event.target.value,
+                    backgroundColor: color,
                   }))
                 }
               />
             </Field>
             <Field label={t("Badge text color")}>
-              <input
-                type="color"
+              <ColorField
+                compact
+                label={t("Badge text color")}
                 value={badgeColors.textColor}
-                onChange={(event) =>
+                onChange={(color) =>
                   setSavingsBadge((value) => ({
                     ...value,
-                    textColor: event.target.value,
+                    textColor: color,
                   }))
                 }
               />

@@ -107,10 +107,19 @@ it("saves and resets badge colors while preserving its manual position and visib
     },
   };
   const editor = openEditor(positioned);
-  fireEvent.change(editor.view.getByLabelText("Badge background color"), {
-    target: { value: "#00aa55" },
-  });
-  fireEvent.change(editor.view.getByLabelText("Badge text color"), {
+  fireEvent.click(
+    editor.view.getByRole("button", { name: /^Badge background color:/ }),
+  );
+  fireEvent.change(
+    editor.view.getByLabelText("Badge background color hex code"),
+    {
+      target: { value: "#00aa55" },
+    },
+  );
+  fireEvent.click(
+    editor.view.getByRole("button", { name: /^Badge text color:/ }),
+  );
+  fireEvent.change(editor.view.getByLabelText("Badge text color hex code"), {
     target: { value: "#112233" },
   });
   expect(
