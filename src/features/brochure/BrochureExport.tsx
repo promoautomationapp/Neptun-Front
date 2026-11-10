@@ -331,9 +331,6 @@ export async function captureBrochurePage(
   }, 15_000);
   try {
     const canvas = await toCanvas(page, {
-      // Translucent brochure paint is printed on white paper. This also avoids
-      // the browser's black JPEG fallback for transparent canvas pixels.
-      backgroundColor: "#ffffff",
       width: rect.width,
       height: rect.height,
       canvasWidth: geometry.canvasWidth,
@@ -512,6 +509,18 @@ export function BrochureExport({
           fontEmbedCSS,
           onUnavailableImage: recordUnavailable,
         });
+        if (format !== "png") {
+          // Paint behind transparent pixels rather than replacing the page's
+          // own background through html-to-image's backgroundColor option.
+          const context = canvas.getContext("2d");
+          if (context) {
+            context.save();
+            context.globalCompositeOperation = "destination-over";
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.restore();
+          }
+        }
         if (pdf) {
           if (position)
             pdf.addPage(
