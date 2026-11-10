@@ -243,8 +243,8 @@
   font-size: var(
     --bf-warranty-label-font,
     calc(0.7cqw * var(--bf-type-scale, 1))
-  );
-  line-height: 1;
+  ) !important;
+  line-height: 1 !important;
   margin: 0;
 }
 .brochure-page.brochure-black-friday
