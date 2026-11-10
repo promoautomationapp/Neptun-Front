@@ -1,4 +1,8 @@
-import { hasPageAppearance, resolvedPageAppearance } from "./pageAppearance";
+import {
+  hasPageAppearance,
+  pageAppearanceFor,
+  resolvedPageAppearance,
+} from "./pageAppearance";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
 import type { Campaign } from "../../domain/models";
 import { coverProducts } from "./campaignPages";
@@ -14,7 +18,22 @@ export function coverTextColor(
   campaign: Partial<Campaign>,
   field: (typeof COVER_TEXT_COLORS)[number][0],
 ) {
-  if (hasPageAppearance(campaign, "cover")) return resolvedPageAppearance(campaign, "cover").textColor;
+  if (field === "coverFooterColor") {
+    const value = campaign[field];
+    if (
+      /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value || "") &&
+      (campaign.coverTextColorOverrides?.[field] ||
+        !["#ffffff", "#1c4075"].includes(value!.toLowerCase()))
+    )
+      return value;
+    const explicitInk = pageAppearanceFor(campaign, "cover").textColor;
+    if (explicitInk) return explicitInk;
+    return lightBackground(pageBackgroundContrastColor(campaign, "cover"))
+      ? "#1c4075"
+      : "#ffffff";
+  }
+  if (hasPageAppearance(campaign, "cover"))
+    return resolvedPageAppearance(campaign, "cover").textColor;
   const value = campaign[field];
   if (
     /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value || "") &&
@@ -22,8 +41,7 @@ export function coverTextColor(
       value?.toLowerCase() !== "#ffffff")
   )
     return value;
-  return field !== "coverFooterColor" &&
-    lightBackground(pageBackgroundContrastColor(campaign, "cover"))
+  return lightBackground(pageBackgroundContrastColor(campaign, "cover"))
     ? "#1c4075"
     : "#ffffff";
 }

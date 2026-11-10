@@ -21,9 +21,7 @@ it("renders semantic imported values without losing wording or line breaks", () 
       reference="red"
     />,
   );
-  expect(numeric).toBe(
-    '<b class="detail-fitted-value detail-number">1400</b>',
-  );
+  expect(numeric).toBe('<b class="detail-fitted-value detail-number">1400</b>');
 
   const metric = renderToStaticMarkup(
     <DetailContent
@@ -130,4 +128,33 @@ it("recomputes fitted type when the reference changes without a resize or text e
   );
   expect(value.style.fontSize).toBe("");
   expect(getComputedStyle(value).fontSize).toBe("10px");
+});
+
+it("reserves capture rounding space instead of fitting blue text exactly against a wrapping threshold", () => {
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(35);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(28);
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(35);
+  vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(22);
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  const styles = document.createElement("style");
+  styles.dataset.detailFitTest = "true";
+  styles.textContent =
+    ".blue-reference-offer .fit-blue{padding:0;row-gap:0}.fit-blue>b{font-size:10px}";
+  document.head.append(styles);
+  const view = render(
+    <article className="blue-reference-offer">
+      <span className="fit-blue">
+        <DetailContent
+          product={{}}
+          label="0"
+          value="4K Ultra HD"
+          layout="strip"
+          reference="blue"
+        />
+      </span>
+    </article>,
+  );
+  const value = view.container.querySelector("b")!;
+  expect(Number.parseFloat(value.style.fontSize)).toBeCloseTo(9.4);
+  expect(value.textContent).toBe("4K Ultra HD");
 });

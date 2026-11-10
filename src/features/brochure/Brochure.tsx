@@ -186,6 +186,7 @@ import "../../styles/brand-logo-appearance.css";
 import "../../styles/blue-reference-layout.css";
 import { blueReferenceDetailGroups, removeBlueReferenceDetailGroup } from "./blueReferenceDetails";
 import { BlueReferenceDetailAlignment } from "./BlueReferenceDetailAlignment";
+import { BlueReferenceRowCopyAlignment } from "./BlueReferenceRowCopyAlignment";
 import {
   visibleImageBounds,
   televisionScreenBox,
@@ -1824,6 +1825,7 @@ function StandardProductCard({
       }
       data-blue-reference-defaults={blueReference ? "true" : undefined}
       data-default-photo={!product.brochureImagePlacement && productDesign.photo.mode !== "custom" ? "true" : undefined}
+      data-default-bottom-row={blueReference && !contentPlacement.price && !contentPlacement.details && !product.detailBlockPlacements?.__brand ? "true" : undefined}
       className={`brochure-product style-${style} ${redReference ? "red-reference-offer" : ""} ${blueReference ? "blue-reference-offer" : ""} ${sideDetails ? `details-${detailPlacement}` : ""} ${isAirConditioner(product) ? "conditioner-offer" : ""} ${hero ? "hero" : ""} ${screenInches ? "has-tv-inch-ribbon" : otherInches ? "has-screen-annotation" : ""} ${draggingCode === String(product.code) ? "cs-product-dragging" : ""} ${dropCode === String(product.code) ? "cs-product-drop-target" : ""}`}
       onDragOver={(event) => {
         if (
@@ -2678,6 +2680,7 @@ function CoverPageContent({
   draggingCode,
   dropCode,
 }: BrochurePageProps) {
+  const pageRef = React.useRef<HTMLElement>(null);
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const chooseImage = useImagePicker();
   campaign = repairAutomaticCollectionCoverLayout(campaign);
@@ -2774,6 +2777,7 @@ function CoverPageContent({
   );
   return (
     <section
+      ref={pageRef}
       className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       data-smart-appearance={hasPageAppearance(campaign, "cover") ? "true" : undefined}
@@ -2784,6 +2788,7 @@ function CoverPageContent({
         ...(backgroundFill ? { background: backgroundFill } : {}),
       }}
     >
+      <BlueReferenceRowCopyAlignment pageRef={pageRef} />
       <PageAppearanceFilters campaign={campaign} kind="cover" id={brandFilterId} />
       {backgroundImage && (
         <img
@@ -3335,6 +3340,7 @@ function ProductPageContent({
   draggingCode,
   dropCode,
 }: ProductPageProps) {
+  const pageRef = React.useRef<HTMLElement>(null);
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const october = isOctoberBrochure(campaign);
   const bluePage = page.products.length > 0 && page.products.every((product) => usesBlueReferencePrice(product, campaign));
@@ -3365,6 +3371,7 @@ function ProductPageContent({
   };
   return (
     <section
+      ref={pageRef}
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
       data-brand-logo-mode={campaign.brandLogoMode || "auto"}
       data-blue-reference-page={bluePage ? "true" : undefined}
@@ -3379,6 +3386,7 @@ function ProductPageContent({
           : {}),
       }}
     >
+      <BlueReferenceRowCopyAlignment pageRef={pageRef} />
       <PageAppearanceFilters campaign={campaign} kind="product" page={page} id={brandFilterId} />
       {backgroundImage && (
         <img
@@ -3416,7 +3424,7 @@ function ProductPageContent({
           gridTemplateRows:
             !page.products.some((item) => item.brochureCardSize) &&
             (page.layout === "tv8" || page.layout === "balanced8")
-              ? "1fr 1.18fr 1.03fr"
+              ? page.layout === "tv8" ? "1fr 1.6fr 1fr" : "1fr 1.18fr 1.03fr"
               : `repeat(${occupiedProductRows(page.products, page.layout)}, minmax(0, 1fr))`,
           ...productGridStyle(campaign, page.spacing),
         }}

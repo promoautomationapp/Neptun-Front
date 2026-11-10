@@ -11,12 +11,14 @@ function Fixture({
   enabled = true,
   automaticPhoto = false,
   manualCopy = false,
+  anchored = false,
 }) {
   const photo = useRef<HTMLDivElement>(null);
   return (
     <article
       className="brochure-product"
       data-default-photo={automaticPhoto ? "true" : undefined}
+      data-default-bottom-row={anchored ? "true" : undefined}
     >
       <div ref={photo} />
       <div className="brochure-specs" data-detail-layout="strip" />
@@ -111,4 +113,19 @@ it("keeps manually positioned copy unchanged while aligning the automatic detail
     view.container.querySelector<HTMLElement>(".brochure-specs")?.style
       .translate,
   ).toBe("0 -10px");
+});
+
+it("keeps automatic anchored copy on its shared row baseline without shifting the savings or detail center", () => {
+  measurements();
+  const view = render(<Fixture anchored />);
+  const card = view.container.querySelector<HTMLElement>(".brochure-product")!;
+  expect(
+    card.querySelector<HTMLElement>(".brochure-product-copy")?.style.translate,
+  ).toBe("");
+  expect(
+    card.querySelector<HTMLElement>(".brochure-specs")?.style.translate,
+  ).toBe("0 -10px");
+  expect(
+    card.querySelector<HTMLElement>(".reference-saving-tab")?.style.cssText,
+  ).toBe("left: 71%; top: 20px;");
 });

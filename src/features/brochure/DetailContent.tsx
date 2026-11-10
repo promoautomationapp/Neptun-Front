@@ -1,4 +1,5 @@
 import React from "react";
+import { centerTextInk } from "./textInkCenter";
 import type { Product } from "../../domain/models";
 import { isAirConditioner } from "./productArtwork";
 import { isAppleProduct, isMobilePhone } from "./productTypes";
@@ -43,6 +44,7 @@ export function FittedDetailValue({
       if (disposed || !block.clientWidth || !block.clientHeight) return;
       value.style.removeProperty("font-size");
       const base = parseFloat(getComputedStyle(value).fontSize);
+      const blue = Boolean(value.closest(".blue-reference-offer"));
       const style = getComputedStyle(block);
       const padding =
         parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
@@ -61,21 +63,32 @@ export function FittedDetailValue({
         block.clientHeight -
         padding -
         labelHeight -
-        (parseFloat(style.rowGap) || 0);
+        (parseFloat(style.rowGap) || 0) -
+        // Leave room for visible-ink centering and capture rounding. Native
+        // text-box trimming is intentionally disabled for fitted values.
+        (blue ? Math.max(1, base * 0.18) : 0);
       if (!(available > 0 && base > 0)) return;
       const fits = () =>
-        value.scrollHeight <= available + 0.5 &&
-        value.scrollWidth <= value.clientWidth + 1;
-      if (fits()) return;
-      let low = base * 0.3,
-        high = base;
-      for (let i = 0; i < 12; i++) {
-        const size = (low + high) / 2;
-        value.style.fontSize = `${size}px`;
-        if (fits()) low = size;
-        else high = size;
+        value.scrollHeight <= available &&
+        value.scrollWidth <= value.clientWidth;
+      let fitted = base;
+      if (!fits()) {
+        let low = base * 0.3,
+          high = base;
+        for (let i = 0; i < 12; i++) {
+          const size = (low + high) / 2;
+          value.style.fontSize = `${size}px`;
+          if (fits()) low = size;
+          else high = size;
+        }
+        fitted = low;
       }
-      value.style.fontSize = `${low}px`;
+      // html-to-image serializes fractional widths. A label that fits within
+      // 0.01px in the live browser can otherwise gain a line in the PDF. Keep
+      // a small typographic reserve, rather than hiding an overflowing word.
+      if (blue || fitted !== base)
+        value.style.fontSize = `${fitted * (blue ? 0.94 : 1)}px`;
+      centerTextInk(value, blue, false);
     };
     fit();
     const observer =

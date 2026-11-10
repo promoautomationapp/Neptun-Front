@@ -45,14 +45,17 @@ const tv: Product = {
   ],
 };
 
-it("renders three packed TV rectangles, source facts, colors before details and warranty under name in any blue-price preset", () => {
+it("renders three readable TV facts, colors before details and warranty under name in any blue-price preset", () => {
   const root = page(tv, { brochurePresetId: "team-custom" });
   const card = root.querySelector(".brochure-product")!;
   expect(
     card.querySelectorAll(".brochure-specs > .product-detail-block"),
   ).toHaveLength(3);
-  for (const fact of tv.brochureDetails!)
+  for (const fact of tv.brochureDetails!.slice(0, 3))
     expect(card.querySelector(".brochure-specs")?.textContent).toContain(fact);
+  expect(card.querySelector(".brochure-specs")?.textContent).not.toContain(
+    "Dolby Atmos",
+  );
   expect(card.querySelector(".brochure-product-code")).toBeNull();
   expect(
     card.querySelector(".brochure-product-copy .brochure-warranty-line")

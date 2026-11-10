@@ -63,7 +63,17 @@ export function BlueReferenceDetailAlignment({
         }
         if (colors)
           colors.style.translate = next ? `0 ${next}px` : originalColors;
-        if (copy && copy.dataset.copyFrameManual !== "true") {
+        if (
+          copy &&
+          card.dataset.defaultBottomRow === "true" &&
+          copy.dataset.copyFrameManual !== "true"
+        ) {
+          // The anchored row already gives every automatic card one shared
+          // baseline. A previous clearance translation must not push only a
+          // short name/warranty block below its neighboring phone's copy.
+          copyOffset = 0;
+          copy.style.translate = "";
+        } else if (copy && copy.dataset.copyFrameManual !== "true") {
           const copyBox = copy.getBoundingClientRect();
           if (copyBox.width && copyBox.height) {
             const sourceTop = copyBox.top - copyOffset * scale;

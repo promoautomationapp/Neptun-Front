@@ -8,7 +8,7 @@ export interface BlueReferenceDetailGroup {
   text: string;
 }
 
-/** Automatic blue offers keep every supplied fact in three compact rectangles.
+/** Automatic blue offers use three readable source facts in compact rectangles.
  * Explicit row editing or an independently positioned/styled fact remains a
  * one-to-one editable list instead of being repacked on a later render. */
 export function blueReferenceDetailGroups(
@@ -55,12 +55,9 @@ export function blueReferenceDetailGroups(
     }
     groups.push(...selected.filter((group) => group.length));
   } else {
-    const count = Math.min(3, entries.length);
-    for (let index = 0; index < count; index++) {
-      const start = Math.floor((index * entries.length) / count);
-      const end = Math.floor(((index + 1) * entries.length) / count);
-      groups.push(entries.slice(start, end));
-    }
+    // A default rectangle should stay readable. Surplus facts remain in the
+    // source editor, where an explicit custom list can add/reorder them.
+    groups.push(...entries.slice(0, 3).map((entry) => [entry]));
   }
   return groups.map((members) => ({
     key: members[0]![0],

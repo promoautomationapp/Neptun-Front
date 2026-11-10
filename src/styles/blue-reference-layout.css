@@ -8,6 +8,61 @@
   --detail-label-size: 1cqw;
   --detail-text-weight: 300;
 }
+/* Every automatic price/copy row shares the card's lower baseline regardless
+   of a side stack, color row, or horizontal details. Explicit region edits
+   retain the saved frame instead of being re-anchored. */
+.brochure-page
+  .brochure-product.blue-reference-offer[data-default-bottom-row="true"] {
+  box-sizing: border-box;
+  padding-bottom: 10cqw;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer[data-default-bottom-row="true"]
+  > .brochure-product-bottom {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: flex-end;
+  height: 10cqw;
+  min-height: 0;
+  margin: 0;
+}
+.brochure-page .brochure-product.blue-reference-offer .brochure-warranty-line {
+  color: inherit;
+  text-shadow: none;
+  filter: none;
+  background: transparent;
+  box-shadow: none;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block
+  > .detail-fitted-value,
+.october-category-ribbon > .ink-centered-text {
+  translate: 0 var(--glyph-center-offset, 0px);
+}
+/* foreignObject capture does not reliably preserve a trimmed multiline box.
+   Fit the ordinary line box and center its visible ink in every renderer. */
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block
+  > .detail-fitted-value {
+  text-box-trim: none;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer
+  > .brochure-specs
+  > .product-detail-block:not(.detail-selected):not(.moving) {
+  overflow: hidden;
+}
+@supports (text-box-trim: trim-both) and (text-box-edge: cap alphabetic) {
+  .october-category-ribbon > .ink-centered-text {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+  }
+}
 .brochure-page
   .brochure-product.blue-reference-offer
   > .brochure-product-bottom {
@@ -329,4 +384,27 @@
   top: var(--blue-reference-photo-center, 50%) !important;
   height: var(--blue-reference-photo-height, 96%);
   max-height: var(--blue-reference-photo-height, 96%);
+}
+
+/* One row owns its shared clearance, keeping peer copy and color lines aligned. */
+.brochure-page
+  .brochure-product.blue-reference-offer[data-default-bottom-row="true"]
+  .brochure-product-copy:not([data-copy-frame-manual="true"]) {
+  translate: 0 var(--blue-copy-row-offset, 0px);
+  scale: var(--blue-copy-row-scale, 1);
+  transform-origin: left bottom;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer[data-default-bottom-row="true"]
+  .brochure-product-copy
+  > [data-product-name] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.brochure-page
+  .brochure-product.blue-reference-offer:is(.details-left, .details-right)
+  > .brochure-colors.blue-reference-colors {
+  translate: 0 var(--blue-phone-colors-offset, 0px);
 }

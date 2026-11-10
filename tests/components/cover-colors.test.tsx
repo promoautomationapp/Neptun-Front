@@ -7,7 +7,7 @@ import { CoverPage } from "../../src/features/brochure/Brochure";
 import { setLanguage } from "../../src/features/brochure/i18n";
 afterEach(cleanup);
 
-it("updates the visible cover message from color input events and leaves the band opt-in", () => {
+it("updates the visible cover message from the shared picker and leaves the band opt-in", () => {
   setLanguage("en");
   function Cover() {
     const [campaign, setCampaign] = useState<Campaign>({ id: "color", name: "Cover", tagline: "The offer", showCoverMessage: true, products: [] });
@@ -22,7 +22,8 @@ it("updates the visible cover message from color input events and leaves the ban
   expect((view.getByRole("checkbox", { name: "UUU / hajde!" }) as HTMLInputElement).checked).toBe(false);
   const message = view.container.querySelector<HTMLElement>(".cover-element-message p")!;
   expect(message.style.color).toBe("rgb(255, 255, 255)");
-  fireEvent.input(view.getByLabelText("Message color"), { target: { value: "#aaffaa" } });
+  fireEvent.click(view.getByRole("button", { name: "Message color: #ffffff" }));
+  fireEvent.change(view.getByLabelText("Message color hex code"), { target: { value: "#aaffaa" } });
   expect(message.style.color).toBe("rgb(170, 255, 170)");
   expect(view.container.querySelector(".cover-element-band")).toBeNull();
 });

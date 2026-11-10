@@ -8,7 +8,7 @@ import type { DetailEntry } from "../../src/features/brochure/detailFacts";
 
 const product: Product = { code: "tv", name: "TV" };
 
-it("packs every supplied TV fact into three rectangles without dropping source lines", () => {
+it("keeps automatic TV rectangles readable and leaves surplus facts in the source editor", () => {
   const entries: DetailEntry[] = [
     ["0", "QLED TV"],
     ["1", "4K Ultra HD"],
@@ -21,11 +21,12 @@ it("packs every supplied TV fact into three rectangles without dropping source l
     imported: true,
   })!;
   expect(groups.map((group) => group.text)).toEqual([
-    "QLED TV\n4K Ultra HD",
-    "144Hz\nHDR10+",
-    "Dolby Vision\nDolby Atmos",
+    "QLED TV",
+    "4K Ultra HD",
+    "144Hz",
   ]);
-  expect(groups.flatMap((group) => group.entries)).toEqual(entries);
+  expect(groups.flatMap((group) => group.entries)).toEqual(entries.slice(0, 3));
+  expect(entries).toHaveLength(6);
 });
 
 it("keeps source labels in catalog groups and never invents empty boxes", () => {

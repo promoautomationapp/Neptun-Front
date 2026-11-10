@@ -103,3 +103,10 @@ test("default text adapts to an explicitly light cover while manual white remain
   assert.equal(coverTextColor(value, "coverMessageColor"), "#1c4075");
   assert.equal(coverTextColor({ ...value, coverTextColorOverrides: { coverMessageColor: true } }, "coverMessageColor"), "#ffffff");
 });
+
+test("footer uses navy on light backgrounds and preserves explicit color choices", () => {
+  const value = { ...campaign(), coverBackgroundColor: "#e4e4e4", pageAppearances: { cover: { priceStyle: "card" as const } } };
+  assert.equal(coverTextColor(value, "coverFooterColor"), "#1c4075");
+  assert.equal(coverTextColor({ ...value, coverFooterColor: "#ffffff", coverTextColorOverrides: { coverFooterColor: true } }, "coverFooterColor"), "#ffffff");
+  assert.equal(coverTextColor({ ...value, coverFooterColor: "#009966" }, "coverFooterColor"), "#009966");
+});

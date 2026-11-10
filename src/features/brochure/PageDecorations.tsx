@@ -1,4 +1,5 @@
 import { ColorField } from "./ColorField";
+import { InkCenteredSpan } from "./InkCenteredSpan";
 import React from "react";
 import type { Campaign, PageLayout } from "../../domain/models";
 import type { BrochurePage } from "./campaignPages";
@@ -81,7 +82,7 @@ export function PageDecorations({
                   color: config.headerTextColor || "#ffffff",
                 }}
               >
-                <span
+                <InkCenteredSpan
                   {...inlineText(
                     title,
                     t("Category heading"),
@@ -91,7 +92,7 @@ export function PageDecorations({
                   )}
                 >
                   {title}
-                </span>
+                </InkCenteredSpan>
               </span>,
               "october-category-header",
             ))}
