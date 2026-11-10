@@ -153,6 +153,23 @@ function energyClass(source: Array<[string, string]>) {
   return null;
 }
 
+export function airConditionerFeatures(
+  product: Partial<Product>,
+  sourceDefaults: { wifi?: boolean; inverter?: boolean } = {},
+) {
+  const source = [
+    ...Object.entries(sourceDefaults).map(
+      ([key, value]) => [key, String(value)] as [string, string],
+    ),
+    ...sourceEntries(product),
+  ];
+  return {
+    wifi: isAirConditioner(product) && hasFeature(source, "wifi"),
+    inverter: isAirConditioner(product) && hasFeature(source, "inverter"),
+    energy: isAirConditioner(product) && energyClass(source) === "A+++",
+  };
+}
+
 export function defaultProductArtworks(
   product: Partial<Product> = {},
   campaign: Partial<Campaign> = {},
@@ -204,7 +221,7 @@ export function defaultProductArtworks(
       width: 32,
     });
   const grade = energyClass(source);
-  if (grade)
+  if (grade === "A+++")
     artworks.push({
       id: "ac-energy",
       type: "energy",

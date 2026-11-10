@@ -39,11 +39,17 @@ function regionVariables(name: string, box: Box | null | undefined) {
   );
 }
 function frameStyle(frame: BlackFridayFrame): React.CSSProperties {
+  const warranty = frame.detailRects?.find((detail) => detail.warranty);
   return {
     "--bf-type-scale": Math.min(1.1, frame.width / 47),
     ...(frame.detailRects?.find((d) => d.warranty)?.runs?.[0]?.pointSize
       ? {
           "--bf-warranty-count-font": `${(frame.detailRects.find((d) => d.warranty)!.runs![0]!.pointSize / 841.88976) * 100}cqw`,
+        }
+      : {}),
+    ...(warranty?.runs?.[1]?.pointSize
+      ? {
+          "--bf-warranty-label-font": `${(warranty.runs[1].pointSize / 841.88976) * 100}cqw`,
         }
       : {}),
     ...(frame.copyStyle
@@ -176,7 +182,7 @@ export function BlackFridayPage({
                 pageArtworks: {
                   product:
                     product.productArtworks ||
-                    blackFridayProductArtworks(frame),
+                    blackFridayProductArtworks(frame, product),
                 },
               }}
               pageKey="product"
@@ -186,7 +192,7 @@ export function BlackFridayPage({
                       onProductChange(product, {
                         productArtworks: (
                           product.productArtworks ||
-                          blackFridayProductArtworks(frame)
+                          blackFridayProductArtworks(frame, product)
                         ).map((item) => (item.id === id ? artwork : item)),
                       })
                   : undefined
@@ -197,7 +203,7 @@ export function BlackFridayPage({
                       onProductChange(product, {
                         productArtworks: (
                           product.productArtworks ||
-                          blackFridayProductArtworks(frame)
+                          blackFridayProductArtworks(frame, product)
                         ).filter((item) => item.id !== id),
                       })
                   : undefined

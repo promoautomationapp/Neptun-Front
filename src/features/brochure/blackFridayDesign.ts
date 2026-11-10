@@ -1,10 +1,12 @@
 import type { Artwork, Box, Campaign, Product } from "../../domain/models";
 import source from "./blackFridayReference.json";
 import type { SourceDetail } from "./BlackFridayDetails";
+import { airConditionerFeatures } from "./productArtwork";
 
 export const BLACK_FRIDAY_ID = "neptun-black-friday";
 export const BLACK_FRIDAY_ASPECT = 297 / 420;
 export interface BlackFridayFrame extends Box {
+  code?: string;
   brandImage?: string;
   priceParts?: (Box & { fill?: string; type?: string })[];
   productArtworks?: (Artwork & {
@@ -200,11 +202,35 @@ export function sourceFont(value?: string) {
     )[value || ""] || value
   );
 }
-export function blackFridayProductArtworks(frame: BlackFridayFrame): Artwork[] {
-  return (frame.productArtworks || [])
+export function blackFridayProductArtworks(
+  frame: BlackFridayFrame,
+  product?: Product,
+): Artwork[] {
+  const native = frame.productArtworks || [];
+  const sameSource = product && product.code === frame.code;
+  const supported = product
+    ? airConditionerFeatures(
+        product,
+        sameSource
+          ? {
+              ...(native.some((item) => item.referenceRole === "wifi")
+                ? { wifi: true }
+                : {}),
+              ...(native.some((item) => /\binverter\b/i.test(item.text || ""))
+                ? { inverter: true }
+                : {}),
+            }
+          : {},
+      )
+    : undefined;
+  return native
     .filter(
       (artwork) =>
         !/BLACK\s+FRIDAY/i.test(artwork.text || "") &&
+        (!supported ||
+          ((artwork.referenceRole !== "wifi" || supported.wifi) &&
+            (!/\binverter\b/i.test(artwork.text || "") || supported.inverter) &&
+            (artwork.type !== "energy" || supported.energy))) &&
         (artwork.referenceRole !== "wifi" ||
           artwork.y < (frame.photo?.y || 20)),
     )

@@ -240,7 +240,12 @@
   > .brochure-specs
   > .brochure-warranty
   > small {
-  font-size: calc(0.9cqw * var(--bf-type-scale, 1));
+  font-size: var(
+    --bf-warranty-label-font,
+    calc(0.7cqw * var(--bf-type-scale, 1))
+  );
+  line-height: 1;
+  margin: 0;
 }
 .brochure-page.brochure-black-friday
   .bf-product-frame
