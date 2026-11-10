@@ -130,4 +130,52 @@ describe("page banners", () => {
       }).pageArtworks?.cover?.[0]?.name,
     ).toBe("original");
   });
+  it("preserves full-page image banners with editable overlays and validates overlay inputs", () => {
+    const image = createPageBanner("image", campaign(), "cover", {
+      id: "banner",
+      image: "/photo.png",
+    });
+    const artwork = {
+      ...image,
+      height: 100,
+      bannerOverlay: {
+        type: "gradient",
+        color: "#000000",
+        endColor: "#ffffff00",
+        angle: 180,
+        opacity: 0.4,
+      },
+    };
+    const stored = campaignSchema.parse({
+      ...campaign(),
+      pageArtworks: { cover: [artwork] },
+    });
+    expect(stored.pageArtworks?.cover?.[0]).toEqual(artwork);
+    expect(
+      campaignSchema.safeParse({
+        ...campaign(),
+        pageArtworks: {
+          cover: [
+            {
+              ...artwork,
+              bannerOverlay: { ...artwork.bannerOverlay, opacity: 4 },
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      campaignSchema.safeParse({
+        ...campaign(),
+        pageArtworks: {
+          cover: [
+            {
+              ...artwork,
+              bannerOverlay: { ...artwork.bannerOverlay, color: "url(unsafe)" },
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+  });
 });

@@ -1,4 +1,8 @@
 /* A3 source composition. Every offer and marketing element remains separate. */
+.brochure-page .brochure-product[data-manual-photo="true"],
+.brochure-page .brochure-product[data-manual-photo="true"] > .brochure-product-image-wrap {
+  overflow: visible;
+}
 .brochure-black-friday.bf-clean-collection {
   --bf-photo-y: 2%;
   --bf-photo-height: 57%;
@@ -120,7 +124,7 @@
   > .brochure-brand-artwork {
   position: absolute;
   left: var(--bf-brand-x, 0);
-  top: var(--bf-brand-y, -200%);
+  top: calc(-1 * var(--bf-brand-height, 160%) - 0.45cqw);
   width: var(--bf-brand-width, 35%);
   height: var(--bf-brand-height, 160%);
   margin: 0;
@@ -129,6 +133,7 @@
 }
 .brochure-black-friday .brochure-brand-artwork .brochure-brand-mark {
   display: flex;
+  align-items: flex-end;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -144,7 +149,7 @@
   width: auto;
   height: 100%;
   object-fit: contain;
-  object-position: left center;
+  object-position: left bottom;
 }
 .brochure-page.brochure-black-friday
   .bf-product-frame
@@ -451,7 +456,7 @@
   .brochure-product-copy
   > .brochure-colors {
   position: absolute;
-  top: calc(var(--bf-brand-y, -200%) - 1.8cqw);
+  top: calc(-1 * var(--bf-brand-height, 160%) - 2.05cqw);
   left: 0;
   margin: 0;
   padding: 0;
@@ -462,8 +467,15 @@
   .bf-product-frame
   .brochure-colors
   > .brochure-color-dot {
-  width: calc(1cqw * var(--bf-type-scale, 1));
-  height: calc(1cqw * var(--bf-type-scale, 1));
+  width: calc(1.35cqw * var(--bf-type-scale, 1));
+  height: calc(1.35cqw * var(--bf-type-scale, 1));
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  [data-apple-product="true"]
+  .brochure-product-copy:not(:has(> .brochure-brand-artwork))
+  > .brochure-colors {
+  top: -1.8cqw;
 }
 /* Native source typography wins over the older generic orange-offer selector. */
 .brochure-page.brochure-black-friday

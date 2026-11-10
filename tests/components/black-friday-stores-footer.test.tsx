@@ -16,6 +16,7 @@ import {
 import {
   brochurePageCount,
   includesStoresPage,
+  includesStoresFooter,
 } from "../../src/features/brochure/storesSelection";
 import { blackFridayStoresContent } from "../../src/features/brochure/blackFridayStores";
 import { resolveSettings } from "../../src/features/settings/settings.schema";
@@ -73,6 +74,7 @@ test.each([false, true])(
       <ProductPage campaign={value} page={last} settings={settings} />,
     );
     expect(page.querySelectorAll(".compact-stores-footer")).toHaveLength(1);
+    expect(page.querySelector(".compact-stores-footer-black")).not.toBeNull();
     expect(
       page
         .querySelector<HTMLElement>(".brochure-last-page-shell")
@@ -112,6 +114,14 @@ test.each([false, true])(
     expect(hidden.textContent).not.toContain("045 286 889");
   },
 );
+test.each([false, true])("legacy separate closing pages become the Black Friday bottom store section (clean=%s)", (clean) => {
+  const saved = { ...campaign(clean), includeStoresPage: true, includeStoresFooter: undefined };
+  expect(includesStoresPage(saved)).toBe(false);
+  expect(includesStoresFooter(saved)).toBe(true);
+  expect(includesStoresFooter({ ...saved, includeStoresFooter: false })).toBe(false);
+  const pages = splitPages(saved);
+  expect(brochurePageCount(saved, pages.length)).toBe(1 + pages.length);
+});
 test("source page12 keeps its reserved14percent space, removes only unchanged native footer layers", () => {
   const value = campaign(false),
     page = splitPages(value).at(-1)!;

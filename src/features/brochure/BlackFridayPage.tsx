@@ -22,6 +22,8 @@ import { backgroundReadabilityStyle } from "./backgroundContrast";
 import { hasPageAppearance, pageAppearanceStyle } from "./pageAppearance";
 import { PageAppearanceFilters } from "./PageAppearanceFilters";
 import { productDesignFor } from "../settings/product-design-defaults";
+import { ApplePageBranding, allAppleProducts } from "./ApplePageBranding";
+import type { CampaignAssetChange } from "./CampaignAssetArtwork";
 import "../../styles/black-friday.css";
 import "../../styles/black-friday-fonts.css";
 
@@ -33,6 +35,7 @@ interface Props {
   onArtworkChange?: PageArtworkProps["onChange"];
   onArtworkRemove?: PageArtworkProps["onRemove"];
   onProductChange?: (product: Product, changes: Partial<Product>) => void;
+  onCampaignAssetChange?: CampaignAssetChange;
   renderProduct?: (product: Product, index: number) => React.ReactNode;
 }
 function regionVariables(name: string, box: Box | null | undefined) {
@@ -54,7 +57,9 @@ function frameStyle(
   const warranty = frame.detailRects?.find((detail) => detail.warranty);
   const detailSize = Math.min(
     5.8,
-    (displayed.height / BLACK_FRIDAY_ASPECT) * 0.11 * (coverSingleton ? 1.12 : 1),
+    (displayed.height / BLACK_FRIDAY_ASPECT) *
+      0.11 *
+      (coverSingleton ? 1.12 : 1),
   );
   const photo = frame.photo || {
     x: 5,
@@ -134,6 +139,7 @@ export function BlackFridayPage({
   onArtworkChange,
   onArtworkRemove,
   onProductChange,
+  onCampaignAssetChange,
   renderProduct,
 }: Props) {
   const kind = closing ? "stores" : page ? "product" : "cover";
@@ -145,9 +151,21 @@ export function BlackFridayPage({
   const frames = blackFridayFrames(number, products, campaign);
   const top = Math.min(100, ...frames.map((frame) => frame.y));
   const bottom = Math.max(95, ...frames.map((frame) => frame.y + frame.height));
-  const fittedFrames = frames.map((frame) =>
-    fitCoverBelowBanners(frame, campaign, key, top, bottom),
-  );
+  const appleTop =
+    allAppleProducts(products) && number > 1 ? Math.max(top, 9.5) : top;
+  const fittedFrames = frames.map((frame) => {
+    const reserved =
+      appleTop > top
+        ? {
+            ...frame,
+            y:
+              appleTop +
+              ((frame.y - top) * (bottom - appleTop)) / (bottom - top),
+            height: (frame.height * (bottom - appleTop)) / (bottom - top),
+          }
+        : frame;
+    return fitCoverBelowBanners(reserved, campaign, key, appleTop, bottom);
+  });
   const displayed = fittedFrames.map((frame, index) => ({
     ...frame,
     ...products[index]?.brochureContentPlacement?.frame,
@@ -196,6 +214,12 @@ export function BlackFridayPage({
         page={page}
         id={id}
       />
+      <ApplePageBranding
+        campaign={campaign}
+        products={products}
+        pageKey={key}
+        onChange={onCampaignAssetChange}
+      />
       <PageArtwork
         campaign={artworkCampaign}
         pageKey={key}
@@ -229,7 +253,18 @@ export function BlackFridayPage({
             ),
           );
         const defaultDetails = !frame.detailRects?.length && !manualDetails;
-        const neutralPhoto = !product.brochureImagePlacement || Object.entries(product.brochureImagePlacement).every(([field, value]) => value === undefined || ({ x: 50, y: 50, scale: 1, hidden: false } as Record<string, unknown>)[field] === value);
+        const neutralPhoto =
+          !product.brochureImagePlacement ||
+          Object.entries(product.brochureImagePlacement).every(
+            ([field, value]) =>
+              value === undefined ||
+              (
+                { x: 50, y: 50, scale: 1, hidden: false } as Record<
+                  string,
+                  unknown
+                >
+              )[field] === value,
+          );
         const largerPhoto =
           twoRows &&
           (isBlackCollectionBrochure(campaign) || automaticPhotos) &&

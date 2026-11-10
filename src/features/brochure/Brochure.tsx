@@ -147,7 +147,7 @@ import {
 } from "./priceDesign";
 import { EditableScreenAnnotation } from "./EditableScreenAnnotation";
 import { ProductArtworkLayer } from "./ProductArtworkLayer";
-import { ApplePhotoClearance } from "./ApplePhotoClearance";
+import { ApplePhotoClearance, hasManualApplePhotoPlacement } from "./ApplePhotoClearance";
 import { DefaultSavingsClearance } from "./DefaultSavingsClearance";
 import { screenGeometryImageUrl } from "./tvWallpaperFit";
 import { screenArtworkFit } from "./screenArtworkFit";
@@ -1367,7 +1367,7 @@ function LargeBundleProductCard(props: ProductCardProps) {
           </div>
         }
       />
-      <ApplePhotoClearance photoAreaRef={photoAreaRef} />
+      <ApplePhotoClearance photoAreaRef={photoAreaRef} enabled={!hasManualApplePhotoPlacement(product)} />
       <DefaultSavingsClearance
         photoAreaRef={photoAreaRef}
         enabled={!contentPlacement.saving && !hasApplePhotos(product)}
@@ -1515,6 +1515,8 @@ function StandardProductCard({
     () => setSize(cardSize(product, layout || "classic8", gridIndex)),
     [product.brochureCardSize, layout, gridIndex],
   );
+  const manualPhoto = Boolean(placement &&
+    (placement.x !== 50 || placement.y !== 50 || placement.scale !== 1));
   const fittedImagePlacement = useProductImageFit({
     imageRef,
     wrapRef,
@@ -1527,6 +1529,7 @@ function StandardProductCard({
         : null,
     base: photoBase,
     externalAnnotation: Boolean(otherInches),
+    allowOverflow: manualPhoto,
   });
   function beginImageGesture(
     event:
@@ -1569,14 +1572,8 @@ function StandardProductCard({
       action.type === "move"
         ? {
             ...action.initial,
-            x: Math.max(
-              0,
-              Math.min(100, action.initial.x + (dx / action.rect.width) * 100),
-            ),
-            y: Math.max(
-              0,
-              Math.min(100, action.initial.y + (dy / action.rect.height) * 100),
-            ),
+            x: action.initial.x + (dx / action.rect.width) * 100,
+            y: action.initial.y + (dy / action.rect.height) * 100,
           }
         : (() => {
             const frame = action.imageRect;
@@ -1594,7 +1591,7 @@ function StandardProductCard({
               {
                 lockAspect: true,
                 minWidth: (frame.width * 0.2) / action.initial.scale,
-                maxWidth: (frame.width * 2.5) / action.initial.scale,
+                maxWidth: (frame.width * 20) / action.initial.scale,
               },
             );
             return {
@@ -1927,6 +1924,7 @@ function StandardProductCard({
     <article
       {...quickEdit?.events}
       data-product-code={String(product.code)}
+      data-manual-photo={manualPhoto ? "true" : undefined}
       data-cover-card-default={
         !Object.values(contentPlacement).some(Boolean) ? "true" : undefined
       }
@@ -2357,7 +2355,7 @@ function StandardProductCard({
           )}
         </ActionMenu>
       )}
-      <ApplePhotoClearance photoAreaRef={wrapRef} />
+      <ApplePhotoClearance photoAreaRef={wrapRef} enabled={!hasManualApplePhotoPlacement(product)} />
       <DefaultSavingsClearance
         key={`${redReference}-${blueReference}-${validSale(product)}`}
         photoAreaRef={wrapRef}
@@ -2909,6 +2907,7 @@ function BlackFridayPageContent(
       onArtworkChange={props.onArtworkChange}
       onArtworkRemove={props.onArtworkRemove}
       onProductChange={props.onProductChange}
+      onCampaignAssetChange={props.onCampaignAssetChange}
       renderProduct={(product, index) => (
         <ProductCard
           {...props}

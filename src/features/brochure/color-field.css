@@ -4,6 +4,7 @@
   color: #20496b;
 }
 .studio-color-trigger {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -20,6 +21,7 @@
   cursor: pointer;
 }
 .studio-color-trigger > i {
+  box-sizing: border-box;
   width: 23px;
   height: 23px;
   flex: none;

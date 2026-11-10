@@ -4,6 +4,8 @@ import { brandLogoFor } from "./brandLogos";
 import { readImage } from "./utils";
 import { t } from "./i18n";
 import { useImagePicker } from "./ImagePickerProvider";
+import { isAppleProduct } from "./productTypes";
+import { isBlackFridayBrochure } from "./blackFridayDesign";
 
 import type { Campaign, Product } from "../../domain/models";
 interface Props {
@@ -16,6 +18,10 @@ export function ProductBrandArtwork({ campaign, product, onChange }: Props) {
   const chooseImage = useImagePicker();
   const [error, setError] = React.useState("");
   const source = product.brandLogo || brandLogoFor(campaign, product.brand);
+  // Apple uses one page-level Authorised Reseller mark. A saved source logo
+  // is not a request to repeat it on every offer; staff can explicitly restore it.
+  if (isBlackFridayBrochure(campaign) && isAppleProduct(product) && product.hideBrandLogo !== false)
+    return null;
   if (product.hideBrandLogo)
     return onChange ? (
       <button

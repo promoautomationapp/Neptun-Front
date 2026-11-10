@@ -1,4 +1,11 @@
 const translations: Record<string, string> = {
+  "Banner image overlay": "Shtresa mbi imazhin e banerit",
+  "Overlay style": "Pamja e shtresës",
+  "Overlay color": "Ngjyra e shtresës",
+  "Overlay opacity": "Dukshmëria e shtresës",
+  "Upload overlay image": "Ngarko imazhin e shtresës",
+  "Replace overlay image": "Zëvendëso imazhin e shtresës",
+  "The overlay changes only this banner. The original image is preserved.": "Shtresa ndryshon vetëm këtë baner. Imazhi origjinal ruhet.",
   "Optional product labels": "Etiketa opsionale të produktit",
   "New model": "Model i ri",
   "Capacity (kg)": "Kapaciteti (kg)",

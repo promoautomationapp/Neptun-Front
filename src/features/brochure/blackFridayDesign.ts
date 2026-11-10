@@ -2,7 +2,6 @@ import type { Artwork, Box, Campaign, Product } from "../../domain/models";
 import source from "./blackFridayReference.json";
 import type { SourceDetail } from "./BlackFridayDetails";
 import { airConditionerFeatures } from "./productArtwork";
-import { coverProductPlacement } from "./coverElements";
 import { getLanguage, t } from "./i18n";
 
 export const BLACK_FRIDAY_ID = "neptun-black-friday";
@@ -211,7 +210,29 @@ export function blackCollectionPageArtworks(
   campaign: Partial<Campaign>,
   pageKey: string | number,
 ): Artwork[] {
-  const saved = campaign.pageArtworks?.[pageKey];
+  const rawSaved = campaign.pageArtworks?.[pageKey];
+  // Earlier source headings began outside the paper. Repair that exact
+  // automatic position while leaving a staff member's moved heading alone.
+  const clippedDefault = (artwork: Artwork) =>
+    isBlackCollectionHeading(artwork) &&
+    artwork.x === -2.13805 &&
+    artwork.y === 0.43983 &&
+    artwork.width === 16.57739 &&
+    artwork.rotation === -5.50022;
+  const saved = rawSaved?.some(clippedDefault)
+    ? rawSaved.map((artwork) =>
+        clippedDefault(artwork)
+          ? {
+              ...artwork,
+              x: 1.5,
+              y: 1,
+              width: 14.9,
+              height: 4.24,
+              fontSize: 2.77,
+            }
+          : artwork,
+      )
+    : rawSaved;
   if (isBlackCollectionBrochure(campaign) && pageKey === "cover") {
     const defaults = blackCollectionPaymentArtworks(campaign);
     const layers = (saved || []).map((layer) => {
@@ -248,6 +269,11 @@ export function blackCollectionPageArtworks(
       id: "black-collection-heading",
       name: "BLACK FRIDAY",
       color: "#ffffff",
+      x: 1.5,
+      y: 1,
+      width: 14.9,
+      height: 4.24,
+      fontSize: 2.77,
     }));
   return [...heading, ...(saved || [])];
 }
@@ -411,35 +437,26 @@ export function blackFridayFrames(
   campaign: Partial<Campaign> = {},
 ): BlackFridayFrame[] {
   const page = blackFridayPage(number);
-  if (
-    !isBlackCollectionBrochure(campaign) &&
-    page?.frames.length === products.length
-  )
-    return page.frames;
-  const count = products.length;
-  if (number === 1 && isBlackCollectionBrochure(campaign)) {
-    const coverCampaign = {
-      id: "black-collection",
-      name: "Black collection",
-      ...campaign,
-      products: [...products],
-    } as Campaign;
-    const placements = products.map((_, index) =>
-      coverProductPlacement(coverCampaign, index, count),
-    );
-    const top = Math.min(...placements.map((frame) => frame.y));
-    const bottom = Math.max(
-      ...placements.map((frame) => frame.y + frame.height),
-    );
-    const scale = 67.5 / Math.max(1, bottom - top);
+  // The cover's products form one bottom row. Its upper area is available for
+  // campaign artwork; explicit saved product frames still win in the renderer.
+  if (number === 1 && products.length) {
+    const count = products.length;
+    const width = count === 1 ? 78 : (96 - (count - 1) * 2) / count;
     return products.map((product, index) => ({
-      ...placements[index]!,
-      y: 26.5 + (placements[index]!.y - top) * scale,
-      height: placements[index]!.height * scale,
+      x: count === 1 ? 11 : 2 + index * (width + 2),
+      y: 48.5,
+      width,
+      height: 45.5,
       order: product.brochureOrder || index + 1,
       model: product.name,
     }));
   }
+  if (
+    !isBlackCollectionBrochure(campaign) &&
+    page?.frames.length === products.length
+  )
+    return fillBlackFridayRows(page.frames);
+  const count = products.length;
   const columns = count <= 2 ? 1 : count <= 6 ? 2 : 3;
   const rows = Math.ceil(count / columns);
   const top =
@@ -454,19 +471,52 @@ export function blackFridayFrames(
   const bottom = 98;
   const width = (96 - (columns - 1) * 2) / columns;
   const height = (bottom - top - (rows - 1) * 1.5) / Math.max(rows, 1);
-  return products.map((product, index) => ({
-    x:
-      columns === 1
-        ? count === 2
-          ? 4
-          : 15
-        : 2 + (index % columns) * (width + 2),
-    y: top + Math.floor(index / columns) * (height + 1.5),
-    width: columns === 1 ? (count === 2 ? 92 : 70) : width,
-    height,
-    order: product.brochureOrder || index + 1,
-    model: product.name,
-  }));
+  return fillBlackFridayRows(
+    products.map((product, index) => ({
+      x:
+        columns === 1
+          ? count === 2
+            ? 4
+            : 15
+          : 2 + (index % columns) * (width + 2),
+      y: top + Math.floor(index / columns) * (height + 1.5),
+      width: columns === 1 ? (count === 2 ? 92 : 70) : width,
+      height,
+      order: product.brochureOrder || index + 1,
+      model: product.name,
+    })),
+  );
+}
+
+/** An incomplete row uses the same left/right edges as the other rows. Native
+ * local artwork coordinates stay attached to their offer as its frame grows. */
+function fillBlackFridayRows(frames: BlackFridayFrame[]): BlackFridayFrame[] {
+  if (frames.length < 3) return frames;
+  const rows: BlackFridayFrame[][] = [];
+  for (const frame of frames) {
+    const row = rows.find(
+      ([peer]) =>
+        Math.abs(peer!.y - frame.y) <
+        Math.min(peer!.height, frame.height) * 0.45,
+    );
+    if (row) row.push(frame);
+    else rows.push([frame]);
+  }
+  const columns = Math.max(...rows.map((row) => row.length));
+  if (rows.every((row) => row.length === columns)) return frames;
+  const left = Math.min(...frames.map((frame) => frame.x));
+  const right = Math.max(...frames.map((frame) => frame.x + frame.width));
+  const changes = new Map<BlackFridayFrame, BlackFridayFrame>();
+  for (const row of rows) {
+    if (row.length === columns) continue;
+    const width = (right - left - (row.length - 1) * 2) / row.length;
+    row
+      .sort((a, b) => a.x - b.x)
+      .forEach((frame, index) =>
+        changes.set(frame, { ...frame, x: left + index * (width + 2), width }),
+      );
+  }
+  return frames.map((frame) => changes.get(frame) || frame);
 }
 
 export function sourceText(value: string) {
@@ -547,6 +597,18 @@ export function blackFridayProductArtworks(
             ...artwork,
             text: artwork.text ? sourceText(artwork.text) : undefined,
             image: artwork.image || artwork.imageUrl,
+            // Source icons have a PDF frame as well as their own viewBox.
+            // Contain the complete mark instead of cropping it to that frame.
+            ...(artwork.referenceRole === "wifi" ||
+            artwork.referenceRole === "energy"
+              ? { imageFit: "contain" }
+              : {}),
+            ...(artwork.referenceRole === "wifi" && frame.photo
+              ? {
+                  x: frame.photo.x + frame.photo.width - artwork.width,
+                  y: frame.photo.y - (artwork.height || 5) - 0.8,
+                }
+              : {}),
             fontSize: artwork.pointSize
               ? (artwork.pointSize / 841.88976) * 100
               : artwork.fontSize,

@@ -1,0 +1,22 @@
+.brochure-apple-page-branding {
+  position: absolute;
+  top: 1.6%;
+  right: 4%;
+  width: 21%;
+  z-index: 7;
+}
+
+.brochure-apple-page-branding img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.brochure-apple-page-branding .brochure-apple-reseller-default {
+  filter: brightness(0) invert(1);
+}
+
+.brochure-page.light .brochure-apple-page-branding .brochure-apple-reseller-default {
+  filter: brightness(0);
+}

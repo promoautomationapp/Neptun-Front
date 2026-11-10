@@ -4,6 +4,7 @@ import { SearchableSelect } from "../../components/SearchableSelect";
 import { t } from "./i18n";
 import { EditorIcon } from "./EditorIcon";
 import { LayerOpacityControl } from "./LayerOpacityControl";
+import { BannerImageFields } from "./PageBannerFields";
 import type { Campaign, CampaignMutator } from "../../domain/models";
 import type { PageArtworkLayer } from "./PageArtwork";
 import React from "react";
@@ -314,6 +315,9 @@ export function PageLayersControls({
               </label>
             </fieldset>
           )}
+          {selected.layoutRole === "banner" && selected.type === "image" && (
+            <BannerImageFields artwork={selected} onChange={change} />
+          )}
           {selected.type === "text" ||
           selected.type === "overlay" ||
           selected.type === "shape" ? (
@@ -433,11 +437,7 @@ export function PageLayersControls({
                 <input
                   type="number"
                   min="0"
-                  max={
-                    selected.layoutRole === "banner" && field === "height"
-                      ? "70"
-                      : "100"
-                  }
+                  max="100"
                   step=".5"
                   aria-label={`${t("Page layer")} ${t({ x: "Left", y: "Top", width: "Width", height: "Height" }[field])}`}
                   value={selected[field] ?? 0}
@@ -445,12 +445,7 @@ export function PageLayersControls({
                     change({
                       [field]: Math.max(
                         0,
-                        Math.min(
-                          selected.layoutRole === "banner" && field === "height"
-                            ? 70
-                            : 100,
-                          Number(event.target.value),
-                        ),
+                        Math.min(100, Number(event.target.value)),
                       ),
                     })
                   }

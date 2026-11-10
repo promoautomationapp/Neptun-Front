@@ -125,6 +125,24 @@ function hasFeature(
   return !states.includes(-1) && states.includes(1);
 }
 
+function hasInverter(source: Array<[string, string]>) {
+  if (source.some(([key, value]) => mentionsFeature(key, value, "inverter") === -1))
+    return false;
+  return hasFeature(source, "inverter") || source.some(([key, value]) => {
+    const text = `${key} ${value}`;
+    return /°|temperatur|temperature/i.test(text) &&
+      /[-−]\s*\d+(?:[.,]\d+)?\s*°?\s*c?[\s\S]{0,50}\+\s*\d+(?:[.,]\d+)?\s*°?\s*c?/i.test(text);
+  });
+}
+
+/** Correct only the shipped energy badge; custom uploaded icons stay intact. */
+export function productBadgeImage(image: string | undefined) {
+  return image === `${BADGE_ROOT}/energy-a-plus-plus-plus.svg` ||
+    image === "/assets/product-badges/energy-a-plus-plus-plus.svg"
+    ? "/product-badges/energy-a-plus-plus-plus.svg"
+    : image;
+}
+
 function firstEnergyClass(text: string) {
   return (
     text
@@ -165,7 +183,7 @@ export function airConditionerFeatures(
   ];
   return {
     wifi: isAirConditioner(product) && hasFeature(source, "wifi"),
-    inverter: isAirConditioner(product) && hasFeature(source, "inverter"),
+    inverter: isAirConditioner(product) && hasInverter(source),
     energy: isAirConditioner(product) && energyClass(source) === "A+++",
   };
 }
@@ -205,11 +223,11 @@ export function defaultProductArtworks(
       label: "WiFi",
       image: `${BADGE_ROOT}/wifi.svg`,
       relativeTo: "image",
-      x: 82,
+      x: 90,
       y: -28,
       width: 10,
     });
-  if (hasFeature(source, "inverter"))
+  if (hasInverter(source))
     artworks.push({
       id: "ac-inverter",
       type: "inverter",
@@ -242,7 +260,7 @@ export function defaultProductArtworks(
     const choice = key ? campaign.iconDefaults?.[key] : undefined;
     return choice?.visible === false
       ? []
-      : [choice?.image ? { ...artwork, image: choice.image } : artwork];
+      : [{ ...artwork, image: productBadgeImage(choice?.image || artwork.image) }];
   });
 }
 
@@ -256,7 +274,7 @@ export function effectiveProductArtworks(
   const artworks = reflowDefaultLargeBundleImages(
     product,
     product.productArtworks,
-  );
+  ).map((artwork) => ({ ...artwork, image: productBadgeImage(artwork.image) }));
   return artworks.some((item) => item.usesPrimaryImage)
     ? artworks.map((item) =>
         item.usesPrimaryImage ? { ...item, image: product.image } : item,

@@ -13,11 +13,22 @@ import {
   type PhotoFit,
 } from "./applePhotoGeometry";
 import "../../styles/apple-photo-clearance.css";
+import type { Product } from "../../domain/models";
 
 export const APPLE_PHOTO_CLEARANCE_EVENT = "brochure-photo-clearance";
 export { hasApplePhotos } from "./productTypes";
 const CANONICAL_GAP = 3;
 const CANONICAL_PAGE_WIDTH = 1080;
+
+/** The default no-overlap pass must not counteract an intentional image edit. */
+export function hasManualApplePhotoPlacement(product: Partial<Product>) {
+  const placement = product.brochureImagePlacement;
+  return Boolean(placement && (
+    (placement.x !== undefined && placement.x !== 50) ||
+    (placement.y !== undefined && placement.y !== 50) ||
+    (placement.scale !== undefined && placement.scale !== 1)
+  ));
+}
 
 interface OriginalCorrection {
   translate: string;
@@ -70,10 +81,13 @@ function shadowLayers(value: string): string[] {
 /** Correct only the displayed transforms; requested drag/resize settings remain on their original elements. */
 export function ApplePhotoClearance({
   photoAreaRef,
+  enabled = true,
 }: {
   photoAreaRef: RefObject<HTMLElement | null>;
+  enabled?: boolean;
 }) {
   useLayoutEffect(() => {
+    if (!enabled) return;
     const area = photoAreaRef.current;
     const card = area?.closest<HTMLElement>(".brochure-product");
     if (!area || !card) return;
@@ -107,6 +121,7 @@ export function ApplePhotoClearance({
           "class",
           "src",
           "data-apple-photo-clearance",
+          "data-apple-photo-manual",
         ],
         childList: true,
         characterData: true,
@@ -121,6 +136,11 @@ export function ApplePhotoClearance({
       mutations?.disconnect();
       try {
         for (const element of originals.keys()) {
+          if (element.dataset.applePhotoManual === "true") {
+            restore(element);
+            originals.delete(element);
+            continue;
+          }
           if (element.dataset.savingManual === "true" || element.dataset.nameDividerManual === "true" || element.querySelector('[data-saving-manual="true"]'))
             originals.delete(element);
           else restore(element);
@@ -188,7 +208,7 @@ export function ApplePhotoClearance({
         };
         const targets: PhotoTarget[] = [];
         for (const element of card.querySelectorAll<HTMLElement>(
-          '[data-apple-photo-clearance="true"]',
+          '[data-apple-photo-clearance="true"]:not([data-apple-photo-manual="true"])',
         )) {
           const image = element.querySelector<HTMLImageElement>(
             "img:not(.bundle-screen-artwork):not(.brochure-screen-image)",
@@ -569,6 +589,6 @@ export function ApplePhotoClearance({
         new CustomEvent(APPLE_PHOTO_CLEARANCE_EVENT, { bubbles: true }),
       );
     };
-  }, [photoAreaRef]);
+  }, [photoAreaRef, enabled]);
   return null;
 }

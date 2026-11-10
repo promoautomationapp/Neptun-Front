@@ -1,0 +1,32 @@
+import type { Campaign, Product } from "../../domain/models";
+import { CampaignAssetArtwork, type CampaignAssetChange } from "./CampaignAssetArtwork";
+import { OCTOBER_ASSETS } from "./octoberDesign";
+import { isAppleProduct } from "./productTypes";
+import "../../styles/apple-page-branding.css";
+
+export function allAppleProducts(products: readonly Product[]) {
+  return products.length > 0 && products.every(isAppleProduct);
+}
+
+/** One replaceable page mark, kept out of the individual Apple photographs. */
+export function ApplePageBranding({ campaign, products, pageKey, onChange }: {
+  campaign: Campaign;
+  products: readonly Product[];
+  pageKey: string;
+  onChange?: CampaignAssetChange;
+}) {
+  if (!allAppleProducts(products)) return null;
+  return (
+    <div className="brochure-apple-page-branding">
+      <CampaignAssetArtwork
+        campaign={campaign}
+        assetKey={`${pageKey}-apple-reseller`}
+        label="Apple Authorised Reseller"
+        onChange={onChange}
+        defaultWidth="100%"
+      >
+        <img className="brochure-apple-reseller-default" src={OCTOBER_ASSETS.apple} alt="Apple Authorised Reseller" draggable={false} />
+      </CampaignAssetArtwork>
+    </div>
+  );
+}

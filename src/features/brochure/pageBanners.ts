@@ -1,10 +1,29 @@
 import type { Artwork, Box, Campaign } from "../../domain/models";
 import { resolveBrochureFormat } from "./brochureFormat";
 import { resolvedPageAppearance } from "./pageAppearance";
+import type { CSSProperties } from "react";
 
 export type PageBannerKind = "color" | "text" | "image";
 const bounded = (value: number, low: number, high: number) =>
   Math.max(low, Math.min(high, value));
+
+/** The overlay stays in its own clipped layer, including in PDF export. */
+export function bannerImageOverlayStyle(
+  overlay: Artwork["bannerOverlay"],
+): CSSProperties {
+  if (!overlay) return {};
+  return {
+    opacity: bounded(overlay.opacity ?? 0.4, 0, 1),
+    ...(overlay.type === "color"
+      ? { backgroundColor: overlay.color || "#000000" }
+      : {}),
+    ...(overlay.type === "gradient"
+      ? {
+          backgroundImage: `linear-gradient(${bounded(overlay.angle ?? 180, 0, 360)}deg, ${overlay.color || "#000000"}, ${overlay.endColor || "#00000000"})`,
+        }
+      : {}),
+  };
+}
 
 /** Only intentional banners affect layout. Ordinary page artwork stays free. */
 export function pageBannerInset(

@@ -1,5 +1,12 @@
 import type {Campaign}from '../../domain/models';
+/** Both Black Friday collections finish with stores beneath the last offers.
+ * Older saved drafts may still carry the former separate-page flag. */
+export function usesBlackFridayStoresFooter(campaign: Partial<Campaign>) {
+  return ["neptun-black-friday", "neptun-black-collection"].includes(campaign.brochurePresetId || "") ||
+    ["black-friday", "black-collection"].includes(campaign.brochureReferenceDesign || "");
+}
 export function includesStoresPage(campaign: Partial<Campaign>) {
+  if (usesBlackFridayStoresFooter(campaign)) return false;
   return campaign?.includeStoresPage !== false;
 }
 
@@ -18,6 +25,8 @@ export function brochurePageCount(campaign: Partial<Campaign>, productPageCount:
 }
 
 export function includesStoresFooter(campaign: Partial<Campaign>) {
+  if (usesBlackFridayStoresFooter(campaign))
+    return campaign.includeStoresFooter !== false;
   return campaign?.includeStoresFooter === true && !includesStoresPage(campaign);
 }
 

@@ -1,7 +1,11 @@
 import type { Campaign, Product } from "../../domain/models";
 import { brandLogoFor } from "./brandLogos";
+import { isBlackFridayBrochure } from "./blackFridayDesign";
+import { isAppleProduct } from "./productTypes";
 
 export function bundleBrandArtworks(campaign: Campaign, product: Product) {
+  const pageAppleBrand = isBlackFridayBrochure(campaign) && product.hideBrandLogo !== false;
+  if (pageAppleBrand && isAppleProduct(product)) return [];
   const composite =
     product.brandLogo ||
     (String(product.brand || "").includes(" / ")
@@ -22,6 +26,7 @@ export function bundleBrandArtworks(campaign: Campaign, product: Product) {
   const unique = new Map<string, { name: string; source: string }>();
   for (const item of candidates) {
     const key = item.name.trim().toUpperCase();
+    if (pageAppleBrand && key === "APPLE") continue;
     if (key && !unique.has(key)) unique.set(key, item);
   }
   return [...unique.values()];

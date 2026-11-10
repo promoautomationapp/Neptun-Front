@@ -97,21 +97,31 @@ it("preserves saved image and detail block sizing instead of applying automatic 
   expect([detail.style.width, detail.style.height]).toEqual(["18%", "6cqw"]);
   expect(value).toEqual(before);
 });
-it("keeps native source detail profiles while recognizing its two separate cover rows", () => {
-  const value = campaign(2);
-  value.brochureReferenceDesign = "black-friday";
-  value.products.forEach((product) => {
-    product.brochurePage = 1;
-  });
-  const view = render(<CoverPage campaign={value} />);
-  expect(view.container.querySelectorAll(".bf-singleton-row")).toHaveLength(2);
-  expect(view.container.querySelectorAll(".bf-default-details")).toHaveLength(
-    0,
-  );
-  expect(
-    view.container.querySelectorAll(".brochure-product-name-divider"),
-  ).toHaveLength(2);
-});
+it.each(["black-friday", "black-collection"] as const)(
+  "leaves the upper cover free and puts %s offers in one bottom row",
+  (design) => {
+    const value = campaign(2);
+    value.brochureReferenceDesign = design;
+    value.products.forEach((product) => {
+      product.brochurePage = 1;
+    });
+    const view = render(<CoverPage campaign={value} />);
+    expect(view.container.querySelectorAll(".bf-singleton-row")).toHaveLength(
+      0,
+    );
+    expect(view.container.querySelectorAll(".bf-default-details")).toHaveLength(
+      2,
+    );
+    const frames = [
+      ...view.container.querySelectorAll<HTMLElement>(".bf-product-frame"),
+    ];
+    expect(frames.map((frame) => frame.style.top)).toEqual(["48.5%", "48.5%"]);
+    expect(frames.map((frame) => frame.style.width)).toEqual(["47%", "47%"]);
+    expect(
+      view.container.querySelectorAll(".brochure-product-name-divider"),
+    ).toHaveLength(2);
+  },
+);
 it("uses saved frame geometry to avoid treating two side-by-side offers as singleton rows", () => {
   const value = campaign(2);
   value.products.forEach((product, index) => {

@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import {
   ApplePhotoClearance,
   hasApplePhotos,
+  hasManualApplePhotoPlacement,
 } from "../../src/features/brochure/ApplePhotoClearance";
 import {
   rectsOverlap,
@@ -21,7 +22,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function fixture(marked = true, showClearance = true, withNameDivider = false) {
+function fixture(marked = true, showClearance = true, withNameDivider = false, enabled = true) {
   function Card() {
     const area = useRef<HTMLDivElement>(null);
     const row = useRef<HTMLDivElement>(null);
@@ -72,7 +73,7 @@ function fixture(marked = true, showClearance = true, withNameDivider = false) {
             style={{ objectFit: "contain" }}
           />
         </div>
-        {showClearance && <ApplePhotoClearance photoAreaRef={area} />}
+        {showClearance && <ApplePhotoClearance photoAreaRef={area} enabled={enabled} />}
       </article>
     );
     return withNameDivider ? (
@@ -83,6 +84,33 @@ function fixture(marked = true, showClearance = true, withNameDivider = false) {
   }
   return <Card />;
 }
+
+it("lets intentional photo moves and sizes bypass automatic Apple clearance", () => {
+  expect(hasManualApplePhotoPlacement({})).toBe(false);
+  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { x: 50, y: 50, scale: 1 } })).toBe(false);
+  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { x: 60, y: 50, scale: 1 } })).toBe(true);
+  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { scale: 2 } })).toBe(true);
+  mockGeometry();
+  const view = render(fixture(true, true, false, false));
+  for (const element of view.container.querySelectorAll<HTMLElement>('[data-apple-photo-clearance]')) {
+    expect(element.style.translate).toBe("");
+    expect(element.style.scale).toBe("");
+  }
+});
+
+it("restores an additional Apple photo's automatic correction when staff move it deliberately", async () => {
+  mockGeometry();
+  const view = render(fixture());
+  const extra = view.container.querySelector<HTMLElement>(".product-artwork-item");
+  if (!extra) throw new Error("Missing additional photo");
+  await act(async () => {
+    extra.dataset.applePhotoManual = "true";
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(extra.style.translate).toBe("");
+  expect(extra.style.scale).toBe("");
+});
 
 function mockGeometry(
   previewScale = 1,

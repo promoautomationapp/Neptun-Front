@@ -1,6 +1,7 @@
 import type { Product } from "../../domain/models";
 import { normalize } from "./utils";
 import { savedDetailEntries } from "./detailFacts";
+import { blackFridaySourceImage, blackFridaySourceOfferCode } from "./blackFridaySourceImages";
 import {
   defaultLargeBundleImages,
   isLargeBundleOffer,
@@ -24,7 +25,24 @@ export function catalogByCode(catalog: Product[]) {
 
 export function isBundleOffer(product: Partial<Product>) {
   return (
-    Array.isArray(product?.bundleProducts) && product.bundleProducts.length > 1
+    Array.isArray(product?.bundleProducts) && product.bundleProducts.length > 1 &&
+    !hasCompleteSourceOfferPhoto(product)
+  );
+}
+
+/** Old reference imports split slash-delimited model codes and copied the same
+ * already-complete offer photo into every member. Render those as one ordinary
+ * primary photo so photo resizing, feature badges and screen geometry work too.
+ * Deliberately saved independent bundle-image layers retain their own layout. */
+function hasCompleteSourceOfferPhoto(product: Partial<Product>) {
+  const sourcePhoto = blackFridaySourceImage(product.image);
+  return Boolean(
+    sourcePhoto && blackFridaySourceOfferCode(sourcePhoto) &&
+    (product.bundleProducts?.length || 0) > 1 &&
+    !product.productArtworks?.some((artwork) => artwork.type === "bundle-product") &&
+    product.bundleProducts?.every(
+      (member) => blackFridaySourceImage(member.image) === sourcePhoto,
+    ),
   );
 }
 
@@ -129,7 +147,7 @@ export function resolveOfferProduct(
       bundle: false,
     };
   // An absent model such as AKT8090/NE is one SKU, not a two-item offer.
-  const slashSuffix = text.match(/^[^\s/]+\/([a-z]{1,5})$/i)?.[1];
+  const slashSuffix = text.match(/^[^\s/]+\/([a-z]{1,5}|\d{1,2})$/i)?.[1];
   const singleModelSuffix = slashSuffix && !lookup.has(importCode(slashSuffix));
   let codes = singleModelSuffix
     ? [text]
@@ -165,6 +183,28 @@ export function resolveOfferProduct(
 
 export function defaultBundleImages(product: Partial<Product>) {
   if (!isBundleOffer(product)) return [];
+  const referencePhoto = blackFridaySourceImage(product.image);
+  if (
+    referencePhoto &&
+    blackFridaySourceOfferCode(referencePhoto) &&
+    product.bundleProducts?.every(
+      (member) => blackFridaySourceImage(member.image) === referencePhoto,
+    )
+  )
+    return [{
+      id: `bundle-image-${product.bundleProducts[0]!.code}`,
+      type: "bundle-product",
+      memberCode: String(product.bundleProducts[0]!.code),
+      label: product.name || String(product.code),
+      image: referencePhoto,
+      usesPrimaryImage: true,
+      relativeTo: "photo-area",
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      zIndex: 3,
+    }];
   if (isLargeBundleOffer(product)) return defaultLargeBundleImages(product);
   const members = product.bundleProducts ?? [];
   return members.map((member, index) => {

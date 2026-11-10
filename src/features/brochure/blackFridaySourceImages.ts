@@ -37,6 +37,14 @@ export function blackFridaySourceImage(value: unknown): string | null {
   }
 }
 
+/** A supplied source photo already depicts the complete reference offer. Model
+ * punctuation such as BHS510/00 or an indoor/outdoor AC pair is not a request
+ * to render that same complete photo once for each piece of the code. */
+export function blackFridaySourceOfferCode(image: unknown): string | null {
+  const local = blackFridaySourceImage(image);
+  return local ? sourceProducts.get(local)?.code || null : null;
+}
+
 /** The original brochure asset is approved source artwork, so reimport never
  * spends AI credits cutting it out or replacing the source's product details. */
 export function applyBlackFridaySourceImage(

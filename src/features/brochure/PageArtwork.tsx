@@ -13,7 +13,7 @@ import { useImagePicker } from "./ImagePickerProvider";
 import { PageTextToolbar } from "./PageTextToolbar";
 import { artworkTextColor } from "./pageAppearance";
 import { preferredTextFonts, textFontCss } from "./textFonts";
-import { PageBannerFields } from "./PageBannerFields";
+import { BannerImage, PageBannerFields } from "./PageBannerFields";
 import "../../styles/page-banners.css";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -231,7 +231,7 @@ function ArtworkItem({
             y: clamp(
               action.original.y + dy,
               0,
-              isBanner ? Math.max(0, 90 - (action.original.height || 7)) : 95,
+              isBanner ? Math.max(0, 100 - (action.original.height || 7)) : 95,
             ),
           }
         : (() => {
@@ -250,7 +250,7 @@ function ArtworkItem({
                 minHeight: 2,
                 maxWidth: 100,
                 maxHeight: isBanner
-                  ? Math.min(70, 90 - action.original.y)
+                  ? Math.max(2, 100 - action.original.y)
                   : 100,
                 lockAspect:
                   (isText && !isBanner) ||
@@ -552,6 +552,8 @@ function ArtworkItem({
         </svg>
       ) : artwork.type === "overlay" ? (
         <div className="page-layer-overlay" style={{ background: fill }} />
+      ) : isBanner ? (
+        <BannerImage artwork={position} />
       ) : (
         <img
           src={position.image}

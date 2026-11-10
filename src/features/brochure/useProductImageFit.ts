@@ -13,6 +13,7 @@ export function useProductImageFit({
   base,
   placement,
   externalAnnotation = false,
+  allowOverflow = false,
 }: {
   imageRef: RefObject<HTMLImageElement | null>;
   wrapRef: RefObject<HTMLDivElement | null>;
@@ -21,6 +22,7 @@ export function useProductImageFit({
   base: ImageFitPlacement;
   placement?: Placement | null;
   externalAnnotation?: boolean;
+  allowOverflow?: boolean;
 }) {
   const [fitted, setFitted] = React.useState<{
     source?: string;
@@ -48,6 +50,7 @@ export function useProductImageFit({
         preservePlacement: Boolean(placement),
         padding: 0.015,
         externalAnnotation,
+        allowOverflow,
       });
       setFitted((previous) =>
         previous &&
@@ -72,6 +75,7 @@ export function useProductImageFit({
     ready,
     placement,
     externalAnnotation,
+    allowOverflow,
     base.x,
     base.y,
     base.scale,

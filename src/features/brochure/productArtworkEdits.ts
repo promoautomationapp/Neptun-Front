@@ -21,6 +21,9 @@ export function patchProductArtwork(
       ? {
           ...item,
           ...values,
+          ...(["x", "y", "width", "height"].some((field) =>
+            values[field as keyof Artwork] != null,
+          ) ? { manualPlacement: true } : {}),
           ...(values.width != null &&
           item.type === "text" &&
           item.width > 0 &&

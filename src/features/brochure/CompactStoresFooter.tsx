@@ -7,6 +7,7 @@ import type { Campaign, Settings, Store } from "../../domain/models";
 import { storePageEntries } from "./storesDesign";
 import type { StoreEntry } from "./storesDesign";
 import { compactStoresFooterHeight } from "./storesSelection";
+import { usesBlackFridayStoresFooter } from "./storesSelection";
 import { StoresElement } from "./StoresElement";
 import type { StoresElementProps } from "./StoresElement";
 import "../../styles/compact-stores-footer.css";
@@ -223,7 +224,7 @@ export function CompactStoresFooter({
 
   return (
     <div
-      className="compact-stores-footer stores-element-canvas"
+      className={`compact-stores-footer stores-element-canvas${usesBlackFridayStoresFooter(campaign) ? " compact-stores-footer-black" : ""}`}
       style={footerStyle}
       aria-label="Dyqanet NEPTUN dhe informacioni i fushatës"
     >

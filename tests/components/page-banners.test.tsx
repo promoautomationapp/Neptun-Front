@@ -2,7 +2,10 @@ import React from "react";
 import { afterEach, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { PageArtwork } from "../../src/features/brochure/PageArtwork";
-import { PageBannerFields } from "../../src/features/brochure/PageBannerFields";
+import {
+  BannerImageFields,
+  PageBannerFields,
+} from "../../src/features/brochure/PageBannerFields";
 import { PageBannerMenu } from "../../src/features/brochure/PageBannerMenu";
 import { setLanguage } from "../../src/features/brochure/i18n";
 import type { Artwork, Campaign } from "../../src/domain/models";
@@ -104,4 +107,82 @@ it("edits banner width, height and transparent fill directly from the small tool
     { height: 12 },
     { backgroundColor: "#00000000" },
   ]);
+});
+
+it("edits an image banner overlay independently and removes it without replacing the source photo", () => {
+  setLanguage("en");
+  let banner: Artwork = {
+    id: "image",
+    type: "image",
+    layoutRole: "banner",
+    image: "/photo.jpg",
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 25,
+  };
+  const update = (change: Partial<Artwork>) => {
+    banner = { ...banner, ...change };
+  };
+  const view = render(<BannerImageFields artwork={banner} onChange={update} />);
+  fireEvent.click(view.getByRole("button", { name: "Gradient" }));
+  view.rerender(<BannerImageFields artwork={banner} onChange={update} />);
+  fireEvent.change(view.getByRole("slider", { name: "Overlay opacity" }), {
+    target: { value: "65" },
+  });
+  expect(banner.image).toBe("/photo.jpg");
+  expect(banner.bannerOverlay).toMatchObject({
+    type: "gradient",
+    opacity: 0.65,
+  });
+  view.rerender(<BannerImageFields artwork={banner} onChange={update} />);
+  expect(
+    view.container.querySelector<HTMLElement>(".page-banner-image-overlay")
+      ?.style.opacity,
+  ).toBe("0.65");
+  fireEvent.click(view.getByRole("button", { name: "None" }));
+  expect(banner.bannerOverlay).toBeUndefined();
+  expect(banner.image).toBe("/photo.jpg");
+});
+
+it("exports a clipped image overlay over the banner while keeping the original image and opacity separate", () => {
+  const view = render(
+    <PageArtwork
+      campaign={{
+        pageArtworks: {
+          cover: [
+            {
+              id: "image",
+              type: "image",
+              layoutRole: "banner",
+              image: "/base.jpg",
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 100,
+              opacity: 0.9,
+              bannerOverlay: {
+                type: "image",
+                image: "/texture.png",
+                opacity: 0.3,
+              },
+            },
+          ],
+        },
+      }}
+      pageKey="cover"
+    />,
+  );
+  const base = view.container.querySelector('img[src="/base.jpg"]');
+  const overlay = view.container.querySelector<HTMLElement>(
+    ".page-banner-image-overlay",
+  )!;
+  expect(base).toBeTruthy();
+  expect(overlay.querySelector("img")?.getAttribute("src")).toBe(
+    "/texture.png",
+  );
+  expect(overlay.style.opacity).toBe("0.3");
+  expect(
+    base?.closest<HTMLElement>(".page-banner-artwork")?.style.opacity,
+  ).toBe("0.9");
 });

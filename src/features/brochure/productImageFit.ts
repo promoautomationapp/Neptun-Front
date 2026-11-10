@@ -22,6 +22,7 @@ export function productImageFit({
   preservePlacement = false,
   padding = 0,
   externalAnnotation = false,
+  allowOverflow = false,
 }: {
   naturalWidth: number;
   naturalHeight: number;
@@ -34,6 +35,7 @@ export function productImageFit({
   preservePlacement?: boolean;
   padding?: number;
   externalAnnotation?: boolean;
+  allowOverflow?: boolean;
 }) {
   const unchanged = { ...base };
   if (
@@ -50,6 +52,9 @@ export function productImageFit({
     !positive(base?.scale)
   )
     return unchanged;
+  // Automatic fitting protects the default layout. A deliberate photo edit is
+  // free to extend beyond its offer's photo slot (even across the whole page).
+  if (allowOverflow) return unchanged;
   const { left, top, right, bottom } = bounds || {
     left: 0,
     top: 0,

@@ -201,3 +201,41 @@
   text-align: right;
   font-size: .65em;
 }
+
+/* Keep the final Black Friday store section on the same black canvas. The
+ * approved multicolour corporate/service logos retain their original ink. */
+.compact-stores-footer-black {
+  background: #000;
+  color: #fff;
+  font-family: CeraPro, Arial, sans-serif;
+}
+
+.compact-stores-footer-black .compact-stores-footer-white {
+  background: #000;
+  border-bottom-color: #000;
+}
+
+.compact-stores-footer.compact-stores-footer-black
+  :is(.compact-footer-brand, .compact-footer-stores, .compact-footer-service) {
+  background: transparent;
+  color: #fff;
+}
+.compact-stores-footer-black .compact-footer-service-fallback {
+  color: #fff;
+}
+
+.compact-stores-footer-black .compact-footer-service {
+  border-left-color: #707070;
+}
+
+.compact-stores-footer-black .compact-footer-online {
+  color: #ff613b;
+}
+
+.compact-stores-footer-black .compact-footer-brand img,
+.compact-stores-footer-black .compact-footer-service-logo {
+  background: #fff;
+  border-radius: .15cqw;
+  padding: .15cqw;
+  box-sizing: border-box;
+}

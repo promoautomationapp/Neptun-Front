@@ -7,7 +7,10 @@ import {
   resolveOfferProduct,
 } from "./productBundles";
 import { normalize, parsePrice } from "./utils";
-import { applyBlackFridaySourceImage } from "./blackFridaySourceImages";
+import {
+  applyBlackFridaySourceImage,
+  blackFridaySourceOfferCode,
+} from "./blackFridaySourceImages";
 import { discardPreparedProductPhoto } from "./imageReview";
 
 /** Optional mappings for ordinary price imports as well as positioned brochure imports. */
@@ -157,6 +160,20 @@ export function resolveExcelOffer(
   columns: ExcelProductColumns,
   rowNumber: number,
 ): ReturnType<typeof resolveOfferProduct> {
+  const sourceCode = blackFridaySourceOfferCode(cell(row, columns.imageCol));
+  if (sourceCode && importCode(sourceCode) === importCode(code))
+    return {
+      product: excelRowProduct(
+        row,
+        code,
+        lookup.get(importCode(code)) || null,
+        columns,
+        rowNumber,
+      ),
+      codes: [code],
+      missingCodes: [],
+      bundle: false,
+    };
   const resolved = resolveOfferProduct(code, lookup);
   if (!resolved.bundle)
     return {

@@ -1885,7 +1885,7 @@ function StorePageControls({
               });
             }}
           >
-            <option value="page">{t("Separate stores page")}</option>
+            {!isBlackFridayBrochure(campaign) && <option value="page">{t("Separate stores page")}</option>}
             <option value="footer">
               {t("Bottom of the last product page")}
             </option>

@@ -530,6 +530,15 @@ export interface Bounds {
 export interface Artwork {
   /** A page banner reserves the product grid beneath its visible frame. */
   layoutRole?: "banner";
+  /** A decorative overlay clipped to an image banner; opacity leaves its photo intact. */
+  bannerOverlay?: {
+    type: "color" | "gradient" | "image";
+    color?: string;
+    endColor?: string;
+    angle?: number;
+    image?: string;
+    opacity?: number;
+  };
   referenceSource?: string;
   referenceRole?: "person" | "wifi" | "inverter" | "energy" | "promotion";
   shapePath?: string;
@@ -540,6 +549,8 @@ export interface Artwork {
   textVerticalAlign?: "top" | "center" | "bottom";
   padding?: number;
   fitVisiblePhoto?: boolean;
+  /** A deliberate photo move/resize may overlap surrounding Apple content. */
+  manualPlacement?: boolean;
   imageFit?: "cover" | "contain";
   id: string;
   name?: string;

@@ -354,7 +354,7 @@ html[data-theme="dark"] .brochure-page .page-text-toolbar button {
   padding: 0 5px;
   font-weight: 700;
 }
-.cs-page-layer-color > div {
+.cs-page-layer-color > div:not(.studio-color-field) {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   align-items: end;

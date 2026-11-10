@@ -11,6 +11,8 @@ import {
 import { needsImagePreparation } from "../../src/features/brochure/imageReview";
 import { otherScreenInches } from "../../src/features/brochure/tvSpecs";
 import { isMobilePhone } from "../../src/features/brochure/productTypes";
+import { createBundleOffer, defaultBundleImages, isBundleOffer } from "../../src/features/brochure/productBundles";
+import { defaultProductArtworks } from "../../src/features/brochure/productArtwork";
 
 const path = "/brochure-presets/black-friday/images/p04-im1.webp";
 const headers = [
@@ -35,6 +37,37 @@ const row = [
 ];
 
 describe("supplied Black Friday source images", () => {
+  it("keeps complete source-offer photos single despite model slashes and AC indoor/outdoor codes", () => {
+    for (const [code, image] of [
+      ["BHS510/00", "/brochure-presets/black-friday/images/p11-im14.webp"],
+      ["BEEPGE125/BEEPGE126", "/brochure-presets/black-friday/images/p08-im3.webp"],
+    ]) {
+      const item = [...row]; item[0] = code!; item[1] = code!; item[4] = `https://neptun.promoautomation.app${image}`;
+      const result = analyzeBrochureRows([item], { ...inferBrochureColumns(headers), codeCol: 0, priceCol: 6 }, []);
+      expect(result.products).toHaveLength(1);
+      expect(result.products[0]?.bundleProducts).toBeUndefined();
+      expect(result.products[0]?.code).toBe(code);
+    }
+    const image = "/brochure-presets/black-friday/images/p11-im14.webp";
+    const legacy = createBundleOffer([
+      { code: "BHS510", name: "BHS510/00", image },
+      { code: "00", name: "BHS510/00", image },
+    ]);
+    expect(isBundleOffer(legacy)).toBe(false);
+    // Ordinary primary-photo rendering is used, so automatic bounds, badges
+    // and image resizing all refer to one actual image element.
+    expect(defaultBundleImages(legacy)).toEqual([]);
+    const acImage = "/brochure-presets/black-friday/images/p08-im3.webp";
+    const ac = createBundleOffer([
+      { code: "BEEPGE125", name: "Kondicioner WIFI", image: acImage },
+      { code: "BEEPGE126", name: "Kondicioner WIFI", image: acImage },
+    ]);
+    ac.brochureDetails = ["Temperatura: -20°C deri +50°C"];
+    expect(isBundleOffer(ac)).toBe(false);
+    expect(defaultProductArtworks(ac).map((artwork) => artwork.type)).toEqual(["wifi", "inverter"]);
+    legacy.bundleProducts![1]!.image = "/uploads/second-product.png";
+    expect(defaultBundleImages(legacy)).toHaveLength(2);
+  });
   it("trusts only an exact shipped filename on the application origin", () => {
     expect(blackFridaySourceImage(path)).toBe(path);
     expect(

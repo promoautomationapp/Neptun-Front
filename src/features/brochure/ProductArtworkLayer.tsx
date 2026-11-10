@@ -650,6 +650,7 @@ export function ProductArtworkLayer({
                     : {}),
                   ...(next.height != null ? { height: next.height } : {}),
                   relativeTo: "product",
+                  manualPlacement: true,
                 }
               : item,
           ),
@@ -707,6 +708,13 @@ export function ProductArtworkLayer({
             }
             data-apple-photo-clearance={
               isApplePhotoArtwork(product, artwork.type, member)
+                ? "true"
+                : undefined
+            }
+            data-apple-photo-manual={
+              isApplePhotoArtwork(product, artwork.type, member) &&
+              (artwork.manualPlacement ||
+                (artwork.type === "image" && artwork.relativeTo === "product"))
                 ? "true"
                 : undefined
             }

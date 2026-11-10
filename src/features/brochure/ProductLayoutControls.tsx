@@ -89,7 +89,7 @@ export function ProductLayoutControls({
           type="range"
           aria-label={t("Photo size")}
           min="20"
-          max="250"
+          max="2000"
           step="5"
           value={Math.round(photo.scale * 100)}
           onChange={(event) =>
@@ -101,17 +101,17 @@ export function ProductLayoutControls({
         />
       </label>
       <div className="cs-product-layout-fields">
-        {field("Left (%)", photo.x, 0, 100, 1, (x) =>
+        {field("Left (%)", photo.x, -1000, 1000, 1, (x) =>
           onChange("brochureImagePlacement", { ...photo, x }),
         )}
-        {field("Top (%)", photo.y, 0, 100, 1, (y) =>
+        {field("Top (%)", photo.y, -1000, 1000, 1, (y) =>
           onChange("brochureImagePlacement", { ...photo, y }),
         )}
         {field(
           "Size (%)",
           Math.round(photo.scale * 100),
           20,
-          250,
+          2000,
           5,
           (scale: number) =>
             onChange("brochureImagePlacement", {
