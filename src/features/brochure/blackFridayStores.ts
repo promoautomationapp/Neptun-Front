@@ -17,6 +17,40 @@ const canonical = (value: unknown): unknown =>
         )
       : value;
 
+/** Saved source campaigns used a prize promotion as their final page. Leave
+ * deliberate artwork edits intact while replacing unchanged source layers. */
+export function blackFridayStoresPageContent(campaign: Campaign): Campaign {
+  if (!isBlackFridayBrochure(campaign)) return campaign;
+  const defaults = new Map(
+    blackFridayPageArtworkDefaults("stores").map((item) => [item.id, item]),
+  );
+  const current = campaign.pageArtworks?.stores;
+  if (!current?.length) return campaign;
+  const filtered = current.filter((item) => {
+    const native = defaults.get(item.id);
+    if (!native) return true;
+    // The person selector adds source metadata even when the original image is
+    // kept. This metadata is not a deliberate change to the artwork itself.
+    const comparable = (artwork: Artwork) =>
+      Object.fromEntries(
+        Object.entries(artwork).filter(
+          ([key]) =>
+            !["source", "referenceSource", "referenceRole"].includes(key),
+        ),
+      );
+    return (
+      JSON.stringify(canonical(comparable(item))) !==
+      JSON.stringify(canonical(comparable(native)))
+    );
+  });
+  return filtered.length === current.length
+    ? campaign
+    : {
+        ...campaign,
+        pageArtworks: { ...campaign.pageArtworks, stores: filtered },
+      };
+}
+
 /** The source's page12 offers already finish above its 14% stores reservation.
  * Remove only unchanged native footer layers; saved edits remain user artwork. */
 export function blackFridayStoresContent(

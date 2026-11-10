@@ -64,6 +64,7 @@ import { BackgroundPicker } from "./BackgroundPicker";
 import { BrochureGridPicker } from "./BrochureGridPicker";
 import { BrochureFormatPicker } from "./BrochureFormatPicker";
 import { ProductGallery, productWebsiteLink } from "../products/ProductGallery";
+import { neptunProductUrl } from "../products/productUrls";
 import { ProductInformation } from "../products/ProductInformation";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import { brochureFormatSelection } from "./brochureFormat";
@@ -1829,6 +1830,14 @@ export function Details({
   onImageEdit?: () => void;
   onClose: () => void;
 }) {
+  const [productUrlDraft, setProductUrlDraft] = useState(
+    originalProduct.url || "",
+  );
+  useEffect(() => {
+    setProductUrlDraft(originalProduct.url || "");
+  }, [originalProduct.code, originalProduct.url]);
+  const invalidProductUrl =
+    Boolean(productUrlDraft.trim()) && !neptunProductUrl(productUrlDraft);
   useEffect(() => {
     if (!focusDetailKey) return;
     const frame = requestAnimationFrame(() => {
@@ -1989,6 +1998,33 @@ export function Details({
                       }
                       placeholder="2 vite"
                     />
+                  </Field>
+                  <Field label={t("Neptun product link")}>
+                    <input
+                      type="url"
+                      value={productUrlDraft}
+                      placeholder="https://www.neptun-ks.com/..."
+                      aria-label={t("Neptun product link")}
+                      aria-invalid={invalidProductUrl}
+                      aria-describedby="neptun-product-link-hint"
+                      onChange={(event) =>
+                        setProductUrlDraft(event.target.value)
+                      }
+                      onBlur={() => {
+                        if (invalidProductUrl) return;
+                        const url = neptunProductUrl(productUrlDraft) || "";
+                        setProductUrlDraft(url);
+                        if (url !== (product.url || ""))
+                          onProductChange("url", url);
+                      }}
+                    />
+                    <small id="neptun-product-link-hint">
+                      {t(
+                        invalidProductUrl
+                          ? "Enter a valid Neptun product page link."
+                          : "Paste the exact product page to make this product clickable in the PDF.",
+                      )}
+                    </small>
                   </Field>
                 </div>
               ) : (

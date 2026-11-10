@@ -144,3 +144,71 @@
 .stores-brand-reference .stores-social > span {
   white-space: nowrap;
 }
+
+/* The black collections finish with live store information on their A3 canvas. */
+.brochure-page.stores-black-reference .stores-heading {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 4cqw;
+  font-weight: 700 !important;
+  letter-spacing: 0.12cqw;
+}
+.stores-black-reference .store-spot {
+  justify-content: flex-start;
+  padding: 0.25cqw 0.45cqw;
+  font-size: 1.6cqw;
+  line-height: 1.12;
+}
+.stores-black-reference .store-spot > :is(span, b, strong) {
+  flex: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+.stores-black-reference .stores-service img {
+  padding: 0.35cqw;
+  background: #fff;
+}
+.stores-black-reference .stores-service span {
+  white-space: pre-line;
+}
+.stores-black-reference.stores-blue .stores-social svg {
+  color: #fff;
+}
+
+.stores-heading-text-element {
+  container-type: inline-size;
+  z-index: 5;
+}
+.stores-heading-ribbon-element {
+  z-index: 4;
+}
+.brochure-page.stores-reference-page .stores-heading-text-element .stores-heading {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0 8.3%;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border-radius: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+.stores-heading-ribbon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0 5cqw 5cqw 0;
+}
+.cs-store-title-controls {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cs-store-title-controls > label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}

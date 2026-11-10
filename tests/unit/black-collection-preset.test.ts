@@ -32,7 +32,8 @@ it("creates a separate reusable black design without people or campaign-specific
   expect(isBlackFridayBrochure(campaign)).toBe(true);
   expect(campaign).toMatchObject({
     brochureReferenceDesign: "black-collection",
-    includeStoresPage: false,
+    includeStoresPage: true,
+    includeStoresFooter: false,
     autoProductLayout: true,
     offerStyle: "current",
     brandLogoMode: "white",
@@ -134,7 +135,7 @@ it("keeps all imported PDF page members, including nine and eleven offer pages, 
   ]);
 });
 
-it("keeps a featured cover row above the remaining imported products", () => {
+it("keeps cover offers together in one bottom row with room for campaign artwork above", () => {
   const design = availableBrochurePresets(resolveSettings(null)).find(
     (preset) => preset.id === BLACK_COLLECTION_ID,
   )!.design;
@@ -144,9 +145,10 @@ it("keeps a featured cover row above the remaining imported products", () => {
       name: `Offer ${index}`,
     }));
     const frames = blackFridayFrames(1, products, design);
-    expect(frames.slice(1).every((frame) => frame.y > frames[0]!.y)).toBe(true);
-    expect(new Set(frames.slice(1).map((frame) => frame.y)).size).toBe(1);
-    expect(frames[0]!.width).toBeGreaterThanOrEqual(frames[1]!.width);
+    expect(new Set(frames.map((frame) => frame.y)).size).toBe(1);
+    expect(frames.every((frame) => frame.y >= 48)).toBe(true);
+    expect(frames[0]!.x).toBeCloseTo(2);
+    expect(frames.at(-1)!.x + frames.at(-1)!.width).toBeCloseTo(98);
   }
 });
 

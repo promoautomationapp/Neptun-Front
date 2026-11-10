@@ -6,17 +6,28 @@
   z-index: 7;
 }
 
-.brochure-apple-page-branding img {
+.brochure-apple-offer-branding {
+  position: absolute;
+  top: 2%;
+  right: 3%;
+  width: min(34%, 21cqw);
+  z-index: 7;
+}
+
+:is(.brochure-apple-page-branding, .brochure-apple-offer-branding) img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
 }
 
-.brochure-apple-page-branding .brochure-apple-reseller-default {
+:is(.brochure-apple-page-branding, .brochure-apple-offer-branding)
+  .brochure-apple-reseller-default {
   filter: brightness(0) invert(1);
 }
 
-.brochure-page.light .brochure-apple-page-branding .brochure-apple-reseller-default {
+.brochure-page.light
+  :is(.brochure-apple-page-branding, .brochure-apple-offer-branding)
+  .brochure-apple-reseller-default {
   filter: brightness(0);
 }

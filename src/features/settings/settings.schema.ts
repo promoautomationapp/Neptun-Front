@@ -299,6 +299,7 @@ export const BROCHURE_DESIGN_KEYS = [
   "storesBackgroundImage",
   "includeStoresPage",
   "includeStoresFooter",
+  "storesDisplayVersion",
   "showOnlineStore",
   "showInteriorFooter",
   "showFooterPageNumber",
@@ -330,6 +331,9 @@ export const BROCHURE_DESIGN_KEYS = [
   "pageArtworks",
   "coverElementPlacements",
   "storesElementPlacements",
+  "storesHeadingFontSize",
+  "storesHeadingTextColor",
+  "storesHeadingRibbonColor",
   "storeFooterElementPlacements",
   "coverTextColorOverrides",
 ] as const;

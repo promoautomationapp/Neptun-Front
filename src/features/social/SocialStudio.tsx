@@ -129,11 +129,14 @@ import { Modal } from "../../components/Modal";
 import { reusableImages } from "../settings/ReusableImages";
 import { resolveAsset } from "../../api/client";
 import { SocialCanvasText } from "./SocialCanvasText";
+import { applyBlackFridaySocialDesign, BLACK_FRIDAY_SOCIAL_LOGO } from "./socialBlackFriday";
 import { annotateSocialPost, socialComments } from "./socialAnnotations";
 import "../../styles/brochure-comments.css";
 import "./social-canvas-toolbar.css";
 import "./social.css";
 import "../../styles/social-product-offer.css";
+import "../../styles/black-friday-fonts.css";
+import "./social-black-friday.css";
 
 const POSITIONS = [
   "top-left",
@@ -151,6 +154,11 @@ const EVENT_LOGOS = [
   { id: "e-days", label: "e-days" },
 ];
 const TEMPLATES = [
+  {
+    id: "black-friday",
+    label: "Black Friday",
+    detail: "Black background, NEPTUN on the left and an angled Black Friday heading",
+  },
   {
     id: "classic",
     label: "NEPTUN classic",
@@ -294,7 +302,8 @@ function DesignPreview({
     <span className={`social-design-preview ${kind}-${id}`} aria-hidden="true">
       {kind === "template" && (
         <>
-          <i className="mini-logo">N</i>
+          <i className="mini-logo">{id === "black-friday" ? <img src={BLACK_FRIDAY_SOCIAL_LOGO} alt="" /> : "N"}</i>
+          {id === "black-friday" && <span className="mini-black-friday">BLACK<br />FRIDAY</span>}
           <span className="mini-product">
             {image && <img src={imageSource(image)} alt="" />}
           </span>
@@ -3022,6 +3031,7 @@ export function SocialStudio({
                       onClick={() =>
                         update((draft: SocialPost) => {
                           draft.template = item.id;
+                          if (item.id === "black-friday") applyBlackFridaySocialDesign(draft);
                         })
                       }
                     >

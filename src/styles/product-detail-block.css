@@ -253,7 +253,14 @@
   width: 100%;
 }
 .brochure-awards .campaign-asset-artwork > .award-badge {
+  display: block;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
+  object-fit: contain;
+}
+.brochure-awards .campaign-asset-artwork {
+  aspect-ratio: 1;
 }
 
 html[data-theme="dark"] .detail-context-menu .detail-context-remove {

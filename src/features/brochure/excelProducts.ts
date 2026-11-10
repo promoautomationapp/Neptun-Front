@@ -12,6 +12,23 @@ import {
   blackFridaySourceOfferCode,
 } from "./blackFridaySourceImages";
 import { discardPreparedProductPhoto } from "./imageReview";
+import {
+  createCatalogProductUrlResolver,
+  type ProductUrlResolver,
+} from "../products/productUrls";
+
+const catalogUrlResolvers = new WeakMap<
+  Map<string, Product>,
+  ProductUrlResolver
+>();
+function catalogUrlResolver(lookup: Map<string, Product>) {
+  let resolve = catalogUrlResolvers.get(lookup);
+  if (!resolve) {
+    resolve = createCatalogProductUrlResolver(lookup.values());
+    catalogUrlResolvers.set(lookup, resolve);
+  }
+  return resolve;
+}
 
 /** Optional mappings for ordinary price imports as well as positioned brochure imports. */
 export interface ExcelProductColumns {
@@ -160,10 +177,17 @@ export function resolveExcelOffer(
   columns: ExcelProductColumns,
   rowNumber: number,
 ): ReturnType<typeof resolveOfferProduct> {
+  const resolveUrl = catalogUrlResolver(lookup);
+  const rowProduct = (...args: Parameters<typeof excelRowProduct>) => {
+    const product = excelRowProduct(...args);
+    if (!product) return null;
+    const url = resolveUrl(product);
+    return url ? { ...product, url } : product;
+  };
   const sourceCode = blackFridaySourceOfferCode(cell(row, columns.imageCol));
   if (sourceCode && importCode(sourceCode) === importCode(code))
     return {
-      product: excelRowProduct(
+      product: rowProduct(
         row,
         code,
         lookup.get(importCode(code)) || null,
@@ -178,12 +202,12 @@ export function resolveExcelOffer(
   if (!resolved.bundle)
     return {
       ...resolved,
-      product: excelRowProduct(row, code, resolved.product, columns, rowNumber),
+      product: rowProduct(row, code, resolved.product, columns, rowNumber),
     };
   const members = resolved.codes.map((memberCode) => {
     const catalogProduct = lookup.get(importCode(memberCode)) || null;
     // The row's regular price describes the entire offer, never each member.
-    return excelRowProduct(
+    return rowProduct(
       row,
       memberCode,
       catalogProduct,

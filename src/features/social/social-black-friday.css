@@ -1,0 +1,23 @@
+.social-design-preview.template-black-friday {
+  background: #000;
+  color: #fff;
+}
+.social-design-preview.template-black-friday .mini-logo {
+  width: 28%;
+  height: auto;
+  top: 8px;
+  left: 8px;
+}
+.social-design-preview.template-black-friday .mini-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.social-design-preview .mini-black-friday {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  font: 900 9px/0.9 "Cera Pro", Arial, sans-serif;
+  text-align: center;
+  transform: rotate(-6deg);
+}

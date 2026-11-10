@@ -1,9 +1,10 @@
-import { blackFridayStoresContent } from "./blackFridayStores";
+import { blackFridayStoresContent, blackFridayStoresPageContent } from "./blackFridayStores";
 import { brandLogoRenderMode } from "./brandLogoAppearance";
 import {
   isBlackFridayBrochure,
   isBlackCollectionBrochure,
   blackFridayFrames,
+  blackFridayReference,
   type BlackFridayFrame,
 } from "./blackFridayDesign";
 import {
@@ -192,6 +193,7 @@ import {
   storesPageIsLight,
   isReferenceStoresDesign,
   storesReferencePlacement,
+  storesHeadingPlacement,
 } from "./storesDesign";
 import {
   compactStoresFooterHeight,
@@ -300,14 +302,14 @@ export const BROCHURE_ASSETS = [
   {
     id: "bestbuy",
     label: "BestBuy Award",
-    src: "/api/assets/legacy/assets/bestbuy-qudal-badges.png",
-    crop: "left",
+    src: "/brochure-presets/october/bestbuy.png",
+    crop: "",
   },
   {
     id: "qudal",
     label: "QUDAL medal",
-    src: "/api/assets/legacy/assets/bestbuy-qudal-badges.png",
-    crop: "right",
+    src: "/brochure-presets/october/qudal.png",
+    crop: "",
   },
   {
     id: "service",
@@ -3560,8 +3562,11 @@ function CoverPageContent({
             campaign={campaign}
             kind="october-awards"
             defaultPlacement={{ x: 79.1, y: 92.68, width: 17.08, height: 6.74 }}
-            onChange={onCoverElementChange}
-            onHide={onCoverElementHide}
+            onChange={
+              campaign.coverElementPlacements?.["october-awards"]?.hidden
+                ? onCoverElementChange
+                : undefined
+            }
           >
             <AwardBadges campaign={campaign} onChange={onCampaignAssetChange} />
           </CoverElement>
@@ -3865,13 +3870,7 @@ export interface StoresPageProps extends BrochurePageProps {
 }
 
 export function StoresPage(props: StoresPageProps) {
-  return isBlackFridayBrochure(props.campaign) && !isBlackCollectionBrochure(props.campaign) ? (
-    <BrochureFormatFrame campaign={props.campaign} kind="stores">
-      <BlackFridayPageContent {...props} closing />
-    </BrochureFormatFrame>
-  ) : (
-    <RegularStoresPage {...props} />
-  );
+  return <RegularStoresPage {...props} />;
 }
 
 function RegularStoresPage({
@@ -3889,10 +3888,15 @@ function RegularStoresPage({
   onContactChange,
 }: StoresPageProps) {
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  campaign = campaignForPageAppearance(campaign, "stores");
-  const readability = pageBackgroundReadability(campaign, "stores");
-  const light = readability.light;
+  campaign = blackFridayStoresPageContent(campaignForPageAppearance(campaign, "stores"));
+  const black = isBlackFridayBrochure(campaign);
   const backgroundImage = pageBackgroundImage(campaign, "stores");
+  const readability = black &&
+    backgroundImage === blackFridayReference.background &&
+    pageBackgroundColor(campaign, "stores") === "#111213"
+      ? backgroundReadability({ kind: "solid", color: "#111213" })
+      : pageBackgroundReadability(campaign, "stores");
+  const light = readability.light;
   const backgroundFill =
     (backgroundImage
       ? pageBackgroundColor(campaign, "stores")
@@ -3903,9 +3907,11 @@ function RegularStoresPage({
     campaign,
     campaign.storesSnapshot?.contact || settings.contact || {},
   );
-  const servicePhones = isReferenceStoresDesign(campaign)
+  const servicePhones = isReferenceStoresDesign(campaign) || black
     ? String(contact.servicePhones || "").replace(/\s*[·;]\s*/g, "\n")
     : contact.servicePhones;
+  const headingBox = storesHeadingPlacement(campaign);
+  const headingFontSize = Math.max(1, Math.min(8, campaign.storesHeadingFontSize || 3.2));
   const element = (
     kind: string,
     placement: Box,
@@ -3915,8 +3921,8 @@ function RegularStoresPage({
     <StoresElement
       campaign={campaign}
       kind={kind}
-      onChange={onElementChange}
-      onHide={onElementHide}
+      onChange={kind === "awards" ? undefined : onElementChange}
+      onHide={kind === "awards" ? undefined : onElementHide}
       defaultPlacement={storesReferencePlacement(campaign, kind, placement)}
       className={className}
     >
@@ -3951,7 +3957,7 @@ function RegularStoresPage({
   return (
     <BrochureFormatFrame campaign={campaign} kind="stores">
       <section
-        className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
+        className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} ${black ? "brochure-black-friday stores-black-reference" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
         data-brand-logo-mode={brandLogoRenderMode(campaign)}
         data-smart-appearance={
           hasPageAppearance(campaign, "stores") ? "true" : undefined
@@ -3985,11 +3991,33 @@ function RegularStoresPage({
           onChange={onArtworkChange}
           onRemove={onArtworkRemove}
         />
-        {element(
-          "heading",
-          { x: 0, y: 2.7, width: 41, height: 4 },
+        <StoresElement
+          campaign={campaign}
+          kind="headingRibbon"
+          onChange={onElementChange}
+          onHide={onElementHide}
+          defaultPlacement={{ ...headingBox, ...campaign.storesElementPlacements?.heading }}
+          className="stores-heading-ribbon-element"
+        >
+          <span
+            className="stores-heading-ribbon"
+            style={{ background: campaign.storesHeadingRibbonColor || (light ? "#0b80bb" : "#ffffff") }}
+          />
+        </StoresElement>
+        <StoresElement
+          campaign={campaign}
+          kind="heading"
+          onChange={onElementChange}
+          onHide={onElementHide}
+          defaultPlacement={headingBox}
+          className="stores-heading-text-element"
+        >
           <span
             className="stores-heading"
+            style={{
+              fontSize: `${headingFontSize / (headingBox.width / 100)}cqw`,
+              color: campaign.storesHeadingTextColor || (light ? "#ffffff" : "#1c4075"),
+            }}
             {...inlineText(
               contact.storesHeading || "DYQANET",
               t("Stores heading"),
@@ -3999,15 +4027,23 @@ function RegularStoresPage({
             )}
           >
             {contact.storesHeading || "DYQANET"}
-          </span>,
-        )}
+          </span>
+        </StoresElement>
         {element(
           "hajde",
-          { x: light ? 30 : 16, y: 7.6, width: light ? 40 : 48, height: 9.4 },
+          { x: black ? 30 : light ? 34 : 20, y: 7.6, width: black ? 40 : 32, height: black ? 9.4 : 6.2 },
           <div className="stores-hajde">
             <img
-              src={brochureAssetSource(campaign, "storesHajde", light)}
-              alt="hajde!"
+              src={black
+                ? campaign.brandAssets?.storesHajde || logoForBackground(
+                    campaign,
+                    "stores",
+                    pageBackgroundColor(campaign, "stores"),
+                    campaign.brandAssets?.neptun || "/brochure-presets/black-friday/artwork/footer-neptun.svg",
+                    light,
+                  )
+                : brochureAssetSource(campaign, "storesHajde", light)}
+              alt={black ? "NEPTUN" : "hajde!"}
               draggable={false}
             />
           </div>,
@@ -4024,7 +4060,7 @@ function RegularStoresPage({
           )}
         {element(
           "locations",
-          { x: 3.4, y: 17.7, width: 93.2, height: 68.4 },
+          { x: 3.4, y: black ? 22 : 17.7, width: 93.2, height: black ? 61.2 : 68.4 },
           <div className="stores-grid stores-element-canvas">
             {entries.map(({ key, store, online }, index) => {
               const lines = online
@@ -4178,7 +4214,9 @@ function RegularStoresPage({
           { x: 61.4, y: 87, width: 14.8, height: 7.7 },
           <div className="stores-service">
             <img
-              src={brochureAssetSource(campaign, "service", light)}
+              src={campaign.brandAssets?.service || (black && !light
+                ? "/brochure-presets/black-friday/artwork/footer-service.svg"
+                : brochureAssetSource(campaign, "service", light))}
               alt="Elektro-Servis Kosova"
               draggable={false}
             />
@@ -4208,7 +4246,9 @@ function RegularStoresPage({
             { x: 78.5, y: 86.9, width: 18.2, height: 7.2 },
             <div className="stores-balfin">
               <img
-                src={brochureAssetSource(campaign, "balfin", light)}
+                src={campaign.brandAssets?.balfin || (black && !light
+                  ? "/brochure-presets/black-friday/artwork/footer-balfin.svg"
+                  : brochureAssetSource(campaign, "balfin", light))}
                 alt="Part of BALFIN Group"
                 draggable={false}
               />
@@ -4387,7 +4427,7 @@ function footerDateText(campaign: Campaign) {
   return `Vlen ${formatDates(campaign.startDate, campaign.endDate, !compact || !sameYear, campaign.brochureFooter?.fadeEnd)}${reference ? ", në dyqane dhe online." : ""}`;
 }
 
-function AwardBadges({
+export function AwardBadges({
   campaign,
   onChange,
   scope = "cover",
@@ -4396,64 +4436,30 @@ function AwardBadges({
   onChange?: CampaignAssetChange;
   scope?: string;
 }) {
-  const artwork = (
-    id: string,
-    label: string,
-    children: React.ReactNode,
-    width = scope === "stores" && isReferenceStoresDesign(campaign)
-      ? "9.6cqw"
-      : isOctoberBrochure(campaign)
-        ? "8.2cqw"
-        : "4cqw",
-  ) => (
-    <CampaignAssetArtwork
-      campaign={campaign}
-      assetKey={`${scope}-${id}`}
-      label={label}
-      onChange={onChange}
-      defaultWidth={width}
-    >
-      {children}
-    </CampaignAssetArtwork>
-  );
+  const width = scope === "stores"
+    ? "9.6cqw"
+    : isOctoberBrochure(campaign)
+      ? "8.2cqw"
+      : "4.9cqw";
   return (
     <div className="brochure-awards">
-      {campaign.brandAssets?.awards
-        ? artwork(
-            "awards",
-            "BestBuy Award and QUDAL Quality Medal",
-            <img
-              className="award-combined"
-              src={campaign.brandAssets.awards}
-              alt="BestBuy Award and QUDAL Quality Medal"
-            />,
-            "10cqw",
-          )
-        : ["bestbuy", "qudal"].map((id) => (
-            <React.Fragment key={id}>
-              {artwork(
-                id,
-                id === "bestbuy" ? "BestBuy Award" : "QUDAL Quality Medal",
-                campaign.brandAssets?.[id] ? (
-                  <img
-                    className="award-badge"
-                    src={campaign.brandAssets[id]}
-                    alt={
-                      id === "bestbuy" ? "BestBuy Award" : "QUDAL Quality Medal"
-                    }
-                  />
-                ) : (
-                  <span
-                    className={`award-badge award-default ${id}`}
-                    role="img"
-                    aria-label={
-                      id === "bestbuy" ? "BestBuy Award" : "QUDAL Quality Medal"
-                    }
-                  />
-                ),
-              )}
-            </React.Fragment>
-          ))}
+      {(["bestbuy", "qudal"] as const).map((id) => (
+        <CampaignAssetArtwork
+          key={id}
+          campaign={campaign}
+          assetKey={`${scope}-${id}`}
+          label={id === "bestbuy" ? "BestBuy Award" : "QUDAL Quality Medal"}
+          onChange={onChange}
+          defaultWidth={width}
+        >
+          <img
+            className="award-badge"
+            src={campaign.brandAssets?.[id] || `/brochure-presets/october/${id}.png`}
+            alt={id === "bestbuy" ? "BestBuy Award" : "QUDAL Quality Medal"}
+            draggable={false}
+          />
+        </CampaignAssetArtwork>
+      ))}
     </div>
   );
 }

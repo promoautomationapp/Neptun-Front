@@ -82,6 +82,21 @@ it("retains brochure edits and does not replace an edited name with fetched cata
     target: { value: "New brochure name" },
   });
   expect(change).toHaveBeenCalledWith("name", "New brochure name");
+  const productLink = view.getByLabelText("Neptun product link");
+  fireEvent.change(productLink, {
+    target: { value: "https://foreign.example/product" },
+  });
+  fireEvent.blur(productLink);
+  expect(productLink.getAttribute("aria-invalid")).toBe("true");
+  expect(change).not.toHaveBeenCalledWith("url", expect.anything());
+  fireEvent.change(productLink, {
+    target: { value: "/products/exact-product" },
+  });
+  fireEvent.blur(productLink);
+  expect(change).toHaveBeenCalledWith(
+    "url",
+    "https://www.neptun-ks.com/products/exact-product",
+  );
   fireEvent.click(view.getByRole("button", { name: "Change image" }));
   expect(imageEdit).toHaveBeenCalledOnce();
   expect(view.getByText("Details shown in brochure")).toBeTruthy();

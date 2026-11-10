@@ -175,9 +175,13 @@ export interface Campaign {
   categorySavingModes?: Record<string, CategorySavingRule>;
   storePositions?: Record<string, Placement>;
   storesElementPlacements?: Record<string, Placement>;
+  storesHeadingFontSize?: number;
+  storesHeadingTextColor?: string;
+  storesHeadingRibbonColor?: string;
   storeFooterElementPlacements?: Record<string, Placement>;
   storeFooterHiddenElements?: string[];
   includeStoresFooter?: boolean;
+  storesDisplayVersion?: number;
   showInteriorFooter?: boolean;
   showFooterPageNumber?: boolean;
   coverLogoSource?: string;

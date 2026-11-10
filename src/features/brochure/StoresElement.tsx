@@ -124,7 +124,7 @@ export function StoresElement({
           }
         : resizeFromCorner(state.original, dx, dy, state.corner, {
             minWidth: 3,
-            minHeight: 2,
+            minHeight: kind === "heading" || kind === "headingRibbon" ? 0.8 : 2,
             maxWidth: state.corner?.endsWith("left")
               ? state.original.x + state.original.width
               : 100 - state.original.x,

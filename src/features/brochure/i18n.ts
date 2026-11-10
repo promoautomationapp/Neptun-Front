@@ -133,6 +133,7 @@ const translations: Record<string, string> = {
   "Brand logo colors": "Ngjyrat e logove të markave",
   "Logo color style": "Stili i ngjyrave të logove",
   "Text rotation": "Këndi i tekstit",
+  "Black background, NEPTUN on the left and an angled Black Friday heading": "Sfond i zi, NEPTUN majtas dhe titulli Black Friday me kënd djathtas",
   "Pay in up to {count} installments at 0% interest.": "Paguani deri në {count} këste me 0% interes.",
   "Offer valid {dates}.": "Oferta vlen {dates}.",
   "Limited stock.": "Sasia është e kufizuar.",
@@ -2336,6 +2337,12 @@ const translations: Record<string, string> = {
     "Një PDF përmban të gjitha faqet e broshurës.",
   "Products with a saved Neptun link are clickable in the PDF.":
     "Në PDF, klikimi mbi një produkt me lidhje të ruajtur hap faqen e tij në Neptun.",
+  "Linked products": "Produkte me lidhje",
+  "Neptun product link": "Lidhja e produktit në Neptun",
+  "Enter a valid Neptun product page link.": "Shënoni një lidhje të vlefshme të faqes së produktit në Neptun.",
+  "Paste the exact product page to make this product clickable in the PDF.": "Ngjitni faqen e saktë të produktit që klikimi mbi të në PDF ta hapë atë.",
+  "products have no verified Neptun link and will remain unlinked.":
+    "produkte nuk kanë lidhje të verifikuar të Neptun dhe do të mbeten pa lidhje.",
   "The selected page downloads as one file.":
     "Faqja e zgjedhur shkarkohet si një skedar.",
   "Loading brochure images…": "Po ngarkohen imazhet e broshurës…",
@@ -3168,6 +3175,10 @@ const translations: Record<string, string> = {
   "Keep product cards, titles and logos.": "Mbaj kartat e produkteve, titujt dhe logot.",
   "The closing promotional photo includes the person and products together. It will also be removed or replaced; separate product cards stay.": "Fotoja promocionale në fund përmban bashkë personin dhe produktet. Edhe ajo do të hiqet ose zëvendësohet; kartat e veçanta të produkteve mbeten.",
   "Upload an image to continue. A transparent background works best.": "Ngarkoni një imazh për të vazhduar. Rekomandohet sfond transparent.",
+  "Stores title size": "Madhësia e titullit të dyqaneve",
+  "Stores title color": "Ngjyra e titullit të dyqaneve",
+  "Stores title ribbon color": "Ngjyra e shiritit të titullit",
+  "Stores title ribbon": "Shiriti i titullit të dyqaneve",
 };
 
 let language =

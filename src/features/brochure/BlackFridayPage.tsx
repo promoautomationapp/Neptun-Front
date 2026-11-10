@@ -22,7 +22,11 @@ import { backgroundReadabilityStyle } from "./backgroundContrast";
 import { hasPageAppearance, pageAppearanceStyle } from "./pageAppearance";
 import { PageAppearanceFilters } from "./PageAppearanceFilters";
 import { productDesignFor } from "../settings/product-design-defaults";
-import { ApplePageBranding, allAppleProducts } from "./ApplePageBranding";
+import {
+  AppleOfferBranding,
+  ApplePageBranding,
+  allAppleProducts,
+} from "./ApplePageBranding";
 import type { CampaignAssetChange } from "./CampaignAssetArtwork";
 import "../../styles/black-friday.css";
 import "../../styles/black-friday-fonts.css";
@@ -149,10 +153,10 @@ export function BlackFridayPage({
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const readability = pageBackgroundReadability(campaign, kind, page);
   const frames = blackFridayFrames(number, products, campaign);
+  const appleOnly = allAppleProducts(products);
   const top = Math.min(100, ...frames.map((frame) => frame.y));
   const bottom = Math.max(95, ...frames.map((frame) => frame.y + frame.height));
-  const appleTop =
-    allAppleProducts(products) && number > 1 ? Math.max(top, 9.5) : top;
+  const appleTop = appleOnly && number > 1 ? Math.max(top, 9.5) : top;
   const fittedFrames = frames.map((frame) => {
     const reserved =
       appleTop > top
@@ -317,6 +321,13 @@ export function BlackFridayPage({
             }
           >
             {renderProduct?.(product, index)}
+            {!appleOnly && (
+              <AppleOfferBranding
+                campaign={campaign}
+                product={product}
+                onChange={onCampaignAssetChange}
+              />
+            )}
             <PageArtwork
               campaign={{
                 ...campaign,

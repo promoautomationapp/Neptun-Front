@@ -18,9 +18,13 @@ export function ProductBrandArtwork({ campaign, product, onChange }: Props) {
   const chooseImage = useImagePicker();
   const [error, setError] = React.useState("");
   const source = product.brandLogo || brandLogoFor(campaign, product.brand);
-  // Apple uses one page-level Authorised Reseller mark. A saved source logo
+  // Apple uses a separate page/offer Authorised Reseller mark. A saved source logo
   // is not a request to repeat it on every offer; staff can explicitly restore it.
-  if (isBlackFridayBrochure(campaign) && isAppleProduct(product) && product.hideBrandLogo !== false)
+  if (
+    isBlackFridayBrochure(campaign) &&
+    isAppleProduct(product) &&
+    product.hideBrandLogo !== false
+  )
     return null;
   if (product.hideBrandLogo)
     return onChange ? (

@@ -1,5 +1,9 @@
 import { ColorField } from "../brochure/ColorField";
 import {
+  createCatalogProductUrlResolver,
+  enrichProductUrls,
+} from "../products/productUrls";
+import {
   readWorkspaceRoute,
   workspaceRouteUrl,
   sameWorkspaceRoute,
@@ -132,6 +136,8 @@ import {
   includesOnlineStore,
   includesStoresPage,
   includesStoresFooter,
+  needsStoresDisplayMigration,
+  migrateStoresDisplaySelection,
   compactStoresFooterHeight,
   selectedStoreIndexes,
 } from "../brochure/storesSelection";
@@ -209,6 +215,8 @@ import {
 } from "../brochure/coverElements";
 import {
   storeDisplayChanges,
+  preserveStoresHeadingRibbon,
+  storesPageIsLight,
   withoutFooterStorePlacements,
 } from "../brochure/storesDesign";
 import { reorderDisplayedDetails } from "../brochure/detailRows";
@@ -1882,10 +1890,11 @@ function StorePageControls({
               onUpdate((draft: Campaign) => {
                 draft.includeStoresPage = value === "page";
                 draft.includeStoresFooter = value === "footer";
+                draft.storesDisplayVersion = 1;
               });
             }}
           >
-            {!isBlackFridayBrochure(campaign) && <option value="page">{t("Separate stores page")}</option>}
+            <option value="page">{t("Separate stores page")}</option>
             <option value="footer">
               {t("Bottom of the last product page")}
             </option>
@@ -1921,6 +1930,34 @@ function StorePageControls({
             }
           />
         </label>
+      )}
+      {!compact && (
+        <div className="cs-store-title-controls">
+          <label>
+            <span>{t("Stores title size")}</span>
+            <input
+              type="number"
+              min="1"
+              max="8"
+              step="0.1"
+              aria-label={t("Stores title size")}
+              value={campaign.storesHeadingFontSize || 3.2}
+              onChange={(event) => onUpdate((draft) => {
+                draft.storesHeadingFontSize = Math.max(1, Math.min(8, Number(event.target.value) || 3.2));
+              })}
+            />
+          </label>
+          <ColorField
+            label={t("Stores title color")}
+            value={campaign.storesHeadingTextColor || (storesPageIsLight(campaign) ? "#ffffff" : "#1c4075")}
+            onChange={(color) => onUpdate((draft) => { draft.storesHeadingTextColor = color; })}
+          />
+          <ColorField
+            label={t("Stores title ribbon color")}
+            value={campaign.storesHeadingRibbonColor || (storesPageIsLight(campaign) ? "#0b80bb" : "#ffffff")}
+            onChange={(color) => onUpdate((draft) => { draft.storesHeadingRibbonColor = color; })}
+          />
+        </div>
       )}
       <details className="cs-store-elements-options">
         <summary>{t("Store fields & contact visibility")}</summary>
@@ -1978,7 +2015,8 @@ function StorePageControls({
               ] as const)
             : ([
                 ["heading", "Page title"],
-                ["hajde", "hajde! logo"],
+                ["headingRibbon", "Stores title ribbon"],
+                ["hajde", isBlackFridayBrochure(campaign) ? "NEPTUN logo" : "hajde! logo"],
                 ["locations", "Stores"],
                 ["service", "Elektro-Servis"],
                 ["balfin", "BALFIN Group"],
@@ -2161,6 +2199,13 @@ export function BrochureEditor({
   const formatGeometry = brochureExportGeometry(pageFormat);
   const televisions = useMemo(() => campaignTelevisionPhotos(campaign), [campaign]);
   const hasStoresPage = includesStoresPage(campaign);
+  const migrateStoresDisplay = needsStoresDisplayMigration(campaign);
+  useEffect(() => {
+    if (migrateStoresDisplay)
+      onUpdate((draft: Campaign) => {
+        migrateStoresDisplaySelection(draft);
+      });
+  }, [campaign.id, migrateStoresDisplay, onUpdate]);
   const [selected, setSelected] = useState(() =>
     Math.max(
       -1,
@@ -2345,6 +2390,8 @@ export function BrochureEditor({
           ? "storeFooterElementPlacements"
           : "storesElementPlacements";
       draft[key] ||= {};
+      if (scope === "page" && kind === "heading" && !draft[key].headingRibbon)
+        preserveStoresHeadingRibbon(draft);
       draft[key][kind] = value;
     });
   const hideStoreElement = (scope: "footer" | "page", kind: string) =>
@@ -4072,6 +4119,7 @@ export function BrochureEditor({
 }
 
 function enrichSavedCampaigns(saved: Campaign[], products: Product[]) {
+  const resolveUrl = createCatalogProductUrlResolver(products);
   const byCode = new Map(
     products.map((product: Product) => [String(product.code), product]),
   );
@@ -4079,15 +4127,17 @@ function enrichSavedCampaigns(saved: Campaign[], products: Product[]) {
     repairCoverProductLayout({
       ...item,
       status: item.status || "in_progress",
-      products: (item.products || []).map((product: Product) => ({
-        ...product,
-        warranty:
-          product.warranty || byCode.get(String(product.code))?.warranty || "",
-        specs: {
-          ...(byCode.get(String(product.code))?.specs || {}),
-          ...(product.specs || {}),
-        },
-      })),
+      products: (item.products || []).map((product: Product) =>
+        enrichProductUrls({
+          ...product,
+          warranty:
+            product.warranty || byCode.get(String(product.code))?.warranty || "",
+          specs: {
+            ...(byCode.get(String(product.code))?.specs || {}),
+            ...(product.specs || {}),
+          },
+        }, resolveUrl),
+      ),
     }),
   );
 }

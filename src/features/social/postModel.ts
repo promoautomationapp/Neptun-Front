@@ -10,6 +10,10 @@ import { isAppleProduct } from "../brochure/priceDesign";
 import { isMobilePhone, mobileDetailEntries } from "../brochure/mobileDetails";
 import { conditionerDetailEntries } from "../brochure/conditionerDetails";
 import { isAirConditioner } from "../brochure/productArtwork";
+import {
+  applyBlackFridaySocialDesign,
+  isBlackFridayCampaign,
+} from "./socialBlackFriday";
 
 const IMAGE_PREPARATION_FIELDS = [
   "aiOriginalImage",
@@ -319,7 +323,7 @@ export function createPost(
   campaign: Campaign | null = null,
 ): SocialPost {
   const now = new Date().toISOString();
-  return {
+  const post: SocialPost = {
     id: crypto.randomUUID(),
     name: campaign ? `${campaign.name} · social post` : "New social post",
     sourceCampaignId: campaign?.id || null,
@@ -372,6 +376,9 @@ export function createPost(
     revision: 0,
     aiReviewedFields: {},
   };
+  return isBlackFridayCampaign(campaign)
+    ? applyBlackFridaySocialDesign(post)
+    : post;
 }
 
 export function cssBackground(background?: Background): string {

@@ -163,8 +163,8 @@ export function isReferenceStoresDesign(campaign: Partial<Campaign>) {
 }
 
 const unifiedPlacements: Record<string, Box> = {
-  heading: { x: 0, y: 2.5, width: 40.8, height: 3.55 },
-  hajde: { x: 18.6, y: 10.8, width: 38.5, height: 7.6 },
+  heading: { x: 0, y: 2.5, width: 40.8, height: 2.8 },
+  hajde: { x: 18.6, y: 10.8, width: 32, height: 6.2 },
   awards: { x: 61.5, y: 11.1, width: 19.7, height: 7 },
   locations: { x: 1, y: 24.2, width: 98, height: 61.2 },
   disclaimer: { x: 1.7, y: 87, width: 55.1, height: 6.2 },
@@ -180,4 +180,22 @@ export function storesReferencePlacement(
   return isReferenceStoresDesign(campaign)
     ? { ...(unifiedPlacements[kind] || fallback) }
     : fallback;
+}
+
+export function storesHeadingPlacement(campaign: Partial<Campaign>): Box {
+  return storesReferencePlacement(campaign, "heading", {
+    x: 0,
+    y: 2.7,
+    width: 41,
+    height: 2.8,
+  });
+}
+
+/** Keep the old combined title position until either part is edited separately. */
+export function preserveStoresHeadingRibbon(campaign: Campaign) {
+  campaign.storesElementPlacements ||= {};
+  campaign.storesElementPlacements.headingRibbon ||= {
+    ...storesHeadingPlacement(campaign),
+    ...campaign.storesElementPlacements.heading,
+  };
 }

@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import type { Product } from "../../src/domain/models";
 import {
   neptunProductPdfUrl,
+  productPdfLinkCoverage,
   productPdfLinks,
 } from "../../src/features/brochure/pdfProductLinks";
 
@@ -53,6 +54,7 @@ describe("saved Neptun destinations", () => {
       undefined,
       "",
       "#photo",
+      "galaxy-a37",
       "/",
       "https://neptun-ks.com",
       "javascript:alert(1)",
@@ -169,6 +171,52 @@ it("uses the primary SKU for a collapsed color choice and leaves unknown product
       300,
     ),
   ).toHaveLength(1);
+});
+
+it("links legacy one-member offers as the single card rendered by the brochure", () => {
+  const page = fixture();
+  box(page.firstElementChild!, 140, 110, 200, 240);
+  expect(
+    productPdfLinks(
+      page,
+      [{ ...phone, bundleProducts: [{ code: "legacy", name: "Legacy" }] }],
+      200,
+      300,
+    ),
+  ).toEqual([{ url, x: 20, y: 30, width: 100, height: 120 }]);
+  expect(
+    productPdfLinkCoverage([
+      phone,
+      {
+        code: "set",
+        name: "Set",
+        bundleProducts: [phone, { code: "missing", name: "Missing" }],
+      },
+    ]),
+  ).toEqual({ linked: 2, total: 3 });
+});
+
+it("links complete source photos as single offers even when a legacy import split the model punctuation", () => {
+  const page = fixture();
+  box(page.firstElementChild!, 140, 110, 200, 240);
+  const image = "/brochure-presets/black-friday/images/p01-im5.webp";
+  const legacy: Product = {
+    ...phone,
+    image,
+    bundleProducts: [
+      {
+        code: "fragment-one",
+        name: "Fragment one",
+        image,
+        url: "/products/wrong-fragment",
+      },
+      { code: "fragment-two", name: "Fragment two", image },
+    ],
+  };
+  expect(productPdfLinks(page, [legacy], 200, 300)).toEqual([
+    { url, x: 20, y: 30, width: 100, height: 120 },
+  ]);
+  expect(productPdfLinkCoverage([legacy])).toEqual({ linked: 1, total: 1 });
 });
 
 it("serializes real URI annotations on the current PDF page with correct coordinates", () => {

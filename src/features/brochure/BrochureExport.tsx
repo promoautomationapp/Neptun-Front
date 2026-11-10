@@ -15,7 +15,7 @@ import {
   resolveBrochureFormat,
 } from "./brochureFormat";
 import { coverProducts } from "./campaignPages";
-import { productPdfLinks } from "./pdfProductLinks";
+import { productPdfLinkCoverage, productPdfLinks } from "./pdfProductLinks";
 
 function exportImageUrl(value: string): string;
 function exportImageUrl(value: undefined): undefined;
@@ -428,6 +428,11 @@ export function BrochureExport({
     scope === "all"
       ? Array.from({ length: pageCount }, (_, index) => index)
       : [pageIndex];
+  const linkCoverage = productPdfLinkCoverage(
+    selectedIndexes.flatMap((index) =>
+      index === 0 ? coverProducts(campaign) : pages[index - 1]?.products || [],
+    ),
+  );
   const knownMissing = selectedIndexes.flatMap((index) =>
     missingExportPhotos(
       index === 0 ? coverProducts(campaign) : pages[index - 1]?.products || [],
@@ -547,7 +552,9 @@ export function BrochureExport({
             geometry.pdfWidthMm,
             geometry.pdfHeightMm,
           ))
-            pdf.link(link.x, link.y, link.width, link.height, { url: link.url });
+            pdf.link(link.x, link.y, link.width, link.height, {
+              url: link.url,
+            });
         } else {
           const extension = format === "png" ? "png" : "jpg";
           const blob = await canvasBlob(
@@ -699,6 +706,22 @@ export function BrochureExport({
                 : t("The selected page downloads as one file.")}
             {format === "pdf" &&
               ` ${t("Products with a saved Neptun link are clickable in the PDF.")}`}
+            {format === "pdf" && linkCoverage.total > 0 && (
+              <>
+                {" "}
+                {t("Linked products")}: {linkCoverage.linked}/
+                {linkCoverage.total}.
+                {linkCoverage.linked < linkCoverage.total && (
+                  <>
+                    {" "}
+                    {linkCoverage.total - linkCoverage.linked}{" "}
+                    {t(
+                      "products have no verified Neptun link and will remain unlinked.",
+                    )}
+                  </>
+                )}
+              </>
+            )}
           </p>
           {error && (
             <p className="cs-export-error" role="alert">

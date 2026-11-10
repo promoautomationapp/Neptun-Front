@@ -23,11 +23,12 @@ const CANONICAL_PAGE_WIDTH = 1080;
 /** The default no-overlap pass must not counteract an intentional image edit. */
 export function hasManualApplePhotoPlacement(product: Partial<Product>) {
   const placement = product.brochureImagePlacement;
-  return Boolean(placement && (
-    (placement.x !== undefined && placement.x !== 50) ||
-    (placement.y !== undefined && placement.y !== 50) ||
-    (placement.scale !== undefined && placement.scale !== 1)
-  ));
+  return Boolean(
+    placement &&
+    ((placement.x !== undefined && placement.x !== 50) ||
+      (placement.y !== undefined && placement.y !== 50) ||
+      (placement.scale !== undefined && placement.scale !== 1)),
+  );
 }
 
 interface OriginalCorrection {
@@ -91,6 +92,8 @@ export function ApplePhotoClearance({
     const area = photoAreaRef.current;
     const card = area?.closest<HTMLElement>(".brochure-product");
     if (!area || !card) return;
+    // A mixed-brand Black Friday offer's reseller mark is a sibling of the card.
+    const scope = card.closest<HTMLElement>(".bf-product-frame") || card;
     const originals = new Map<HTMLElement, OriginalCorrection>();
     let disposed = false;
     let updating = false;
@@ -113,7 +116,7 @@ export function ApplePhotoClearance({
       }
     };
     const observeMutations = () =>
-      mutations?.observe(card, {
+      mutations?.observe(scope, {
         attributes: true,
         attributeOldValue: true,
         attributeFilter: [
@@ -141,7 +144,11 @@ export function ApplePhotoClearance({
             originals.delete(element);
             continue;
           }
-          if (element.dataset.savingManual === "true" || element.dataset.nameDividerManual === "true" || element.querySelector('[data-saving-manual="true"]'))
+          if (
+            element.dataset.savingManual === "true" ||
+            element.dataset.nameDividerManual === "true" ||
+            element.querySelector('[data-saving-manual="true"]')
+          )
             originals.delete(element);
           else restore(element);
         }
@@ -323,7 +330,7 @@ export function ApplePhotoClearance({
             return false;
           for (
             let parent: Element | null = element;
-            parent && card.contains(parent);
+            parent && scope.contains(parent);
             parent = parent.parentElement
           ) {
             const style = getComputedStyle(parent);
@@ -415,6 +422,12 @@ export function ApplePhotoClearance({
         };
         const groupRect = (price: HTMLElement) =>
           unionArtworkRects(paintedRects(price));
+        const resellerMarks = [
+          ...scope.querySelectorAll<HTMLElement>(
+            ".brochure-apple-offer-branding .campaign-asset-artwork",
+          ),
+        ].filter(visibleArtwork);
+        for (const mark of resellerMarks) resize?.observe(mark);
         const applyFit = (
           element: HTMLElement,
           fit: PhotoFit,
@@ -435,7 +448,11 @@ export function ApplePhotoClearance({
           if (fit) applyFit(price, fit, () => groupRect(price));
         }
         for (const saving of separateSavings) {
-          if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
+          if (
+            saving.dataset.savingManual === "true" ||
+            saving.dataset.nameDividerManual === "true"
+          )
+            continue;
           const requested = groupRect(saving);
           const bounds = area.contains(saving) ? photoBounds : cardBounds;
           const fit =
@@ -452,6 +469,7 @@ export function ApplePhotoClearance({
         const obstacles = () => [
           ...prices.flatMap(paintedRects),
           ...separateSavings.flatMap(paintedRects),
+          ...resellerMarks.flatMap(paintedRects),
         ];
         let fits = targets.map((target) =>
           fitPhotoAroundArtwork(
@@ -478,7 +496,11 @@ export function ApplePhotoClearance({
             if (fit) applyFit(price, fit, () => groupRect(price));
           }
           for (const saving of separateSavings) {
-            if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
+            if (
+              saving.dataset.savingManual === "true" ||
+              saving.dataset.nameDividerManual === "true"
+            )
+              continue;
             restore(saving);
             const bounds = area.contains(saving) ? photoBounds : cardBounds;
             const gutter = {
@@ -516,7 +538,11 @@ export function ApplePhotoClearance({
             if (fit) applyFit(price, fit, () => groupRect(price));
           }
           for (const saving of separateSavings) {
-            if (saving.dataset.savingManual === "true" || saving.dataset.nameDividerManual === "true") continue;
+            if (
+              saving.dataset.savingManual === "true" ||
+              saving.dataset.nameDividerManual === "true"
+            )
+              continue;
             restore(saving);
             const bounds = area.contains(saving)
               ? {
@@ -562,13 +588,14 @@ export function ApplePhotoClearance({
       resize = new ResizeObserver(queueUpdate);
       resize.observe(card);
       resize.observe(area);
+      if (scope !== card) resize.observe(scope);
     }
     if (typeof MutationObserver === "function")
       mutations = new MutationObserver((records) => {
         if (requestedLayoutChanged(records)) queueUpdate();
       });
-    card.addEventListener("load", queueUpdate, true);
-    card.addEventListener("error", queueUpdate, true);
+    scope.addEventListener("load", queueUpdate, true);
+    scope.addEventListener("error", queueUpdate, true);
     document.fonts?.ready.then(queueUpdate);
     document.fonts?.addEventListener("loadingdone", queueUpdate);
     window.addEventListener("beforeprint", update);
@@ -578,8 +605,8 @@ export function ApplePhotoClearance({
       disposed = true;
       mutations?.disconnect();
       resize?.disconnect();
-      card.removeEventListener("load", queueUpdate, true);
-      card.removeEventListener("error", queueUpdate, true);
+      scope.removeEventListener("load", queueUpdate, true);
+      scope.removeEventListener("error", queueUpdate, true);
       document.fonts?.removeEventListener("loadingdone", queueUpdate);
       window.removeEventListener("beforeprint", update);
       window.removeEventListener("afterprint", queueUpdate);

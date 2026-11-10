@@ -113,6 +113,17 @@ export function SocialCanvasText({
         width: `${value.width}%`,
         fontSize: `${value.fontSize || 4}cqw`,
         color: value.color || "#ffffff",
+        fontFamily: value.fontFamily || undefined,
+        fontWeight: value.fontWeight || undefined,
+        fontStyle: value.fontStyle || undefined,
+        lineHeight: value.lineHeight || undefined,
+        letterSpacing:
+          value.letterSpacing === undefined
+            ? undefined
+            : `${value.letterSpacing}em`,
+        textAlign: value.textAlign || undefined,
+        whiteSpace: value.whiteSpace || "pre-wrap",
+        transform: value.rotation ? `rotate(${value.rotation}deg)` : undefined,
         zIndex: value.zIndex || 30,
       }}
       onPointerMove={move}
@@ -220,6 +231,25 @@ export function SocialCanvasText({
                         fontSize: Math.max(
                           0.6,
                           Math.min(20, Number(event.target.value) || 4),
+                        ),
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  {t("Rotation")}
+                  <input
+                    type="number"
+                    aria-label={t("Text rotation")}
+                    min="-180"
+                    max="180"
+                    step="1"
+                    value={artwork.rotation || 0}
+                    onChange={(event) =>
+                      onChange({
+                        rotation: Math.max(
+                          -180,
+                          Math.min(180, Number(event.target.value) || 0),
                         ),
                       })
                     }

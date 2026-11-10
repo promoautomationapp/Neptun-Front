@@ -90,3 +90,27 @@ it("renders export text without move, formatting or resize controls", () => {
   expect(view.queryByRole("textbox")).toBeNull();
   expect(view.queryByRole("button")).toBeNull();
 });
+it("keeps the chosen font and angle in the exported text and exposes an editable rotation", () => {
+  const changed = vi.fn();
+  const view = render(
+    <SocialCanvasText
+      artwork={{
+        ...initial,
+        fontFamily: "Cera Pro",
+        fontWeight: 900,
+        rotation: -6,
+        lineHeight: 0.9,
+      }}
+      onChange={changed}
+    />,
+  );
+  const layer = view.container.querySelector<HTMLElement>(".social-free-text")!;
+  expect(layer.style.transform).toBe("rotate(-6deg)");
+  expect(layer.style.fontFamily).toBe('"Cera Pro"');
+  expect(layer.style.fontWeight).toBe("900");
+  fireEvent.click(view.getByRole("button", { name: "Move text" }));
+  fireEvent.change(view.getByRole("spinbutton", { name: "Text rotation" }), {
+    target: { value: "-15" },
+  });
+  expect(changed).toHaveBeenCalledWith({ rotation: -15 });
+});

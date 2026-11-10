@@ -322,6 +322,10 @@ export function blackCollectionHeadingInset(
 }
 
 export function blackFridayDesignDefaults(): Partial<Campaign> {
+  const pageArtworks = blackFridayPageArtworks();
+  // The final page shows editable store information, rather than the source's
+  // campaign-specific prize promotion.
+  delete pageArtworks.stores;
   return {
     brochureVisualStyle: "current",
     brochureReferenceDesign: "black-friday",
@@ -357,13 +361,14 @@ export function blackFridayDesignDefaults(): Partial<Campaign> {
     showCoverGradient: false,
     coverImage: "",
     coverBrandTagline: "",
-    includeStoresPage: false,
-    includeStoresFooter: true,
+    includeStoresPage: true,
+    includeStoresFooter: false,
+    storesDisplayVersion: 1,
     compactStoresFooterHeight: 14,
     showInteriorFooter: false,
     showFooterPageNumber: false,
     brochureFooter: { visible: false },
-    pageArtworks: blackFridayPageArtworks(),
+    pageArtworks,
     pricePalette: {
       red: "#ef4023",
       blue: "#003870",
@@ -392,7 +397,7 @@ export function blackCollectionDesignDefaults(): Partial<Campaign> {
     storesBackgroundImage: "",
     brandLogoMode: "white",
     autoProductLayout: true,
-    includeStoresPage: false,
+    includeStoresPage: true,
     pageArtworks: {
       cover: [
         {

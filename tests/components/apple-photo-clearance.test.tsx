@@ -22,7 +22,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function fixture(marked = true, showClearance = true, withNameDivider = false, enabled = true) {
+function fixture(
+  marked = true,
+  showClearance = true,
+  withNameDivider = false,
+  enabled = true,
+  withOfferBranding = false,
+) {
   function Card() {
     const area = useRef<HTMLDivElement>(null);
     const row = useRef<HTMLDivElement>(null);
@@ -73,13 +79,27 @@ function fixture(marked = true, showClearance = true, withNameDivider = false, e
             style={{ objectFit: "contain" }}
           />
         </div>
-        {showClearance && <ApplePhotoClearance photoAreaRef={area} enabled={enabled} />}
+        {showClearance && (
+          <ApplePhotoClearance photoAreaRef={area} enabled={enabled} />
+        )}
       </article>
     );
-    return withNameDivider ? (
-      <div className="brochure-page">{article}</div>
+    const offer = withOfferBranding ? (
+      <div className="bf-product-frame">
+        {article}
+        <div className="brochure-apple-offer-branding">
+          <span className="campaign-asset-artwork">
+            <img src="/reseller.png" alt="Apple Authorised Reseller" />
+          </span>
+        </div>
+      </div>
     ) : (
       article
+    );
+    return withNameDivider || withOfferBranding ? (
+      <div className="brochure-page">{offer}</div>
+    ) : (
+      offer
     );
   }
   return <Card />;
@@ -87,12 +107,24 @@ function fixture(marked = true, showClearance = true, withNameDivider = false, e
 
 it("lets intentional photo moves and sizes bypass automatic Apple clearance", () => {
   expect(hasManualApplePhotoPlacement({})).toBe(false);
-  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { x: 50, y: 50, scale: 1 } })).toBe(false);
-  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { x: 60, y: 50, scale: 1 } })).toBe(true);
-  expect(hasManualApplePhotoPlacement({ brochureImagePlacement: { scale: 2 } })).toBe(true);
+  expect(
+    hasManualApplePhotoPlacement({
+      brochureImagePlacement: { x: 50, y: 50, scale: 1 },
+    }),
+  ).toBe(false);
+  expect(
+    hasManualApplePhotoPlacement({
+      brochureImagePlacement: { x: 60, y: 50, scale: 1 },
+    }),
+  ).toBe(true);
+  expect(
+    hasManualApplePhotoPlacement({ brochureImagePlacement: { scale: 2 } }),
+  ).toBe(true);
   mockGeometry();
   const view = render(fixture(true, true, false, false));
-  for (const element of view.container.querySelectorAll<HTMLElement>('[data-apple-photo-clearance]')) {
+  for (const element of view.container.querySelectorAll<HTMLElement>(
+    "[data-apple-photo-clearance]",
+  )) {
     expect(element.style.translate).toBe("");
     expect(element.style.scale).toBe("");
   }
@@ -101,7 +133,9 @@ it("lets intentional photo moves and sizes bypass automatic Apple clearance", ()
 it("restores an additional Apple photo's automatic correction when staff move it deliberately", async () => {
   mockGeometry();
   const view = render(fixture());
-  const extra = view.container.querySelector<HTMLElement>(".product-artwork-item");
+  const extra = view.container.querySelector<HTMLElement>(
+    ".product-artwork-item",
+  );
   if (!extra) throw new Error("Missing additional photo");
   await act(async () => {
     extra.dataset.applePhotoManual = "true";
@@ -212,6 +246,23 @@ function mockGeometry(
       return { x: 0, y: 0, width: cardWidth, height: cardHeight };
     if (element.classList.contains("brochure-product-image-wrap"))
       return { x: 0, y: 0, width: cardWidth, height: areaHeight };
+    const reseller = element.closest<HTMLElement>(
+      ".brochure-apple-offer-branding",
+    );
+    if (reseller) {
+      const asset = reseller.querySelector<HTMLElement>(
+        ".campaign-asset-artwork",
+      )!;
+      const manual = asset.style.transform.match(
+        /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/,
+      );
+      return {
+        x: 110 + Number(manual?.[1] || 0),
+        y: 10 + Number(manual?.[2] || 0),
+        width: 80,
+        height: 30,
+      };
+    }
     const saving = element.closest<HTMLElement>(".brochure-saving");
     if (saving) {
       const base = { x: 140, y: 50, width: 60, height: 60 };
@@ -379,6 +430,64 @@ function mockGeometry(
     });
   }
 }
+
+it.each([1, 0.25])(
+  "keeps default Apple photos clear of a sibling offer reseller mark, including after edits (preview scale %s)",
+  async (previewScale) => {
+    mockGeometry(previewScale);
+    const view = render(fixture(true, true, false, true, true));
+    const asset = view.container.querySelector<HTMLElement>(
+      ".campaign-asset-artwork",
+    )!;
+    const clearOfReseller = () => {
+      const mark = asset.getBoundingClientRect();
+      for (const image of view.container.querySelectorAll<HTMLImageElement>(
+        ".brochure-product img",
+      )) {
+        const rect = image.getBoundingClientRect();
+        const size = Math.min(rect.width, rect.height);
+        expect(
+          rectsOverlap(
+            {
+              x: rect.x + (rect.width - size) / 2,
+              y: rect.y + (rect.height - size) / 2,
+              width: size,
+              height: size,
+            },
+            mark,
+          ),
+        ).toBe(false);
+      }
+    };
+    clearOfReseller();
+    await act(async () => {
+      asset.style.transform = "translate(-70px, 70px)";
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    clearOfReseller();
+    await act(async () => {
+      asset.parentElement!.style.display = "none";
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(
+      view.container.querySelector<HTMLElement>(
+        ".apple-photo-clearance-primary",
+      )!.style.scale,
+    ).toBe("");
+  },
+);
+
+it("preserves a deliberately moved Apple photo beside an offer reseller mark", () => {
+  mockGeometry();
+  const view = render(fixture(true, true, false, false, true));
+  const photo = view.container.querySelector<HTMLElement>(
+    ".apple-photo-clearance-primary",
+  )!;
+  expect(photo.style.translate).toBe("");
+  expect(photo.style.scale).toBe("");
+});
 
 function clearOfArtwork(container: HTMLElement) {
   const parts = [
@@ -640,7 +749,8 @@ it.each(["savingManual", "nameDividerManual"])(
   async (marker) => {
     mockGeometry(0.5, { legacy: true });
     const view = render(paintedFixture());
-    const saving = view.container.querySelector<HTMLElement>(".brochure-saving");
+    const saving =
+      view.container.querySelector<HTMLElement>(".brochure-saving");
     const price = view.container.querySelector<HTMLElement>(".brochure-price");
     if (!saving || !price) throw new Error("Missing manual badge fixture");
     const requested = { scale: "0.85", translate: "-26px 38px" };

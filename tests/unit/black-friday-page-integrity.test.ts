@@ -88,7 +88,7 @@ describe("Black Friday source composition integrity", () => {
     ).toBeUndefined();
   });
 
-  it("keeps all77 source offers on12 pages with stores in the last product footer, including11 offers together on page11", () => {
+  it("keeps all 77 source offers plus a separate stores page, including 11 offers together on page 11", () => {
     const campaign = sourceCampaign();
     const pages = splitPages(campaign);
     expect(campaign.products).toHaveLength(77);
@@ -96,7 +96,7 @@ describe("Black Friday source composition integrity", () => {
     expect(pages.map((page) => page.products.length)).toEqual([
       6, 6, 6, 6, 6, 6, 9, 6, 4, 11, 9,
     ]);
-    expect(1 + pages.length + Number(campaign.includeStoresPage)).toBe(12);
+    expect(1 + pages.length + Number(campaign.includeStoresPage)).toBe(13);
     expect(pages[9]).toMatchObject({ index: 9, layout: "grid12" });
     expect(
       pages.flatMap((page) => page.products).length +
@@ -140,9 +140,11 @@ describe("Black Friday source composition integrity", () => {
   it("uses source geometry for matching groups and supplies a frame for every added offer", () => {
     const campaign = sourceCampaign();
     const page = splitPages(campaign)[9]!;
-    expect(blackFridayFrames(11, page.products)).toBe(
-      blackFridayReference.pages.find((page) => page.number === 11)!.frames,
-    );
+    const native = blackFridayReference.pages.find((page) => page.number === 11)!.frames;
+    const matching = blackFridayFrames(11, page.products);
+    expect(matching.slice(0, 9)).toEqual(native.slice(0, 9));
+    expect(matching.slice(-2).every((frame, index) => frame.width > native[index + 9]!.width)).toBe(true);
+    expect(matching.map((frame) => frame.code)).toEqual(native.map((frame) => frame.code));
     const extra = [...page.products, { code: "added", name: "Added offer" }];
     const frames = blackFridayFrames(11, extra);
     expect(frames).toHaveLength(12);

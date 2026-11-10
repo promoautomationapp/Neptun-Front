@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 import type { Product } from "../../src/domain/models";
 import {
+  applyBlackFridaySocialDesign,
+  BLACK_FRIDAY_SOCIAL_HEADING,
+} from "../../src/features/social/socialBlackFriday";
+import {
   clearPostImagePreparation,
   createPost,
   outputDimensions,
@@ -19,6 +23,41 @@ it("starts new and brochure-derived posts without forcing an event badge", () =>
   });
   expect(fromBrochure.showEventLogo).toBe(false);
   expect(fromBrochure.eventLogoUpload).toBe("/chosen-brochure-logo.png");
+});
+it("starts Black Friday posts with a black canvas, left NEPTUN mark and editable angled right title", () => {
+  const post = createPost([], {
+    id: "bf",
+    name: "Black Friday 2026",
+    products: [],
+  });
+  expect(post).toMatchObject({
+    template: "black-friday",
+    background: { type: "solid", color: "#000000" },
+    showNeptunLogo: true,
+    logoPosition: "top-left",
+    logoLayout: "corner",
+    showEventLogo: false,
+  });
+  const heading = post.artworks!.find(
+    (layer) => layer.id === BLACK_FRIDAY_SOCIAL_HEADING,
+  )!;
+  expect(heading).toMatchObject({
+    type: "text",
+    text: "BLACK\nFRIDAY",
+    x: 75,
+    color: "#ffffff",
+    rotation: -6,
+    fontFamily: "Cera Pro",
+    fontWeight: 900,
+  });
+  heading.text = "My promotion";
+  heading.rotation = -12;
+  applyBlackFridaySocialDesign(post);
+  expect(post.artworks).toHaveLength(1);
+  expect(post.artworks![0]).toMatchObject({
+    text: "My promotion",
+    rotation: -12,
+  });
 });
 it("copies a brochure product without losing structured detail keys, image preparation, or editable nested artwork", () => {
   const original: Product = {

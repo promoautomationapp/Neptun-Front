@@ -1,4 +1,6 @@
 import type { Product } from "../../domain/models";
+import { isBundleOffer } from "./productBundles";
+import { neptunProductUrl } from "../products/productUrls";
 
 export interface PdfProductLink {
   url: string;
@@ -9,23 +11,18 @@ export interface PdfProductLink {
 }
 
 /** Use saved product destinations only, never a guessed URL or an executable URI. */
-export function neptunProductPdfUrl(value?: string): string | null {
-  if (!value?.trim()) return null;
-  try {
-    const url = new URL(value.trim(), "https://www.neptun-ks.com");
-    if (
-      !["http:", "https:"].includes(url.protocol) ||
-      url.username ||
-      url.password ||
-      url.port ||
-      !/(?:^|\.)neptun-ks\.com$/i.test(url.hostname) ||
-      url.pathname === "/"
-    )
-      return null;
-    return url.href;
-  } catch {
-    return null;
-  }
+export const neptunProductPdfUrl = neptunProductUrl;
+
+/** Count visible product destinations, treating a real shared offer per member. */
+export function productPdfLinkCoverage(products: readonly Product[]) {
+  const destinations = products.flatMap((product) =>
+    isBundleOffer(product) ? product.bundleProducts || [] : [product],
+  );
+  return {
+    total: destinations.length,
+    linked: destinations.filter((product) => neptunProductUrl(product.url))
+      .length,
+  };
 }
 
 type Rect = { left: number; top: number; right: number; bottom: number };
@@ -103,12 +100,9 @@ export function productPdfLinks(
     heightMm <= 0
   )
     return [];
-  const byCode = new Map<string, Product>();
-  const remember = (product: Product) => {
-    byCode.set(String(product.code), product);
-    product.bundleProducts?.forEach(remember);
-  };
-  products.forEach(remember);
+  const byCode = new Map(
+    products.map((product) => [String(product.code), product]),
+  );
   const links: PdfProductLink[] = [];
   const add = (node: Element, product?: Product) => {
     const url = neptunProductPdfUrl(product?.url);
@@ -126,7 +120,7 @@ export function productPdfLinks(
   for (const card of page.querySelectorAll("[data-product-code]")) {
     const product = byCode.get(card.getAttribute("data-product-code") || "");
     // A shared bundle price must not open the first member by accident.
-    if (!product || product.bundleProducts?.length) continue;
+    if (!product || isBundleOffer(product)) continue;
     add(card, product);
     const cardBox = card.getBoundingClientRect();
     for (const artwork of card.querySelectorAll(
@@ -152,9 +146,10 @@ export function productPdfLinks(
     const code =
       member.getAttribute("data-bundle-member-code") ||
       member.getAttribute("data-bundle-artwork-code");
-    const product = bundle?.bundleProducts?.find(
-      (item) => String(item.code) === code,
-    );
+    const product =
+      bundle && isBundleOffer(bundle)
+        ? bundle.bundleProducts?.find((item) => String(item.code) === code)
+        : undefined;
     add(member, product);
   }
   return links;
