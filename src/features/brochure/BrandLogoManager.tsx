@@ -10,7 +10,7 @@ import {
 } from "./brandLogos";
 import { readImage } from "./utils";
 import { ImageUploadButton } from "./ImageUploadButton";
-import { BrandLogoModeSelect } from "./BrandLogoPreview";
+import { BrandLogoPreview, applyBrandLogoAppearance } from "./BrandLogoPreview";
 
 const sources: Record<string, string> = {
   BEKO: "/api/assets/legacy/assets/brand-sources/beko.jpg",
@@ -108,12 +108,11 @@ export function BrandLogoManager({
           )}
         </span>
       </summary>
-      <BrandLogoModeSelect
-        value={campaign.brandLogoMode}
-        onChange={(mode) =>
-          onUpdate((draft) => {
-            draft.brandLogoMode = mode;
-          })
+      <BrandLogoPreview
+        campaign={campaign}
+        products={campaign.products || []}
+        onChange={(changes) =>
+          onUpdate((draft) => applyBrandLogoAppearance(draft, changes))
         }
       />
       <div className="cs-brand-grid">

@@ -135,6 +135,7 @@ describe("independent brochure preset snapshots", () => {
       "neptun-online",
       "neptun-october",
       "neptun-black-friday",
+      "neptun-black-collection",
     ]);
     expect(presets[0]!.design).toMatchObject({
       layout: "feature3",
@@ -189,7 +190,7 @@ describe("independent brochure preset snapshots", () => {
   it("applies the below €30 rule in every ready design without replacing explicit preset or product choices", () => {
     const settings = resolveSettings(null);
     const presets = availableBrochurePresets(settings);
-    expect(presets).toHaveLength(6);
+    expect(presets).toHaveLength(7);
     for (const preset of presets) {
       const campaign: Campaign = { id: preset.id, name: "Offer", products: [] };
       applyBrochurePreset(campaign, preset);

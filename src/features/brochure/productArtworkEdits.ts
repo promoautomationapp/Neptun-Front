@@ -21,6 +21,12 @@ export function patchProductArtwork(
       ? {
           ...item,
           ...values,
+          ...(values.width != null &&
+          item.type === "text" &&
+          item.width > 0 &&
+          values.fontSize == null
+            ? { fontSize: ((item.fontSize || 2) * values.width) / item.width }
+            : {}),
           ...(values.width != null && item.height != null && item.width > 0
             ? { height: (item.height * values.width) / item.width }
             : {}),

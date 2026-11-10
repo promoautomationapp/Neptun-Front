@@ -17,6 +17,7 @@ const backgroundKeys = [
   "coverOverlayGradient",
   "coverGradientRegion",
   "brandLogoMode",
+  "brandLogoColor",
   "coverMessageColor",
   "coverHeadlineColor",
   "coverTypeColor",

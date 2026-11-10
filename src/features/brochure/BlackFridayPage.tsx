@@ -1,3 +1,4 @@
+import { brandLogoRenderMode } from "./brandLogoAppearance";
 import React from "react";
 import type { Box, Campaign, Product } from "../../domain/models";
 import type { BrochurePage } from "./campaignPages";
@@ -6,6 +7,7 @@ import { PageArtwork, type PageArtworkProps } from "./PageArtwork";
 import {
   blackFridayFrames,
   blackFridayProductArtworks,
+  isBlackCollectionBrochure,
   type BlackFridayFrame,
 } from "./blackFridayDesign";
 import { fitCoverBelowBanners } from "./pageBanners";
@@ -38,7 +40,10 @@ function regionVariables(name: string, box: Box | null | undefined) {
     ]),
   );
 }
-function frameStyle(frame: BlackFridayFrame): React.CSSProperties {
+function frameStyle(
+  frame: BlackFridayFrame,
+  clean = false,
+): React.CSSProperties {
   const warranty = frame.detailRects?.find((detail) => detail.warranty);
   return {
     "--bf-type-scale": Math.min(1.1, frame.width / 47),
@@ -65,6 +70,15 @@ function frameStyle(frame: BlackFridayFrame): React.CSSProperties {
         frame.price,
     ),
     ...regionVariables("specs", frame.specs),
+    ...(clean
+      ? {
+          "--bf-price-width": `${Math.min(36, (frame.height / frame.width) * 60)}%`,
+          "--bf-price-x": `${100 - Math.min(36, (frame.height / frame.width) * 60)}%`,
+          "--bf-warranty-count-font": `${frame.height * 0.085}cqw`,
+          "--bf-warranty-label-font": `${Math.min(0.65, frame.height * 0.018)}cqw`,
+          "--bf-saving-width": `${Math.min(16, (frame.height / frame.width) * 32)}%`,
+        }
+      : {}),
     ...(frame.brand && frame.copy
       ? {
           "--bf-brand-x": `${((frame.brand.x - frame.copy.x) / Math.max(frame.copy.width, 45)) * 100}%`,
@@ -101,13 +115,13 @@ export function BlackFridayPage({
   const id = `bf-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const readability = pageBackgroundReadability(campaign, kind, page);
-  const frames = blackFridayFrames(number, products);
+  const frames = blackFridayFrames(number, products, campaign);
   const top = Math.min(100, ...frames.map((frame) => frame.y));
   const bottom = Math.max(95, ...frames.map((frame) => frame.y + frame.height));
   return (
     <section
-      className={`brochure-page brochure-black-friday cover-editable-elements has-background-readability ${readability.light ? "light" : "blue"} bf-source-page-${number} count-${products.length}`}
-      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      className={`brochure-page brochure-black-friday ${isBlackCollectionBrochure(campaign) ? "bf-clean-collection" : `bf-source-page-${number}`} cover-editable-elements has-background-readability ${readability.light ? "light" : "blue"} count-${products.length}`}
+      data-brand-logo-mode={brandLogoRenderMode(campaign)}
       data-smart-appearance={
         hasPageAppearance(campaign, kind, page) ? "true" : undefined
       }
@@ -150,7 +164,7 @@ export function BlackFridayPage({
             kind={frameKey}
             className="bf-product-frame"
             defaultPlacement={defaultPlacement}
-            style={frameStyle(frame)}
+            style={frameStyle(frame, isBlackCollectionBrochure(campaign))}
             onChange={
               onProductChange
                 ? (_, next) =>

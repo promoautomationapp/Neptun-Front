@@ -48,6 +48,10 @@ export function blackFridayDetailStyle(
     height: `${(detail.height / parent.height) * 100}%`,
     maxWidth: "none",
     flex: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "column",
     fontFamily: textFontCss(detail.fontFamily),
     fontSize: `${(detail.pointSize / 841.88976) * 100}cqw`,
     fontWeight: detail.fontWeight,
@@ -83,7 +87,9 @@ export function BlackFridayDetailContent({
               key={index}
               className="bf-source-detail-run"
               style={{
-                color: /^#(?:ffffff|000000)$/i.test(run.color) ? "inherit" : run.color,
+                color: /^#(?:ffffff|000000)$/i.test(run.color)
+                  ? "inherit"
+                  : run.color,
                 fontFamily: textFontCss(run.fontFamily),
                 fontWeight: run.fontWeight,
                 fontStyle: /italic/i.test(run.fontStyle) ? "italic" : "normal",

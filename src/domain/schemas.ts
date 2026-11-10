@@ -153,11 +153,17 @@ export const campaignSchema = z
     name: z.string(),
     brochureFooter: brochureFooterSchema.optional(),
     brochurePresetId: z.string().max(100).optional(),
-    brochureReferenceDesign: z.literal("black-friday").optional(),
+    brochureReferenceDesign: z
+      .enum(["black-friday", "black-collection"])
+      .optional(),
     pageArtworks: z
       .record(z.string(), z.array(pageArtworkSchema).max(200))
       .optional(),
     brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
+    brandLogoColor: z
+      .string()
+      .regex(/^(?:|#[0-9a-f]{6}(?:[0-9a-f]{2})?)$/i)
+      .optional(),
     pageAppearances: pageAppearancesSchema.optional(),
     coverBrandTagline: z.string().max(500).optional(),
     coverRibbonColors: z

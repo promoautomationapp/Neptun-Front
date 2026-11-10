@@ -106,8 +106,9 @@ export interface Campaign {
   pageAppearances?: Record<string, PageAppearance>;
   updatedBy?: string;
   brochurePresetId?: string;
-  brochureReferenceDesign?: "black-friday";
+  brochureReferenceDesign?: "black-friday" | "black-collection";
   brandLogoMode?: "auto" | "white" | "dark" | "original";
+  brandLogoColor?: string;
   brandPreparation?: Record<
     string,
     {

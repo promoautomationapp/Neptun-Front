@@ -1,4 +1,6 @@
 import type { Campaign } from "../../domain/models";
+import { BrandLogoTintFilter } from "./BrandLogoTintFilter";
+import { validBackgroundColor } from "./pageBackground";
 import {
   hasPageAppearance,
   resolvedPageAppearance,
@@ -18,22 +20,15 @@ export function PageAppearanceFilters({
   page?: AppearancePage;
   id: string;
 }) {
-  if (!hasPageAppearance(campaign, kind, page)) return null;
+  if (
+    !hasPageAppearance(campaign, kind, page) &&
+    !validBackgroundColor(campaign.brandLogoColor)
+  )
+    return null;
   return (
-    <svg
-      width="0"
-      height="0"
-      aria-hidden="true"
-      className="page-appearance-filters"
-    >
-      <defs>
-        <filter id={id} colorInterpolationFilters="sRGB">
-          <feFlood
-            floodColor={resolvedPageAppearance(campaign, kind, page).brandColor}
-          />
-          <feComposite in2="SourceAlpha" operator="in" />
-        </filter>
-      </defs>
-    </svg>
+    <BrandLogoTintFilter
+      id={id}
+      color={resolvedPageAppearance(campaign, kind, page).brandColor}
+    />
   );
 }

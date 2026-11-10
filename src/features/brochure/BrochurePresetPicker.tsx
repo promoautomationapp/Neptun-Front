@@ -16,13 +16,17 @@ import {
 import { applyBrochurePreset } from "./brochurePresets";
 import type { BrochurePreset } from "./brochurePresets";
 import { t } from "./i18n";
-import { isBlackFridayBrochure } from "./blackFridayDesign";
+import {
+  isBlackFridayBrochure,
+  isBlackCollectionBrochure,
+} from "./blackFridayDesign";
 import { BlackFridayPersonChoice } from "./BlackFridayPersonChoice";
 import { blackFridaySampleProducts } from "./blackFridaySourceImages";
 import { coverRibbonColors } from "./coverElements";
 import "./brochure-presets.css";
 const isBlackFridayPreset = (preset: BrochurePresetDefinition) =>
-  isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id });
+  isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id }) &&
+  !isBlackCollectionBrochure({ ...preset.design, brochurePresetId: preset.id });
 
 export function PresetThumbnail({
   preset,
@@ -30,6 +34,12 @@ export function PresetThumbnail({
   preset: BrochurePresetDefinition;
 }) {
   const d = preset.design;
+  if (isBlackCollectionBrochure({ ...d, brochurePresetId: preset.id })) {
+    const thumbnail = `<svg xmlns="http://www.w3.org/2000/svg" width="216" height="306" viewBox="0 0 216 306"><rect width="216" height="306" fill="#111213"/><text x="108" y="31" text-anchor="middle" fill="white" font-family="Arial" font-size="21" font-weight="900">NEPTUN</text><path d="M57 37h102" stroke="#ef4023" stroke-width="3"/><path d="M38 60h140" stroke="white" stroke-width="4" stroke-opacity=".65"/><g fill="#26303a" stroke="#75808a"><rect x="14" y="85" width="188" height="85"/><rect x="14" y="195" width="88" height="70"/><rect x="114" y="195" width="88" height="70"/></g><g fill="#ef4023"><rect x="150" y="166" width="52" height="14"/><rect x="64" y="261" width="38" height="13"/><rect x="164" y="261" width="38" height="13"/></g></svg>`;
+    return (
+      <img src={`data:image/svg+xml,${encodeURIComponent(thumbnail)}`} alt="" />
+    );
+  }
   if (isBlackFridayPreset(preset))
     return <img src="/brochure-presets/black-friday/thumbnail.webp" alt="" />;
   const color = (v: string | undefined, fallback: string) =>

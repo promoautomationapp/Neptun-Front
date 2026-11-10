@@ -1,6 +1,9 @@
 import type { Artwork } from "../../domain/models";
 import type { BrochurePreset } from "./brochurePresets";
-import { isBlackFridayBrochure } from "./blackFridayDesign";
+import {
+  isBlackFridayBrochure,
+  isBlackCollectionBrochure,
+} from "./blackFridayDesign";
 
 export type BlackFridayPersonChoice = {
   mode: "keep" | "replace" | "none";
@@ -43,6 +46,10 @@ export function withBlackFridayPerson(
   choice: BlackFridayPersonChoice,
 ): BrochurePreset {
   const result = structuredClone(preset);
+  if (
+    isBlackCollectionBrochure({ ...preset.design, brochurePresetId: preset.id })
+  )
+    return result;
   if (!isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id }))
     return result;
   const pages = result.design.pageArtworks;

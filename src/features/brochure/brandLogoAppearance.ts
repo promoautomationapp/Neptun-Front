@@ -1,5 +1,8 @@
 import type { Campaign } from "../../domain/models";
-import { pageBackgroundReadability } from "./pageBackground";
+import {
+  pageBackgroundReadability,
+  validBackgroundColor,
+} from "./pageBackground";
 
 export type BrandLogoMode = NonNullable<Campaign["brandLogoMode"]>;
 
@@ -10,7 +13,15 @@ export const DARK_BRAND_LOGO_FILTER =
 export function brandLogoAppearance(
   campaign: Partial<Campaign>,
   kind: "cover" | "product",
+  filterId?: string,
 ) {
+  const customColor = validBackgroundColor(campaign.brandLogoColor);
+  if (customColor)
+    return {
+      mode: "custom",
+      filter: filterId ? `url("#${filterId}")` : "none",
+      color: customColor,
+    };
   const mode = campaign.brandLogoMode || "auto";
   const resolved =
     mode === "auto"
@@ -28,4 +39,10 @@ export function brandLogoAppearance(
           : DARK_BRAND_LOGO_FILTER,
     color: resolved === "white" ? "#ffffff" : "#343534",
   };
+}
+
+export function brandLogoRenderMode(campaign: Partial<Campaign>) {
+  return validBackgroundColor(campaign.brandLogoColor)
+    ? "custom"
+    : campaign.brandLogoMode || "auto";
 }

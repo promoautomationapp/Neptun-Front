@@ -7,6 +7,8 @@ import { campaignDefaults } from "../settings/campaign-defaults";
 import { materializeCampaignColorVariants } from "./campaignColorVariants";
 import {
   BLACK_FRIDAY_ID,
+  BLACK_COLLECTION_ID,
+  blackCollectionDesignDefaults,
   blackFridayDesignDefaults,
   blackFridayPageArtworks,
   isBlackFridayBrochure,
@@ -306,6 +308,32 @@ export const builtInBrochurePresets: readonly BrochurePreset[] = [
       },
     },
   },
+  {
+    id: BLACK_COLLECTION_ID,
+    name: "Black collection",
+    description:
+      "Clean black brochure · dynamic products · no promotional overlays",
+    builtin: true,
+    design: {
+      ...currentDesign,
+      ...blackCollectionDesignDefaults(),
+      productDesign: {
+        ...currentDesign.productDesign!,
+        photo: {
+          mode: "automatic",
+          x: 50,
+          y: 50,
+          scale: 1,
+          automaticTvSizing: false,
+        },
+        details: { placement: "bottom", fill: "automatic" },
+        typography: {
+          ...currentDesign.productDesign!.typography,
+          font: "automatic",
+        },
+      },
+    },
+  },
 ];
 
 /** Built-ins can be customized without losing their original reset point. */
@@ -395,11 +423,13 @@ export function applyBrochurePreset(
     isBlackFridayBrochure(campaign) &&
     !isBlackFridayBrochure({ ...preset.design, brochurePresetId: preset.id })
   ) {
-    const sourceIds = new Set(
-      Object.values(blackFridayPageArtworks()).flatMap((artworks) =>
+    const sourceIds = new Set([
+      ...Object.values(blackFridayPageArtworks()).flatMap((artworks) =>
         artworks.map((artwork) => artwork.id),
       ),
-    );
+      "black-collection-logo",
+      "black-collection-title",
+    ]);
     if (campaign.pageArtworks)
       campaign.pageArtworks = Object.fromEntries(
         Object.entries(campaign.pageArtworks).map(([key, artworks]) => [

@@ -5,6 +5,8 @@ import {
 } from "./resizeCorners";
 import type { Artwork, Box, Campaign, Product } from "../../domain/models";
 import React, { useLayoutEffect, useRef, useState } from "react";
+import { optionalProductLabelKind } from "./optionalProductLabels";
+import { textFontCss } from "./textFonts";
 import { effectiveProductArtworks } from "./productArtwork";
 import {
   normalizeScreenPhotoSource,
@@ -456,7 +458,7 @@ export function ProductArtworkLayer({
 }: ProductArtworkLayerProps) {
   const layerRef = useRef<HTMLDivElement | null>(null);
   const gesture = useRef<ArtworkGesture | null>(null);
-  const artworks = effectiveProductArtworks(product, campaign);
+  const artworks: Artwork[] = effectiveProductArtworks(product, campaign);
   const latest = useRef(artworks);
   latest.current = artworks;
   const [photoBox, setPhotoBox] = useState<Box | null>(null);
@@ -638,6 +640,14 @@ export function ProductArtworkLayer({
                   x: next.x,
                   y: next.y,
                   width: next.width,
+                  ...(optionalProductLabelKind(item) &&
+                  item.type === "text" &&
+                  item.width > 0
+                    ? {
+                        fontSize:
+                          ((item.fontSize || 2) * next.width) / item.width,
+                      }
+                    : {}),
                   ...(next.height != null ? { height: next.height } : {}),
                   relativeTo: "product",
                 }
@@ -677,7 +687,9 @@ export function ProductArtworkLayer({
           photoBox,
           photoArea,
         );
-        if (!artwork.image || !position) return null;
+        const optionalLabel = optionalProductLabelKind(artwork);
+        if ((!artwork.image && !optionalLabel) || !position || artwork.hidden)
+          return null;
         const label = artwork.label || t("Additional image");
         const member = bundleArtworkMember(product, artwork);
         return (
@@ -714,30 +726,94 @@ export function ProductArtworkLayer({
               canEdit ? (event) => end(event, true) : undefined
             }
           >
-            <ArtworkPhoto
-              artwork={artwork}
-              member={member}
-              label={label}
-              fitPhoto={
-                "fitVisiblePhoto" in artwork && artwork.fitVisiblePhoto === true
-              }
-              onMemberChange={
-                canEdit && member
-                  ? (field, value) =>
-                      onChange?.(
-                        "bundleProducts",
-                        updateBundleMember(product, member.code, {
-                          [field]: value,
-                        }),
-                      )
-                  : undefined
-              }
-              onPointerDown={
-                canEdit
-                  ? (event) => start(event, artwork, index, "move")
-                  : undefined
-              }
-            />
+            {optionalLabel ? (
+              <svg
+                width="100%"
+                height="100%"
+                viewBox={`0 0 1000 ${(1000 * (artwork.height || 7)) / artwork.width}`}
+                role="img"
+                aria-label={label}
+                preserveAspectRatio={
+                  artwork.type === "shape" ? "none" : "xMidYMid meet"
+                }
+                style={{
+                  display: "block",
+                  overflow: "visible",
+                  cursor: canEdit ? "move" : undefined,
+                }}
+                onPointerDown={
+                  canEdit
+                    ? (event) =>
+                        start(
+                          event as unknown as React.PointerEvent<HTMLElement>,
+                          artwork,
+                          index,
+                          "move",
+                        )
+                    : undefined
+                }
+              >
+                {artwork.type === "shape" ? (
+                  <rect
+                    width="1000"
+                    height="100%"
+                    fill={artwork.fill || artwork.color || "#fa321e"}
+                  />
+                ) : (
+                  <text
+                    x={
+                      artwork.textAlign === "left"
+                        ? 0
+                        : artwork.textAlign === "right"
+                          ? 1000
+                          : 500
+                    }
+                    y="50%"
+                    dominantBaseline="central"
+                    textAnchor={
+                      artwork.textAlign === "left"
+                        ? "start"
+                        : artwork.textAlign === "right"
+                          ? "end"
+                          : "middle"
+                    }
+                    fill={artwork.color || "#ffffff"}
+                    fontFamily={textFontCss(artwork.fontFamily)}
+                    fontWeight={artwork.fontWeight || 700}
+                    fontStyle={artwork.fontStyle || "normal"}
+                    fontSize={(1000 * (artwork.fontSize || 2)) / artwork.width}
+                  >
+                    {artwork.text}
+                  </text>
+                )}
+              </svg>
+            ) : (
+              <ArtworkPhoto
+                artwork={artwork}
+                member={member}
+                label={label}
+                fitPhoto={
+                  "fitVisiblePhoto" in artwork &&
+                  artwork.fitVisiblePhoto === true
+                }
+                onMemberChange={
+                  canEdit && member
+                    ? (field, value) =>
+                        onChange?.(
+                          "bundleProducts",
+                          updateBundleMember(product, member.code, {
+                            [field]: value,
+                          }),
+                        )
+                    : undefined
+                }
+                onPointerDown={
+                  canEdit
+                    ? (event) => start(event, artwork, index, "move")
+                    : undefined
+                }
+              />
+            )}
             {canEdit && (
               <div className="product-artwork-chrome" data-export-hide="true">
                 <CornerHandles

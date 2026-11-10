@@ -1,4 +1,19 @@
 /* A3 source composition. Every offer and marketing element remains separate. */
+.brochure-black-friday.bf-clean-collection {
+  --bf-photo-y: 2%;
+  --bf-photo-height: 57%;
+  --bf-price-width: 36%;
+  --bf-price-x: 64%;
+  --bf-specs-y: 87%;
+  --bf-specs-height: 12%;
+}
+.brochure-page.brochure-black-friday.bf-clean-collection
+  .bf-product-frame
+  .brochure-product.black-friday-offer
+  .brochure-price.red-reference-price {
+  top: auto;
+  bottom: 15%;
+}
 .black-friday-format > .brochure-format-content {
   aspect-ratio: 297 / 420;
 }
@@ -185,7 +200,7 @@
   height: 100%;
   border: 0.16cqw solid currentColor;
   border-radius: 0.7cqw;
-  padding: 0.35cqw;
+  padding: 0.25cqw 0.1cqw;
   justify-content: center;
   align-items: center;
   flex-direction: column;
@@ -266,6 +281,7 @@
   > .brochure-specs
   .bf-source-detail-value {
   display: block;
+  flex: none !important;
   font: inherit;
   color: inherit;
   white-space: pre-line;
@@ -313,6 +329,8 @@
     --bf-warranty-count-font,
     calc(3.6cqw * var(--bf-type-scale, 1))
   ) !important;
+  transform: scale(0.9);
+  transform-origin: center;
   line-height: 0.9;
 }
 .brochure-page.brochure-black-friday
@@ -331,7 +349,9 @@
   border-radius: 0;
   font: inherit;
 }
-.brochure-black-friday:not([data-smart-appearance="true"])
+.brochure-black-friday:not([data-smart-appearance="true"]):not(
+    [data-brand-logo-mode="custom"]
+  )
   .brochure-brand-mark
   img {
   filter: none;
@@ -339,7 +359,9 @@
 .brochure-black-friday .bf-product-frame .brochure-brand-mark {
   min-height: 0;
 }
-.brochure-page.brochure-black-friday:not([data-smart-appearance="true"])
+.brochure-page.brochure-black-friday:not([data-smart-appearance="true"]):not(
+    [data-brand-logo-mode="custom"]
+  )
   .brochure-brand-mark
   img {
   filter: none !important;

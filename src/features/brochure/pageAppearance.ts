@@ -77,6 +77,7 @@ export function resolvedPageAppearance(
     textColor,
     brandColor:
       validBackgroundColor(saved.brandColor) ||
+      validBackgroundColor(campaign.brandLogoColor) ||
       (readability.light ? "#343534" : "#ffffff"),
     screenLabelColor: validBackgroundColor(saved.screenLabelColor) || textColor,
     priceStyle,
@@ -205,13 +206,29 @@ export function pageAppearanceStyle(
   page: AppearancePage | undefined,
   brandFilterId: string,
 ): CSSProperties & Record<`--${string}`, string> {
-  if (!hasPageAppearance(campaign, kind, page)) return {};
+  if (!hasPageAppearance(campaign, kind, page)) {
+    const color = validBackgroundColor(campaign.brandLogoColor);
+    return color
+      ? {
+          "--brochure-brand-filter": `url("#${brandFilterId}")`,
+          "--brochure-brand-color": color,
+          "--brand-logo-mode-filter": `url("#${brandFilterId}")`,
+          "--brand-logo-mode-ink": color,
+        }
+      : {};
+  }
   const resolved = resolvedPageAppearance(campaign, kind, page);
   return {
     color: resolved.textColor,
     "--brochure-foreground": resolved.textColor,
     "--brochure-brand-filter": `url("#${brandFilterId}")`,
     "--brochure-brand-color": resolved.brandColor,
+    ...(validBackgroundColor(campaign.brandLogoColor)
+      ? {
+          "--brand-logo-mode-filter": `url("#${brandFilterId}")`,
+          "--brand-logo-mode-ink": resolved.brandColor,
+        }
+      : {}),
     "--brochure-screen-label-color": resolved.screenLabelColor,
     "--brochure-energy-ink": resolved.textColor,
   };

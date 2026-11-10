@@ -3,6 +3,8 @@ import type { Campaign, Product } from "../../domain/models";
 import { brandLogoFor } from "./brandLogos";
 import { brandLogoAppearance, type BrandLogoMode } from "./brandLogoAppearance";
 import { pageBackgroundFill } from "./pageBackground";
+import { ColorField } from "./ColorField";
+import { BrandLogoTintFilter } from "./BrandLogoTintFilter";
 import { t } from "./i18n";
 import "../../styles/brand-logo-appearance.css";
 
@@ -18,10 +20,10 @@ function previewBrands(
       name,
       source: product.brandLogo || brandLogoFor(campaign, name),
     });
-    if (brands.size === 3) break;
+    if (brands.size === 2) break;
   }
   if (!brands.size)
-    for (const name of ["LG", "Samsung", "BEKO"])
+    for (const name of ["LG", "Samsung"])
       brands.set(name.toUpperCase(), {
         name,
         source: brandLogoFor(campaign, name),
@@ -38,6 +40,67 @@ function PreviewLogo({ name, source }: { name: string; source: string }) {
   );
 }
 
+export interface BrandLogoAppearanceChanges {
+  brandLogoMode?: BrandLogoMode;
+  brandLogoColor?: string;
+}
+
+/** A global choice replaces saved page colors without changing other page styles. */
+export function applyBrandLogoAppearance(
+  campaign: Campaign,
+  changes: BrandLogoAppearanceChanges,
+) {
+  Object.assign(campaign, changes);
+  for (const appearance of Object.values(campaign.pageAppearances || {}))
+    delete appearance.brandColor;
+}
+
+export function BrandLogoColorControl({
+  campaign,
+  onChange,
+}: {
+  campaign: Partial<Campaign>;
+  onChange: (changes: BrandLogoAppearanceChanges) => void;
+}) {
+  const appearance = brandLogoAppearance(campaign, "product");
+  const automatic =
+    !campaign.brandLogoColor &&
+    (!campaign.brandLogoMode || campaign.brandLogoMode === "auto");
+  const original =
+    !campaign.brandLogoColor && campaign.brandLogoMode === "original";
+  return (
+    <div className="cs-brand-logo-color-control">
+      <ColorField
+        compact
+        label={t("Brand logo colors")}
+        value={campaign.brandLogoColor || appearance.color}
+        colors={["#ffffff", "#343534", "#000000", "#1c4075", "#ef4023"]}
+        onChange={(brandLogoColor) =>
+          onChange({ brandLogoColor, brandLogoMode: "auto" })
+        }
+      />
+      <button
+        type="button"
+        aria-pressed={automatic}
+        onClick={() =>
+          onChange({ brandLogoColor: undefined, brandLogoMode: "auto" })
+        }
+      >
+        {t("Automatic")}
+      </button>
+      <button
+        type="button"
+        aria-pressed={original}
+        onClick={() =>
+          onChange({ brandLogoColor: undefined, brandLogoMode: "original" })
+        }
+      >
+        {t("Original colors")}
+      </button>
+    </div>
+  );
+}
+
 export function BrandLogoPreview({
   campaign,
   products,
@@ -45,9 +108,9 @@ export function BrandLogoPreview({
 }: {
   campaign: Partial<Campaign>;
   products: readonly Product[];
-  onChange: (mode: BrandLogoMode) => void;
+  onChange: (changes: BrandLogoAppearanceChanges) => void;
 }) {
-  const id = React.useId();
+  const id = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const brands = previewBrands(campaign, products);
   return (
     <section
@@ -56,14 +119,12 @@ export function BrandLogoPreview({
     >
       <div className="cs-brand-logo-preview-heading">
         <strong id={`${id}-heading`}>{t("Brand logo appearance")}</strong>
-        <BrandLogoModeSelect
-          value={campaign.brandLogoMode}
-          onChange={onChange}
-        />
+        <BrandLogoColorControl campaign={campaign} onChange={onChange} />
       </div>
       <div className="cs-brand-logo-preview-pages">
         {(["cover", "product"] as const).map((kind) => {
-          const appearance = brandLogoAppearance(campaign, kind);
+          const filterId = `brand-preview-${id}-${kind}`;
+          const appearance = brandLogoAppearance(campaign, kind, filterId);
           return (
             <figure key={kind}>
               <figcaption>
@@ -81,6 +142,7 @@ export function BrandLogoPreview({
                   } as React.CSSProperties
                 }
               >
+                <BrandLogoTintFilter id={filterId} color={appearance.color} />
                 {brands.map((brand) => (
                   <span key={brand.name}>
                     <PreviewLogo {...brand} />
@@ -91,34 +153,6 @@ export function BrandLogoPreview({
           );
         })}
       </div>
-      <small>
-        {t(
-          "Automatic uses white logos on dark backgrounds and dark gray on light backgrounds. You can change this later.",
-        )}
-      </small>
     </section>
-  );
-}
-
-export function BrandLogoModeSelect({
-  value = "auto",
-  onChange,
-}: {
-  value?: BrandLogoMode;
-  onChange: (mode: BrandLogoMode) => void;
-}) {
-  return (
-    <label className="cs-brand-logo-mode-control">
-      <span>{t("Brand logo colors")}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value as BrandLogoMode)}
-      >
-        <option value="auto">{t("Automatic")}</option>
-        <option value="white">{t("White")}</option>
-        <option value="dark">{t("Dark gray")}</option>
-        <option value="original">{t("Original colors")}</option>
-      </select>
-    </label>
   );
 }

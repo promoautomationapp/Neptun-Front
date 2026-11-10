@@ -159,7 +159,11 @@ export const brochureDefaultsSchema = z
       .default("neptun1080x1350"),
     automaticProductLayout: z.boolean().default(true),
     brochureVisualStyle: z.enum(["current", "october"]).optional(),
-    brochureReferenceDesign: z.literal("black-friday").optional(),
+    brochureReferenceDesign: z
+      .enum(["black-friday", "black-collection"])
+      .optional(),
+    brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
+    brandLogoColor: color.optional(),
     pageDecorationDefaults: pageDecorationSchema.optional(),
     layout: z
       .enum([
@@ -314,6 +318,7 @@ export const BROCHURE_DESIGN_KEYS = [
   "brandAssets",
   "brandLogos",
   "brandLogoMode",
+  "brandLogoColor",
   "pageAppearances",
   "iconDefaults",
   "productDesign",
@@ -339,8 +344,11 @@ export const brochurePresetSchema = z.object({
   design: z
     .object({
       brochureVisualStyle: z.enum(["current", "october"]).optional(),
-      brochureReferenceDesign: z.literal("black-friday").optional(),
+      brochureReferenceDesign: z
+        .enum(["black-friday", "black-collection"])
+        .optional(),
       brandLogoMode: z.enum(["auto", "white", "dark", "original"]).optional(),
+      brandLogoColor: color.optional(),
       pageAppearances: pageAppearancesSchema.optional(),
       coverBrandTagline: z.string().max(500).optional(),
       offerStyle: priceStyle.optional(),

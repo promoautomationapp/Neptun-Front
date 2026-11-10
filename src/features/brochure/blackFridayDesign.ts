@@ -2,8 +2,10 @@ import type { Artwork, Box, Campaign, Product } from "../../domain/models";
 import source from "./blackFridayReference.json";
 import type { SourceDetail } from "./BlackFridayDetails";
 import { airConditionerFeatures } from "./productArtwork";
+import { coverProductPlacement } from "./coverElements";
 
 export const BLACK_FRIDAY_ID = "neptun-black-friday";
+export const BLACK_COLLECTION_ID = "neptun-black-collection";
 export const BLACK_FRIDAY_ASPECT = 297 / 420;
 export interface BlackFridayFrame extends Box {
   code?: string;
@@ -42,9 +44,13 @@ export const blackFridayReference = source as unknown as {
   background: string;
   pages: SourcePage[];
 };
+export const isBlackCollectionBrochure = (campaign: Partial<Campaign>) =>
+  campaign.brochurePresetId === BLACK_COLLECTION_ID ||
+  campaign.brochureReferenceDesign === "black-collection";
 export const isBlackFridayBrochure = (campaign: Partial<Campaign>) =>
   campaign.brochurePresetId === BLACK_FRIDAY_ID ||
-  campaign.brochureReferenceDesign === "black-friday";
+  campaign.brochureReferenceDesign === "black-friday" ||
+  isBlackCollectionBrochure(campaign);
 
 export function blackFridayPage(number: number) {
   return blackFridayReference.pages.find((page) => page.number === number);
@@ -163,15 +169,87 @@ export function blackFridayDesignDefaults(): Partial<Campaign> {
   };
 }
 
+/** A reusable black catalogue, independent of the original campaign promotion. */
+export function blackCollectionDesignDefaults(): Partial<Campaign> {
+  return {
+    ...blackFridayDesignDefaults(),
+    brochureReferenceDesign: "black-collection",
+    brandLogoMode: "white",
+    autoProductLayout: true,
+    includeStoresPage: false,
+    pageArtworks: {
+      cover: [
+        {
+          id: "black-collection-logo",
+          type: "image",
+          name: "NEPTUN",
+          image: "/brochure-presets/black-friday/cover-logo.png",
+          x: 30,
+          y: 3,
+          width: 40,
+          height: 7.5,
+          imageFit: "contain",
+          zIndex: 3,
+        },
+        {
+          id: "black-collection-title",
+          type: "text",
+          name: "Campaign title",
+          text: "Titulli i fushatës",
+          x: 5,
+          y: 14,
+          width: 90,
+          height: 7,
+          color: "#ffffff",
+          fontFamily: "Cera Pro",
+          fontSize: 5.2,
+          fontWeight: 900,
+          textAlign: "center",
+          whiteSpace: "pre-wrap",
+          zIndex: 3,
+        },
+      ],
+    },
+  };
+}
+
 /** Reference positions are used only when the imported page has the same offer
  * count. Other brochures receive a complete editable grid, never missing slots. */
 export function blackFridayFrames(
   number: number,
   products: readonly Product[],
+  campaign: Partial<Campaign> = {},
 ): BlackFridayFrame[] {
   const page = blackFridayPage(number);
-  if (page?.frames.length === products.length) return page.frames;
+  if (
+    !isBlackCollectionBrochure(campaign) &&
+    page?.frames.length === products.length
+  )
+    return page.frames;
   const count = products.length;
+  if (number === 1 && isBlackCollectionBrochure(campaign)) {
+    const coverCampaign = {
+      id: "black-collection",
+      name: "Black collection",
+      ...campaign,
+      products: [...products],
+    } as Campaign;
+    const placements = products.map((_, index) =>
+      coverProductPlacement(coverCampaign, index, count),
+    );
+    const top = Math.min(...placements.map((frame) => frame.y));
+    const bottom = Math.max(
+      ...placements.map((frame) => frame.y + frame.height),
+    );
+    const scale = 67 / Math.max(1, bottom - top);
+    return products.map((product, index) => ({
+      ...placements[index]!,
+      y: 31 + (placements[index]!.y - top) * scale,
+      height: placements[index]!.height * scale,
+      order: product.brochureOrder || index + 1,
+      model: product.name,
+    }));
+  }
   const columns = count <= 2 ? 1 : count <= 6 ? 2 : 3;
   const rows = Math.ceil(count / columns);
   const top = number === 1 ? 31 : 9;
@@ -207,6 +285,23 @@ export function blackFridayProductArtworks(
   product?: Product,
 ): Artwork[] {
   const native = frame.productArtworks || [];
+  const optionalLabels = native.filter((artwork) =>
+    /\bMODEL\s+I\s+RI\b|^\s*\d+(?:[.,]\d+)?\s*kg\s*$/i.test(
+      sourceText(artwork.text || ""),
+    ),
+  );
+  const optionalLabelBackdrop = (artwork: Artwork) =>
+    artwork.type === "shape" &&
+    optionalLabels.some((label) => {
+      const x = label.x + label.width / 2,
+        y = label.y + (label.height || 0) / 2;
+      return (
+        x >= artwork.x &&
+        x <= artwork.x + artwork.width &&
+        y >= artwork.y &&
+        y <= artwork.y + (artwork.height || 0)
+      );
+    });
   const sameSource = product && product.code === frame.code;
   const supported = product
     ? airConditionerFeatures(
@@ -226,6 +321,14 @@ export function blackFridayProductArtworks(
   return native
     .filter(
       (artwork) =>
+        !optionalLabels.includes(artwork) &&
+        !optionalLabelBackdrop(artwork) &&
+        (!product ||
+          sameSource ||
+          artwork.referenceRole === "wifi" ||
+          artwork.referenceRole === "inverter" ||
+          artwork.referenceRole === "energy" ||
+          /\binverter\b/i.test(artwork.text || "")) &&
         !/BLACK\s+FRIDAY/i.test(artwork.text || "") &&
         (!supported ||
           ((artwork.referenceRole !== "wifi" || supported.wifi) &&

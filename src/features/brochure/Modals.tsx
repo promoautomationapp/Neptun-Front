@@ -67,7 +67,7 @@ import { ProductInformation } from "../products/ProductInformation";
 import { useCatalogPhotos } from "../products/useCatalogPhotos";
 import { brochureFormatSelection } from "./brochureFormat";
 import { lightBackground, pageBackgroundContrastColor } from "./pageBackground";
-import { BrandLogoPreview } from "./BrandLogoPreview";
+import { BrandLogoPreview, applyBrandLogoAppearance } from "./BrandLogoPreview";
 import type { BrandLogoMode } from "./brandLogoAppearance";
 
 function spreadsheetColumn(index: number): string {
@@ -199,6 +199,10 @@ export function CreateCampaign({
   const [brandLogoMode, setBrandLogoMode] = useState<BrandLogoMode>(
     initialDesign.brandLogoMode || "auto",
   );
+  const [brandLogoColor, setBrandLogoColor] = useState<string | undefined>(
+    initialDesign.brandLogoColor,
+  );
+  const [brandLogoOverride, setBrandLogoOverride] = useState(false);
   const [layout, setLayout] = useState<string>(
     initialDesign.layout ?? initialSettings.brochure.layout,
   );
@@ -242,6 +246,8 @@ export function CreateCampaign({
     setBackgroundGradient(d.productBackgroundGradient ?? null);
     setBackgroundImage(d.productBackgroundImage ?? "");
     setBrandLogoMode(d.brandLogoMode || "auto");
+    setBrandLogoColor(d.brandLogoColor);
+    setBrandLogoOverride(false);
     setLayout(d.layout ?? "feature3");
     setAutoProductLayout(d.autoProductLayout ?? true);
     setBrochureFormat(d.brochureFormat ?? "neptun1080x1350");
@@ -285,7 +291,7 @@ export function CreateCampaign({
       return setError(t("Add a campaign name and both dates."));
     if (finalEndDate < startDate)
       return setError(t("End date must be on or after the start date."));
-    onCreate({
+    const createdCampaign: Campaign = {
       ...campaignDefaults(initialSettings, undefined, type),
       ...structuredClone(selectedPreset.design),
       brochurePresetId: selectedPreset.id,
@@ -304,6 +310,7 @@ export function CreateCampaign({
       productBackgroundGradient: backgroundGradient,
       productBackgroundImage: backgroundImage,
       brandLogoMode,
+      brandLogoColor,
       coverImage: "",
       showCoverBand,
       showCoverMessage: Boolean(tagline.trim()),
@@ -321,7 +328,10 @@ export function CreateCampaign({
       storesSnapshot: structuredClone(initialSettings),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    };
+    if (brandLogoOverride)
+      applyBrandLogoAppearance(createdCampaign, { brandLogoMode, brandLogoColor });
+    onCreate(createdCampaign);
   }
   if (importOpen)
     return (
@@ -352,20 +362,6 @@ export function CreateCampaign({
               value={selectedPreset.id}
               onChange={choosePreset}
               onPreview={setPreviewPreset}
-            />
-            <BrandLogoPreview
-              campaign={{
-                ...selectedPreset.design,
-                theme,
-                brandLogoMode,
-                brandLogos: selectedPreset.design.brandLogos || initialSettings.brandLogos,
-                productBackgroundColor: backgroundColor,
-                productBackgroundGradient: backgroundGradient,
-                productBackgroundImage: backgroundImage,
-                ...(coverImage ? { coverBackgroundImage: coverImage } : {}),
-              }}
-              products={importedProducts.length ? importedProducts : catalog}
-              onChange={setBrandLogoMode}
             />
             {blueDesign && (
               <div className="cs-preset-upload">
@@ -520,6 +516,25 @@ export function CreateCampaign({
               value={brochureFormat}
               customFormats={initialSettings.customFormats}
               onChange={setBrochureFormat}
+            />
+            <BrandLogoPreview
+              campaign={{
+                ...selectedPreset.design,
+                theme,
+                brandLogoMode,
+                brandLogoColor,
+                brandLogos: selectedPreset.design.brandLogos || initialSettings.brandLogos,
+                productBackgroundColor: backgroundColor,
+                productBackgroundGradient: backgroundGradient,
+                productBackgroundImage: backgroundImage,
+                ...(coverImage ? { coverBackgroundImage: coverImage } : {}),
+              }}
+              products={importedProducts.length ? importedProducts : catalog}
+              onChange={(changes) => {
+                if (changes.brandLogoMode) setBrandLogoMode(changes.brandLogoMode);
+                if ("brandLogoColor" in changes) setBrandLogoColor(changes.brandLogoColor);
+                setBrandLogoOverride(true);
+              }}
             />
 
             <details className="cs-create-options">

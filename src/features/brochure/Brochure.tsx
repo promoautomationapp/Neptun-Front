@@ -1,5 +1,7 @@
+import { brandLogoRenderMode } from "./brandLogoAppearance";
 import {
   isBlackFridayBrochure,
+  isBlackCollectionBrochure,
   blackFridayFrames,
   type BlackFridayFrame,
 } from "./blackFridayDesign";
@@ -2703,7 +2705,9 @@ function StandardProductCard({
           )}
         </div>
       )}
-      {!isBlackFridayBrochure(campaign) && (
+      {(!isBlackFridayBrochure(campaign) ||
+        (isBlackCollectionBrochure(campaign) &&
+          !Array.isArray(product.productArtworks))) && (
         <ProductArtworkLayer
           campaign={campaign}
           product={product}
@@ -2802,7 +2806,7 @@ function LastPageWithStores({
   return (
     <section
       className={`brochure-page brochure-last-page-shell has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"}`}
-      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-brand-logo-mode={brandLogoRenderMode(campaign)}
       data-smart-appearance={
         hasPageAppearance(campaign, kind, page) ? "true" : undefined
       }
@@ -2878,7 +2882,11 @@ function BlackFridayPageContent(
 ) {
   const { campaign, page, closing } = props;
   const products = closing ? [] : page?.products || coverProducts(campaign);
-  const frames = blackFridayFrames(page ? page.index + 2 : 1, products);
+  const frames = blackFridayFrames(
+    page ? page.index + 2 : 1,
+    products,
+    campaign,
+  );
   const kind = closing ? "stores" : page ? "product" : "cover";
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const light = pageBackgroundReadability(campaign, kind, page).light;
@@ -3063,7 +3071,7 @@ function CoverPageContent({
     <section
       ref={pageRef}
       className={`brochure-page brochure-cover cover-editable-elements ${classicCover ? "classic-reference-cover" : ""} ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} ${campaign.showCoverBand === true ? "cover-with-uuu" : ""} ${campaign.coverBandVariant ? `cover-branding-${campaign.coverBandVariant}` : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${dark ? "blue" : "light"} cover-template-${template} ${coverArt ? "has-cover-art" : ""} ${backgroundColor ? "has-custom-background" : ""}`}
-      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-brand-logo-mode={brandLogoRenderMode(campaign)}
       data-smart-appearance={
         hasPageAppearance(campaign, "cover") ? "true" : undefined
       }
@@ -3689,7 +3697,7 @@ function ProductPageContent({
     <section
       ref={pageRef}
       className={`brochure-page brochure-interior ${october ? "brochure-october" : ""} ${campaign.brochureFooter?.style === "reference" ? "reference-ready-preset" : ""} has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"} ${page.showFooter ? "with-footer" : ""} layout-${page.layout} count-${page.products.length} ${page.products.some((item) => item.brochureCardSize) ? "custom-card-layout" : ""}`}
-      data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+      data-brand-logo-mode={brandLogoRenderMode(campaign)}
       data-blue-reference-page={bluePage ? "true" : undefined}
       data-default-stacked-pair={
         page.products.length === 2 && !pageConfig?.layout ? "true" : undefined
@@ -3935,7 +3943,7 @@ function RegularStoresPage({
     <BrochureFormatFrame campaign={campaign} kind="stores">
       <section
         className={`brochure-page brochure-stores ${isOctoberBrochure(campaign) ? "brochure-october" : ""} stores-reference-page ${isReferenceStoresDesign(campaign) ? "stores-brand-reference" : ""} stores-element-canvas has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "custom-light stores-gray" : "stores-blue"}`}
-        data-brand-logo-mode={campaign.brandLogoMode || "auto"}
+        data-brand-logo-mode={brandLogoRenderMode(campaign)}
         data-smart-appearance={
           hasPageAppearance(campaign, "stores") ? "true" : undefined
         }

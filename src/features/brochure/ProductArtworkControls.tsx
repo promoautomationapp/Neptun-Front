@@ -12,6 +12,13 @@ import {
   type ProductArtworkPatch,
 } from "./productArtworkEdits";
 import "../../styles/product-artwork-controls.css";
+import {
+  optionalProductLabelChoices,
+  inferredCapacityKg,
+  hasOptionalProductLabel,
+  optionalProductLabelKind,
+  setOptionalProductLabel,
+} from "./optionalProductLabels";
 
 export function ProductArtworkControls({
   product,
@@ -20,14 +27,33 @@ export function ProductArtworkControls({
 }: {
   product: Product;
   campaign?: Partial<Campaign>;
-  onChange: (field: keyof Product | ProductArtworkPatch, value?: Product[keyof Product]) => void;
+  onChange: (
+    field: keyof Product | ProductArtworkPatch,
+    value?: Product[keyof Product],
+  ) => void;
 }) {
-  const artworks = effectiveProductArtworks(product, campaign);
+  const artworks: Artwork[] = effectiveProductArtworks(product, campaign);
   const defaults = defaultProductArtworks(product, campaign);
   const latest = useRef(artworks);
   latest.current = artworks;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [capacityDraft, setCapacityDraft] = useState<{
+    code: string;
+    value: string;
+  } | null>(null);
+  const capacity =
+    capacityDraft?.code === product.code
+      ? capacityDraft.value
+      : artworks
+          .find(
+            (item) =>
+              optionalProductLabelKind(item) === "capacity" &&
+              item.type === "text",
+          )
+          ?.text?.match(/\b(\d+(?:[.,]\d+)?)\s*kg\b/i)?.[1]
+          ?.replace(",", ".") || inferredCapacityKg(product);
+  const choices = optionalProductLabelChoices(product);
   const save = (next: Artwork[] | null) => onChange("productArtworks", next);
   const patch = (id: string, values: Partial<Artwork>) => {
     const changes = patchProductArtwork(product, latest.current, id, values);
@@ -98,6 +124,79 @@ export function ProductArtworkControls({
           "Drag images and badges on the product to move or resize them. You can replace or remove each one.",
         )}
       </p>
+      {choices.length > 0 && (
+        <fieldset className="product-optional-labels">
+          <legend>{t("Optional product labels")}</legend>
+          {choices.map((kind) => (
+            <label className="product-optional-label-choice" key={kind}>
+              <input
+                type="checkbox"
+                checked={hasOptionalProductLabel(artworks, kind)}
+                disabled={
+                  kind === "capacity" &&
+                  !hasOptionalProductLabel(artworks, kind) &&
+                  !(
+                    Number(capacity.replace(",", ".")) > 0 &&
+                    Number(capacity.replace(",", ".")) <= 30
+                  )
+                }
+                onChange={(event) =>
+                  save(
+                    setOptionalProductLabel(
+                      latest.current,
+                      kind,
+                      event.target.checked,
+                      capacity,
+                    ),
+                  )
+                }
+              />
+              <span>
+                {t(kind === "new-model" ? "New model" : "Capacity (kg)")}
+              </span>
+            </label>
+          ))}
+          {choices.includes("capacity") && (
+            <label className="product-capacity-value">
+              <span>{t("Capacity value (kg)")}</span>
+              <input
+                type="number"
+                aria-label={t("Capacity value (kg)")}
+                min="0.1"
+                max="30"
+                step="0.1"
+                value={capacity}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setCapacityDraft({ code: product.code, value });
+                  if (
+                    hasOptionalProductLabel(latest.current, "capacity") &&
+                    Number(value) > 0 &&
+                    Number(value) <= 30
+                  )
+                    save(
+                      latest.current.map((item) =>
+                        optionalProductLabelKind(item) === "capacity" &&
+                        item.type === "text"
+                          ? {
+                              ...item,
+                              text: `${Number(value)} kg`,
+                              label: `${Number(value)} kg`,
+                            }
+                          : item,
+                      ),
+                    );
+                }}
+              />
+              {!capacity && (
+                <small>
+                  {t("Enter the capacity before enabling its label.")}
+                </small>
+              )}
+            </label>
+          )}
+        </fieldset>
+      )}
       <div className="product-artwork-list">
         {artworks.map((artwork, index) => (
           <div className="product-artwork-control-item" key={artwork.id}>
@@ -121,11 +220,61 @@ export function ProductArtworkControls({
                 ×
               </button>
             </div>
-            <ImageUploadButton
-              label={t("Replace product image or badge")}
-              value={artwork.image}
-              onFile={(file) => upload(file, artwork.id)}
-            />
+            {optionalProductLabelKind(artwork) ? (
+              <div className="product-label-style-fields">
+                {artwork.type === "text" && (
+                  <label>
+                    <span>{t("Label text")}</span>
+                    <input
+                      value={artwork.text || ""}
+                      onChange={(event) =>
+                        patch(artwork.id, { text: event.target.value })
+                      }
+                    />
+                  </label>
+                )}
+                <label>
+                  <span>
+                    {t(
+                      artwork.type === "shape"
+                        ? "Label background color"
+                        : "Label text color",
+                    )}
+                  </span>
+                  <input
+                    type="color"
+                    value={
+                      /^#[0-9a-f]{6}$/i.test(
+                        artwork.type === "shape"
+                          ? artwork.fill || ""
+                          : artwork.color || "",
+                      )
+                        ? artwork.type === "shape"
+                          ? artwork.fill
+                          : artwork.color
+                        : "#ffffff"
+                    }
+                    onChange={(event) =>
+                      patch(
+                        artwork.id,
+                        artwork.type === "shape"
+                          ? {
+                              fill: event.target.value,
+                              color: event.target.value,
+                            }
+                          : { color: event.target.value },
+                      )
+                    }
+                  />
+                </label>
+              </div>
+            ) : (
+              <ImageUploadButton
+                label={t("Replace product image or badge")}
+                value={artwork.image}
+                onFile={(file) => upload(file, artwork.id)}
+              />
+            )}
             <div className="product-artwork-ranges">
               {(
                 [

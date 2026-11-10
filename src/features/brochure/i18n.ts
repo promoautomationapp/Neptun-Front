@@ -1,4 +1,12 @@
 const translations: Record<string, string> = {
+  "Optional product labels": "Etiketa opsionale të produktit",
+  "New model": "Model i ri",
+  "Capacity (kg)": "Kapaciteti (kg)",
+  "Capacity value (kg)": "Vlera e kapacitetit (kg)",
+  "Enter the capacity before enabling its label.": "Shënoni kapacitetin para se të aktivizoni etiketën.",
+  "Label text": "Teksti i etiketës",
+  "Label background color": "Ngjyra e sfondit të etiketës",
+  "Label text color": "Ngjyra e tekstit të etiketës",
   "Banner": "Baner",
   "Add page banner": "Shto baner në faqe",
   "Page banner": "Baneri i faqes",
