@@ -15,6 +15,7 @@ interface EditableScreenAnnotationProps {
   product: { screenAnnotationPlacement?: ScreenAnnotationPlacement };
   inches: number | string | null;
   type: ScreenAnnotationType;
+  televisionVariant?: "default" | "black-friday";
   className?: string;
   style?: React.CSSProperties;
   onChange?: (
@@ -35,16 +36,21 @@ export function EditableScreenAnnotation({
   product,
   inches,
   type,
+  televisionVariant = "default",
   className = "",
   style,
   onChange,
 }: EditableScreenAnnotationProps) {
   const saved: ScreenAnnotationPlacement | undefined =
     product.screenAnnotationPlacement;
+  const inset = televisionVariant === "black-friday" ? 6 : 2;
   const [placement, setPlacement] = React.useState<ScreenAnnotationPlacement>(
-    resolveScreenAnnotationPlacement(type, saved),
+    resolveScreenAnnotationPlacement(type, saved, inset),
   );
-  React.useEffect(() => setPlacement(resolveScreenAnnotationPlacement(type, saved)), [saved, type]);
+  React.useEffect(
+    () => setPlacement(resolveScreenAnnotationPlacement(type, saved, inset)),
+    [saved, type, inset],
+  );
   const gesture = React.useRef<AnnotationGesture | null>(null);
   if (placement.hidden) return null;
   function begin(
@@ -92,7 +98,8 @@ export function EditableScreenAnnotation({
   function end(event: React.PointerEvent<HTMLElement>, cancelled = false) {
     event.stopPropagation();
     if (!gesture.current) return;
-    if (cancelled) setPlacement(resolveScreenAnnotationPlacement(type, saved));
+    if (cancelled)
+      setPlacement(resolveScreenAnnotationPlacement(type, saved, inset));
     else if (gesture.current.next)
       onChange?.("screenAnnotationPlacement", gesture.current.next);
     gesture.current = null;
@@ -101,6 +108,7 @@ export function EditableScreenAnnotation({
   return (
     <ScreenSizeAnnotation
       textPosition={placement.textPosition}
+      televisionVariant={televisionVariant}
       inches={inches}
       type={type}
       className={`${className} ${onChange ? "cs-editable-inch" : ""}`}

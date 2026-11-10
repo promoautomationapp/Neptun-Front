@@ -2,7 +2,7 @@ import type { Artwork, Campaign } from "../../domain/models";
 import type { BrochurePage } from "./campaignPages";
 import {
   blackFridayPage,
-  blackFridayPageArtworks,
+  blackFridayPageArtworkDefaults,
   isBlackCollectionBrochure,
   isBlackFridayBrochure,
 } from "./blackFridayDesign";
@@ -39,7 +39,7 @@ export function blackFridayStoresContent(
     !page.products.some((product) => product.brochureContentPlacement?.frame),
   );
   const key = "product-10";
-  const defaults = blackFridayPageArtworks()[key] || [];
+  const defaults = blackFridayPageArtworkDefaults(key);
   const footers = new Map(
     defaults.filter((item) => item.y >= 85).map((item) => [item.id, item]),
   );

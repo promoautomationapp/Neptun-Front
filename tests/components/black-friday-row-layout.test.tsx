@@ -40,6 +40,7 @@ it.each([2, 4, 5])(
   "uses automatic square strips and measured price dividers for all %i offers",
   (count) => {
     const value = campaign(count);
+    value.products[0]!.brochureImagePlacement = { x: 50, y: 50, scale: 1 };
     const view = render(
       <ProductPage campaign={value} page={splitPages(value)[0]!} />,
     );
@@ -61,7 +62,7 @@ it.each([2, 4, 5])(
       )) {
         expect(frame.style.width).toBe("92%");
         expect(frame.style.getPropertyValue("--bf-photo-width")).toBe("96%");
-        expect(frame.style.getPropertyValue("--bf-photo-height")).toBe("70%");
+        expect(frame.style.getPropertyValue("--bf-photo-height")).toBe("78%");
       }
     }
   },

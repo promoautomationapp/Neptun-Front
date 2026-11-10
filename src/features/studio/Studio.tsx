@@ -2120,6 +2120,15 @@ function StorePageControls({
   );
 }
 
+const BrochurePrintStack = React.memo(function BrochurePrintStack({ campaign, settings }: { campaign: Campaign; settings: Settings }) {
+  const pages = splitPages(campaign);
+  return <div className="print-stack">
+    <CoverPage campaign={campaign} settings={settings} />
+    {pages.map((page) => <ProductPage key={page.index} campaign={campaign} settings={settings} page={page} />)}
+    {includesStoresPage(campaign) && <StoresPage campaign={campaign} settings={settings} />}
+  </div>;
+});
+
 export function BrochureEditor({
   canMakeSocial = true,
   canUseCatalog = true,
@@ -2147,10 +2156,10 @@ export function BrochureEditor({
   initialPage = 0,
   onPageChange,
 }: BrochureEditorProps) {
-  const pages = splitPages(campaign);
+  const pages = useMemo(() => splitPages(campaign), [campaign]);
   const pageFormat = resolveBrochureFormat(campaign);
   const formatGeometry = brochureExportGeometry(pageFormat);
-  const televisions = campaignTelevisionPhotos(campaign);
+  const televisions = useMemo(() => campaignTelevisionPhotos(campaign), [campaign]);
   const hasStoresPage = includesStoresPage(campaign);
   const [selected, setSelected] = useState(() =>
     Math.max(
@@ -2582,7 +2591,10 @@ export function BrochureEditor({
   function removeArtwork(id: string) {
     onUpdate((draft: Campaign) => {
       materializeBlackCollectionPageArtworks(draft, artworkPageKey);
-      if (draft.pageArtworks?.[artworkPageKey])
+      if (id.startsWith("black-collection-")) {
+        const item = draft.pageArtworks?.[artworkPageKey]?.find((entry) => entry.id === id);
+        if (item) item.hidden = true;
+      } else if (draft.pageArtworks?.[artworkPageKey])
         draft.pageArtworks[artworkPageKey] = draft.pageArtworks[
           artworkPageKey
         ].filter((entry) => entry.id !== id);
@@ -3987,20 +3999,7 @@ export function BrochureEditor({
           </aside>
         )}
       </div>
-      <div className="print-stack">
-        <CoverPage campaign={campaign} settings={settings} />
-        {pages.map((item) => (
-          <ProductPage
-            key={item.index}
-            campaign={campaign}
-            settings={settings}
-            page={item}
-          />
-        ))}
-        {hasStoresPage && (
-          <StoresPage campaign={campaign} settings={settings} />
-        )}
-      </div>
+      <BrochurePrintStack campaign={campaign} settings={settings} />
       {moveTarget && (
         <Modal
           title={t("Move product")}

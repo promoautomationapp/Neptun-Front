@@ -334,8 +334,8 @@
         ) /
         var(--detail-strip-columns, 6)
     )
-  );
-  height: auto;
+  ) !important;
+  height: auto !important;
   min-height: 0;
   aspect-ratio: 1;
   box-sizing: border-box;

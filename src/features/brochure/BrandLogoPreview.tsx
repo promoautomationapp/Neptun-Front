@@ -5,6 +5,7 @@ import { brandLogoAppearance, type BrandLogoMode } from "./brandLogoAppearance";
 import { pageBackgroundFill } from "./pageBackground";
 import { ColorField } from "./ColorField";
 import { BrandLogoTintFilter } from "./BrandLogoTintFilter";
+import { EditorIcon } from "./EditorIcon";
 import { t } from "./i18n";
 import "../../styles/brand-logo-appearance.css";
 
@@ -68,35 +69,57 @@ export function BrandLogoColorControl({
     (!campaign.brandLogoMode || campaign.brandLogoMode === "auto");
   const original =
     !campaign.brandLogoColor && campaign.brandLogoMode === "original";
+  const custom = Boolean(campaign.brandLogoColor || campaign.brandLogoMode === "white" || campaign.brandLogoMode === "dark");
   return (
     <div className="cs-brand-logo-color-control">
-      <ColorField
-        compact
-        label={t("Brand logo colors")}
-        value={campaign.brandLogoColor || appearance.color}
-        colors={["#ffffff", "#343534", "#000000", "#1c4075", "#ef4023"]}
-        onChange={(brandLogoColor) =>
-          onChange({ brandLogoColor, brandLogoMode: "auto" })
-        }
-      />
-      <button
-        type="button"
-        aria-pressed={automatic}
-        onClick={() =>
-          onChange({ brandLogoColor: undefined, brandLogoMode: "auto" })
-        }
+      <div
+        className="cs-brand-logo-modes"
+        role="group"
+        aria-label={t("Logo color style")}
       >
-        {t("Automatic")}
-      </button>
-      <button
-        type="button"
-        aria-pressed={original}
-        onClick={() =>
-          onChange({ brandLogoColor: undefined, brandLogoMode: "original" })
-        }
+        <button
+          type="button"
+          aria-pressed={automatic}
+          onClick={() =>
+            onChange({ brandLogoColor: undefined, brandLogoMode: "auto" })
+          }
+        >
+          <EditorIcon name="check" />
+          {t("Automatic")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={original}
+          onClick={() =>
+            onChange({ brandLogoColor: undefined, brandLogoMode: "original" })
+          }
+        >
+          <EditorIcon name="palette" />
+          {t("Original colors")}
+        </button>
+      </div>
+      <div
+        className={`cs-brand-logo-custom-color ${custom ? "selected" : ""}`}
       >
-        {t("Original colors")}
-      </button>
+        <span>{t("Custom color")}</span>
+        <ColorField
+          label={t("Brand logo colors")}
+          value={campaign.brandLogoColor || appearance.color}
+          colors={["#ffffff", "#343534", "#000000", "#1c4075", "#ef4023"]}
+          onChange={(brandLogoColor) =>
+            onChange({ brandLogoColor, brandLogoMode: "auto" })
+          }
+        />
+      </div>
+      <small className="cs-brand-logo-mode-hint">
+        {t(
+            custom
+            ? "Your color applies to logos on every page."
+            : original
+              ? "Keeps the original colors of each logo."
+              : "Adapts logos to each page background.",
+        )}
+      </small>
     </div>
   );
 }
@@ -117,8 +140,11 @@ export function BrandLogoPreview({
       className="cs-brand-logo-preview"
       aria-labelledby={`${id}-heading`}
     >
-      <div className="cs-brand-logo-preview-heading">
-        <strong id={`${id}-heading`}>{t("Brand logo appearance")}</strong>
+      <div className="cs-brand-logo-preview-settings">
+        <div className="cs-brand-logo-preview-heading">
+          <strong id={`${id}-heading`}>{t("Brand logo appearance")}</strong>
+          <small>{t("Preview the logo colors used in your brochure.")}</small>
+        </div>
         <BrandLogoColorControl campaign={campaign} onChange={onChange} />
       </div>
       <div className="cs-brand-logo-preview-pages">
@@ -128,7 +154,21 @@ export function BrandLogoPreview({
           return (
             <figure key={kind}>
               <figcaption>
-                {t(kind === "cover" ? "Cover" : "Inside pages")}
+                <span>
+                  <EditorIcon name={kind === "cover" ? "page" : "pages"} />
+                  {t(kind === "cover" ? "Cover" : "Inside pages")}
+                </span>
+                <small>
+                  {appearance.mode === "custom"
+                    ? appearance.color.toUpperCase()
+                    : t(
+                        appearance.mode === "original"
+                          ? "Original colors"
+                          : appearance.mode === "white"
+                            ? "White"
+                            : "Dark gray",
+                      )}
+                </small>
               </figcaption>
               <div
                 className="cs-brand-logo-preview-swatch"

@@ -2162,6 +2162,7 @@ function StandardProductCard({
             !tvInchesEmbedded(product)) && (
             <EditableScreenAnnotation
               product={product}
+              televisionVariant={isBlackFridayBrochure(campaign) ? "black-friday" : "default"}
               onChange={changeProduct}
               inches={inches}
               type={
@@ -2918,7 +2919,7 @@ function BlackFridayPageContent(
               ? {}
               : { brochureImagePlacement: { x: 50, y: 50, scale: 1 } }),
           }}
-          sourceFrame={frames[index]}
+          sourceFrame={isBlackCollectionBrochure(campaign) ? undefined : frames[index]}
           priceLogo={priceLogoSource(campaign)}
           installments={installmentCount(campaign)}
           layout={page?.layout || "grid6portrait"}

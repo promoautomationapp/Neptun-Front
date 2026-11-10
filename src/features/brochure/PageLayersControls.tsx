@@ -10,6 +10,10 @@ import React from "react";
 import { readImage } from "./utils";
 import { pageBackgroundContrastColor } from "./pageBackground";
 import "../../styles/page-layers.css";
+import {
+  blackCollectionPageArtworks,
+  materializeBlackCollectionPageArtworks,
+} from "./blackFridayDesign";
 
 export interface PageLayersControlsProps {
   campaign: Campaign;
@@ -23,7 +27,10 @@ export function PageLayersControls({
   onUpdate,
   onToast,
 }: PageLayersControlsProps) {
-  const layers: PageArtworkLayer[] = campaign.pageArtworks?.[pageKey] || [];
+  const layers: PageArtworkLayer[] = blackCollectionPageArtworks(
+    campaign,
+    pageKey,
+  );
   const [selectedId, setSelectedId] = React.useState("");
   const selected =
     layers.find((item: { id: string }) => item.id === selectedId) ||
@@ -38,6 +45,7 @@ export function PageLayersControls({
     ) || "#1c4075";
   function add(items: PageArtworkLayer[]) {
     onUpdate((draft: Campaign) => {
+      materializeBlackCollectionPageArtworks(draft, pageKey);
       draft.pageArtworks ||= {};
       draft.pageArtworks[pageKey] ||= [];
       draft.pageArtworks[pageKey].push(...items);
@@ -47,6 +55,7 @@ export function PageLayersControls({
   function change(changes: Partial<PageArtworkLayer>) {
     if (!selected) return;
     onUpdate((draft: Campaign) => {
+      materializeBlackCollectionPageArtworks(draft, pageKey);
       const item = draft.pageArtworks?.[pageKey]?.find(
         (item) => item.id === selected.id,
       );
@@ -466,8 +475,14 @@ export function PageLayersControls({
             type="button"
             onClick={() =>
               onUpdate((draft: Campaign) => {
+                materializeBlackCollectionPageArtworks(draft, pageKey);
                 const pageLayers = draft.pageArtworks?.[pageKey];
-                if (draft.pageArtworks && pageLayers)
+                if (selected.id.startsWith("black-collection-")) {
+                  const layer = pageLayers?.find(
+                    (item) => item.id === selected.id,
+                  );
+                  if (layer) layer.hidden = true;
+                } else if (draft.pageArtworks && pageLayers)
                   draft.pageArtworks[pageKey] = pageLayers.filter(
                     (item) => item.id !== selected.id,
                   );

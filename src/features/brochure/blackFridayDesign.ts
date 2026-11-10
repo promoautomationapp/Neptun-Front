@@ -3,6 +3,7 @@ import source from "./blackFridayReference.json";
 import type { SourceDetail } from "./BlackFridayDetails";
 import { airConditionerFeatures } from "./productArtwork";
 import { coverProductPlacement } from "./coverElements";
+import { getLanguage, t } from "./i18n";
 
 export const BLACK_FRIDAY_ID = "neptun-black-friday";
 export const BLACK_COLLECTION_ID = "neptun-black-collection";
@@ -57,9 +58,7 @@ export function blackFridayPage(number: number) {
 }
 
 /** Source text frames use page-height percentages; editor typography uses page width. */
-export function blackFridayPageArtworks(): NonNullable<
-  Campaign["pageArtworks"]
-> {
+function buildBlackFridayPageArtworks(): NonNullable<Campaign["pageArtworks"]> {
   return Object.fromEntries(
     blackFridayReference.pages.map((page) => [
       page.number === 1
@@ -112,6 +111,79 @@ export function blackFridayPageArtworks(): NonNullable<
   );
 }
 
+let sourceArtworkCache:
+  ReturnType<typeof buildBlackFridayPageArtworks> | undefined;
+export function blackFridayPageArtworkDefaults(key: string) {
+  sourceArtworkCache ||= buildBlackFridayPageArtworks();
+  return sourceArtworkCache[key] || [];
+}
+export function blackFridayPageArtworks() {
+  sourceArtworkCache ||= buildBlackFridayPageArtworks();
+  return structuredClone(sourceArtworkCache);
+}
+
+function blackCollectionPaymentArtworks(
+  campaign: Partial<Campaign>,
+): Artwork[] {
+  const count = Math.min(60, Math.max(1, Number(campaign.installments) || 12));
+  const payment =
+    campaign.paymentText?.trim() ||
+    t("Pay in up to {count} installments at 0% interest.").replace(
+      "{count}",
+      String(count),
+    );
+  const date = (value?: string) => {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+    return new Intl.DateTimeFormat(getLanguage() === "sq" ? "sq-AL" : "en-GB", {
+      day: "numeric",
+      month: "long",
+    }).format(new Date(`${value}T12:00:00`));
+  };
+  const from = date(campaign.startDate),
+    to = date(campaign.endDate);
+  const period = from ? `${from}${to && to !== from ? ` – ${to}` : ""}` : "";
+  const offer = period
+    ? `${t("Offer valid {dates}.").replace("{dates}", period)} `
+    : "";
+  return [
+    {
+      id: "black-collection-payment-rule",
+      type: "image",
+      name: "Payment message divider",
+      image:
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='2'%3E%3Cpath d='M0 1H1000' stroke='white' stroke-dasharray='1 3'/%3E%3C/svg%3E",
+      x: 2.5,
+      y: 95.8,
+      width: 95,
+      height: 0.15,
+      zIndex: 3,
+    },
+    {
+      id: "black-collection-payment",
+      type: "text",
+      name: "Payment message",
+      text: `${payment} ${offer}${t("Limited stock.")}`,
+      referenceSource: `black-collection-payment:${payment} ${offer}${t("Limited stock.")}`,
+      textRuns: [
+        { text: `${payment} `, fontScale: 1, fontWeight: 400 },
+        { text: offer, fontScale: 1, fontWeight: 700 },
+        { text: t("Limited stock."), fontScale: 1, fontWeight: 400 },
+      ],
+      x: 2.5,
+      y: 96.6,
+      width: 95,
+      height: 2.3,
+      color: "#ffffff",
+      fontFamily: "Cera Pro",
+      fontSize: 1.65,
+      fontWeight: 400,
+      lineHeight: 1.1,
+      whiteSpace: "nowrap",
+      zIndex: 3,
+    },
+  ];
+}
+
 /** Missing page layers inherit the reusable heading. An explicit page array,
  * including an empty one, records the user's own composition/removals. */
 export function blackCollectionPageArtworks(
@@ -119,13 +191,36 @@ export function blackCollectionPageArtworks(
   pageKey: string | number,
 ): Artwork[] {
   const saved = campaign.pageArtworks?.[pageKey];
+  if (isBlackCollectionBrochure(campaign) && pageKey === "cover") {
+    const defaults = blackCollectionPaymentArtworks(campaign);
+    const layers = (saved || []).map((layer) => {
+      const fresh = defaults.find((item) => item.id === layer.id);
+      return fresh &&
+        layer.referenceSource?.startsWith("black-collection-payment:") &&
+        layer.text ===
+          layer.referenceSource.slice("black-collection-payment:".length)
+        ? {
+            ...layer,
+            text: fresh.text,
+            textRuns: fresh.textRuns,
+            referenceSource: fresh.referenceSource,
+          }
+        : layer;
+    });
+    return [
+      ...layers,
+      ...defaults.filter(
+        (item) => !layers.some((layer) => layer.id === item.id),
+      ),
+    ];
+  }
   if (
-    saved !== undefined ||
+    (saved !== undefined && saved.length > 0) ||
     !isBlackCollectionBrochure(campaign) ||
     !/^product-\d+$/.test(String(pageKey))
   )
     return saved || [];
-  return (blackFridayPageArtworks()["product-0"] || [])
+  return blackFridayPageArtworkDefaults("product-0")
     .filter((artwork) => artwork.id === "bf-u16b099")
     .map((artwork) => ({
       ...artwork,
@@ -142,13 +237,12 @@ export function materializeBlackCollectionPageArtworks(
 ) {
   if (
     !isBlackCollectionBrochure(campaign) ||
-    !/^product-\d+$/.test(String(pageKey)) ||
-    campaign.pageArtworks?.[pageKey] !== undefined
+    (pageKey !== "cover" && !/^product-\d+$/.test(String(pageKey)))
   )
     return;
   const layers = blackCollectionPageArtworks(campaign, pageKey);
   campaign.pageArtworks ||= {};
-  campaign.pageArtworks[pageKey] = layers;
+  campaign.pageArtworks[pageKey] = structuredClone(layers);
 }
 
 export function blackCollectionHeadingInset(
@@ -315,10 +409,10 @@ export function blackFridayFrames(
     const bottom = Math.max(
       ...placements.map((frame) => frame.y + frame.height),
     );
-    const scale = 67 / Math.max(1, bottom - top);
+    const scale = 67.5 / Math.max(1, bottom - top);
     return products.map((product, index) => ({
       ...placements[index]!,
-      y: 31 + (placements[index]!.y - top) * scale,
+      y: 26.5 + (placements[index]!.y - top) * scale,
       height: placements[index]!.height * scale,
       order: product.brochureOrder || index + 1,
       model: product.name,

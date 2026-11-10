@@ -92,7 +92,7 @@ function frameStyle(
           ...photo,
           x: photo.width < 96 ? 2 : photo.x,
           width: Math.max(96, photo.width),
-          height: Math.max(70, photo.height),
+          height: Math.max(78, photo.height),
         })
       : {}),
     ...(clean
@@ -229,11 +229,11 @@ export function BlackFridayPage({
             ),
           );
         const defaultDetails = !frame.detailRects?.length && !manualDetails;
+        const neutralPhoto = !product.brochureImagePlacement || Object.entries(product.brochureImagePlacement).every(([field, value]) => value === undefined || ({ x: 50, y: 50, scale: 1, hidden: false } as Record<string, unknown>)[field] === value);
         const largerPhoto =
           twoRows &&
-          automaticPhotos &&
-          !placement &&
-          !product.brochureImagePlacement;
+          (isBlackCollectionBrochure(campaign) || automaticPhotos) &&
+          neutralPhoto;
         const defaultPlacement = {
           x: fitted.x,
           y: fitted.y,

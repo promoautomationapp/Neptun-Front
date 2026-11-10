@@ -9,6 +9,7 @@ export interface ScreenSizeAnnotationProps extends React.HTMLAttributes<HTMLSpan
   inches?: number | string | null;
   type?: ScreenAnnotationType;
   textPosition?: "balanced" | "original";
+  televisionVariant?: "default" | "black-friday";
   guideLengths?: Pick<
     ScreenAnnotationPlacement,
     "horizontalLength" | "verticalLength"
@@ -22,19 +23,23 @@ export function ScreenSizeAnnotation({
   style,
   guideLengths = {},
   textPosition = "balanced",
+  televisionVariant = "default",
   children,
   ...props
 }: ScreenSizeAnnotationProps) {
   const id = useId().replace(/:/g, "");
   const labelX =
-    type === "television" && textPosition !== "original"
-      ? "51.5"
-      : "53.9218715547";
+    televisionVariant === "black-friday"
+      ? "48.5"
+      : type === "television" && textPosition !== "original"
+        ? "51.5"
+        : "53.9218715547";
   const labelY =
     type === "television" && textPosition !== "original"
       ? "37"
       : "32.0116815921";
   if (!inches) return null;
+  const ink = televisionVariant === "black-friday" ? "#000000" : "#243a6a";
   return (
     <span
       className={`screen-size-annotation screen-size-${type} ${className}`}
@@ -84,7 +89,7 @@ export function ScreenSizeAnnotation({
             <path
               d="M0 -.7950385348H89.8530031576V89.0579646228"
               fill="none"
-              stroke="#243a6a"
+              stroke={ink}
               strokeWidth="1.5900770695"
             />
             <path
@@ -96,7 +101,7 @@ export function ScreenSizeAnnotation({
             <path
               d="M0 1.1925578022H87.8654068206V89.0579646228"
               fill="none"
-              stroke="#243a6a"
+              stroke={ink}
               strokeWidth=".7950385348"
             />
           </g>
@@ -105,7 +110,7 @@ export function ScreenSizeAnnotation({
             y={labelY}
             transform={`rotate(53 ${labelX} ${labelY})`}
             textAnchor="middle"
-            fill="#243a6a"
+            fill={ink}
             fontFamily="TSTAR Headline,TSTAR,Arial,sans-serif"
             fontWeight="400"
             fontSize={String(inches).length > 2 ? "24.5" : "29.4412936119"}

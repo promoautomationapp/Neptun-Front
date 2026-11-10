@@ -32,14 +32,13 @@ const otherAnnotationHeightRatio = 0.3067161428571429;
 // 400×280 photo; photo-relative sizing keeps the same breathing room at zoom.
 const otherAnnotationHorizontalGapRatio = 6 / 85.88052;
 const otherAnnotationVerticalGapRatio = 2 / 85.88052;
-const canonicalInset =
-  (TV_ANNOTATION_INSET_PX / SCREEN_ANNOTATION_CANONICAL_WIDTH) * 100;
 
 // A saved coordinate or scale is a deliberate manual edit. Apply the new
 // default only to fields the user has not already adjusted.
 export function resolveScreenAnnotationPlacement(
   type: ScreenAnnotationType,
   saved?: ScreenAnnotationPlacement,
+  televisionInsetPx = TV_ANNOTATION_INSET_PX,
 ): ResolvedScreenAnnotationPlacement {
   const manual =
     saved &&
@@ -48,6 +47,7 @@ export function resolveScreenAnnotationPlacement(
       (Number.isFinite(saved.scale) && Number(saved.scale) > 0));
   saved ||= {};
   const television = type === "television";
+  const inset = (televisionInsetPx / SCREEN_ANNOTATION_CANONICAL_WIDTH) * 100;
   return {
     ...saved,
     ...(type === "television"
@@ -56,8 +56,8 @@ export function resolveScreenAnnotationPlacement(
             saved.textPosition || (manual ? "original" : "balanced"),
         }
       : {}),
-    x: Number.isFinite(saved.x) ? saved.x! : television ? -canonicalInset : 0,
-    y: Number.isFinite(saved.y) ? saved.y! : television ? canonicalInset : 0,
+    x: Number.isFinite(saved.x) ? saved.x! : television ? -inset : 0,
+    y: Number.isFinite(saved.y) ? saved.y! : television ? inset : 0,
     scale:
       Number.isFinite(saved.scale) && saved.scale! > 0
         ? saved.scale!

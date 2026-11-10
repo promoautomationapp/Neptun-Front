@@ -102,11 +102,20 @@
 }
 
 /* Campaign setup keeps product upload visible and optional design controls collapsed. */
-.cs-create-products { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; padding: 16px; border: 1px solid #cbdfea; border-radius: 12px; background: #f5faff; }
-.cs-create-products > div { flex: 1; min-width: 180px; display: grid; gap: 5px; }
+.cs-create-products { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 20px 0 14px; padding: 18px; border: 1px solid #cbdfea; border-radius: 12px; background: #f5faff; }
+.cs-create-products-info { display: flex; align-items: center; gap: 12px; flex: 1 1 230px; min-width: 0; }
+.cs-create-products-info > div { display: grid; gap: 4px; min-width: 0; }
+.cs-create-products-info small { overflow-wrap: anywhere; }
+.cs-create-products-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 10px; background: #e5f1fb; color: #217cb3; }
+.cs-create-products-icon.ready { background: #e4f4ee; color: #18724e; }
+.cs-create-products-icon svg { width: 20px; height: 20px; }
+.cs-create-products-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .cs-create-products strong { color: #244766; font-size: 13px; }
 .cs-create-products small { color: #72869a; font-size: 12px; line-height: 1.5; }
-.cs-create-products-clear { border: 0; background: transparent; color: #627d92; padding: 8px; font-size: 12px; }
+.cs-create-products-clear { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #627d92; padding: 8px 10px; font-size: 12px; cursor: pointer; }
+.cs-create-products-clear:hover { background: #fff; border-color: #cbdfea; color: #bd4537; }
+.cs-create-products-clear:focus-visible { outline: 2px solid #217cb3; outline-offset: 2px; }
+@media (max-width: 480px) { .cs-create-products { padding: 14px; gap: 12px; } .cs-create-products-actions { width: 100%; } .cs-create-products-actions .np-upload-control { flex: 1; } .cs-create-products-actions .np-upload-button { width: 100%; } }
 .cs-create-options > summary { display: flex; align-items: center; gap: 12px; list-style: none; padding: 15px 16px; border-radius: 12px; background: #fff; transition: background .15s, border-color .15s; }
 .cs-create-options > summary::-webkit-details-marker { display: none; }
 .cs-create-options > summary:hover { background: #f5faff; border-color: #9fc4df; }

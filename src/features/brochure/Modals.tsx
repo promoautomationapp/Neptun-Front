@@ -11,6 +11,7 @@ import { availableBrochurePresets } from "./brochurePresets";
 import type { BrochurePreset } from "./brochurePresets";
 import { BrochureImportNotices } from "./BrochureImportNotices";
 import { FileUpload } from "../../components/FileUpload";
+import { EditorIcon } from "./EditorIcon";
 import { Modal } from "../../components/Modal";
 import { SearchableSelect } from "../../components/SearchableSelect";
 import type {
@@ -224,6 +225,7 @@ export function CreateCampaign({
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | undefined>(undefined);
   const [importedProducts, setImportedProducts] = useState<Product[]>([]);
+  const [importedFileName, setImportedFileName] = useState("");
   const [importMetadata, setImportMetadata] =
     useState<Parameters<ImportSalesProps["onApply"]>[2]>(null);
   const [coverImage, setCoverImage] = useState("");
@@ -343,6 +345,7 @@ export function CreateCampaign({
         initialFile={importFile}
         onApply={(products, _skipped, metadata) => {
           setImportedProducts(products);
+          setImportedFileName(importFile?.name || "");
           setImportMetadata(metadata);
           setImportOpen(false);
         }}
@@ -422,48 +425,67 @@ export function CreateCampaign({
               className="cs-create-products"
               aria-label={t("Campaign products")}
             >
-              <div>
-                <strong>{t("Products")}</strong>
-                <small>
-                  {importedProducts.length
-                    ? `${importedProducts.length} ${t(importedProducts.length === 1 ? "product ready" : "products ready")}`
-                    : t("Upload an Excel or CSV file to build your brochure.")}
-                </small>
+              <div className="cs-create-products-info">
+                <span
+                  className={`cs-create-products-icon ${importedProducts.length ? "ready" : ""}`}
+                >
+                  <EditorIcon
+                    name={importedProducts.length ? "check" : "pages"}
+                  />
+                </span>
+                <div>
+                  <strong>
+                    {importedProducts.length
+                      ? `${importedProducts.length} ${t(importedProducts.length === 1 ? "product ready" : "products ready")}`
+                      : t("Products")}
+                  </strong>
+                  <small>
+                    {importedProducts.length && importedFileName
+                      ? importedFileName
+                      : t(
+                          "Upload an Excel or CSV file to build your brochure.",
+                        )}
+                  </small>
+                </div>
               </div>
-              <FileUpload
-                accept=".csv,.xlsx,.xls"
-                aria-label={t(
-                  importedProducts.length
-                    ? "Replace products"
-                    : "Upload products",
-                )}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  if (file) {
-                    setImportFile(file);
-                    setImportOpen(true);
-                  }
-                }}
-              >
-                {t(
-                  importedProducts.length
-                    ? "Replace products"
-                    : "Upload products",
-                )}
-              </FileUpload>
-              {importedProducts.length > 0 && (
-                <button
-                  type="button"
-                  className="cs-create-products-clear"
-                  onClick={() => {
-                    setImportedProducts([]);
-                    setImportMetadata(null);
+              <div className="cs-create-products-actions">
+                <FileUpload
+                  accept=".csv,.xlsx,.xls"
+                  aria-label={t(
+                    importedProducts.length
+                      ? "Replace products"
+                      : "Upload products",
+                  )}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (file) {
+                      setImportFile(file);
+                      setImportOpen(true);
+                    }
                   }}
                 >
-                  {t("Remove")}
-                </button>
-              )}
+                  {t(
+                    importedProducts.length
+                      ? "Replace products"
+                      : "Upload products",
+                  )}
+                </FileUpload>
+                {importedProducts.length > 0 && (
+                  <button
+                    type="button"
+                    className="cs-create-products-clear"
+                    onClick={() => {
+                      setImportedProducts([]);
+                      setImportedFileName("");
+                      setImportMetadata(null);
+                    }}
+                  >
+                    <EditorIcon name="trash" />
+                    {t("Remove")}
+                  </button>
+                )}
+              </div>
             </section>
             <BrandLogoPreview
               campaign={{

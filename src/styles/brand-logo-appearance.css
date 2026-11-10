@@ -1,87 +1,163 @@
 .cs-brand-logo-preview {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   align-items: center;
-  gap: 8px 14px;
+  gap: 20px 24px;
   min-width: 0;
-  padding: 7px 10px;
+  padding: 18px;
   border: 1px solid var(--np-border, #dce6ee);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--np-surface, #fff);
 }
-.cs-brand-logo-preview-heading {
-  display: flex;
-  flex: 1 1 235px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+.cs-brand-logo-preview-settings {
   min-width: 0;
-  color: var(--np-text, #24445f);
-  font-size: 12px;
+}
+.cs-brand-logo-preview-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 .cs-brand-logo-preview-heading > strong {
-  max-width: 128px;
-  line-height: 1.2;
+  color: var(--np-text, #24445f);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.cs-brand-logo-preview-heading > small,
+.cs-brand-logo-mode-hint {
+  color: var(--np-muted, #6b8196);
+  font-size: 11px;
+  line-height: 1.4;
 }
 .cs-brand-logo-color-control {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+.cs-brand-logo-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--np-border, #dce6ee);
+  border-radius: 8px;
+  background: var(--np-bg, #f5f8fb);
+}
+.cs-brand-logo-modes > button {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--np-muted, #6b8196);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.cs-brand-logo-modes > button svg {
+  width: 15px;
+  height: 15px;
   flex: none;
+}
+.cs-brand-logo-modes > button:first-child:not([aria-pressed="true"]) svg {
+  opacity: 0.35;
+}
+.cs-brand-logo-modes > button[aria-pressed="true"] {
+  color: var(--np-accent, #217cb3);
+  background: var(--np-surface, #fff);
+  border-color: var(--np-border, #dce6ee);
+  box-shadow: 0 1px 3px #12344f0d;
+  font-weight: 700;
+}
+.cs-brand-logo-modes > button:focus-visible {
+  outline: 2px solid var(--np-accent, #217cb3);
+  outline-offset: 1px;
+}
+.cs-brand-logo-custom-color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  color: var(--np-text, #24445f);
+  font-size: 11px;
+}
+.cs-brand-logo-custom-color .studio-color-field {
+  width: 145px;
+  max-width: 60%;
+  flex: none;
+}
+.cs-brand-logo-custom-color .studio-color-trigger {
+  min-height: 36px;
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.cs-brand-logo-custom-color.selected .studio-color-trigger {
+  border-color: var(--np-accent, #217cb3);
+  box-shadow: 0 0 0 1px var(--np-accent, #217cb3);
+}
+.cs-brand-logo-mode-hint {
+  min-height: 16px;
 }
 .cs-brand-manager > .cs-brand-logo-preview {
   margin: 12px 0;
 }
-.cs-brand-logo-color-control > button {
-  min-height: 28px;
-  padding: 3px 0;
-  border: 0;
-  background: transparent;
-  color: var(--np-muted, #6b8196);
-  font: inherit;
-  font-size: 10px;
-  line-height: 1.2;
-  cursor: pointer;
-}
-.cs-brand-logo-color-control > button[aria-pressed="true"] {
-  color: var(--np-accent, #217cb3);
-  font-weight: 700;
-}
-.cs-brand-logo-color-control > button:focus-visible {
-  outline: 2px solid var(--np-accent, #217cb3);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
 .cs-brand-logo-preview-pages {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  align-self: stretch;
+  align-content: center;
 }
 .cs-brand-logo-preview-pages figure {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  display: grid;
+  gap: 8px;
   min-width: 0;
   margin: 0;
 }
 .cs-brand-logo-preview-pages figcaption {
-  max-width: 48px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: var(--np-text, #24445f);
+  font-size: 11px;
+  line-height: 1.3;
+}
+.cs-brand-logo-preview-pages figcaption > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+.cs-brand-logo-preview-pages figcaption svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
   color: var(--np-muted, #6b8196);
-  font-size: 9px;
-  line-height: 1.15;
+}
+.cs-brand-logo-preview-pages figcaption small {
+  color: var(--np-muted, #6b8196);
+  font-size: 10px;
 }
 .cs-brand-logo-preview-swatch {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 6px;
+  justify-content: space-evenly;
+  gap: 12px;
   box-sizing: border-box;
-  width: 84px;
-  height: 34px;
-  padding: 4px;
-  border-radius: 5px;
+  width: 100%;
+  min-height: 76px;
+  padding: 14px 10px;
+  border: 1px solid #71849a29;
+  border-radius: 8px;
   overflow: hidden;
 }
 .cs-brand-logo-preview-swatch > svg {
@@ -99,16 +175,36 @@
 }
 .cs-brand-logo-preview-swatch img {
   display: block;
-  max-width: 32px;
-  max-height: 21px;
+  max-width: 100%;
+  max-height: 36px;
   width: auto;
   height: auto;
   object-fit: contain;
   filter: var(--brand-preview-filter);
 }
 .cs-brand-logo-preview-swatch strong {
-  font-size: 9px;
+  font-size: 13px;
   overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .cs-brand-logo-preview {
+    padding: 14px;
+    gap: 16px;
+  }
+  .cs-brand-logo-modes > button {
+    min-height: 42px;
+  }
+  .cs-brand-logo-custom-color .studio-color-trigger {
+    min-height: 42px;
+  }
+  .cs-brand-logo-preview-pages {
+    gap: 10px;
+  }
+  .cs-brand-logo-preview-swatch {
+    min-height: 68px;
+    gap: 8px;
+    padding: 12px 8px;
+  }
 }
 .brochure-page[data-brand-logo-mode="white"] {
   --brand-logo-mode-filter: brightness(0) invert(1);
@@ -137,17 +233,4 @@
   )
   .brochure-brand-mark {
   color: var(--brand-logo-mode-ink);
-}
-@media (max-width: 480px) {
-  .cs-brand-logo-preview {
-    padding: 7px 9px;
-  }
-  .cs-brand-logo-preview-heading {
-    flex-basis: 100%;
-  }
-  .cs-brand-logo-preview-pages {
-    width: 100%;
-    justify-content: space-between;
-    gap: 8px;
-  }
 }
