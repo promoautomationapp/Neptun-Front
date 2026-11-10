@@ -86,6 +86,36 @@
   border: 1px solid var(--np-border, #d4e0e9);
   border-radius: 5px;
 }
+.page-text-floating-toolbar .page-text-toolbar-move {
+  cursor: grab;
+  touch-action: none;
+  background: var(--np-raised, #eef5fa);
+}
+.page-text-floating-toolbar .page-text-toolbar-move:active {
+  cursor: grabbing;
+}
+.page-text-rotation-picker {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid var(--np-border, #d4e0e9);
+  border-radius: 5px;
+  font-size: 12px;
+}
+.page-text-floating-toolbar .page-text-rotation-picker > input {
+  width: 39px;
+  min-width: 0;
+  height: 26px;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: center;
+  font: inherit;
+}
 .page-text-floating-toolbar .page-text-size-picker > input {
   width: 39px;
   height: 26px;

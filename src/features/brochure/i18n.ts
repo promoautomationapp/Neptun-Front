@@ -125,6 +125,7 @@ const translations: Record<string, string> = {
   "Brand logo appearance": "Pamja e logove të markave",
   "Brand logo colors": "Ngjyrat e logove të markave",
   "Logo color style": "Stili i ngjyrave të logove",
+  "Text rotation": "Këndi i tekstit",
   "Pay in up to {count} installments at 0% interest.": "Paguani deri në {count} këste me 0% interes.",
   "Offer valid {dates}.": "Oferta vlen {dates}.",
   "Limited stock.": "Sasia është e kufizuar.",

@@ -10,6 +10,7 @@ import {
   blackCollectionPageArtworks,
   BLACK_FRIDAY_ASPECT,
   isBlackCollectionBrochure,
+  isBlackCollectionHeading,
   type BlackFridayFrame,
 } from "./blackFridayDesign";
 import { fitCoverBelowBanners } from "./pageBanners";
@@ -165,9 +166,7 @@ export function BlackFridayPage({
   const automaticPhotos = productDesignFor(campaign).photo.mode !== "custom";
   const pageArtworks = blackCollectionPageArtworks(campaign, key);
   const headingArtworks = isBlackCollectionBrochure(campaign)
-    ? pageArtworks.filter((artwork) =>
-        artwork.id.startsWith("black-collection-heading"),
-      )
+    ? pageArtworks.filter(isBlackCollectionHeading)
     : [];
   const artworkCampaign = {
     ...campaign,

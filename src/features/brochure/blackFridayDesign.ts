@@ -126,8 +126,16 @@ function blackCollectionPaymentArtworks(
   campaign: Partial<Campaign>,
 ): Artwork[] {
   const count = Math.min(60, Math.max(1, Number(campaign.installments) || 12));
+  const savedPayment = campaign.paymentText?.trim();
+  const defaultPayment =
+    !savedPayment ||
+    [
+      "Paguan deri në 12 këste me 0% interes.",
+      "Paguani deri në 12 këste me 0% interes.",
+      "Pay in up to 12 installments at 0% interest.",
+    ].includes(savedPayment);
   const payment =
-    campaign.paymentText?.trim() ||
+    (!defaultPayment && savedPayment) ||
     t("Pay in up to {count} installments at 0% interest.").replace(
       "{count}",
       String(count),
@@ -141,7 +149,13 @@ function blackCollectionPaymentArtworks(
   };
   const from = date(campaign.startDate),
     to = date(campaign.endDate);
-  const period = from ? `${from}${to && to !== from ? ` – ${to}` : ""}` : "";
+  const sharedMonth =
+    campaign.startDate?.slice(0, 7) === campaign.endDate?.slice(0, 7);
+  const period = from
+    ? to && to !== from
+      ? `${sharedMonth ? Number(campaign.startDate!.slice(8, 10)) : from} – ${to}`
+      : from
+    : "";
   const offer = period
     ? `${t("Offer valid {dates}.").replace("{dates}", period)} `
     : "";
@@ -184,8 +198,15 @@ function blackCollectionPaymentArtworks(
   ];
 }
 
-/** Missing page layers inherit the reusable heading. An explicit page array,
- * including an empty one, records the user's own composition/removals. */
+export function isBlackCollectionHeading(artwork: Artwork) {
+  return (
+    artwork.id.startsWith("black-collection-heading") ||
+    artwork.text?.replace(/\s/g, "").toUpperCase() === "BLACKFRIDAY"
+  );
+}
+
+/** Legacy page arrays may contain custom artwork but no default heading.
+ * A saved hidden heading records its deliberate removal. */
 export function blackCollectionPageArtworks(
   campaign: Partial<Campaign>,
   pageKey: string | number,
@@ -215,12 +236,12 @@ export function blackCollectionPageArtworks(
     ];
   }
   if (
-    (saved !== undefined && saved.length > 0) ||
+    saved?.some(isBlackCollectionHeading) ||
     !isBlackCollectionBrochure(campaign) ||
     !/^product-\d+$/.test(String(pageKey))
   )
     return saved || [];
-  return blackFridayPageArtworkDefaults("product-0")
+  const heading = blackFridayPageArtworkDefaults("product-0")
     .filter((artwork) => artwork.id === "bf-u16b099")
     .map((artwork) => ({
       ...artwork,
@@ -228,6 +249,7 @@ export function blackCollectionPageArtworks(
       name: "BLACK FRIDAY",
       color: "#ffffff",
     }));
+  return [...heading, ...(saved || [])];
 }
 
 /** Materialize only as part of a deliberate page-artwork edit. */
@@ -251,7 +273,7 @@ export function blackCollectionHeadingInset(
 ) {
   const heading = blackCollectionPageArtworks(campaign, pageKey).filter(
     (artwork) =>
-      artwork.id.startsWith("black-collection-heading") &&
+      isBlackCollectionHeading(artwork) &&
       !artwork.hidden &&
       artwork.opacity !== 0 &&
       artwork.width > 0 &&

@@ -47,6 +47,18 @@ it("materializes the heading for an edit and respects a saved edit, hidden layer
   expect(blackFridayFrames(2, value.products, value)[0]!.y).toBe(2);
 });
 
+it("adds the missing heading beside older saved banners without discarding their artwork", () => {
+  const value = campaign();
+  const banner = { id: "saved-banner", type: "text", layoutRole: "banner" as const, text: "My offer", x: 1, y: 7, width: 98, height: 7 };
+  value.pageArtworks = { "product-0": [banner] };
+  const layers = blackCollectionPageArtworks(value, "product-0");
+  expect(layers.some((layer) => layer.id === "black-collection-heading")).toBe(true);
+  expect(layers.find((layer) => layer.id === banner.id)).toBe(banner);
+  materializeBlackCollectionPageArtworks(value, "product-0");
+  value.pageArtworks["product-0"]!.find((layer) => layer.id === "black-collection-heading")!.rotation = -17;
+  expect(blackCollectionPageArtworks(value, "product-0").find((layer) => layer.id === "black-collection-heading")!.rotation).toBe(-17);
+});
+
 it("keeps cover payment dates current until its text is explicitly edited", () => {
   const value = { ...campaign(), startDate: "2026-11-20", endDate: "2026-11-30" };
   materializeBlackCollectionPageArtworks(value, "cover");

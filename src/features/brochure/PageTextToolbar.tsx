@@ -37,6 +37,10 @@ export function PageTextToolbar({
   onRemove,
   preferredFonts = [],
   extraControls,
+  onMoveStart,
+  onMove,
+  onMoveEnd,
+  onMoveCancel,
 }: {
   artwork: Artwork;
   textRef: React.RefObject<HTMLElement | null>;
@@ -45,6 +49,10 @@ export function PageTextToolbar({
   onRemove: () => void;
   preferredFonts?: readonly string[];
   extraControls?: React.ReactNode;
+  onMoveStart?: React.PointerEventHandler<HTMLButtonElement>;
+  onMove?: React.PointerEventHandler<HTMLButtonElement>;
+  onMoveEnd?: React.PointerEventHandler<HTMLButtonElement>;
+  onMoveCancel?: React.PointerEventHandler<HTMLButtonElement>;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -54,6 +62,19 @@ export function PageTextToolbar({
   const [panel, setPanel] = useState<Panel>(null);
   const [query, setQuery] = useState("");
   const [size, setSize] = useState(String(pixels(artwork.fontSize)));
+  const [rotation, setRotation] = useState(
+    String(Math.round((artwork.rotation || 0) * 10) / 10),
+  );
+  useEffect(
+    () => setRotation(String(Math.round((artwork.rotation || 0) * 10) / 10)),
+    [artwork.rotation],
+  );
+  const commitRotation = () => {
+    const value = Number(rotation.replace(",", "."));
+    if (rotation.trim() && Number.isFinite(value))
+      onChange({ rotation: clamp(value, -180, 180) });
+    else setRotation(String(artwork.rotation || 0));
+  };
   useEffect(
     () => setSize(String(pixels(artwork.fontSize))),
     [artwork.fontSize],
@@ -158,6 +179,42 @@ export function PageTextToolbar({
       }}
     >
       <div className="page-text-toolbar-row">
+        {onMoveStart && (
+          <button
+            type="button"
+            className="page-text-toolbar-move"
+            aria-label={t("Move text")}
+            title={t("Move text")}
+            onPointerDown={onMoveStart}
+            onPointerMove={onMove}
+            onPointerUp={onMoveEnd}
+            onPointerCancel={onMoveCancel}
+            onLostPointerCapture={onMoveCancel}
+            onKeyDown={(event) => {
+              const dx =
+                event.key === "ArrowRight"
+                  ? 0.5
+                  : event.key === "ArrowLeft"
+                    ? -0.5
+                    : 0;
+              const dy =
+                event.key === "ArrowDown"
+                  ? 0.5
+                  : event.key === "ArrowUp"
+                    ? -0.5
+                    : 0;
+              if (dx || dy) {
+                event.preventDefault();
+                onChange({
+                  x: clamp(artwork.x + dx, 0, 95),
+                  y: clamp(artwork.y + dy, 0, 95),
+                });
+              }
+            }}
+          >
+            <EditorIcon name="move" />
+          </button>
+        )}
         <button
           type="button"
           role="combobox"
@@ -207,6 +264,23 @@ export function PageTextToolbar({
           </button>
         </div>
         <span className="page-text-tool-divider" />
+        <label className="page-text-rotation-picker" title={t("Rotation")}>
+          <span aria-hidden="true">↻</span>
+          <input
+            inputMode="decimal"
+            aria-label={t("Text rotation")}
+            value={rotation}
+            onChange={(event) => setRotation(event.target.value)}
+            onBlur={commitRotation}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitRotation();
+              }
+            }}
+          />
+          <span aria-hidden="true">°</span>
+        </label>
         <button
           type="button"
           aria-label={t("Bold")}

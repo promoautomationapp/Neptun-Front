@@ -189,9 +189,9 @@ function ArtworkItem({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const pageElement = event.currentTarget.closest(
-      ".bf-product-frame, .brochure-page",
-    );
+    const pageElement =
+      event.currentTarget.closest(".bf-product-frame, .brochure-page") ||
+      text.current?.closest(".bf-product-frame, .brochure-page");
     if (!pageElement) return;
     const page = pageElement.getBoundingClientRect();
     event.currentTarget
@@ -210,8 +210,8 @@ function ArtworkItem({
       x: event.clientX,
       y: event.clientY,
       page,
-      original: position,
-      next: position,
+      original: currentPosition.current,
+      next: currentPosition.current,
     };
   }
   function move(event: { clientX: number; clientY: number }) {
@@ -609,6 +609,7 @@ function ArtworkItem({
               <button
                 type="button"
                 className="page-text-move"
+                hidden={selected}
                 aria-label={t("Move text")}
                 title={t("Move text")}
                 onPointerDown={(event) => start(event, "move")}
@@ -627,6 +628,13 @@ function ArtworkItem({
                   }
                   textRef={text}
                   onChange={change}
+                  onMoveStart={(event) => {
+                    if (text.current) saveText(text.current);
+                    start(event, "move");
+                  }}
+                  onMove={move}
+                  onMoveEnd={end}
+                  onMoveCancel={cancel}
                   beforeFormat={() => {
                     if (text.current) saveText(text.current);
                   }}
