@@ -1,3 +1,4 @@
+import { blackFridayStoresContent } from "./blackFridayStores";
 import { brandLogoRenderMode } from "./brandLogoAppearance";
 import {
   isBlackFridayBrochure,
@@ -193,6 +194,7 @@ import {
   storesReferencePlacement,
 } from "./storesDesign";
 import {
+  compactStoresFooterHeight,
   compactStoresFooterScale,
   hasCompactStoresFooter,
 } from "./storesSelection";
@@ -2453,13 +2455,11 @@ function StandardProductCard({
           onEditPrice={onEditPrice}
           onEditSavings={onEditSavings}
         />
-        {!isBlackFridayBrochure(campaign) && (
-          <ProductNameDivider
-            rowRef={priceRowRef}
-            alignName={!contentPlacement.details}
-            defaults={productDesign.divider}
-          />
-        )}
+        <ProductNameDivider
+          rowRef={priceRowRef}
+          alignName={!isBlackFridayBrochure(campaign) && !contentPlacement.details}
+          defaults={productDesign.divider}
+        />
       </div>
       {(specs.length > 0 || (warranty && warrantyInStrip)) && (
         <div
@@ -2794,15 +2794,20 @@ function LastPageWithStores({
 }: BrochurePageProps & { page?: BrochurePage; children: React.ReactNode }) {
   const brandFilterId = `page-brand-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const lastProductIndex = splitPages(campaign).at(-1)?.index ?? -1;
+  const nativeContent = blackFridayStoresContent(campaign, page);
+  const content = React.isValidElement<{ campaign: Campaign }>(children)
+    ? React.cloneElement(children, { campaign: nativeContent.campaign })
+    : children;
   if (!hasCompactStoresFooter(campaign, page?.index ?? -1, lastProductIndex))
-    return children;
+    return content;
   const kind = page ? "product" : "cover";
   const color = pageBackgroundContrastColor(campaign, kind, page);
   const readability = pageBackgroundReadability(campaign, kind, page);
   const light = readability.light;
   const fill =
     pageBackgroundFill(campaign, kind, page) || (light ? "#f1f2f4" : "#1c4075");
-  const scale = compactStoresFooterScale(campaign);
+  const scale = nativeContent.reserved && compactStoresFooterHeight(campaign) <= 14 ? 1 : compactStoresFooterScale(campaign);
+  const blackFriday = isBlackFridayBrochure(campaign);
   return (
     <section
       className={`brochure-page brochure-last-page-shell has-background-readability ${readability.needsSurface ? "needs-contrast-surfaces" : ""} ${light ? "light" : "blue"}`}
@@ -2814,6 +2819,7 @@ function LastPageWithStores({
         ...brochureFormatStyle(campaign),
         ...backgroundReadabilityStyle(readability, color),
         ...pageAppearanceStyle(campaign, kind, page, brandFilterId),
+        ...(blackFriday ? { "--brochure-disclaimer-surface": "transparent" } : {}),
         background: fill,
       }}
     >
@@ -2827,7 +2833,7 @@ function LastPageWithStores({
         className="brochure-last-page-scaled"
         style={{ left: `${(1 - scale) * 50}%`, transform: `scale(${scale})` }}
       >
-        {children}
+        {content}
       </div>
       <CompactStoresFooter
         campaign={campaign}
@@ -2836,15 +2842,15 @@ function LastPageWithStores({
           neptun: logoForBackground(
             campaign,
             "footer",
-            pageBackgroundColor(campaign, kind, page),
+            "#ffffff",
             campaign.brandAssets?.neptun ||
               (campaign.neptunLogoOption === "framed"
                 ? "/api/assets/legacy/assets/neptun-logo-framed.png"
-                : "/api/assets/legacy/assets/neptun-cover-logo.png"),
-            light,
+                : blackFriday ? "/brochure-presets/black-friday/artwork/footer-neptun.svg" : "/api/assets/legacy/assets/neptun-cover-logo.png"),
+            true,
           ),
-          balfin: brochureAssetSource(campaign, "balfin", true),
-          service: brochureAssetSource(campaign, "service", true),
+          balfin: campaign.brandAssets?.balfin || (blackFriday ? "/brochure-presets/black-friday/artwork/footer-balfin.svg" : brochureAssetSource(campaign, "balfin", true)),
+          service: campaign.brandAssets?.service || (blackFriday ? "/brochure-presets/black-friday/artwork/footer-service.svg" : brochureAssetSource(campaign, "service", true)),
         }}
         onChange={onStoresFooterChange}
         onHide={onStoresFooterHide}
@@ -3856,7 +3862,7 @@ export interface StoresPageProps extends BrochurePageProps {
 }
 
 export function StoresPage(props: StoresPageProps) {
-  return isBlackFridayBrochure(props.campaign) ? (
+  return isBlackFridayBrochure(props.campaign) && !isBlackCollectionBrochure(props.campaign) ? (
     <BrochureFormatFrame campaign={props.campaign} kind="stores">
       <BlackFridayPageContent {...props} closing />
     </BrochureFormatFrame>

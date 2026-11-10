@@ -60,7 +60,9 @@ function buildPages(campaign: Campaign) {
   const featuredCollection = isFeaturedProductCollection(campaign);
   const preserveAssignedComposition =
     campaign.brochurePresetId === "neptun-black-friday" ||
-    campaign.brochureReferenceDesign === "black-friday";
+    campaign.brochureReferenceDesign === "black-friday" ||
+    campaign.brochurePresetId === "neptun-black-collection" ||
+    campaign.brochureReferenceDesign === "black-collection";
   const appendPage = (
     products: Product[],
     layout: string,

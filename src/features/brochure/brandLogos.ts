@@ -24,6 +24,14 @@ export const BUILTIN_BRAND_LOGOS: Readonly<Record<string, string>> =
   );
 let sharedLogos: Record<string, string> = {};
 let loading: Promise<Record<string, string>> | undefined;
+export function normalizeBrandLogoName(brand: unknown): string {
+  return String(brand ?? "")
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\s*([+&/])\s*/g, "$1")
+    .toUpperCase();
+}
 export function rememberPreparedBrandLogo(brand: unknown, url: string): void {
   const path = url.startsWith("http") ? new URL(url).pathname : url;
   if (
@@ -32,7 +40,7 @@ export function rememberPreparedBrandLogo(brand: unknown, url: string): void {
       path,
     )
   )
-    sharedLogos[String(brand).trim().toUpperCase()] = url;
+    sharedLogos[normalizeBrandLogoName(brand)] = url;
 }
 export function loadPreparedBrandLogos(): Promise<Record<string, string>> {
   loading ??= request("/api/brand-logos", z.record(z.string(), z.string()))
@@ -50,10 +58,12 @@ export function brandLogoFor(
   campaign: Pick<Campaign, "brandLogos"> | null | undefined,
   brand: unknown,
 ): string {
-  const key = String(brand ?? "")
-    .trim()
-    .toUpperCase();
+  const key = normalizeBrandLogoName(brand);
   if (campaign?.brandLogos && Object.hasOwn(campaign.brandLogos, key))
     return campaign.brandLogos[key] ?? "";
+  const savedKey = Object.keys(campaign?.brandLogos || {}).find(
+    (name) => normalizeBrandLogoName(name) === key,
+  );
+  if (savedKey !== undefined) return campaign!.brandLogos![savedKey] ?? "";
   return sharedLogos[key] ?? BUILTIN_BRAND_LOGOS[key] ?? "";
 }

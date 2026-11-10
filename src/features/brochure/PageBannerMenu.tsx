@@ -4,6 +4,10 @@ import { ActionMenu } from "./ActionMenu";
 import { EditorIcon } from "./EditorIcon";
 import { useImagePicker } from "./ImagePickerProvider";
 import { createPageBanner, type PageBannerKind } from "./pageBanners";
+import {
+  blackCollectionHeadingInset,
+  materializeBlackCollectionPageArtworks,
+} from "./blackFridayDesign";
 import { readImage } from "./utils";
 import { t } from "./i18n";
 import "../../styles/page-banners.css";
@@ -22,16 +26,20 @@ export function PageBannerMenu({
   const input = useRef<HTMLInputElement>(null);
   const add = (kind: PageBannerKind, image?: string, name?: string) => {
     onUpdate((draft) => {
+      materializeBlackCollectionPageArtworks(draft, pageKey);
       draft.pageArtworks ||= {};
       draft.pageArtworks[pageKey] ||= [];
-      draft.pageArtworks[pageKey].push(
-        createPageBanner(kind, draft, pageKey, {
-          id: crypto.randomUUID(),
-          text: kind === "image" ? undefined : t("Your banner message"),
-          image,
-          name: name || t(kind === "image" ? "Image banner" : "Page banner"),
-        }),
+      const banner = createPageBanner(kind, draft, pageKey, {
+        id: crypto.randomUUID(),
+        text: kind === "image" ? undefined : t("Your banner message"),
+        image,
+        name: name || t(kind === "image" ? "Image banner" : "Page banner"),
+      });
+      banner.y = Math.max(
+        banner.y,
+        blackCollectionHeadingInset(draft, pageKey),
       );
+      draft.pageArtworks[pageKey].push(banner);
     });
     onToast?.(t("Banner added. Products fit below it."));
   };

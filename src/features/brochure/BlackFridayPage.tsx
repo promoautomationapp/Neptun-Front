@@ -7,6 +7,8 @@ import { PageArtwork, type PageArtworkProps } from "./PageArtwork";
 import {
   blackFridayFrames,
   blackFridayProductArtworks,
+  blackCollectionPageArtworks,
+  BLACK_FRIDAY_ASPECT,
   isBlackCollectionBrochure,
   type BlackFridayFrame,
 } from "./blackFridayDesign";
@@ -18,6 +20,7 @@ import {
 import { backgroundReadabilityStyle } from "./backgroundContrast";
 import { hasPageAppearance, pageAppearanceStyle } from "./pageAppearance";
 import { PageAppearanceFilters } from "./PageAppearanceFilters";
+import { productDesignFor } from "../settings/product-design-defaults";
 import "../../styles/black-friday.css";
 import "../../styles/black-friday-fonts.css";
 
@@ -43,10 +46,24 @@ function regionVariables(name: string, box: Box | null | undefined) {
 function frameStyle(
   frame: BlackFridayFrame,
   clean = false,
+  displayed: Box = frame,
+  largerPhoto = false,
 ): React.CSSProperties {
   const warranty = frame.detailRects?.find((detail) => detail.warranty);
+  const detailSize = Math.min(
+    5.8,
+    (displayed.height / BLACK_FRIDAY_ASPECT) * 0.11,
+  );
+  const photo = frame.photo || {
+    x: 5,
+    y: clean ? 2 : 1,
+    width: 90,
+    height: clean ? 57 : 65,
+  };
   return {
     "--bf-type-scale": Math.min(1.1, frame.width / 47),
+    "--bf-detail-size": `${detailSize}cqw`,
+    "--bf-detail-gap": `${Math.min(0.7, detailSize * 0.12)}cqw`,
     ...(frame.detailRects?.find((d) => d.warranty)?.runs?.[0]?.pointSize
       ? {
           "--bf-warranty-count-font": `${(frame.detailRects.find((d) => d.warranty)!.runs![0]!.pointSize / 841.88976) * 100}cqw`,
@@ -70,6 +87,14 @@ function frameStyle(
         frame.price,
     ),
     ...regionVariables("specs", frame.specs),
+    ...(largerPhoto
+      ? regionVariables("photo", {
+          ...photo,
+          x: photo.width < 96 ? 2 : photo.x,
+          width: Math.max(96, photo.width),
+          height: Math.max(70, photo.height),
+        })
+      : {}),
     ...(clean
       ? {
           "--bf-price-width": `${Math.min(36, (frame.height / frame.width) * 60)}%`,
@@ -118,6 +143,41 @@ export function BlackFridayPage({
   const frames = blackFridayFrames(number, products, campaign);
   const top = Math.min(100, ...frames.map((frame) => frame.y));
   const bottom = Math.max(95, ...frames.map((frame) => frame.y + frame.height));
+  const fittedFrames = frames.map((frame) =>
+    fitCoverBelowBanners(frame, campaign, key, top, bottom),
+  );
+  const displayed = fittedFrames.map((frame, index) => ({
+    ...frame,
+    ...products[index]?.brochureContentPlacement?.frame,
+  }));
+  const singletons = displayed.map(
+    (frame, index) =>
+      !frame.hidden &&
+      displayed.every((other, peer) => {
+        if (peer === index || other.hidden) return true;
+        const overlap =
+          Math.min(frame.y + frame.height, other.y + other.height) -
+          Math.max(frame.y, other.y);
+        return overlap <= Math.min(frame.height, other.height) * 0.5;
+      }),
+  );
+  const twoRows = products.length === 2 && singletons.every(Boolean);
+  const automaticPhotos = productDesignFor(campaign).photo.mode !== "custom";
+  const pageArtworks = blackCollectionPageArtworks(campaign, key);
+  const headingArtworks = isBlackCollectionBrochure(campaign)
+    ? pageArtworks.filter((artwork) =>
+        artwork.id.startsWith("black-collection-heading"),
+      )
+    : [];
+  const artworkCampaign = {
+    ...campaign,
+    pageArtworks: {
+      ...campaign.pageArtworks,
+      [key]: pageArtworks.filter(
+        (artwork) => !headingArtworks.includes(artwork),
+      ),
+    },
+  };
   return (
     <section
       className={`brochure-page brochure-black-friday ${isBlackCollectionBrochure(campaign) ? "bf-clean-collection" : `bf-source-page-${number}`} cover-editable-elements has-background-readability ${readability.light ? "light" : "blue"} count-${products.length}`}
@@ -137,16 +197,43 @@ export function BlackFridayPage({
         id={id}
       />
       <PageArtwork
-        campaign={campaign}
+        campaign={artworkCampaign}
         pageKey={key}
         onChange={onArtworkChange}
         onRemove={onArtworkRemove}
       />
+      {headingArtworks.length > 0 && (
+        <PageArtwork
+          campaign={{
+            ...campaign,
+            // Preserve this editable heading's chosen ink independently of
+            // page-wide automatic product text colors.
+            pageAppearances: {},
+            pageArtworks: { [key]: headingArtworks },
+          }}
+          pageKey={key}
+          onChange={onArtworkChange}
+          onRemove={onArtworkRemove}
+        />
+      )}
       {products.map((product, index) => {
         const frame = frames[index]!;
         const frameKey = `bf-product-${product.code}`;
         const placement = product.brochureContentPlacement?.frame;
-        const fitted = fitCoverBelowBanners(frame, campaign, key, top, bottom);
+        const fitted = fittedFrames[index]!;
+        const manualDetails =
+          Boolean(product.brochureContentPlacement?.specs) ||
+          Object.values(product.detailBlockPlacements || {}).some((value) =>
+            ["x", "y", "width", "height"].some(
+              (field) => value[field as keyof typeof value] !== undefined,
+            ),
+          );
+        const defaultDetails = !frame.detailRects?.length && !manualDetails;
+        const largerPhoto =
+          twoRows &&
+          automaticPhotos &&
+          !placement &&
+          !product.brochureImagePlacement;
         const defaultPlacement = {
           x: fitted.x,
           y: fitted.y,
@@ -162,9 +249,14 @@ export function BlackFridayPage({
                 : {},
             }}
             kind={frameKey}
-            className="bf-product-frame"
+            className={`bf-product-frame ${singletons[index] ? "bf-singleton-row" : ""} ${defaultDetails ? "bf-default-details" : ""} ${largerPhoto ? "bf-larger-default-photo" : ""}`}
             defaultPlacement={defaultPlacement}
-            style={frameStyle(frame, isBlackCollectionBrochure(campaign))}
+            style={frameStyle(
+              frame,
+              isBlackCollectionBrochure(campaign),
+              displayed[index]!,
+              largerPhoto,
+            )}
             onChange={
               onProductChange
                 ? (_, next) =>

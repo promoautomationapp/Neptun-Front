@@ -3,10 +3,37 @@ import { afterEach, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { PageArtwork } from "../../src/features/brochure/PageArtwork";
 import { PageBannerFields } from "../../src/features/brochure/PageBannerFields";
+import { PageBannerMenu } from "../../src/features/brochure/PageBannerMenu";
 import { setLanguage } from "../../src/features/brochure/i18n";
-import type { Artwork } from "../../src/domain/models";
+import type { Artwork, Campaign } from "../../src/domain/models";
 
 afterEach(cleanup);
+
+it("keeps the clean Black Friday heading when adding a banner and places the banner below it", async () => {
+  setLanguage("en");
+  const campaign: Campaign = {
+    id: "clean-banner",
+    name: "Black collection",
+    brochureReferenceDesign: "black-collection",
+    products: [],
+  };
+  const view = render(
+    <PageBannerMenu
+      campaign={campaign}
+      pageKey="product-0"
+      onUpdate={(mutate) => mutate(campaign)}
+    />,
+  );
+  fireEvent.click(view.getByLabelText("Add page banner"));
+  fireEvent.click(await view.findByRole("button", { name: /Colored banner/ }));
+  const layers = campaign.pageArtworks!["product-0"]!;
+  expect(
+    layers.find((layer) => layer.id === "black-collection-heading")?.text,
+  ).toBe("BLACK \nFRIDAY");
+  expect(
+    layers.find((layer) => layer.layoutRole === "banner")?.y,
+  ).toBeGreaterThan(5.7);
+});
 
 it("renders an editable independent banner frame and leaves hidden artwork out of preview/export", () => {
   setLanguage("en");

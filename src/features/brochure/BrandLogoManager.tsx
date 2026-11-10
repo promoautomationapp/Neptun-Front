@@ -7,7 +7,12 @@ import {
   brandLogoFor,
   BUILTIN_BRAND_LOGOS,
   rememberPreparedBrandLogo,
+  normalizeBrandLogoName,
 } from "./brandLogos";
+import {
+  applyBrandLogoToMatchingProducts,
+  campaignBrandLogoProducts,
+} from "./campaignBrandLogos";
 import { readImage } from "./utils";
 import { ImageUploadButton } from "./ImageUploadButton";
 import { BrandLogoPreview, applyBrandLogoAppearance } from "./BrandLogoPreview";
@@ -37,41 +42,55 @@ export function BrandLogoManager({
   campaign: Campaign;
   onUpdate: (mutator: CampaignMutator) => void;
 }) {
+  const products = campaignBrandLogoProducts(campaign);
   const brands = [
     ...new Set(
-      (campaign.products || [])
-        .map((product: Product) =>
-          String(product.brand || "")
-            .trim()
-            .toUpperCase(),
-        )
+      products
+        .map((product: Product) => normalizeBrandLogoName(product.brand))
         .filter(Boolean),
     ),
   ].sort();
-  const inferredSources = (campaign.products || []).reduce<
-    Record<string, string>
-  >((result, product: Product) => {
-    const key = String(product.brand || "")
-      .trim()
-      .toUpperCase();
-    if (!result[key])
-      result[key] =
-        (product.images || []).find((image: string) =>
-          /[?&]width=80(?:&|$)/i.test(image),
-        ) || "";
-    return result;
-  }, {});
+  const inferredSources = products.reduce<Record<string, string>>(
+    (result, product: Product) => {
+      const key = normalizeBrandLogoName(product.brand);
+      if (!result[key])
+        result[key] =
+          (product.images || []).find((image: string) =>
+            /[?&]width=80(?:&|$)/i.test(image),
+          ) || "";
+      return result;
+    },
+    {},
+  );
   const [brand, setBrand] = useState(brands[0] || "");
   const [source, setSource] = useState("");
   const [prepared, setPrepared] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [applied, setApplied] = useState(false);
   if (!brands.length) return null;
   const activeBrand = brands.includes(brand) ? brand : (brands[0] ?? "");
+  const currentLogo = (name: string) =>
+    products.find(
+      (product) =>
+        normalizeBrandLogoName(product.brand) === name && product.brandLogo,
+    )?.brandLogo || brandLogoFor(campaign, name);
+  const selectedLogo = prepared || source || currentLogo(activeBrand);
+  const applyToAll = (image: string) => {
+    rememberPreparedBrandLogo(activeBrand, image);
+    onUpdate((draft) => {
+      applyBrandLogoToMatchingProducts(draft, activeBrand, image);
+    });
+    setPrepared("");
+    setSource("");
+    setError("");
+    setApplied(true);
+  };
   async function prepare() {
     if (!source && BUILTIN_BRAND_LOGOS[activeBrand]) {
       setPrepared(BUILTIN_BRAND_LOGOS[activeBrand] ?? "");
       setError("");
+      setApplied(false);
       return;
     }
     const image =
@@ -79,6 +98,7 @@ export function BrandLogoManager({
     if (!image || busy) return;
     const retry = Boolean(error);
     setBusy(true);
+    setApplied(false);
     setError("");
     setPrepared("");
     try {
@@ -126,11 +146,12 @@ export function BrandLogoManager({
               setSource("");
               setPrepared("");
               setError("");
+              setApplied(false);
             }}
           >
             <span>
-              {brandLogoFor(campaign, name) ? (
-                <img src={brandLogoFor(campaign, name)} alt="" />
+              {currentLogo(name) ? (
+                <img src={currentLogo(name)} alt="" />
               ) : (
                 name
               )}
@@ -146,24 +167,34 @@ export function BrandLogoManager({
           hint="PNG, JPG or WebP · up to 12 MB"
           value={source}
           onFile={async (file: File) => {
-            if (file.size > 12 * 1024 * 1024) {
+            if (
+              !file.type.startsWith("image/") ||
+              file.size > 12 * 1024 * 1024
+            ) {
               setError(t("Choose an image under 12 MB."));
               return;
             }
-            setSource(await readImage(file));
-            setPrepared("");
+            try {
+              setSource(await readImage(file));
+              setPrepared("");
+              setError("");
+              setApplied(false);
+            } catch {
+              setError(t("Could not read this image."));
+            }
           }}
           onRemove={() => {
             setSource("");
             setPrepared("");
+            setApplied(false);
           }}
         />
         <div className="cs-brand-logo-pair">
           <div className="light">
             <small>{t("Light background")}</small>
-            {prepared || brandLogoFor(campaign, activeBrand) ? (
+            {selectedLogo ? (
               <img
-                src={prepared || brandLogoFor(campaign, activeBrand)}
+                src={selectedLogo}
                 alt={`${activeBrand} black logo preview`}
               />
             ) : (
@@ -172,9 +203,9 @@ export function BrandLogoManager({
           </div>
           <div className="dark">
             <small>{t("Dark background")}</small>
-            {prepared || brandLogoFor(campaign, activeBrand) ? (
+            {selectedLogo ? (
               <img
-                src={prepared || brandLogoFor(campaign, activeBrand)}
+                src={selectedLogo}
                 alt={`${activeBrand} white logo preview`}
               />
             ) : (
@@ -212,34 +243,28 @@ export function BrandLogoManager({
           </Button>
           <Button
             tone="primary"
-            disabled={!prepared || busy}
-            onClick={() => {
-              rememberPreparedBrandLogo(activeBrand, prepared);
-              onUpdate((draft) => {
-                draft.brandLogos ||= {};
-                draft.brandLogos[activeBrand] = prepared;
-              });
-              setPrepared("");
-            }}
+            disabled={!selectedLogo || busy}
+            onClick={() => applyToAll(selectedLogo)}
           >
-            {t("Use logo")}
+            {t("Apply to all {brand} products").replace("{brand}", activeBrand)}
           </Button>
-          {campaign.brandLogos?.[activeBrand] && (
+          {(currentLogo(activeBrand) !==
+            (BUILTIN_BRAND_LOGOS[activeBrand] || "") ||
+            Object.hasOwn(campaign.brandLogos || {}, activeBrand)) && (
             <Button
-              onClick={() =>
-                onUpdate((draft: Campaign) => {
-                  draft.brandLogos ||= {};
-                  draft.brandLogos[activeBrand] =
-                    BUILTIN_BRAND_LOGOS[activeBrand] || "";
-                })
-              }
+              onClick={() => applyToAll(BUILTIN_BRAND_LOGOS[activeBrand] || "")}
             >
               {BUILTIN_BRAND_LOGOS[activeBrand]
-                ? t("Use built-in logo here")
-                : t("Use brand name here")}
+                ? t("Use built-in logo for all matching products")
+                : t("Use brand name for all matching products")}
             </Button>
           )}
         </div>
+        {applied && (
+          <small role="status">
+            {t("Logo updated for all matching products in this brochure.")}
+          </small>
+        )}
       </div>
     </details>
   );

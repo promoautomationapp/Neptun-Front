@@ -88,7 +88,7 @@ describe("Black Friday source composition integrity", () => {
     ).toBeUndefined();
   });
 
-  it("keeps all77 source offers on13 pages, including11 offers together on page11", () => {
+  it("keeps all77 source offers on12 pages with stores in the last product footer, including11 offers together on page11", () => {
     const campaign = sourceCampaign();
     const pages = splitPages(campaign);
     expect(campaign.products).toHaveLength(77);
@@ -96,7 +96,7 @@ describe("Black Friday source composition integrity", () => {
     expect(pages.map((page) => page.products.length)).toEqual([
       6, 6, 6, 6, 6, 6, 9, 6, 4, 11, 9,
     ]);
-    expect(1 + pages.length + Number(campaign.includeStoresPage)).toBe(13);
+    expect(1 + pages.length + Number(campaign.includeStoresPage)).toBe(12);
     expect(pages[9]).toMatchObject({ index: 9, layout: "grid12" });
     expect(
       pages.flatMap((page) => page.products).length +

@@ -112,6 +112,73 @@ export function blackFridayPageArtworks(): NonNullable<
   );
 }
 
+/** Missing page layers inherit the reusable heading. An explicit page array,
+ * including an empty one, records the user's own composition/removals. */
+export function blackCollectionPageArtworks(
+  campaign: Partial<Campaign>,
+  pageKey: string | number,
+): Artwork[] {
+  const saved = campaign.pageArtworks?.[pageKey];
+  if (
+    saved !== undefined ||
+    !isBlackCollectionBrochure(campaign) ||
+    !/^product-\d+$/.test(String(pageKey))
+  )
+    return saved || [];
+  return (blackFridayPageArtworks()["product-0"] || [])
+    .filter((artwork) => artwork.id === "bf-u16b099")
+    .map((artwork) => ({
+      ...artwork,
+      id: "black-collection-heading",
+      name: "BLACK FRIDAY",
+      color: "#ffffff",
+    }));
+}
+
+/** Materialize only as part of a deliberate page-artwork edit. */
+export function materializeBlackCollectionPageArtworks(
+  campaign: Campaign,
+  pageKey: string | number,
+) {
+  if (
+    !isBlackCollectionBrochure(campaign) ||
+    !/^product-\d+$/.test(String(pageKey)) ||
+    campaign.pageArtworks?.[pageKey] !== undefined
+  )
+    return;
+  const layers = blackCollectionPageArtworks(campaign, pageKey);
+  campaign.pageArtworks ||= {};
+  campaign.pageArtworks[pageKey] = layers;
+}
+
+export function blackCollectionHeadingInset(
+  campaign: Partial<Campaign>,
+  pageKey: string,
+) {
+  const heading = blackCollectionPageArtworks(campaign, pageKey).filter(
+    (artwork) =>
+      artwork.id.startsWith("black-collection-heading") &&
+      !artwork.hidden &&
+      artwork.opacity !== 0 &&
+      artwork.width > 0 &&
+      (artwork.height || 0) > 0,
+  );
+  return Math.min(
+    85,
+    Math.max(
+      0,
+      ...heading.map((artwork) => {
+        const angle = ((artwork.rotation || 0) * Math.PI) / 180;
+        const height = artwork.height!;
+        const rotated =
+          Math.abs(height * Math.cos(angle)) +
+          Math.abs(artwork.width * BLACK_FRIDAY_ASPECT * Math.sin(angle));
+        return artwork.y + height / 2 + rotated / 2 + 0.7;
+      }),
+    ),
+  );
+}
+
 export function blackFridayDesignDefaults(): Partial<Campaign> {
   return {
     brochureVisualStyle: "current",
@@ -148,8 +215,9 @@ export function blackFridayDesignDefaults(): Partial<Campaign> {
     showCoverGradient: false,
     coverImage: "",
     coverBrandTagline: "",
-    includeStoresPage: true,
-    includeStoresFooter: false,
+    includeStoresPage: false,
+    includeStoresFooter: true,
+    compactStoresFooterHeight: 14,
     showInteriorFooter: false,
     showFooterPageNumber: false,
     brochureFooter: { visible: false },
@@ -258,14 +326,27 @@ export function blackFridayFrames(
   }
   const columns = count <= 2 ? 1 : count <= 6 ? 2 : 3;
   const rows = Math.ceil(count / columns);
-  const top = number === 1 ? 31 : 9;
+  const top =
+    number === 1
+      ? 31
+      : isBlackCollectionBrochure(campaign)
+        ? Math.max(
+            2,
+            blackCollectionHeadingInset(campaign, `product-${number - 2}`),
+          )
+        : 9;
   const bottom = 98;
   const width = (96 - (columns - 1) * 2) / columns;
   const height = (bottom - top - (rows - 1) * 1.5) / Math.max(rows, 1);
   return products.map((product, index) => ({
-    x: columns === 1 ? 15 : 2 + (index % columns) * (width + 2),
+    x:
+      columns === 1
+        ? count === 2
+          ? 4
+          : 15
+        : 2 + (index % columns) * (width + 2),
     y: top + Math.floor(index / columns) * (height + 1.5),
-    width: columns === 1 ? 70 : width,
+    width: columns === 1 ? (count === 2 ? 92 : 70) : width,
     height,
     order: product.brochureOrder || index + 1,
     model: product.name,

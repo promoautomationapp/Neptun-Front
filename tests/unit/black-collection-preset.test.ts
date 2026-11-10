@@ -15,6 +15,8 @@ import { resolveSettings } from "../../src/features/settings/settings.schema";
 import { campaignSchema } from "../../src/domain/schemas";
 import type { Campaign } from "../../src/domain/models";
 import { withBlackFridayPerson } from "../../src/features/brochure/blackFridayPerson";
+import { splitPages } from "../../src/features/brochure/campaignPages";
+import { blackFridaySampleProducts } from "../../src/features/brochure/blackFridaySourceImages";
 import {
   pageBackgroundFill,
   pageBackgroundImage,
@@ -116,6 +118,20 @@ it("uses dynamic frames for arbitrary products even when their count matches a s
         !frame.brandImage,
     ),
   ).toBe(true);
+});
+
+it("keeps all imported PDF page members, including nine and eleven offer pages, in the clean design", () => {
+  const campaign: Campaign = {
+    id: "pdf-pages",
+    name: "PDF pages",
+    brochurePresetId: BLACK_COLLECTION_ID,
+    autoProductLayout: true,
+    layout: "feature3",
+    products: blackFridaySampleProducts(),
+  };
+  expect(splitPages(campaign).map((page) => page.products.length)).toEqual([
+    6, 6, 6, 6, 6, 6, 9, 6, 4, 11, 9,
+  ]);
 });
 
 it("keeps a featured cover row above the remaining imported products", () => {

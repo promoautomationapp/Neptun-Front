@@ -81,12 +81,19 @@ export function ProductNameDivider({
           setPlacement(null);
           return;
         }
-        const rowBox = row.getBoundingClientRect();
+        const naturalRowBox = row.getBoundingClientRect();
+        // Black Friday's bottom row uses display:contents; its children and
+        // this rule are positioned relative to the complete product instead.
+        const anchor =
+          naturalRowBox.width && naturalRowBox.height
+            ? row
+            : row.closest<HTMLElement>(".brochure-product") || row;
+        const rowBox = anchor.getBoundingClientRect();
         if (!rowBox.width || !rowBox.height) return;
-        const scale = rowBox.width / (row.offsetWidth || rowBox.width);
+        const scale = rowBox.width / (anchor.offsetWidth || rowBox.width);
         const pageWidth =
-          row.closest(".brochure-page, .social-canvas")?.getBoundingClientRect().width ??
-          rowBox.width;
+          row.closest(".brochure-page, .social-canvas")?.getBoundingClientRect()
+            .width ?? rowBox.width;
         const gap = ((defaults?.gap ?? 2) * pageWidth) / 1080;
         const boundary = native?.getBoundingClientRect();
         const saleBox = sale?.getBoundingClientRect();
@@ -184,6 +191,8 @@ export function ProductNameDivider({
         ? new ResizeObserver(queueUpdate)
         : undefined;
     resize?.observe(row);
+    const card = row.closest<HTMLElement>(".brochure-product");
+    if (card) resize?.observe(card);
     resize?.observe(copy);
     const price = row.querySelector(".brochure-price");
     if (price) resize?.observe(price);

@@ -216,12 +216,12 @@
   .bf-product-frame
   .brochure-product.black-friday-offer
   > .brochure-specs
-  > .detail-filled,
+  > .product-detail-block.detail-filled,
 .brochure-page.brochure-black-friday
   .bf-product-frame
   .brochure-product.black-friday-offer
   > .brochure-specs
-  > .detail-style-filled {
+  > .product-detail-block.detail-style-filled {
   color: #000;
   background: #fff;
   border-color: #fff;
@@ -294,15 +294,83 @@
   max-height: 65%;
   object-fit: contain;
 }
-.brochure-black-friday .bf-product-frame .brochure-product-copy::after {
-  content: "";
-  position: absolute;
-  width: calc((var(--bf-price-x, 65%) - var(--bf-copy-x, 0%)) * 1.8);
-  height: 0.1cqw;
-  top: 100%;
-  left: 0;
-  background: currentColor;
-  pointer-events: none;
+.brochure-page.brochure-black-friday
+  .bf-product-frame
+  .brochure-product-name-divider {
+  background: var(--product-divider-color, #fff);
+}
+
+/* Only automatic strips use these compact cells. Native source cells and all
+   saved detail positions retain their original geometry. */
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details
+  > .brochure-product.black-friday-offer
+  > .brochure-specs {
+  height: auto;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--bf-detail-gap, 0.7cqw);
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details.bf-singleton-row
+  > .brochure-product.black-friday-offer
+  > .brochure-specs {
+  justify-content: center;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details
+  > .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .product-detail-block {
+  container-type: inline-size;
+  flex: none;
+  width: min(
+    var(--bf-detail-size, 5.8cqw),
+    calc(
+      (
+          100% - (var(--detail-strip-columns, 6) - 1) *
+            var(--bf-detail-gap, 0.7cqw)
+        ) /
+        var(--detail-strip-columns, 6)
+    )
+  );
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  padding: 0.25cqw 0.15cqw;
+  border-radius: 0.5cqw;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details
+  > .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .product-detail-block
+  :is(b, small, .detail-fitted-value) {
+  font-size: 17cqw;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.05;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details
+  > .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .brochure-warranty
+  > b.detail-warranty-count {
+  font-size: 45cqw !important;
+  line-height: 0.9;
+}
+.brochure-page.brochure-black-friday
+  .bf-product-frame.bf-default-details
+  > .brochure-product.black-friday-offer
+  > .brochure-specs
+  > .brochure-warranty
+  > small {
+  font-size: 10.5cqw !important;
+  line-height: 1 !important;
 }
 .brochure-page.brochure-black-friday
   .bf-product-frame

@@ -27,14 +27,16 @@ const rect = (
   toJSON: () => ({}),
 });
 
-function fixture(native: boolean, manual: boolean) {
+function fixture(native: boolean, manual: boolean, contents = false) {
   let movement = 0;
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
     function (this: Element) {
       if (this.classList.contains("brochure-page"))
         return rect(0, 0, 1080, 1350);
       if (this.classList.contains("brochure-product-bottom"))
-        return rect(0, 100, 500, 130);
+        return contents ? rect(0, 0, 0, 0) : rect(0, 100, 500, 130);
+      if (this.classList.contains("brochure-product") && contents)
+        return rect(20, 80, 500, 200);
       if (this.hasAttribute("data-offer-price-divider"))
         return rect(350, 150 + movement, 150, 1);
       if (this.classList.contains("brochure-price-sale"))
@@ -49,7 +51,7 @@ function fixture(native: boolean, manual: boolean) {
           /translateY\((-?[\d.]+)px\)/,
         );
         return rect(
-          0,
+          contents ? 20 : 0,
           130 + Number(translate?.[1] ?? 0) + Number(savedMove?.[1] ?? 0),
           230,
           20,
@@ -135,6 +137,24 @@ it("uses the HTML orange/installment boundary without changing a manually moved 
   );
   expect(copy?.style.translate).toBe("");
   expect(copy?.style.transform).toBe("translate(2cqw,3cqw)");
+});
+
+it("tracks the native price boundary against the product frame when the bottom row has no box", async () => {
+  const view = fixture(true, true, true);
+  const line = () =>
+    view.container.querySelector<HTMLElement>(
+      ".brochure-product-name-divider",
+    )!;
+  expect(line().dataset.active).toBe("true");
+  expect(line().style.top).toBe("70px");
+  expect(line().style.left).toBe("232px");
+  expect(line().style.width).toBe("248px");
+  view.move(12);
+  await waitFor(() => expect(line().style.top).toBe("82px"));
+  expect(
+    view.container.querySelector<HTMLElement>(".brochure-product-copy")!.style
+      .translate,
+  ).toBe("");
 });
 
 it("materializes default alignment for a live name drag and restores it after cancellation", async () => {

@@ -159,7 +159,10 @@ import {
 import { ProductPriceEditor } from "../brochure/ProductPriceEditor";
 import { BackgroundPicker } from "../brochure/BackgroundPicker";
 import { BackgroundCanvasControls } from "../brochure/BackgroundCanvasControls";
-import { isBlackFridayBrochure } from "../brochure/blackFridayDesign";
+import {
+  isBlackFridayBrochure,
+  materializeBlackCollectionPageArtworks,
+} from "../brochure/blackFridayDesign";
 import { BrochureDesignSwitcher } from "../brochure/BrochureDesignSwitcher";
 import { switchBrochureDesign } from "../brochure/switchBrochureDesign";
 import { useDesignBrandPreparation } from "../brochure/useDesignBrandPreparation";
@@ -2401,6 +2404,7 @@ export function BrochureEditor({
     point?: { x: number; y: number } | null,
   ) {
     onUpdate((draft) => {
+      materializeBlackCollectionPageArtworks(draft, artworkPageKey);
       draft.pageArtworks ||= {};
       draft.pageArtworks[artworkPageKey] ||= [];
       draft.pageArtworks[artworkPageKey]!.push({
@@ -2434,6 +2438,7 @@ export function BrochureEditor({
       const image = await readImage(file);
       const id = crypto.randomUUID();
       onUpdate((draft: Campaign) => {
+        materializeBlackCollectionPageArtworks(draft, artworkPageKey);
         draft.pageArtworks ||= {};
         draft.pageArtworks[artworkPageKey] ||= [];
         draft.pageArtworks[artworkPageKey].push({
@@ -2517,6 +2522,7 @@ export function BrochureEditor({
       Math.min(94, ((event.clientY - rect.top) / rect.height) * 100),
     );
     onUpdate((draft) => {
+      materializeBlackCollectionPageArtworks(draft, artworkPageKey);
       draft.pageArtworks ||= {};
       draft.pageArtworks[artworkPageKey] ||= [];
       draft.pageArtworks[artworkPageKey].push({
@@ -2566,6 +2572,7 @@ export function BrochureEditor({
   }
   function changeArtwork(id: string, placement: Partial<Artwork>) {
     onUpdate((draft: Campaign) => {
+      materializeBlackCollectionPageArtworks(draft, artworkPageKey);
       const item = draft.pageArtworks?.[artworkPageKey]?.find(
         (entry) => entry.id === id,
       );
@@ -2574,6 +2581,7 @@ export function BrochureEditor({
   }
   function removeArtwork(id: string) {
     onUpdate((draft: Campaign) => {
+      materializeBlackCollectionPageArtworks(draft, artworkPageKey);
       if (draft.pageArtworks?.[artworkPageKey])
         draft.pageArtworks[artworkPageKey] = draft.pageArtworks[
           artworkPageKey
