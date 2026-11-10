@@ -48,6 +48,7 @@
   .brochure-product.black-friday-offer
   > .brochure-product-image-wrap {
   position: absolute;
+  z-index: 2;
   left: var(--bf-photo-x, 5%);
   top: var(--bf-photo-y, 1%);
   width: var(--bf-photo-width, 90%);
@@ -80,6 +81,7 @@
   .brochure-product.black-friday-offer
   .brochure-product-copy {
   position: absolute;
+  z-index: 3;
   left: var(--bf-copy-x, 0%);
   top: var(--bf-copy-y, 76%);
   width: max(45%, var(--bf-copy-width, 55%));
@@ -298,6 +300,7 @@
   .bf-product-frame
   .brochure-product-name-divider {
   background: var(--product-divider-color, #fff);
+  z-index: 1;
 }
 
 /* Only automatic strips use these compact cells. Native source cells and all

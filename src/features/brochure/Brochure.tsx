@@ -2458,7 +2458,10 @@ function StandardProductCard({
         />
         <ProductNameDivider
           rowRef={priceRowRef}
-          alignName={!isBlackFridayBrochure(campaign) && !contentPlacement.details}
+          alignName={
+            (!isBlackFridayBrochure(campaign) || isBlackCollectionBrochure(campaign)) &&
+            !contentPlacement.details
+          }
           defaults={productDesign.divider}
         />
       </div>

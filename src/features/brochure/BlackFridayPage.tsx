@@ -49,11 +49,12 @@ function frameStyle(
   clean = false,
   displayed: Box = frame,
   largerPhoto = false,
+  coverSingleton = false,
 ): React.CSSProperties {
   const warranty = frame.detailRects?.find((detail) => detail.warranty);
   const detailSize = Math.min(
     5.8,
-    (displayed.height / BLACK_FRIDAY_ASPECT) * 0.11,
+    (displayed.height / BLACK_FRIDAY_ASPECT) * 0.11 * (coverSingleton ? 1.12 : 1),
   );
   const photo = frame.photo || {
     x: 5,
@@ -255,6 +256,7 @@ export function BlackFridayPage({
               isBlackCollectionBrochure(campaign),
               displayed[index]!,
               largerPhoto,
+              number === 1 && singletons[index],
             )}
             onChange={
               onProductChange

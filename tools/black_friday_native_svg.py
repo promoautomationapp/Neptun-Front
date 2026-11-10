@@ -179,11 +179,33 @@ class PdfPaint:
         return True
 
 EXTRACTOR=None
+SOURCE_LG_LOGOS={'p01-01.svg','p02-05.svg','p02-06.svg','p03-01.svg','p03-02.svg','p03-04.svg','p06-05.svg','p07-03.svg','p10-04.svg'}
 def write_pdf_svg(page,bounds,dest):
     global EXTRACTOR
     if EXTRACTOR is None:EXTRACTOR=PdfPaint()
     index=page.page_number-1 if hasattr(page,'page_number') else int(page)
-    return EXTRACTOR.write(index,bounds,dest)
+    written=EXTRACTOR.write(index,bounds,dest)
+    path=Path(dest)
+    if written and path.parent.name=='brands' and path.name in SOURCE_LG_LOGOS:
+        preserve_visible_lg_wordmark(path)
+    return written
+
+def preserve_visible_lg_wordmark(dest):
+    """Drop the source's clipped-out alternate G, not the visible LG artwork.
+
+    These nine marks contain both an alternate even-odd G in a clipped PDF
+    form and the final nonzero G. The source raster shows only the latter.
+    A path-only export otherwise superimposes them. Keep the source bounds,
+    compound face cutouts and visible L/G paths verbatim.
+    """
+    dest=Path(dest);svg=dest.read_text()
+    paths=re.findall(r'<path\b[^>]+/>',svg)
+    if len(paths)!=4:return
+    commands=[re.search(r'd="([^"]+)"',path).group(1) for path in paths]
+    if (commands[0].count('M')>=4 and commands[1].count('M')==1
+        and 'fill-rule="evenodd"' in paths[1]
+        and all('fill-rule="nonzero"' in path for path in paths[2:])):
+        dest.write_text(svg.replace(paths[1], '', 1))
 
 def rebuild_all():
     profile=json.loads((ROOT/'src/features/brochure/blackFridayReference.json').read_text())
@@ -196,7 +218,9 @@ def rebuild_all():
         n,order=map(int,match.groups());frame=next(f for f in profile['pages'][n-1]['frames'] if f['order']==order)
         prod=next(p for p in products if p['page']==n and p['order']==order); f=prod['sourceBounds'];r=frame['brand'];w=f[2]-f[0];h=f[3]-f[1]
         b=[f[0]+r['x']/100*w,f[1]+r['y']/100*h,f[0]+(r['x']+r['width'])/100*w,f[1]+(r['y']+r['height'])/100*h]
-        (done if extractor.write(n-1,b,dest) else fail).append(str(dest.relative_to(ROOT)))
+        written=extractor.write(n-1,b,dest)
+        if written and prod.get('brand')=='LG':preserve_visible_lg_wordmark(dest)
+        (done if written else fail).append(str(dest.relative_to(ROOT)))
     for dest in sorted((PUB/'artwork').glob('*.svg')):
         if dest.name == 'footer-service.svg':
             # Reuse the approved outlined service logo; its embedded PDF text
