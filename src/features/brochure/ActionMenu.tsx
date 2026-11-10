@@ -143,7 +143,8 @@ export function ActionMenu({
           <path d="m5 7.5 5 5 5-5" />
         </svg>
       </summary>
-      {portal && mounted ? createPortal(content, document.body) : content}
+      {open &&
+        (portal && mounted ? createPortal(content, document.body) : content)}
     </details>
   );
 }

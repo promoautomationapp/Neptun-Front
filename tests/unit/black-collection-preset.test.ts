@@ -32,6 +32,7 @@ it("creates a separate reusable black design without people or campaign-specific
   expect(isBlackFridayBrochure(campaign)).toBe(true);
   expect(campaign).toMatchObject({
     brochureReferenceDesign: "black-collection",
+    brochureFormat: "neptun1080x1350",
     includeStoresPage: true,
     includeStoresFooter: false,
     autoProductLayout: true,
@@ -45,7 +46,7 @@ it("creates a separate reusable black design without people or campaign-specific
   const artwork = Object.values(campaign.pageArtworks || {}).flat();
   expect(artwork.map((item) => item.id)).toEqual([
     "black-collection-logo",
-    "black-collection-title",
+    "black-collection-hajde",
   ]);
   expect(
     artwork.some(

@@ -2853,8 +2853,8 @@ function LastPageWithStores({
                 : blackFriday ? "/brochure-presets/black-friday/artwork/footer-neptun.svg" : "/api/assets/legacy/assets/neptun-cover-logo.png"),
             true,
           ),
-          balfin: campaign.brandAssets?.balfin || (blackFriday ? "/brochure-presets/black-friday/artwork/footer-balfin.svg" : brochureAssetSource(campaign, "balfin", true)),
-          service: campaign.brandAssets?.service || (blackFriday ? "/brochure-presets/black-friday/artwork/footer-service.svg" : brochureAssetSource(campaign, "service", true)),
+          balfin: campaign.brandAssets?.balfin || (blackFriday ? "/brochure-presets/october/balfin-white.svg" : brochureAssetSource(campaign, "balfin", true)),
+          service: campaign.brandAssets?.service || (blackFriday ? "/brochure-presets/october/service-white.svg" : brochureAssetSource(campaign, "service", true)),
         }}
         onChange={onStoresFooterChange}
         onHide={onStoresFooterHide}
@@ -4035,15 +4035,11 @@ function RegularStoresPage({
           <div className="stores-hajde">
             <img
               src={black
-                ? campaign.brandAssets?.storesHajde || logoForBackground(
-                    campaign,
-                    "stores",
-                    pageBackgroundColor(campaign, "stores"),
-                    campaign.brandAssets?.neptun || "/brochure-presets/black-friday/artwork/footer-neptun.svg",
-                    light,
-                  )
+                ? campaign.brandAssets?.storesHajde || (light
+                    ? "/brochure-presets/october/hajde.svg"
+                    : "/brochure-presets/october/hajde-white.svg")
                 : brochureAssetSource(campaign, "storesHajde", light)}
-              alt={black ? "NEPTUN" : "hajde!"}
+              alt="hajde!"
               draggable={false}
             />
           </div>,
@@ -4214,8 +4210,8 @@ function RegularStoresPage({
           { x: 61.4, y: 87, width: 14.8, height: 7.7 },
           <div className="stores-service">
             <img
-              src={campaign.brandAssets?.service || (black && !light
-                ? "/brochure-presets/black-friday/artwork/footer-service.svg"
+              src={campaign.brandAssets?.service || (!light
+                ? "/brochure-presets/october/service-white.svg"
                 : brochureAssetSource(campaign, "service", light))}
               alt="Elektro-Servis Kosova"
               draggable={false}
@@ -4246,8 +4242,8 @@ function RegularStoresPage({
             { x: 78.5, y: 86.9, width: 18.2, height: 7.2 },
             <div className="stores-balfin">
               <img
-                src={campaign.brandAssets?.balfin || (black && !light
-                  ? "/brochure-presets/black-friday/artwork/footer-balfin.svg"
+                src={campaign.brandAssets?.balfin || (!light
+                  ? "/brochure-presets/october/balfin-white.svg"
                   : brochureAssetSource(campaign, "balfin", light))}
                 alt="Part of BALFIN Group"
                 draggable={false}

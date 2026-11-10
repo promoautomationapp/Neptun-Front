@@ -117,10 +117,10 @@ function frameStyle(
       : {}),
     ...(frame.brand && frame.copy
       ? {
-          "--bf-brand-x": `${((frame.brand.x - frame.copy.x) / Math.max(frame.copy.width, 45)) * 100}%`,
+          "--bf-brand-x": "0%",
           "--bf-brand-y": `${((frame.brand.y - frame.copy.y) / Math.max(frame.copy.height, 3)) * 100}%`,
-          "--bf-brand-width": `${(frame.brand.width / Math.max(frame.copy.width, 45)) * 100}%`,
-          "--bf-brand-height": `${(frame.brand.height / Math.max(frame.copy.height, 3)) * 100}%`,
+          "--bf-brand-width": "40%",
+          "--bf-brand-height": "calc(2.7cqw * var(--bf-type-scale, 1))",
         }
       : {}),
     ...(frame.saving && frame.photo

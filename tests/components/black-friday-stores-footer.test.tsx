@@ -101,13 +101,13 @@ test.each([false, true])(
     expect(storesPage.textContent).toContain("Current service");
     expect(
       storesPage.querySelector(".stores-hajde img")?.getAttribute("src"),
-    ).toBe("/brochure-presets/black-friday/artwork/footer-neptun.svg");
+    ).toBe("/brochure-presets/october/hajde-white.svg");
     expect(
       storesPage.querySelector(".stores-service img")?.getAttribute("src"),
-    ).toBe("/brochure-presets/black-friday/artwork/footer-service.svg");
+    ).toBe("/brochure-presets/october/service-white.svg");
     expect(
       storesPage.querySelector(".stores-balfin img")?.getAttribute("src"),
-    ).toBe("/brochure-presets/black-friday/artwork/footer-balfin.svg");
+    ).toBe("/brochure-presets/october/balfin-white.svg");
     expect(
       storesPage.querySelector('[data-reference-role="person"]'),
     ).toBeNull();
@@ -150,10 +150,10 @@ test.each([false, true])(
     ).toBe("/brochure-presets/black-friday/artwork/footer-neptun.svg");
     expect(
       page.querySelector(".compact-footer-balfin")?.getAttribute("src"),
-    ).toBe("/brochure-presets/black-friday/artwork/footer-balfin.svg");
+    ).toBe("/brochure-presets/october/balfin-white.svg");
     expect(
       page.querySelector(".compact-footer-service-logo")?.getAttribute("src"),
-    ).toBe("/brochure-presets/black-friday/artwork/footer-service.svg");
+    ).toBe("/brochure-presets/october/service-white.svg");
     expect(page.textContent).not.toContain("045 286 889");
     expect(
       markup(<CoverPage campaign={value} settings={settings} />).querySelector(

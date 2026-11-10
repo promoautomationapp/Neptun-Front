@@ -32,6 +32,8 @@
 }
 .brochure-black-friday .bf-product-frame {
   z-index: 3;
+  --bf-brand-height: calc(2.7cqw * var(--bf-type-scale, 1));
+  --bf-brand-width: 40%;
 }
 .brochure-black-friday .bf-product-frame > .brochure-product {
   position: relative;
@@ -456,7 +458,7 @@
   .brochure-product-copy
   > .brochure-colors {
   position: absolute;
-  top: calc(-1 * var(--bf-brand-height, 160%) - 2.05cqw);
+  top: calc(-1 * var(--bf-brand-height, 160%) - 1.9cqw);
   left: 0;
   margin: 0;
   padding: 0;

@@ -56,16 +56,43 @@ export function createCatalogProductUrlResolver(
 ): ProductUrlResolver {
   const products = [...catalog];
   const byCode = new Map<string, Product[]>();
-  const brands = new Set<string>();
-  for (const product of products) {
+  const byBrand = new Map<
+    string,
+    {
+      tokens: Map<string, Set<number>>;
+      names: Map<string, Set<number>>;
+    }
+  >();
+  const add = (index: Map<string, Set<number>>, key: string, id: number) => {
+    if (!key) return;
+    let ids = index.get(key);
+    if (!ids) index.set(key, (ids = new Set()));
+    ids.add(id);
+  };
+  products.forEach((product, id) => {
     const key = sku(product.code);
     if (key) byCode.set(key, [...(byCode.get(key) || []), product]);
-    if (product.brand) brands.add(words(product.brand));
-  }
-  const uniqueUrl = (candidates: Product[]) => {
-    if (candidates.length !== 1) return null;
-    return neptunProductUrl(candidates[0]!.url);
-  };
+    const brand = words(product.brand);
+    if (!brand) return;
+    let index = byBrand.get(brand);
+    if (!index)
+      byBrand.set(brand, (index = { tokens: new Map(), names: new Map() }));
+    add(index.names, words(product.name), id);
+    const tokens = new Set([
+      ...modelTokens(product.code),
+      ...modelTokens(product.name),
+      ...Object.entries(product.specs || {}).flatMap(([key, value]) =>
+        /^(?:model|modeli|model code|mpn|manufacturer part number)$/i.test(
+          key.trim(),
+        )
+          ? modelTokens(value)
+          : [],
+      ),
+    ]);
+    for (const token of tokens) add(index.tokens, token, id);
+  });
+  const uniqueUrl = (candidates: Product[]) =>
+    candidates.length === 1 ? neptunProductUrl(candidates[0]!.url) : null;
   return (product) => {
     const saved = neptunProductUrl(product.url);
     if (saved) return saved;
@@ -75,42 +102,31 @@ export function createCatalogProductUrlResolver(
     const name = words(product.name);
     const explicitBrand = words(product.brand);
     const matchingBrands = explicitBrand
-      ? brands.has(explicitBrand)
+      ? byBrand.has(explicitBrand)
         ? [explicitBrand]
         : []
-      : [...brands].filter((brand) => ` ${name} `.includes(` ${brand} `));
+      : [...byBrand.keys()].filter((brand) =>
+          ` ${name} `.includes(` ${brand} `),
+        );
     if (matchingBrands.length !== 1) return null;
-    const brand = matchingBrands[0]!;
+    const index = byBrand.get(matchingBrands[0]!)!;
     const codeTokens = modelTokens(product.code);
-    const suppliedTokens = codeTokens.length
-      ? codeTokens
-      : modelTokens(product.name);
-    const candidates = products.filter((candidate) => {
-      if (words(candidate.brand) !== brand) return false;
-      const candidateName = words(candidate.name);
-      // Exact titles still need model evidence; a generic brand/category is insufficient.
-      if (
-        !codeTokens.length &&
-        name &&
-        name === candidateName &&
-        modelTokens(product.name).length
-      )
-        return true;
-      if (!suppliedTokens.length) return false;
-      const candidateTokens = new Set([
-        ...modelTokens(candidate.code),
-        ...modelTokens(candidate.name),
-        ...Object.entries(candidate.specs || {}).flatMap(([key, value]) =>
-          /^(?:model|modeli|model code|mpn|manufacturer part number)$/i.test(
-            key.trim(),
-          )
-            ? modelTokens(value)
-            : [],
-        ),
-      ]);
-      return suppliedTokens.every((token) => candidateTokens.has(token));
-    });
-    return uniqueUrl(candidates);
+    const nameTokens = modelTokens(product.name);
+    const suppliedTokens = codeTokens.length ? codeTokens : nameTokens;
+    const candidates = new Set<number>();
+    // Build the catalog index once, rather than rescanning thousands of titles
+    // for every product on each background campaign refresh.
+    const tokenMatches = suppliedTokens.map((token) => index.tokens.get(token));
+    if (tokenMatches.length && tokenMatches.every(Boolean)) {
+      const ordered = (tokenMatches as Set<number>[]).sort(
+        (a, b) => a.size - b.size,
+      );
+      for (const id of ordered[0]!)
+        if (ordered.every((ids) => ids.has(id))) candidates.add(id);
+    }
+    if (!codeTokens.length && nameTokens.length)
+      for (const id of index.names.get(name) || []) candidates.add(id);
+    return uniqueUrl([...candidates].map((id) => products[id]!));
   };
 }
 

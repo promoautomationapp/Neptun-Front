@@ -8,7 +8,6 @@ import {
   brandLogoAppearance,
   DARK_BRAND_LOGO_FILTER,
 } from "../../src/features/brochure/brandLogoAppearance";
-import { BUILTIN_BRAND_LOGOS } from "../../src/features/brochure/brandLogos";
 import { CreateCampaign } from "../../src/features/brochure/Modals";
 import { brochureDesignSnapshot } from "../../src/features/brochure/brochurePresets";
 import { campaignSchema } from "../../src/domain/schemas";
@@ -23,13 +22,13 @@ afterEach(() => {
   setLanguage("sq");
 });
 
-it("previews actual manufacturer assets in each page's default logo color", () => {
+it("previews one FUEGO example in each page's default logo color", () => {
   setLanguage("en");
   const campaign = {
     theme: "blue",
     coverBackgroundColor: "#1c4075",
     productBackgroundColor: "#e4e4e4",
-    brandLogos: { SAMSUNG: "/team-samsung.png" },
+    brandLogos: { FUEGO: "/team-fuego.png" },
   };
   const view = render(
     <BrandLogoPreview
@@ -37,19 +36,18 @@ it("previews actual manufacturer assets in each page's default logo color", () =
       products={[
         { code: "a", name: "Phone", brand: "Samsung" },
         { code: "b", name: "TV", brand: "LG" },
-        { code: "c", name: "Another phone", brand: "SAMSUNG" },
+        { code: "c", name: "Example", brand: "FUEGO" },
       ]}
       onChange={vi.fn()}
     />,
   );
   expect(
     view
-      .getAllByRole("img", { name: "Samsung" })
+      .getAllByRole("img", { name: "FUEGO" })
       .map((image) => image.getAttribute("src")),
-  ).toEqual(["/team-samsung.png", "/team-samsung.png"]);
-  expect(view.getAllByRole("img", { name: "LG" })[0]!.getAttribute("src")).toBe(
-    BUILTIN_BRAND_LOGOS.LG,
-  );
+  ).toEqual(["/team-fuego.png", "/team-fuego.png"]);
+  expect(view.queryByRole("img", { name: "LG" })).toBeNull();
+  expect(view.queryByRole("img", { name: "Samsung" })).toBeNull();
   const swatches = view.container.querySelectorAll<HTMLElement>(
     ".cs-brand-logo-preview-swatch",
   );
@@ -72,7 +70,7 @@ it("uses a compact color picker, previews the tint and offers automatic/original
       onChange={change}
     />,
   );
-  expect(view.getAllByRole("img")).toHaveLength(4);
+  expect(view.getAllByRole("img")).toHaveLength(2);
   expect(view.queryByRole("combobox")).toBeNull();
   for (const swatch of view.container.querySelectorAll<HTMLElement>(
     ".cs-brand-logo-preview-swatch",

@@ -9,8 +9,14 @@ interface SampledGeometry {
   source: string;
   bounds: Bounds | null;
   screen: Box | null;
+  screenSampled: boolean;
 }
 const imageGeometryCache = new WeakMap<HTMLImageElement, SampledGeometry>();
+// Page navigation replaces image elements. Keep only the small detected boxes,
+// never canvas/pixel buffers, so returning to an image does not rescan it.
+const sourceGeometryCache = new Map<string, SampledGeometry>();
+const MAX_SOURCE_GEOMETRIES = 256;
+const MAX_SOURCE_KEY_LENGTH = 4096;
 
 export function validScreenGeometryBox(
   box: Box | null | undefined,
@@ -339,6 +345,7 @@ export function televisionScreenBoxFromPixels(
 
 function sampledGeometry(
   image?: HTMLImageElement | null,
+  detectScreen = false,
 ): SampledGeometry | null {
   if (
     !image?.naturalWidth ||
@@ -348,8 +355,23 @@ function sampledGeometry(
     return null;
   const source = `${image.currentSrc || image.src || ""}:${image.naturalWidth}:${image.naturalHeight}`;
   const cached = imageGeometryCache.get(image);
-  if (cached?.source === source) return cached;
-  const result: SampledGeometry = { source, bounds: null, screen: null };
+  if (cached?.source === source && (!detectScreen || cached.screenSampled))
+    return cached;
+  const shared = sourceGeometryCache.get(source);
+  if (shared && image.complete && (!detectScreen || shared.screenSampled)) {
+    sourceGeometryCache.delete(source);
+    sourceGeometryCache.set(source, shared);
+    imageGeometryCache.set(image, shared);
+    return shared;
+  }
+  const previous = cached?.source === source ? cached : shared;
+  const result: SampledGeometry = previous || {
+    source,
+    bounds: null,
+    screen: null,
+    screenSampled: false,
+  };
+  let sampled = false;
   try {
     const scale = Math.min(
       1,
@@ -367,23 +389,39 @@ function sampledGeometry(
         canvas.width,
         canvas.height,
       ).data;
+      sampled = true;
       result.bounds = visibleImageBoundsFromPixels(
         pixels,
         canvas.width,
         canvas.height,
       );
-      result.screen = televisionScreenBoxFromPixels(
-        pixels,
-        canvas.width,
-        canvas.height,
-      );
+      if (detectScreen)
+        result.screen = televisionScreenBoxFromPixels(
+          pixels,
+          canvas.width,
+          canvas.height,
+        );
     }
   } catch {
     /* Cross-origin and unrecognized photographs keep contained-image bounds. */
   }
   // Header dimensions may be available before the picture has decoded. A
   // partial/failed sample must not survive the later load event for that URL.
-  if (image.complete) imageGeometryCache.set(image, result);
+  if (image.complete) {
+    if (detectScreen) result.screenSampled = true;
+    imageGeometryCache.set(image, result);
+    // Long inline uploads stay weakly cached on their own image, preventing
+    // this session cache from retaining large data URLs after a draft closes.
+    if (
+      sampled &&
+      source.length <= MAX_SOURCE_KEY_LENGTH &&
+      (image.currentSrc || image.src)
+    ) {
+      sourceGeometryCache.set(source, result);
+      if (sourceGeometryCache.size > MAX_SOURCE_GEOMETRIES)
+        sourceGeometryCache.delete(sourceGeometryCache.keys().next().value!);
+    }
+  }
   return result;
 }
 
@@ -396,7 +434,7 @@ export function detectedTelevisionScreenBox(
   product: ProductPhoto = {},
   image?: HTMLImageElement | null,
 ): Box | null {
-  const screen = sampledGeometry(image)?.screen;
+  const screen = sampledGeometry(image, true)?.screen;
   if (screen) return { ...screen };
   const saved = savedScreenBoxForPhoto(product, image);
   return saved &&
@@ -414,7 +452,7 @@ export function televisionScreenBox(
   product: ProductPhoto = {},
   image?: HTMLImageElement | null,
 ): Box {
-  const geometry = sampledGeometry(image);
+  const geometry = sampledGeometry(image, true);
   if (geometry?.screen) return { ...geometry.screen };
   const saved = savedScreenBoxForPhoto(product, image);
   if (saved) return saved;

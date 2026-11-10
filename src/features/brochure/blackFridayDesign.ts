@@ -3,6 +3,7 @@ import source from "./blackFridayReference.json";
 import type { SourceDetail } from "./BlackFridayDetails";
 import { airConditionerFeatures } from "./productArtwork";
 import { getLanguage, t } from "./i18n";
+import { DEFAULT_BROCHURE_FORMAT } from "./brochureFormat";
 
 export const BLACK_FRIDAY_ID = "neptun-black-friday";
 export const BLACK_COLLECTION_ID = "neptun-black-collection";
@@ -204,13 +205,51 @@ export function isBlackCollectionHeading(artwork: Artwork) {
   );
 }
 
+function blackCollectionHajde(): Artwork {
+  return {
+    id: "black-collection-hajde",
+    type: "image",
+    name: "hajde!",
+    image: "/brochure-presets/october/hajde-white.svg",
+    x: 35,
+    y: 13,
+    width: 30,
+    height: 6.5,
+    imageFit: "contain",
+    zIndex: 3,
+  };
+}
+
+function hasHajdeArtwork(artwork: Artwork) {
+  return /hajde/i.test(
+    `${artwork.id} ${artwork.name || ""} ${artwork.image || ""} ${artwork.text || ""}`,
+  );
+}
+
 /** Legacy page arrays may contain custom artwork but no default heading.
  * A saved hidden heading records its deliberate removal. */
 export function blackCollectionPageArtworks(
   campaign: Partial<Campaign>,
   pageKey: string | number,
 ): Artwork[] {
-  const rawSaved = campaign.pageArtworks?.[pageKey];
+  const stored = campaign.pageArtworks?.[pageKey];
+  const needsHeadingStyle = (artwork: Artwork) =>
+    /^product-\d+$/.test(String(pageKey)) &&
+    isBlackCollectionHeading(artwork) &&
+    /^BLACK[ \t]*\nFRIDAY$/.test(artwork.text || "");
+  const rawSaved = stored?.some(needsHeadingStyle)
+    ? stored.map((artwork) =>
+        needsHeadingStyle(artwork)
+          ? {
+              ...artwork,
+              text: "BLACK\n\u2003FRIDAY",
+              textAlign: "left" as const,
+              whiteSpace: "pre-wrap" as const,
+              lineHeight: 0.95,
+            }
+          : artwork,
+      )
+    : stored;
   // Earlier source headings began outside the paper. Repair that exact
   // automatic position while leaving a staff member's moved heading alone.
   const clippedDefault = (artwork: Artwork) =>
@@ -234,21 +273,32 @@ export function blackCollectionPageArtworks(
       )
     : rawSaved;
   if (isBlackCollectionBrochure(campaign) && pageKey === "cover") {
-    const defaults = blackCollectionPaymentArtworks(campaign);
-    const layers = (saved || []).map((layer) => {
-      const fresh = defaults.find((item) => item.id === layer.id);
-      return fresh &&
-        layer.referenceSource?.startsWith("black-collection-payment:") &&
-        layer.text ===
-          layer.referenceSource.slice("black-collection-payment:".length)
-        ? {
-            ...layer,
-            text: fresh.text,
-            textRuns: fresh.textRuns,
-            referenceSource: fresh.referenceSource,
-          }
-        : layer;
-    });
+    const defaults = [
+      ...blackCollectionPaymentArtworks(campaign),
+      ...((saved || []).some(hasHajdeArtwork) ? [] : [blackCollectionHajde()]),
+    ];
+    const layers = (saved || [])
+      .filter(
+        (layer) =>
+          !(
+            layer.id === "black-collection-title" &&
+            layer.text === "Titulli i fushatës"
+          ),
+      )
+      .map((layer) => {
+        const fresh = defaults.find((item) => item.id === layer.id);
+        return fresh &&
+          layer.referenceSource?.startsWith("black-collection-payment:") &&
+          layer.text ===
+            layer.referenceSource.slice("black-collection-payment:".length)
+          ? {
+              ...layer,
+              text: fresh.text,
+              textRuns: fresh.textRuns,
+              referenceSource: fresh.referenceSource,
+            }
+          : layer;
+      });
     return [
       ...layers,
       ...defaults.filter(
@@ -268,6 +318,10 @@ export function blackCollectionPageArtworks(
       ...artwork,
       id: "black-collection-heading",
       name: "BLACK FRIDAY",
+      text: "BLACK\n\u2003FRIDAY",
+      textAlign: "left" as const,
+      whiteSpace: "pre-wrap" as const,
+      lineHeight: 0.95,
       color: "#ffffff",
       x: 1.5,
       y: 1,
@@ -329,7 +383,7 @@ export function blackFridayDesignDefaults(): Partial<Campaign> {
   return {
     brochureVisualStyle: "current",
     brochureReferenceDesign: "black-friday",
-    brochureFormat: "a3",
+    brochureFormat: DEFAULT_BROCHURE_FORMAT,
     layout: "grid6portrait",
     autoProductLayout: false,
     offerStyle: "current",
@@ -412,23 +466,7 @@ export function blackCollectionDesignDefaults(): Partial<Campaign> {
           imageFit: "contain",
           zIndex: 3,
         },
-        {
-          id: "black-collection-title",
-          type: "text",
-          name: "Campaign title",
-          text: "Titulli i fushatës",
-          x: 5,
-          y: 14,
-          width: 90,
-          height: 7,
-          color: "#ffffff",
-          fontFamily: "Cera Pro",
-          fontSize: 5.2,
-          fontWeight: 900,
-          textAlign: "center",
-          whiteSpace: "pre-wrap",
-          zIndex: 3,
-        },
+        blackCollectionHajde(),
       ],
     },
   };

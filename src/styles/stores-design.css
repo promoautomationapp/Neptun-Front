@@ -167,14 +167,21 @@
   text-overflow: clip;
 }
 .stores-black-reference .stores-service img {
-  padding: 0.35cqw;
-  background: #fff;
+  padding: 0;
+  background: transparent;
 }
 .stores-black-reference .stores-service span {
   white-space: pre-line;
 }
 .stores-black-reference.stores-blue .stores-social svg {
   color: #fff;
+}
+
+.compact-stores-footer.compact-stores-footer-black
+  :is(.compact-footer-balfin, .compact-footer-service-logo) {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 
 .stores-heading-text-element {
@@ -188,13 +195,14 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  padding: 0 8.3%;
+  padding: 0.24em 8.3% 0;
   display: flex;
   align-items: center;
   background: transparent;
   border-radius: 0;
   line-height: 1;
   white-space: nowrap;
+  font-weight: 400 !important;
 }
 .stores-heading-ribbon {
   display: block;

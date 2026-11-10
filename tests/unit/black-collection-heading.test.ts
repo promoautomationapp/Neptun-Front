@@ -22,7 +22,7 @@ it("gives an existing clean interior the small native tilted editable heading wi
   expect(header).toHaveLength(1);
   expect(header.some((layer) => layer.type === "shape")).toBe(false);
   expect(header.find((layer) => layer.type === "text")).toMatchObject({
-    text: "BLACK \nFRIDAY",
+    text: "BLACK\n\u2003FRIDAY",
     color: "#ffffff",
     fontFamily: "Cera Pro",
     fontWeight: 900,
@@ -31,7 +31,11 @@ it("gives an existing clean interior the small native tilted editable heading wi
   expect(frames[0]!.y).toBeGreaterThan(5.7);
   expect(frames[0]!.y).toBeLessThan(6.5);
   expect(value).toEqual(before);
-  expect(blackCollectionPageArtworks(value, "cover").some((layer) => layer.id === "black-collection-payment")).toBe(true);
+  expect(
+    blackCollectionPageArtworks(value, "cover").some(
+      (layer) => layer.id === "black-collection-payment",
+    ),
+  ).toBe(true);
 });
 it("materializes the heading for an edit and respects a saved edit, hidden layer or removal", () => {
   const value = campaign();
@@ -49,26 +53,57 @@ it("materializes the heading for an edit and respects a saved edit, hidden layer
 
 it("adds the missing heading beside older saved banners without discarding their artwork", () => {
   const value = campaign();
-  const banner = { id: "saved-banner", type: "text", layoutRole: "banner" as const, text: "My offer", x: 1, y: 7, width: 98, height: 7 };
+  const banner = {
+    id: "saved-banner",
+    type: "text",
+    layoutRole: "banner" as const,
+    text: "My offer",
+    x: 1,
+    y: 7,
+    width: 98,
+    height: 7,
+  };
   value.pageArtworks = { "product-0": [banner] };
   const layers = blackCollectionPageArtworks(value, "product-0");
-  expect(layers.some((layer) => layer.id === "black-collection-heading")).toBe(true);
+  expect(layers.some((layer) => layer.id === "black-collection-heading")).toBe(
+    true,
+  );
   expect(layers.find((layer) => layer.id === banner.id)).toBe(banner);
   materializeBlackCollectionPageArtworks(value, "product-0");
-  value.pageArtworks["product-0"]!.find((layer) => layer.id === "black-collection-heading")!.rotation = -17;
-  expect(blackCollectionPageArtworks(value, "product-0").find((layer) => layer.id === "black-collection-heading")!.rotation).toBe(-17);
+  value.pageArtworks["product-0"]!.find(
+    (layer) => layer.id === "black-collection-heading",
+  )!.rotation = -17;
+  expect(
+    blackCollectionPageArtworks(value, "product-0").find(
+      (layer) => layer.id === "black-collection-heading",
+    )!.rotation,
+  ).toBe(-17);
 });
 
 it("keeps cover payment dates current until its text is explicitly edited", () => {
-  const value = { ...campaign(), startDate: "2026-11-20", endDate: "2026-11-30" };
+  const value = {
+    ...campaign(),
+    startDate: "2026-11-20",
+    endDate: "2026-11-30",
+  };
   materializeBlackCollectionPageArtworks(value, "cover");
-  const payment = value.pageArtworks!["cover"]!.find((layer) => layer.id === "black-collection-payment")!;
+  const payment = value.pageArtworks!["cover"]!.find(
+    (layer) => layer.id === "black-collection-payment",
+  )!;
   expect(payment.text).toContain("30");
   expect(payment.text).not.toContain("2025");
   value.endDate = "2026-12-02";
-  expect(blackCollectionPageArtworks(value, "cover").find((layer) => layer.id === payment.id)!.text).not.toContain("30");
+  expect(
+    blackCollectionPageArtworks(value, "cover").find(
+      (layer) => layer.id === payment.id,
+    )!.text,
+  ).not.toContain("30");
   payment.text = "Custom payment message";
-  expect(blackCollectionPageArtworks(value, "cover").find((layer) => layer.id === payment.id)!.text).toBe("Custom payment message");
+  expect(
+    blackCollectionPageArtworks(value, "cover").find(
+      (layer) => layer.id === payment.id,
+    )!.text,
+  ).toBe("Custom payment message");
 });
 it("uses actual visible banner clearance and leaves custom product frames to their saved overrides", () => {
   const value = campaign();

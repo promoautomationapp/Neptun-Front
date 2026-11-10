@@ -428,6 +428,7 @@ export function applyBrochurePreset(
         artworks.map((artwork) => artwork.id),
       ),
       "black-collection-logo",
+      "black-collection-hajde",
       "black-collection-title",
     ]);
     if (campaign.pageArtworks)

@@ -1,4 +1,5 @@
 import { ColorField } from "../brochure/ColorField";
+import { flushSync } from "react-dom";
 import {
   createCatalogProductUrlResolver,
   enrichProductUrls,
@@ -343,6 +344,7 @@ interface BrochureEditorProps extends StoreControlsProps {
   canMakeSocial?: boolean;
   canUseCatalog?: boolean;
   initialPage?: number;
+  prepareForPrint?: boolean;
   onPageChange?: (page: number) => void;
   notificationTarget?: {
     id: string;
@@ -2016,7 +2018,7 @@ function StorePageControls({
             : ([
                 ["heading", "Page title"],
                 ["headingRibbon", "Stores title ribbon"],
-                ["hajde", isBlackFridayBrochure(campaign) ? "NEPTUN logo" : "hajde! logo"],
+                ["hajde", "hajde! logo"],
                 ["locations", "Stores"],
                 ["service", "Elektro-Servis"],
                 ["balfin", "BALFIN Group"],
@@ -2168,6 +2170,7 @@ const BrochurePrintStack = React.memo(function BrochurePrintStack({ campaign, se
 });
 
 export function BrochureEditor({
+  prepareForPrint = false,
   canMakeSocial = true,
   canUseCatalog = true,
   campaign,
@@ -2194,6 +2197,17 @@ export function BrochureEditor({
   initialPage = 0,
   onPageChange,
 }: BrochureEditorProps) {
+  const [browserPrinting, setBrowserPrinting] = useState(false);
+  useEffect(() => {
+    const before = () => flushSync(() => setBrowserPrinting(true));
+    const after = () => setBrowserPrinting(false);
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+    };
+  }, []);
   const pages = useMemo(() => splitPages(campaign), [campaign]);
   const pageFormat = resolveBrochureFormat(campaign);
   const formatGeometry = brochureExportGeometry(pageFormat);
@@ -4046,7 +4060,7 @@ export function BrochureEditor({
           </aside>
         )}
       </div>
-      <BrochurePrintStack campaign={campaign} settings={settings} />
+      {(prepareForPrint || browserPrinting) && <BrochurePrintStack campaign={campaign} settings={settings} />}
       {moveTarget && (
         <Modal
           title={t("Move product")}
@@ -6554,6 +6568,7 @@ export default function App({
                       routePage.campaignId === campaign.id ? routePage.index : 0
                     }
                     onPageChange={rememberBrochurePage}
+                    prepareForPrint={pendingPrintId === campaign.id}
                     onUpdate={updateCampaign}
                     onPreparePhotos={prepareProductPhotos}
                     onToast={setToast}
@@ -6588,7 +6603,7 @@ export default function App({
                       setSection("social");
                     }}
                     onPrint={() => {
-                      window.print();
+                      setPendingPrintId(campaign.id);
                     }}
                     onExport={(pageIndex: React.SetStateAction<number>) => {
                       setExportPage(pageIndex);

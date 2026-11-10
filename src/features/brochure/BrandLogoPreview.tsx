@@ -13,23 +13,15 @@ function previewBrands(
   campaign: Partial<Campaign>,
   products: readonly Product[],
 ) {
-  const brands = new Map<string, { name: string; source: string }>();
-  for (const product of products) {
-    const name = String(product.brand || "").trim();
-    if (!name || brands.has(name.toUpperCase())) continue;
-    brands.set(name.toUpperCase(), {
-      name,
-      source: product.brandLogo || brandLogoFor(campaign, name),
-    });
-    if (brands.size === 2) break;
-  }
-  if (!brands.size)
-    for (const name of ["LG", "Samsung"])
-      brands.set(name.toUpperCase(), {
-        name,
-        source: brandLogoFor(campaign, name),
-      });
-  return [...brands.values()];
+  const fuego = products.find(
+    (product) => product.brand?.trim().toUpperCase() === "FUEGO",
+  );
+  return [
+    {
+      name: "FUEGO",
+      source: fuego?.brandLogo || brandLogoFor(campaign, "FUEGO"),
+    },
+  ];
 }
 
 function PreviewLogo({ name, source }: { name: string; source: string }) {
@@ -69,7 +61,11 @@ export function BrandLogoColorControl({
     (!campaign.brandLogoMode || campaign.brandLogoMode === "auto");
   const original =
     !campaign.brandLogoColor && campaign.brandLogoMode === "original";
-  const custom = Boolean(campaign.brandLogoColor || campaign.brandLogoMode === "white" || campaign.brandLogoMode === "dark");
+  const custom = Boolean(
+    campaign.brandLogoColor ||
+    campaign.brandLogoMode === "white" ||
+    campaign.brandLogoMode === "dark",
+  );
   return (
     <div className="cs-brand-logo-color-control">
       <div
@@ -98,9 +94,7 @@ export function BrandLogoColorControl({
           {t("Original colors")}
         </button>
       </div>
-      <div
-        className={`cs-brand-logo-custom-color ${custom ? "selected" : ""}`}
-      >
+      <div className={`cs-brand-logo-custom-color ${custom ? "selected" : ""}`}>
         <span>{t("Custom color")}</span>
         <ColorField
           label={t("Brand logo colors")}
@@ -113,7 +107,7 @@ export function BrandLogoColorControl({
       </div>
       <small className="cs-brand-logo-mode-hint">
         {t(
-            custom
+          custom
             ? "Your color applies to logos on every page."
             : original
               ? "Keeps the original colors of each logo."
