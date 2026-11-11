@@ -126,7 +126,7 @@ export function ScreenSizeAnnotation({
             <text
               x="0"
               y="17.7387065136"
-              fontSize="23.6516086847"
+              fontSize={type === "phone" ? "27.2" : "23.6516086847"}
               fontWeight="900"
             >
               {inches}”
@@ -134,7 +134,7 @@ export function ScreenSizeAnnotation({
             <text
               x="2.3729060484"
               y="28.7886316164"
-              fontSize="11.4132152250"
+              fontSize={type === "phone" ? "13.125" : "11.4132152250"}
               fontWeight="700"
             >
               INCH
